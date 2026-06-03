@@ -522,6 +522,10 @@ const createAxiosInstance = (requiresAuth = false): AxiosInstance => {
         logger.error(`Error response data:`, formattedErrorData, requestId);
       }
 
+      if (err.response?.status === 401 && isBrowser) {
+        window.location.href = "/login";
+      }
+
       return Promise.reject(error);
     }
   );
