@@ -3,9 +3,13 @@
 # Get current date and time
 CURRENT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
 
+# Get current branch name
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Fetch remote updates
 git fetch
 
-# Push to production branch
-git pull origin production
+# Pull latest code for the current branch
+git pull origin $BRANCH
 
-echo "✅ Code pull form 'production' branch at $CURRENT_TIME"
+echo "✅ Auto pull completed from '$BRANCH' at $CURRENT_TIME"
