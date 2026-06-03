@@ -65,7 +65,6 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional
     public StaffUserResponseDto registerStaff(StaffCreateRequestDto requestDto) {
-        log.info("Registering new staff user with email: {}", requestDto.getEmail());
 
         if (requestDto.getDepartmentId() != null) {
             DepartmentEntity department = departmentRepository.findById(requestDto.getDepartmentId())
@@ -85,13 +84,11 @@ public class StaffServiceImpl implements StaffService {
         createInitialRelationships(savedStaff, requestDto);
         UserEntity refreshedStaff = loadStaffWithAllRelationships(savedStaff.getId());
 
-        log.info("Staff user registered successfully with ID: {}", refreshedStaff.getId());
         return staffMapper.toStaffUserDto(refreshedStaff);
     }
 
     @Override
     public StaffUserAllResponseDto getAllStaffUsers(StaffUserFilterRequestDto filterDto) {
-        log.info("Fetching all staff users with filter: {}", filterDto);
 
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),
@@ -109,7 +106,6 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public StaffUserResponseDto getStaffUserById(Long id) {
-        log.info("Fetching staff user by ID: {}", id);
         UserEntity user = loadStaffWithAllRelationships(id);
         return staffMapper.toStaffUserDto(user);
     }
@@ -117,7 +113,6 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional
     public StaffUserResponseDto updateStaffUser(Long id, StaffUpdateRequestDto updateDto) {
-        log.info("Starting staff user update for ID: {}", id);
 
         UserEntity staff = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
@@ -144,13 +139,11 @@ public class StaffServiceImpl implements StaffService {
         // Load final result with all relationships
         UserEntity finalStaff = loadStaffWithAllRelationships(id);
 
-        log.info("Staff user update completed successfully for ID: {}", id);
         return staffMapper.toStaffUserDto(finalStaff);
     }
 
     // FIXED: Remove manual transaction management and flush calls
     private void updateStaffRelationships(UserEntity staff, StaffUpdateRequestDto updateDto) {
-        log.info("Updating staff relationships for user ID: {}", staff.getId());
 
         try {
             // Use RelationshipUpdateHandler for all relationship updates
@@ -250,8 +243,6 @@ public class StaffServiceImpl implements StaffService {
                     TeacherFamilyDto::getId
             );
 
-            log.info("Successfully updated all staff relationships for user ID: {}", staff.getId());
-
         } catch (Exception e) {
             log.error("Error updating staff relationships for user ID {}: {}", staff.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to update staff relationships: " + e.getMessage(), e);
@@ -261,7 +252,6 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional
     public StaffUserResponseDto deleteStaffUser(Long id) {
-        log.info("Deleting/deactivating staff user with ID: {}", id);
 
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
@@ -270,7 +260,6 @@ public class StaffServiceImpl implements StaffService {
         user.setStatus(Status.DELETED);
         UserEntity deactivatedUser = userRepository.save(user);
 
-        log.info("Staff user with ID {} deactivated successfully", id);
         return staffMapper.toStaffUserDto(deactivatedUser);
     }
 
@@ -539,7 +528,6 @@ public class StaffServiceImpl implements StaffService {
         }
 
         // Remove manual flush - let Spring handle it
-        log.info("Initial relationships created successfully for staff ID: {}", savedStaff.getId());
     }
 
     private void updateBasicFields(UserEntity staff, StaffUpdateRequestDto updateDto) {

@@ -3,7 +3,6 @@ package com.menghor.ksit.utils.database;
 import jakarta.persistence.*;
 import lombok.Data;
 
-
 import java.time.LocalDateTime;
 
 @MappedSuperclass
@@ -30,5 +29,4 @@ public abstract class BaseEntity {
         updatedAt = LocalDateTime.now();
     }
 }
-
 

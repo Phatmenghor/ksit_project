@@ -18,7 +18,6 @@ import com.menghor.ksit.feature.survey.specification.SurveySpecification;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class SurveyReportServiceImpl implements SurveyReportService {
 
     private final SurveyResponseRepository surveyResponseRepository;
@@ -39,7 +37,6 @@ public class SurveyReportServiceImpl implements SurveyReportService {
 
     @Override
     public CustomPaginationResponseDto<SurveyReportRowDto> getSurveyReportWithPagination(SurveyReportFilterDto filterDto) {
-        log.info("Generating survey report with pagination - ALL QUESTIONS, filters: {}", filterDto);
 
         // Validate and prepare pagination
         Pageable pageable = PaginationUtils.createPageable(
@@ -67,13 +64,11 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         response.setTotalPages(responsePage.getTotalPages());
         response.setLast(responsePage.isLast());
 
-        log.info("Survey report with pagination generated successfully. Total: {}", response.getTotalElements());
         return response;
     }
 
     @Override
     public List<SurveyReportRowDto> getSurveyReportForExport(SurveyReportFilterDto filterDto) {
-        log.info("Generating survey report for export - ALL QUESTIONS, filters: {}", filterDto);
 
         // Use specification for regular reports (includes all questions)
         Specification<SurveyResponseEntity> spec = SurveyResponseSpecification.buildRegularReportSpecification(filterDto);
@@ -84,13 +79,11 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Build report rows with all questions
         List<SurveyReportRowDto> reportRows = buildReportRowsAllQuestions(responses);
 
-        log.info("Survey report for export generated successfully. Total rows: {}", reportRows.size());
         return reportRows;
     }
 
     @Override
     public List<SurveyReportHeaderDto> getSurveyReportHeaders() {
-        log.info("Generating survey report headers for ALL QUESTIONS");
 
         List<SurveyReportHeaderDto> headers = new ArrayList<>();
 
@@ -100,13 +93,11 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Add ALL question headers (including deleted ones)
         addAllQuestionHeaders(headers);
 
-        log.info("Survey report headers generated successfully. Total headers: {}", headers.size());
         return headers;
     }
 
     @Override
     public List<SurveyReportHeaderDto> getFilteredSurveyReportHeaders(SurveyReportHeaderFilterDto filterDto) {
-        log.info("Generating FILTERED survey report headers - ALL QUESTIONS with filter: {}", filterDto);
 
         // Get all headers first
         List<SurveyReportHeaderDto> allHeaders = getSurveyReportHeaders();
@@ -114,7 +105,6 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Apply SIMPLIFIED filtering logic - only hiddenHeaders
         List<SurveyReportHeaderDto> filteredHeaders = applySimplifiedHeaderFilter(allHeaders, filterDto);
 
-        log.info("Filtered headers count: {} from total: {}", filteredHeaders.size(), allHeaders.size());
         return filteredHeaders;
     }
 
@@ -122,7 +112,6 @@ public class SurveyReportServiceImpl implements SurveyReportService {
 
     @Override
     public CustomPaginationResponseDto<SurveyReportRowDto> getSurveyReportWithPaginationActiveOnly(SurveyReportFilterDto filterDto) {
-        log.info("Generating survey report with pagination - ACTIVE QUESTIONS ONLY, filters: {}", filterDto);
 
         // Validate and prepare pagination
         Pageable pageable = PaginationUtils.createPageable(
@@ -150,13 +139,11 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         response.setTotalPages(responsePage.getTotalPages());
         response.setLast(responsePage.isLast());
 
-        log.info("Survey report with pagination (active only) generated successfully. Total: {}", response.getTotalElements());
         return response;
     }
 
     @Override
     public List<SurveyReportRowDto> getSurveyReportForExportActiveOnly(SurveyReportFilterDto filterDto) {
-        log.info("Generating survey report for export - ACTIVE QUESTIONS ONLY, filters: {}", filterDto);
 
         // Use specification for active-only reports (optimized query)
         Specification<SurveyResponseEntity> spec = SurveyResponseSpecification.buildActiveOnlyReportSpecification(filterDto);
@@ -167,13 +154,11 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Build report rows (questions already filtered at query level)
         List<SurveyReportRowDto> reportRows = buildReportRowsActiveOnly(responses);
 
-        log.info("Survey report for export (active only) generated successfully. Total rows: {}", reportRows.size());
         return reportRows;
     }
 
     @Override
     public List<SurveyReportHeaderDto> getSurveyReportHeadersActiveOnly() {
-        log.info("Generating survey report headers for ACTIVE QUESTIONS ONLY");
 
         List<SurveyReportHeaderDto> headers = new ArrayList<>();
 
@@ -183,13 +168,11 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Add ONLY active question headers
         addActiveQuestionHeaders(headers);
 
-        log.info("Survey report headers (active only) generated successfully. Total headers: {}", headers.size());
         return headers;
     }
 
     @Override
     public List<SurveyReportHeaderDto> getFilteredSurveyReportHeadersActiveOnly(SurveyReportHeaderFilterDto filterDto) {
-        log.info("Generating FILTERED survey report headers - ACTIVE QUESTIONS ONLY with filter: {}", filterDto);
 
         // Get active headers first
         List<SurveyReportHeaderDto> activeHeaders = getSurveyReportHeadersActiveOnly();
@@ -197,7 +180,6 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Apply SIMPLIFIED filtering logic - only hiddenHeaders
         List<SurveyReportHeaderDto> filteredHeaders = applySimplifiedHeaderFilter(activeHeaders, filterDto);
 
-        log.info("Filtered active headers count: {} from total: {}", filteredHeaders.size(), activeHeaders.size());
         return filteredHeaders;
     }
 
@@ -209,22 +191,16 @@ public class SurveyReportServiceImpl implements SurveyReportService {
                                                                     SurveyReportHeaderFilterDto filterDto) {
         // If no filter provided, return all headers
         if (filterDto == null || filterDto.getHiddenHeaders() == null || filterDto.getHiddenHeaders().isEmpty()) {
-            log.info("No hidden headers specified, returning all {} headers", allHeaders.size());
             return allHeaders;
         }
 
         // Convert hidden headers to Set for faster lookup
         Set<String> hiddenHeadersSet = new HashSet<>(filterDto.getHiddenHeaders());
 
-        log.info("Filtering out {} hidden headers: {}", hiddenHeadersSet.size(), hiddenHeadersSet);
-
         // Filter out hidden headers
         List<SurveyReportHeaderDto> filteredHeaders = allHeaders.stream()
                 .filter(header -> !hiddenHeadersSet.contains(header.getKey()))
                 .collect(Collectors.toList());
-
-        log.info("Filtered headers: {} hidden, {} remaining",
-                hiddenHeadersSet.size(), filteredHeaders.size());
 
         return filteredHeaders;
     }

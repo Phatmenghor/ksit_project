@@ -14,13 +14,11 @@ import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
@@ -30,18 +28,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponseDTO createPayment(PaymentCreateDTO createDTO) {
-        log.info("Creating new payment for user: {}", createDTO.getUserId());
 
         PaymentEntity payment = paymentMapper.toEntity(createDTO);
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
-        log.info("Payment created successfully with ID: {}", savedPayment.getId());
         return paymentMapper.toResponseDto(savedPayment);
     }
 
     @Override
     public PaymentResponseDTO updatePayment(Long id, PaymentUpdateDto updateDTO) {
-        log.info("Updating payment with ID: {}", id);
 
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
@@ -49,14 +44,12 @@ public class PaymentServiceImpl implements PaymentService {
         paymentMapper.updateEntityFromDto(updateDTO, payment);
         PaymentEntity updatedPayment = paymentRepository.save(payment);
 
-        log.info("Payment updated successfully with ID: {}", id);
         return paymentMapper.toResponseDto(updatedPayment);
     }
 
     @Override
     @Transactional()
     public PaymentResponseDTO getPaymentById(Long id) {
-        log.info("Fetching payment with ID: {}", id);
 
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
@@ -67,7 +60,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional()
     public CustomPaginationResponseDto<PaymentResponseDTO> getAllPayments(PaymentFilterDto filterDto) {
-        log.info("Fetching all payments with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -91,7 +83,6 @@ public class PaymentServiceImpl implements PaymentService {
         // Apply status correction for any null statuses
         paymentPage.getContent().forEach(payment -> {
             if (payment.getStatus() == null) {
-                log.debug("Correcting null status to ACTIVE for payment ID: {}", payment.getId());
                 payment.setStatus(Status.ACTIVE);
                 paymentRepository.save(payment);
             }
@@ -99,17 +90,12 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Map to response DTO
         CustomPaginationResponseDto<PaymentResponseDTO> response = paymentMapper.toPaymentAllResponseDto(paymentPage);
-        log.info("Retrieved {} payments (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }
 
     @Override
     public PaymentResponseDTO deletePayment(Long id) {
-        log.info("Soft deleting payment with ID: {}", id);
 
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment not found with ID: " + id));
@@ -117,7 +103,6 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(Status.DELETED);
         payment = paymentRepository.save(payment);
 
-        log.info("Payment soft deleted successfully with ID: {}", id);
         return paymentMapper.toResponseDto(payment);
 
     }

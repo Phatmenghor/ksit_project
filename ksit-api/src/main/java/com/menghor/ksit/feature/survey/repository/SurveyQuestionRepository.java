@@ -21,4 +21,3 @@ public interface SurveyQuestionRepository extends JpaRepository<SurveyQuestionEn
     Integer getMaxDisplayOrderBySectionId(@Param("sectionId") Long sectionId);
 }
 
-

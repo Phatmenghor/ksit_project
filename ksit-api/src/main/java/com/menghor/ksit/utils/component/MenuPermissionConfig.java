@@ -1,7 +1,6 @@
 package com.menghor.ksit.utils.component;
 
 import com.menghor.ksit.enumations.RoleEnum;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -10,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 @Component
-@Slf4j
 public class MenuPermissionConfig {
 
     // Menu permissions map - initialized once
@@ -18,7 +16,6 @@ public class MenuPermissionConfig {
 
     public MenuPermissionConfig() {
         this.menuPermissions = initializeMenuPermissions();
-        log.info("MenuPermissionConfig initialized with {} menu configurations", menuPermissions.size());
     }
 
     /**
@@ -235,7 +232,6 @@ public class MenuPermissionConfig {
      */
     public void setMenuPermission(String menuCode, Set<RoleEnum> allowedRoles) {
         menuPermissions.put(menuCode, allowedRoles);
-        log.info("Updated permission for menu '{}' to roles: {}", menuCode, allowedRoles);
     }
 
     /**
@@ -244,7 +240,6 @@ public class MenuPermissionConfig {
      */
     public void removeMenuPermission(String menuCode) {
         menuPermissions.remove(menuCode);
-        log.info("Removed permission configuration for menu '{}'", menuCode);
     }
 
     /**
@@ -259,13 +254,9 @@ public class MenuPermissionConfig {
      * Print all menu permissions (useful for debugging)
      */
     public void printAllPermissions() {
-        log.info("=== MENU PERMISSIONS CONFIGURATION ===");
         menuPermissions.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> 
-                    log.info("Menu: {} -> Roles: {}", entry.getKey(), entry.getValue())
-                );
-        log.info("=== END MENU PERMISSIONS ===");
     }
 
     /**

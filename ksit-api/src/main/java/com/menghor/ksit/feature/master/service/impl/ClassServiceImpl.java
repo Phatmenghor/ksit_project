@@ -38,8 +38,6 @@ public class ClassServiceImpl implements ClassService {
     @Override
     @Transactional
     public ClassResponseDto createClass(ClassRequestDto classRequestDto) {
-        log.info("Creating new class with code: {}, majorId: {}, academyYear: {}",
-                classRequestDto.getCode(), classRequestDto.getMajorId(), classRequestDto.getAcademyYear());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = classRequestDto.getStatus() != null ?
@@ -69,25 +67,21 @@ public class ClassServiceImpl implements ClassService {
         classEntity.setMajor(major);
 
         ClassEntity savedClass = classRepository.save(classEntity);
-        log.info("Class created successfully with ID: {}", savedClass.getId());
 
         return classMapper.toResponseDto(savedClass);
     }
 
     @Override
     public ClassResponseDto getClassById(Long id) {
-        log.info("Fetching class by ID: {}", id);
 
         ClassEntity classEntity = findClassById(id);
 
-        log.info("Retrieved class with ID: {}", id);
         return classMapper.toResponseDto(classEntity);
     }
 
     @Override
     @Transactional
     public ClassResponseDto updateClassById(Long id, ClassUpdateDto classUpdateDto) {
-        log.info("Updating class with ID: {}", id);
 
         // Find the existing entity
         ClassEntity existingClass = findClassById(id);
@@ -135,7 +129,6 @@ public class ClassServiceImpl implements ClassService {
 
         // Save the updated entity
         ClassEntity updatedClass = classRepository.save(existingClass);
-        log.info("Class updated successfully with ID: {}", id);
 
         return classMapper.toResponseDto(updatedClass);
     }
@@ -143,7 +136,6 @@ public class ClassServiceImpl implements ClassService {
     @Override
     @Transactional
     public ClassResponseDto deleteClassById(Long id) {
-        log.info("Deleting class with ID: {}", id);
 
         ClassEntity classEntity = findClassById(id);
 
@@ -151,14 +143,12 @@ public class ClassServiceImpl implements ClassService {
         classEntity.setStatus(Status.DELETED);
 
         classEntity = classRepository.save(classEntity);
-        log.info("Class marked as DELETED successfully with ID: {}", id);
 
         return classMapper.toResponseDto(classEntity);
     }
 
     @Override
     public CustomPaginationResponseDto<ClassResponseDto> getAllClasses(ClassFilterDto filterDto) {
-        log.info("Fetching all classes with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -181,21 +171,14 @@ public class ClassServiceImpl implements ClassService {
 
         // Map to response DTO
         CustomPaginationResponseDto<ClassResponseDto> response = classMapper.toClassAllResponseDto(classPage);
-        log.info("Retrieved {} classes (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }
 
     @Override
     public CustomPaginationResponseDto<ClassResponseDto> getMyClasses(ClassFilterDto filterDto) {
-        log.info("Fetching user-specific classes with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("Current user: {} with roles: {}", currentUser.getUsername(),
-                currentUser.getRoles().stream().map(role -> role.getName().name()).toList());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -219,8 +202,6 @@ public class ClassServiceImpl implements ClassService {
 
         // Map to response DTO
         CustomPaginationResponseDto<ClassResponseDto> response = classMapper.toClassAllResponseDto(classPage);
-        log.info("User-specific classes retrieved successfully: {} classes (page {}/{})",
-                response.getContent().size(), response.getPageNo(), response.getTotalPages());
 
         return response;
     }

@@ -6,4 +6,3 @@ public enum EducationLevelEnum {
     UPPER_SECONDARY_SCHOOL;
 }
 
-

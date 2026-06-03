@@ -1,6 +1,5 @@
 package com.menghor.ksit.feature.attendance.dto.response;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

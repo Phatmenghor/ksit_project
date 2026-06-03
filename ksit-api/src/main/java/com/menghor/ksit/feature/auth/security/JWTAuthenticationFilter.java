@@ -50,8 +50,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = getJWTFromRequest(request);
-            log.debug("Processing request to: {} with token: {}", request.getRequestURI(),
-                    token != null ? "present" : "absent");
 
             if (StringUtils.hasText(token)) {
                 // Check if token is blacklisted
@@ -66,7 +64,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 // Validate and process token
                 if (tokenGenerator.validateToken(token)) {
                     String username = tokenGenerator.getUsernameFromJWT(token);
-                    log.debug("Token valid for username: {}", username);
 
                     authenticateUser(username, token, request);
                 }
@@ -124,8 +121,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             Optional<UserEntity> userOpt = userRepository.findByUsername(username);
             userOpt.ifPresent(user -> request.setAttribute("currentUser", user));
 
-            log.debug("Successfully authenticated user: {}", username);
-
         } catch (UsernameNotFoundException ex) {
             log.warn("User not found during token authentication: {}", username);
             throw new UsernameNotFoundException("User account no longer exists. Please login again.");
@@ -167,7 +162,6 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private String getJWTFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        log.debug("Authorization header: {}", bearerToken != null ? "Bearer ***" : "null");
 
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);

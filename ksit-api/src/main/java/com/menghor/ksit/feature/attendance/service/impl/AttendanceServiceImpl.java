@@ -15,7 +15,6 @@ import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
@@ -79,7 +77,6 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public List<AttendanceDto> findAllAttendanceHistory(AttendanceHistoryFilterDto filterDto) {
-        log.info("Fetching all attendance history (no pagination) with filter: {}", filterDto);
 
         Specification<AttendanceEntity> spec = AttendanceSpecification.combine(filterDto);
 
@@ -92,20 +89,15 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .map(attendanceMapper::toDto)
                 .collect(Collectors.toList());
 
-        log.info("Retrieved {} total attendance records without pagination", result.size());
-
         return result;
     }
 
     @Override
     public Long countAttendanceHistory(AttendanceHistoryFilterDto filterDto) {
-        log.info("Counting attendance history with filter: {}", filterDto);
 
         Specification<AttendanceEntity> spec = AttendanceSpecification.combine(filterDto);
 
         Long count = attendanceRepository.count(spec);
-
-        log.info("Found {} total attendance records matching filter criteria", count);
 
         return count;
     }
@@ -113,7 +105,6 @@ public class AttendanceServiceImpl implements AttendanceService {
     // Implementation
     @Override
     public CustomPaginationResponseDto<AttendanceDto> findAttendanceHistory(AttendanceHistoryFilterDto filterDto) {
-        log.info("Fetching attendance history with filter: {}", filterDto);
 
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),
@@ -129,9 +120,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         List<AttendanceDto> content = attendancePage.getContent().stream()
                 .map(attendanceMapper::toDto)
                 .collect(Collectors.toList());
-
-        log.info("Retrieved {} attendance records (page {}/{})",
-                content.size(), attendancePage.getNumber() + 1, attendancePage.getTotalPages());
 
         return new CustomPaginationResponseDto<>(
                 content,

@@ -46,7 +46,6 @@ public class RequestHistorySpecification {
                 // Join with request owner through request.user
                 Join<RequestEntity, UserEntity> requestOwnerJoin = requestJoin.join("user", JoinType.LEFT);
 
-
                 Predicate actionByPredicate = criteriaBuilder.like(
                         criteriaBuilder.lower(root.get("actionBy")), searchTerm);
                 Predicate titlePredicate = criteriaBuilder.like(

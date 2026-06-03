@@ -35,7 +35,6 @@ public class MenuController {
      */
     @GetMapping("/my-menus")
     public ApiResponse<List<UserMenuResponseDto>> getMyMenus() {
-        log.info("Getting current user's menus with canView flags");
         UserEntity currentUser = securityUtils.getCurrentUser();
         List<UserMenuResponseDto> menus = menuService.getAllMenusWithPermissions(currentUser.getId());
         return ApiResponse.success("User menus retrieved successfully", menus);
@@ -47,7 +46,6 @@ public class MenuController {
      */
     @GetMapping("/my-menus/viewable")
     public ApiResponse<List<UserMenuResponseDto>> getMyViewableMenus() {
-        log.info("Getting current user's viewable menus only");
         UserEntity currentUser = securityUtils.getCurrentUser();
         List<UserMenuResponseDto> menus = menuService.getUserViewableMenus(currentUser.getId());
         return ApiResponse.success("User viewable menus retrieved successfully", menus);
@@ -58,7 +56,6 @@ public class MenuController {
      */
     @GetMapping("/users/{userId}")
     public ApiResponse<List<UserMenuResponseDto>> getUserMenus(@PathVariable Long userId) {
-        log.info("Getting all menus with permissions for user ID: {}", userId);
         List<UserMenuResponseDto> menus = menuService.getAllMenusWithPermissions(userId);
         return ApiResponse.success("User menus retrieved successfully", menus);
     }
@@ -68,7 +65,6 @@ public class MenuController {
      */
     @GetMapping("/roles/{role}")
     public ApiResponse<List<UserMenuResponseDto>> getMenusByRole(@PathVariable RoleEnum role) {
-        log.info("Getting menus for role: {}", role);
         List<UserMenuResponseDto> menus = menuService.getMenusByRole(role);
         return ApiResponse.success("Role menus retrieved successfully", menus);
     }
@@ -78,7 +74,6 @@ public class MenuController {
      */
     @GetMapping("/all")
     public ApiResponse<List<MenuItemResponseDto>> getAllMenuItems() {
-        log.info("Getting all menu items structure");
         List<MenuItemResponseDto> menus = menuService.getAllMenuItems();
         return ApiResponse.success("All menu items retrieved successfully", menus);
     }
@@ -90,14 +85,12 @@ public class MenuController {
     public ApiResponse<List<UserMenuResponseDto>> updateUserMenuPermissions(
             @PathVariable Long userId,
             @Valid @RequestBody UserMenuUpdateDto updateDto) {
-        log.info("Admin/Developer updating menu permissions for user ID: {}", userId);
         List<UserMenuResponseDto> menus = menuService.updateUserMenuPermissions(userId, updateDto);
         return ApiResponse.success("Menu permissions updated successfully", menus);
     }
 
     @PostMapping("/migrate-permissions")
     public ApiResponse<String> migrateAllUsersToNewPermissions() {
-        log.info("Admin/Developer triggering permission migration for all users");
 
         try {
             // Cast to implementation to access the new method
@@ -122,7 +115,6 @@ public class MenuController {
     @PutMapping("/my-menus/permissions")
     public ApiResponse<List<UserMenuResponseDto>> updateMyMenuPermissions(@Valid @RequestBody UserMenuUpdateDto updateDto) {
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("User updating own menu permissions for user ID: {}", currentUser.getId());
         List<UserMenuResponseDto> menus = menuService.updateUserMenuPermissions(currentUser.getId(), updateDto);
         return ApiResponse.success("Your menu permissions updated successfully", menus);
     }
@@ -132,7 +124,6 @@ public class MenuController {
      */
     @PostMapping("/users/{userId}/reset")
     public ApiResponse<List<UserMenuResponseDto>> resetUserMenusToDefault(@PathVariable Long userId) {
-        log.info("Admin/Developer resetting menu permissions to defaults for user ID: {}", userId);
         List<UserMenuResponseDto> menus = menuService.resetUserMenusToDefault(userId);
         return ApiResponse.success("Menu permissions reset to defaults successfully", menus);
     }
@@ -143,7 +134,6 @@ public class MenuController {
     @PostMapping("/my-menus/reset")
     public ApiResponse<List<UserMenuResponseDto>> resetMyMenusToDefault() {
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("User resetting own menu permissions to defaults for user ID: {}", currentUser.getId());
         List<UserMenuResponseDto> menus = menuService.resetUserMenusToDefault(currentUser.getId());
         return ApiResponse.success("Your menu permissions reset to defaults successfully", menus);
     }
@@ -153,7 +143,6 @@ public class MenuController {
      */
     @PostMapping("/users/{userId}/refresh")
     public ApiResponse<List<UserMenuResponseDto>> refreshUserMenuPermissions(@PathVariable Long userId) {
-        log.info("Admin/Developer refreshing menu permissions after role change for user ID: {}", userId);
         List<UserMenuResponseDto> menus = menuService.refreshUserMenuPermissionsAfterRoleChange(userId);
         return ApiResponse.success("Menu permissions refreshed successfully", menus);
     }
@@ -165,7 +154,6 @@ public class MenuController {
      */
     @PostMapping("/items")
     public ApiResponse<MenuItemResponseDto> createMenuItem(@Valid @RequestBody MenuCreateDto createDto) {
-        log.info("Creating new menu item with code: {}", createDto.getCode());
         MenuItemResponseDto menu = menuService.createMenuItem(createDto);
         return ApiResponse.success("Menu item created successfully", menu);
     }
@@ -177,7 +165,6 @@ public class MenuController {
     public ApiResponse<MenuItemResponseDto> updateMenuItem(
             @PathVariable Long menuId,
             @Valid @RequestBody MenuUpdateDto updateDto) {
-        log.info("Updating menu item with ID: {}", menuId);
         MenuItemResponseDto menu = menuService.updateMenuItem(menuId, updateDto);
         return ApiResponse.success("Menu item updated successfully", menu);
     }
@@ -187,7 +174,6 @@ public class MenuController {
      */
     @DeleteMapping("/items/{menuId}")
     public ApiResponse<MenuItemResponseDto> deleteMenuItem(@PathVariable Long menuId) {
-        log.info("Deleting menu item with ID: {}", menuId);
         MenuItemResponseDto menu = menuService.deleteMenuItem(menuId);
         return ApiResponse.success("Menu item deleted successfully", menu);
     }
@@ -197,7 +183,6 @@ public class MenuController {
      */
     @PutMapping("/items/reorder")
     public ApiResponse<List<MenuItemResponseDto>> reorderMenuItems(@Valid @RequestBody MenuBatchReorderDto reorderDto) {
-        log.info("Reordering {} menu items", reorderDto.getMenuReorders().size());
         List<MenuItemResponseDto> menus = menuService.reorderMenuItems(reorderDto);
         return ApiResponse.success("Menu items reordered successfully", menus);
     }
@@ -210,7 +195,6 @@ public class MenuController {
             @PathVariable Long menuId,
             @RequestParam(required = false) Integer newPosition,
             @RequestParam(required = false) Long newParentId) {
-        log.info("Moving menu item {} to position {} under parent {}", menuId, newPosition, newParentId);
         MenuItemResponseDto menu = menuService.moveMenuItem(menuId, newPosition, newParentId);
         return ApiResponse.success("Menu item moved successfully", menu);
     }
@@ -221,7 +205,6 @@ public class MenuController {
     @PostMapping("/cleanup")
     @PreAuthorize("hasAnyAuthority('DEVELOPER')")
     public ApiResponse<String> cleanupDeletedMenuPermissions() {
-        log.info("Cleaning up permissions for deleted menus");
         menuService.cleanupDeletedMenuPermissions();
         return ApiResponse.success("Deleted menu permissions cleaned up successfully", "Cleanup completed");
     }

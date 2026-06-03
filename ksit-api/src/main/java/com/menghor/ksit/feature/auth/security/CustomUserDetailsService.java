@@ -33,15 +33,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.debug("Loading user details for username: {}", username);
 
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     log.warn("User not found with username: {}", username);
                     return new UsernameNotFoundException("User not found with username: " + username);
                 });
-
-        log.debug("Found user: {} with status: {}", username, user.getStatus());
 
         // Validate user status and throw appropriate exceptions
         validateUserStatus(user);
@@ -57,7 +54,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 mapRolesToAuthorities(user.getRoles())
         );
 
-        log.debug("Successfully loaded user details for: {}", username);
         return userDetails;
     }
 
@@ -67,7 +63,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     private void validateUserStatus(UserEntity user) {
         // Set default status if null
         if (user.getStatus() == null) {
-            log.info("User {} has null status, setting to ACTIVE", user.getUsername());
             user.setStatus(Status.ACTIVE);
             userRepository.save(user);
             return;
@@ -83,7 +78,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 throw new DisabledException("Your account has been temporarily deactivated. Please contact the administrator to reactivate your account.");
 
             case ACTIVE:
-                log.debug("User {} is active and can login", user.getUsername());
                 break;
 
             default:
@@ -103,7 +97,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         boolean nonLocked = user.getStatus() != Status.DELETED;
-        log.debug("User {} account non-locked status: {}", user.getUsername(), nonLocked);
         return nonLocked;
     }
 
@@ -117,7 +110,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         boolean enabled = user.getStatus() == Status.ACTIVE;
-        log.debug("User {} enabled status: {}", user.getUsername(), enabled);
         return enabled;
     }
 
@@ -130,7 +122,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                 .collect(Collectors.toList());
 
-        log.debug("Mapped authorities: {}", authorities);
         return authorities;
     }
 }

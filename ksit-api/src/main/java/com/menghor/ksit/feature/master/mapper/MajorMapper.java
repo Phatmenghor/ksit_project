@@ -41,7 +41,6 @@ public interface MajorMapper {
     @Mapping(target = "classes", ignore = true)
     void updateEntityFromDto(MajorUpdateDto dto, @MappingTarget MajorEntity entity);
 
-
     default List<MajorResponseDto> toResponseDtoList(List<MajorEntity> entities) {
         return entities.stream().map(this::toResponseDto).collect(Collectors.toList());
     }

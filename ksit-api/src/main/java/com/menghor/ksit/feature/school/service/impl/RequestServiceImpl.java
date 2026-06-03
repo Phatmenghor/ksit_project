@@ -28,7 +28,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -42,7 +41,6 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public RequestResponseDto createRequest(RequestCreateDto createDto) {
-        log.info("Creating new request with title: {}", createDto.getTitle());
         
         UserEntity currentUser = securityUtils.getCurrentUser();
         
@@ -56,14 +54,12 @@ public class RequestServiceImpl implements RequestService {
         createHistoryEntry(savedRequest, RequestStatus.PENDING, RequestStatus.PENDING,
             "Request created by user", currentUser);
         
-        log.info("Request created successfully with ID: {}", savedRequest.getId());
         return requestMapper.toResponseDto(savedRequest);
     }
     
     @Override
     @Transactional
     public RequestResponseDto updateRequest(Long id, RequestUpdateDto updateDto) {
-        log.info("Updating request with ID: {}", id);
         
         RequestEntity request = findRequestById(id);
         UserEntity currentUser = securityUtils.getCurrentUser();
@@ -77,13 +73,11 @@ public class RequestServiceImpl implements RequestService {
         String action = currentUser.isOther() ? "Request updated by staff" : "Request updated by user";
         createHistoryEntry(updatedRequest, request.getStatus(), updateDto.getStatus(), action, currentUser);
         
-        log.info("Request with ID {} updated successfully", id);
         return requestMapper.toResponseDto(updatedRequest);
     }
     
     @Override
     public RequestResponseDto getRequestById(Long id) {
-        log.info("Fetching request with ID: {}", id);
         
         RequestEntity request = findRequestById(id);
         return requestMapper.toResponseDto(request);
@@ -91,7 +85,6 @@ public class RequestServiceImpl implements RequestService {
     
     @Override
     public CustomPaginationResponseDto<RequestResponseDto> getAllRequests(RequestFilterDto filterDto) {
-        log.info("Fetching all requests with filter: {}", filterDto);
         
         Pageable pageable = PaginationUtils.createPageable(
             filterDto.getPageNo(),
@@ -110,7 +103,6 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional()
     public CustomPaginationResponseDto<RequestHistoryDto> getRequestHistory(RequestHistoryFilterDto filterDto) {
-        log.info("Fetching history with filter: {}", filterDto);
 
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),
@@ -128,7 +120,6 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional()
     public CustomPaginationResponseDto<RequestHistoryDto> getMyRequestHistory(RequestHistoryFilterDto filterDto) {
-        log.info("Fetching current user's request history with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
 
@@ -145,13 +136,11 @@ public class RequestServiceImpl implements RequestService {
         Specification<RequestHistoryEntity> spec = RequestHistorySpecification.createSpecification(filterDto);
         Page<RequestHistoryEntity> historyPage = historyRepository.findAll(spec, pageable);
 
-        log.info("Retrieved {} history entries for current user", historyPage.getTotalElements());
         return requestMapper.toHistoryPaginationResponse(historyPage);
     }
 
     @Override
     public RequestHistoryDto getRequestHistoryDetail(Long historyId) {
-        log.info("Fetching detailed history with ID: {}", historyId);
 
         RequestHistoryEntity historyEntity = historyRepository.findById(historyId)
                 .orElseThrow(() -> {
@@ -162,15 +151,12 @@ public class RequestServiceImpl implements RequestService {
         // Use a special mapper that includes the full request details
         RequestHistoryDto historyDto = requestMapper.mapToDetailedHistoryDto(historyEntity);
 
-        log.info("Request history detail fetched successfully with ID: {}", historyId);
         return historyDto;
     }
-
 
     @Override
     @Transactional
     public RequestResponseDto deleteRequest(Long id) {
-        log.info("Deleting request with ID: {}", id);
 
         RequestEntity request = findRequestById(id);
         UserEntity currentUser = securityUtils.getCurrentUser();
@@ -190,7 +176,6 @@ public class RequestServiceImpl implements RequestService {
 
         RequestResponseDto responseDto = requestMapper.toResponseDto(updatedRequest);
 
-        log.info("Request with ID {} marked as deleted successfully", id);
         return responseDto;
     }
     // Private helper methods
@@ -220,7 +205,5 @@ public class RequestServiceImpl implements RequestService {
         history.setStaffComment(request.getStaffComment());
 
         historyRepository.save(history);
-        log.debug("Created history entry: {} -> {} by user {} for request owned by {}",
-                fromStatus, toStatus, actionUser.getUsername(), request.getUser().getUsername());
     }
 }

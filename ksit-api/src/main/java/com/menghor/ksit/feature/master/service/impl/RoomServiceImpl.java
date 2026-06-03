@@ -33,7 +33,6 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public RoomResponseDto createRoom(RoomRequestDto roomRequest) {
-        log.info("Creating new room with name: {}", roomRequest.getName());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = roomRequest.getStatus() != null ?
@@ -60,25 +59,21 @@ public class RoomServiceImpl implements RoomService {
         }
 
         RoomEntity savedRoom = roomRepository.save(room);
-        log.info("Room created successfully with ID: {}", savedRoom.getId());
 
         return roomMapper.toResponseDto(savedRoom);
     }
 
     @Override
     public RoomResponseDto getRoomById(Long id) {
-        log.info("Fetching room by ID: {}", id);
 
         RoomEntity room = findRoomById(id);
 
-        log.info("Retrieved room with ID: {}", id);
         return roomMapper.toResponseDto(room);
     }
 
     @Override
     @Transactional
     public RoomResponseDto updateRoomById(RoomUpdateDto roomRequest, Long id) {
-        log.info("Updating room with ID: {}", id);
 
         // Find the existing entity
         RoomEntity existingRoom = findRoomById(id);
@@ -120,7 +115,6 @@ public class RoomServiceImpl implements RoomService {
 
         // Save the updated entity
         RoomEntity updatedRoom = roomRepository.save(existingRoom);
-        log.info("Room updated successfully with ID: {}", id);
 
         return roomMapper.toResponseDto(updatedRoom);
     }
@@ -128,20 +122,17 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public RoomResponseDto deleteRoomById(Long id) {
-        log.info("Deleting room with ID: {}", id);
 
         RoomEntity room = findRoomById(id);
         room.setStatus(Status.DELETED);
 
         room = roomRepository.save(room);
-        log.info("Room deleted successfully with ID: {}", id);
 
         return roomMapper.toResponseDto(room);
     }
 
     @Override
     public CustomPaginationResponseDto<RoomResponseDto> getAllRoom(RoomFilterDto filterDto) {
-        log.info("Fetching all rooms with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -163,7 +154,6 @@ public class RoomServiceImpl implements RoomService {
         // Apply status correction for any null statuses
         roomPage.getContent().forEach(room -> {
             if (room.getStatus() == null) {
-                log.debug("Correcting null status to ACTIVE for room ID: {}", room.getId());
                 room.setStatus(Status.ACTIVE);
                 roomRepository.save(room);
             }
@@ -171,10 +161,6 @@ public class RoomServiceImpl implements RoomService {
 
         // Map to response DTO
         CustomPaginationResponseDto<RoomResponseDto> response = roomMapper.toRoomAllResponseDto(roomPage);
-        log.info("Retrieved {} rooms (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }

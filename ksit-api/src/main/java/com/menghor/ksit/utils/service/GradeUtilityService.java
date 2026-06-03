@@ -1,7 +1,6 @@
 package com.menghor.ksit.utils.service;
 
 import com.menghor.ksit.enumations.GradeLevel;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,7 +12,6 @@ import java.util.List;
  * Uses the Cambodian grading system
  */
 @Service
-@Slf4j
 public class GradeUtilityService {
 
     /**
@@ -21,7 +19,6 @@ public class GradeUtilityService {
      */
     public String calculateGrade(double totalScore) {
         GradeLevel gradeLevel = GradeLevel.fromScore(totalScore);
-        log.debug("Calculated grade {} for score {}", gradeLevel.getGrade(), totalScore);
         return gradeLevel.getGrade();
     }
 
@@ -123,7 +120,6 @@ public class GradeUtilityService {
         BigDecimal roundedGpa = BigDecimal.valueOf(gpa)
                 .setScale(2, RoundingMode.HALF_UP);
         
-        log.debug("Calculated GPA {} from {} grades", roundedGpa.doubleValue(), validGrades);
         
         return roundedGpa.doubleValue();
     }

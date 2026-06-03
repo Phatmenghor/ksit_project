@@ -28,7 +28,6 @@ public class SecurityUtils {
 
         // Get the username (email) from the authentication object
         String username = authentication.getName();
-        log.info("Fetching user with email: {}", username);
 
         // Fetch the user from the repository
         UserEntity user = userRepository.findByUsername(username)
@@ -37,7 +36,6 @@ public class SecurityUtils {
                     return new NotFoundException(String.format(ErrorMessages.EMAIL_NOT_FOUND, username));
                 });
 
-        log.info("User with email {} successfully retrieved", username);
         return user;
     }
 

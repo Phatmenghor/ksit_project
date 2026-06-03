@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -43,12 +42,6 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public CourseResponseDto createCourse(CourseRequestDto courseRequestDto) {
-        log.info("Creating new course with code: {}, name: {}, departmentId: {}, subjectId: {}, teacherId: {}",
-                courseRequestDto.getCode(),
-                courseRequestDto.getNameEn(),
-                courseRequestDto.getDepartmentId(),
-                courseRequestDto.getSubjectId(),
-                courseRequestDto.getTeacherId());
 
         // Validate all IDs before proceeding
         validateCourseRequestIds(courseRequestDto);
@@ -70,25 +63,21 @@ public class CourseServiceImpl implements CourseService {
         }
 
         CourseEntity savedCourse = courseRepository.save(course);
-        log.info("Course created successfully with ID: {}", savedCourse.getId());
 
         return courseMapper.toResponseDto(savedCourse);
     }
 
     @Override
     public CourseResponseDto getCourseById(Long id) {
-        log.info("Fetching course by ID: {}", id);
 
         CourseEntity course = findCourseById(id);
 
-        log.info("Retrieved course with ID: {}", id);
         return courseMapper.toResponseDto(course);
     }
 
     @Override
     @Transactional
     public CourseResponseDto updateById(Long id, CourseUpdateDto courseRequestDto) {
-        log.info("Updating course with ID: {}", id);
 
         // Find the existing course
         CourseEntity existingCourse = findCourseById(id);
@@ -122,7 +111,6 @@ public class CourseServiceImpl implements CourseService {
         }
 
         CourseEntity updatedCourse = courseRepository.save(existingCourse);
-        log.info("Course updated successfully with ID: {}", id);
 
         return courseMapper.toResponseDto(updatedCourse);
     }
@@ -130,19 +118,16 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public CourseResponseDto deleteById(Long id) {
-        log.info("Deleting course with ID: {}", id);
 
         CourseEntity course = findCourseById(id);
 
         courseRepository.delete(course);
-        log.info("Course deleted successfully with ID: {}", id);
 
         return courseMapper.toResponseDto(course);
     }
 
     @Override
     public CustomPaginationResponseDto<CourseResponseDto> getAllCourses(CourseFilterDto filterDto) {
-        log.info("Fetching all courses with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         // Always sort by createdAt DESC by default
@@ -176,10 +161,6 @@ public class CourseServiceImpl implements CourseService {
 
         // Map to response DTO
         CustomPaginationResponseDto<CourseResponseDto> response = courseMapper.toCourseAllResponseDto(coursePage);
-        log.info("Retrieved {} courses (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }

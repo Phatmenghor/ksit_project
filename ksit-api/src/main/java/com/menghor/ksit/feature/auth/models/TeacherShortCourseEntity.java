@@ -28,4 +28,3 @@ public class TeacherShortCourseEntity extends BaseEntity {
     private UserEntity user;
 }
 
-

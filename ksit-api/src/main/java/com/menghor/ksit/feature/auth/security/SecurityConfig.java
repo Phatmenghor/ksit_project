@@ -60,7 +60,6 @@ public class SecurityConfig {
                                 "/api/images/**",
                                 "/api/v1/enums/**",
 
-
                                 // Static resources
                                 "/favicon.ico",
                                 "/*.ico",

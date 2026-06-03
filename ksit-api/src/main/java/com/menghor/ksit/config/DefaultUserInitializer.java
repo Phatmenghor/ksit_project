@@ -7,7 +7,6 @@ import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.RoleRepository;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +18,6 @@ import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 @Order(2) // Run after DefaultRoleInitializer
 public class DefaultUserInitializer implements CommandLineRunner {
 
@@ -30,19 +28,15 @@ public class DefaultUserInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        log.info("Checking for default users...");
         if (userRepository.count() > 0) {
-            log.info("Users already exist, skipping default user creation");
             return;
         }
-        log.info("No users found, creating default users");
         createDeveloperUser();
 //        createAdminUser();
 //        createStaffUser();
 //        createTeacherUser();
 //        createStudentUser();
 //        createMultiRoleUser();
-        log.info("Default users created successfully");
     }
 
     private void createDeveloperUser() {
@@ -57,7 +51,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         developer.setRoles(Collections.singletonList(devRole));
 
         userRepository.save(developer);
-        log.info("Created developer user: developer@ksit.com");
     }
 
     private void createAdminUser() {
@@ -72,7 +65,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         admin.setRoles(Collections.singletonList(adminRole));
 
         userRepository.save(admin);
-        log.info("Created admin user: admin@ksit.com");
     }
 
     private void createStaffUser() {
@@ -87,7 +79,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         staff.setRoles(Collections.singletonList(staffRole));
 
         userRepository.save(staff);
-        log.info("Created staff user: staff@ksit.com");
     }
 
     private void createTeacherUser() {
@@ -102,7 +93,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         teacher.setRoles(Collections.singletonList(teacherRole));
 
         userRepository.save(teacher);
-        log.info("Created teacher user: teacher@ksit.com");
     }
 
     private void createStudentUser() {
@@ -117,7 +107,6 @@ public class DefaultUserInitializer implements CommandLineRunner {
         student.setRoles(Collections.singletonList(studentRole));
 
         userRepository.save(student);
-        log.info("Created student user: student@ksit.com");
     }
 
     private void createMultiRoleUser() {
@@ -134,6 +123,5 @@ public class DefaultUserInitializer implements CommandLineRunner {
         headTeacher.setRoles(Arrays.asList(staffRole, adminRole));
 
         userRepository.save(headTeacher);
-        log.info("Created multi-role user: headteacher@ksit.com");
     }
 }

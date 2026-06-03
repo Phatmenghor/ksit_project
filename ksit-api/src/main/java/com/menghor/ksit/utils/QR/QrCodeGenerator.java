@@ -9,7 +9,6 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 
-
 @Component
 @Slf4j
 public class QrCodeGenerator {

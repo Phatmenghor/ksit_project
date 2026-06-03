@@ -36,7 +36,6 @@ public class SurveyProgressServiceImpl implements SurveyProgressService {
 
     @Override
     public ScheduleStudentsProgressDto getScheduleStudentsProgress(Long scheduleId) {
-        log.info("Getting students survey progress for schedule ID: {}", scheduleId);
 
         // Get schedule with necessary information
         ScheduleEntity schedule = scheduleRepository.findById(scheduleId)
@@ -72,9 +71,6 @@ public class SurveyProgressServiceImpl implements SurveyProgressService {
 
         // Calculate and set statistics
         calculateAndSetStatistics(progressDto, studentDtos);
-
-        log.info("Students survey progress retrieved for schedule {}: {}/{} students completed",
-                scheduleId, progressDto.getCompletedSurveys(), progressDto.getTotalStudents());
 
         return progressDto;
     }

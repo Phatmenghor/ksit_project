@@ -6,7 +6,6 @@ import com.menghor.ksit.feature.setting.dto.response.ImageResponse;
 
 import java.util.UUID;
 
-
 public interface ImageService {
 
     ImageDto uploadImage(ImageUploadRequest request);

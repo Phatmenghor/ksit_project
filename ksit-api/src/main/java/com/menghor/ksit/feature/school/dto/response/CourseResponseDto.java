@@ -30,4 +30,3 @@ public class CourseResponseDto {
     private LocalDateTime createdAt;
 }
 
-

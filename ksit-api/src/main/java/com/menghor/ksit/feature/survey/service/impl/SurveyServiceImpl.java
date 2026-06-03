@@ -54,16 +54,13 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Override
     public SurveyResponseDto getMainSurvey() {
-        log.info("Fetching main survey for admin view");
         SurveyEntity mainSurvey = getMainSurveyEntity();
-        log.info("Main survey fetched successfully with ID: {}", mainSurvey.getId());
         return surveyMapper.toResponseDto(mainSurvey);
     }
 
     @Override
     @Transactional
     public SurveyResponseDto updateMainSurvey(SurveyUpdateDto updateDto) {
-        log.info("Updating main survey with soft delete logic");
 
         SurveyEntity mainSurvey = getMainSurveyEntity();
 
@@ -75,7 +72,6 @@ public class SurveyServiceImpl implements SurveyService {
         }
 
         SurveyEntity savedSurvey = surveyRepository.save(mainSurvey);
-        log.info("Main survey updated successfully with ID: {}", savedSurvey.getId());
 
         return surveyMapper.toResponseDto(savedSurvey);
     }
@@ -83,14 +79,12 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     @Transactional
     public SurveyResponseDto deleteSurveySectionAndGetUpdatedSurvey(Long sectionId) {
-        log.info("Deleting survey section with ID: {} and returning updated survey", sectionId);
 
         // Perform the deletion using existing method
         deleteSurveySection(sectionId);
 
         // Return the updated survey (this will automatically filter out deleted items)
         SurveyResponseDto updatedSurvey = getMainSurvey();
-        log.info("Survey section deleted and updated survey returned for section ID: {}", sectionId);
 
         return updatedSurvey;
     }
@@ -98,21 +92,18 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     @Transactional
     public SurveyResponseDto deleteSurveyQuestionAndGetUpdatedSurvey(Long questionId) {
-        log.info("Deleting survey question with ID: {} and returning updated survey", questionId);
 
         // Perform the deletion using existing method
         deleteSurveyQuestion(questionId);
 
         // Return the updated survey (this will automatically filter out deleted items)
         SurveyResponseDto updatedSurvey = getMainSurvey();
-        log.info("Survey question deleted and updated survey returned for question ID: {}", questionId);
 
         return updatedSurvey;
     }
 
     @Transactional
     private void deleteSurveySection(Long sectionId) {
-        log.info("Deleting survey section with ID: {}", sectionId);
 
         SurveySectionEntity section = surveySectionRepository.findById(sectionId)
                 .orElseThrow(() -> new NotFoundException("Survey section not found with ID: " + sectionId));
@@ -140,12 +131,10 @@ public class SurveyServiceImpl implements SurveyService {
         }
 
         surveySectionRepository.save(section);
-        log.info("Survey section deleted successfully with ID: {}", sectionId);
     }
 
     @Transactional
     private void deleteSurveyQuestion(Long questionId) {
-        log.info("Deleting survey question with ID: {}", questionId);
 
         SurveyQuestionEntity question = surveyQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new NotFoundException("Survey question not found with ID: " + questionId));
@@ -164,7 +153,6 @@ public class SurveyServiceImpl implements SurveyService {
         question.setStatus(StatusSurvey.DELETED);
         surveyQuestionRepository.save(question);
 
-        log.info("Survey question deleted successfully with ID: {}", questionId);
     }
 
     @Transactional
@@ -273,7 +261,6 @@ public class SurveyServiceImpl implements SurveyService {
                     !sectionsToKeep.contains(existingSection.getId()) &&
                     existingSection.getStatus() == StatusSurvey.ACTIVE) {
 
-                log.info("Soft deleting section with ID: {}", existingSection.getId());
                 existingSection.setStatus(StatusSurvey.DELETED);
 
                 // Also soft delete all questions in this section
@@ -288,7 +275,6 @@ public class SurveyServiceImpl implements SurveyService {
                     !questionsToKeep.contains(existingQuestion.getId()) &&
                     existingQuestion.getStatus() == StatusSurvey.ACTIVE) {
 
-                log.info("Soft deleting question with ID: {}", existingQuestion.getId());
                 existingQuestion.setStatus(StatusSurvey.DELETED);
             }
         }
@@ -306,7 +292,6 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     @Transactional
     public StudentSurveyResponseDto submitSurveyResponseForSchedule(Long scheduleId, SurveyResponseSubmitDto submitDto) {
-        log.info("Submitting survey response for schedule ID: {}", scheduleId);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
         SurveyEntity mainSurvey = getMainSurveyEntity();
@@ -410,7 +395,6 @@ public class SurveyServiceImpl implements SurveyService {
             if (existingSurvey.isEmpty()) {
                 SurveyEntity defaultSurvey = createDefaultSurvey();
                 surveyRepository.save(defaultSurvey);
-                log.info("Default survey created successfully on application startup");
             }
         } catch (Exception e) {
             log.error("Error during survey initialization: {}", e.getMessage());

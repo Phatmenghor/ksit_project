@@ -37,7 +37,6 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public List<UserMenuResponseDto> getAllMenusWithPermissions(Long userId) {
-        log.info("Fetching ALL menus with permission status for user ID: {}", userId);
 
         UserEntity user = getUserById(userId);
 
@@ -58,7 +57,6 @@ public class MenuServiceImpl implements MenuService {
         // Build hierarchical structure
         List<UserMenuResponseDto> hierarchicalResult = buildUserMenuHierarchy(result);
 
-        log.info("Retrieved {} menus with permissions for user: {}", hierarchicalResult.size(), userId);
         return hierarchicalResult;
     }
 
@@ -73,12 +71,8 @@ public class MenuServiceImpl implements MenuService {
                 .findByUserIdAndStatus(user.getId(), Status.ACTIVE);
 
         if (!existingPermissions.isEmpty()) {
-            log.debug("User {} already has menu permissions", user.getId());
             return;
         }
-
-        log.info("Initializing ALL menu permissions for user ID: {} with roles: {}",
-                user.getId(), user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
 
         // Get ALL active menus
         List<MenuItemEntity> allMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
@@ -109,9 +103,6 @@ public class MenuServiceImpl implements MenuService {
         // Save all user permissions
         menuPermissionRepository.saveAll(userPermissions);
 
-        log.info("Created {} menu permissions for user: {} (with {} viewable)",
-                userPermissions.size(), user.getId(),
-                userPermissions.stream().mapToInt(p -> p.getCanView() ? 1 : 0).sum());
     }
 
     /**
@@ -119,7 +110,6 @@ public class MenuServiceImpl implements MenuService {
      */
     @Transactional
     public void initializeMenuPermissionsForAllExistingUsers() {
-        log.info("Initializing menu permissions for all existing users...");
 
         List<UserEntity> allUsers = userRepository.findAll();
         int processedUsers = 0;
@@ -133,21 +123,16 @@ public class MenuServiceImpl implements MenuService {
             }
         }
 
-        log.info("Processed {} existing users for menu permission initialization", processedUsers);
     }
 
     @Transactional
     public void updateAllUsersToNewPermissions() {
-        log.info("🔄 UPDATING ALL USERS TO NEW PERMISSION SYSTEM...");
 
         List<UserEntity> allUsers = userRepository.findAll();
         int updatedUsersCount = 0;
 
         for (UserEntity user : allUsers) {
             try {
-                log.info("Updating permissions for user: {} (ID: {}) with roles: {}",
-                        user.getUsername(), user.getId(),
-                        user.getRoles().stream().map(Role::getName).collect(Collectors.toList()));
 
                 // Delete all existing user permissions
                 List<MenuPermissionEntity> existingPermissions = menuPermissionRepository
@@ -159,7 +144,6 @@ public class MenuServiceImpl implements MenuService {
 
                 if (!existingPermissions.isEmpty()) {
                     menuPermissionRepository.saveAll(existingPermissions);
-                    log.info("Deleted {} old permissions for user: {}", existingPermissions.size(), user.getUsername());
                 }
 
                 // Re-initialize with new permission logic
@@ -171,7 +155,6 @@ public class MenuServiceImpl implements MenuService {
             }
         }
 
-        log.info("✅ PERMISSION UPDATE COMPLETE: Updated {} users successfully", updatedUsersCount);
     }
 
     @Transactional
@@ -205,9 +188,6 @@ public class MenuServiceImpl implements MenuService {
         // Save all user permissions
         menuPermissionRepository.saveAll(userPermissions);
 
-        log.info("✅ Created {} NEW permissions for user: {} (with {} viewable)",
-                userPermissions.size(), user.getUsername(),
-                userPermissions.stream().mapToInt(p -> p.getCanView() ? 1 : 0).sum());
     }
 
     /**
@@ -215,7 +195,6 @@ public class MenuServiceImpl implements MenuService {
      */
     @Transactional
     public void initializeMenuPermissionsForNewUser(Long userId) {
-        log.info("Auto-initializing menu permissions for new user ID: {}", userId);
 
         UserEntity user = getUserById(userId);
         initializeUserPermissionsIfNeeded(user);
@@ -224,7 +203,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public List<UserMenuResponseDto> refreshUserMenuPermissionsAfterRoleChange(Long userId) {
-        log.info("Refreshing menu permissions for user {} after role change", userId);
 
         UserEntity user = getUserById(userId);
 
@@ -244,20 +222,17 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public List<MenuItemResponseDto> getAllMenuItems() {
-        log.info("Fetching all menu items structure");
 
         List<MenuItemEntity> allMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
         List<MenuItemResponseDto> menuDtos = menuMapper.toMenuItemResponseList(allMenus);
 
         List<MenuItemResponseDto> result = buildMenuHierarchy(menuDtos);
 
-        log.info("Retrieved {} top-level menu items", result.size());
         return result;
     }
 
     @Override
     public List<UserMenuResponseDto> getMenusByRole(RoleEnum role) {
-        log.info("Fetching menus for role: {}", role);
 
         List<MenuItemEntity> allMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
 
@@ -278,7 +253,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public List<UserMenuResponseDto> updateUserMenuPermissions(Long userId, UserMenuUpdateDto updateDto) {
-        log.info("Updating menu permissions for user ID: {}", userId);
 
         UserEntity user = getUserById(userId);
 
@@ -295,8 +269,6 @@ public class MenuServiceImpl implements MenuService {
                 MenuPermissionEntity permission = existingPermissionOpt.get();
                 permission.setCanView(permissionDto.getCanView() != null ? permissionDto.getCanView() : false);
                 menuPermissionRepository.save(permission);
-                log.debug("Updated permission for user {} menu {}: canView={}",
-                        userId, menuItem.getCode(), permission.getCanView());
             } else {
                 // This shouldn't happen if user was properly initialized, but create if missing
                 MenuPermissionEntity permission = new MenuPermissionEntity();
@@ -308,31 +280,24 @@ public class MenuServiceImpl implements MenuService {
                 permission.setRole(null);
 
                 menuPermissionRepository.save(permission);
-                log.debug("Created new permission for user {} menu {}: canView={}",
-                        userId, menuItem.getCode(), permission.getCanView());
             }
         }
 
-        log.info("Updated {} menu permissions for user: {}", updateDto.getMenuPermissions().size(), userId);
         return getAllMenusWithPermissions(userId);
     }
 
     @Override
     public List<UserMenuResponseDto> getUserViewableMenus(Long userId) {
-        log.info("Fetching viewable menus for user ID: {}", userId);
 
         List<UserMenuResponseDto> allMenusWithPermissions = getAllMenusWithPermissions(userId);
         List<UserMenuResponseDto> viewableMenus = filterViewableMenus(allMenusWithPermissions);
 
-        log.info("User {} has {} viewable menus out of {} total",
-                userId, viewableMenus.size(), allMenusWithPermissions.size());
         return viewableMenus;
     }
 
     @Override
     @Transactional
     public List<UserMenuResponseDto> resetUserMenusToDefault(Long userId) {
-        log.info("Resetting user menu permissions to defaults for user ID: {}", userId);
 
         UserEntity user = getUserById(userId);
 
@@ -345,7 +310,6 @@ public class MenuServiceImpl implements MenuService {
         // Re-initialize with role-based defaults
         initializeUserPermissionsIfNeeded(user);
 
-        log.info("Reset {} custom menu permissions for user: {}", userPermissions.size(), userId);
         return getAllMenusWithPermissions(userId);
     }
 
@@ -454,7 +418,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public MenuItemResponseDto createMenuItem(MenuCreateDto createDto) {
-        log.info("Creating new menu item with code: {}", createDto.getCode());
 
         // Check if menu code already exists
         if (menuItemRepository.existsByCodeAndStatus(createDto.getCode(), Status.ACTIVE)) {
@@ -491,14 +454,12 @@ public class MenuServiceImpl implements MenuService {
         // Initialize permissions for all existing users
         initializeNewMenuForAllUsers(savedMenu);
 
-        log.info("Created new menu item: {} with ID: {}", createDto.getCode(), savedMenu.getId());
         return menuMapper.toMenuItemResponse(savedMenu);
     }
 
     @Override
     @Transactional
     public MenuItemResponseDto updateMenuItem(Long menuId, MenuUpdateDto updateDto) {
-        log.info("Updating menu item with ID: {}", menuId);
 
         MenuItemEntity menuItem = getMenuItemById(menuId);
 
@@ -516,7 +477,6 @@ public class MenuServiceImpl implements MenuService {
         }
 
         MenuItemEntity updatedMenu = menuItemRepository.save(menuItem);
-        log.info("Updated menu item: {}", menuItem.getCode());
 
         return menuMapper.toMenuItemResponse(updatedMenu);
     }
@@ -524,7 +484,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public MenuItemResponseDto deleteMenuItem(Long menuId) {
-        log.info("Soft deleting menu item with ID: {}", menuId);
 
         MenuItemEntity menuItem = getMenuItemById(menuId);
         menuItem.setStatus(Status.DELETED);
@@ -546,14 +505,12 @@ public class MenuServiceImpl implements MenuService {
             handleDeletedMenuPermissions(child.getId());
         }
 
-        log.info("Soft deleted menu item: {} and {} children", menuItem.getCode(), children.size());
         return menuMapper.toMenuItemResponse(menuItem);
     }
 
     @Override
     @Transactional
     public List<MenuItemResponseDto> reorderMenuItems(MenuBatchReorderDto reorderDto) {
-        log.info("Reordering {} menu items", reorderDto.getMenuReorders().size());
 
         for (var reorder : reorderDto.getMenuReorders()) {
             MenuItemEntity menuItem = getMenuItemById(reorder.getMenuId());
@@ -561,14 +518,12 @@ public class MenuServiceImpl implements MenuService {
             menuItemRepository.save(menuItem);
         }
 
-        log.info("Successfully reordered menu items");
         return getAllMenuItems();
     }
 
     @Override
     @Transactional
     public MenuItemResponseDto moveMenuItem(Long menuId, Integer newPosition, Long newParentId) {
-        log.info("Moving menu item {} to position {} under parent {}", menuId, newPosition, newParentId);
 
         MenuItemEntity menuItem = getMenuItemById(menuId);
 
@@ -584,7 +539,6 @@ public class MenuServiceImpl implements MenuService {
         }
 
         MenuItemEntity savedMenu = menuItemRepository.save(menuItem);
-        log.info("Moved menu item: {}", menuItem.getCode());
 
         return menuMapper.toMenuItemResponse(savedMenu);
     }
@@ -592,7 +546,6 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public void cleanupDeletedMenuPermissions() {
-        log.info("Cleaning up permissions for deleted menus");
 
         // This method can be called periodically to clean up permissions
         // for menus that have been soft deleted
@@ -611,7 +564,6 @@ public class MenuServiceImpl implements MenuService {
             }
         }
 
-        log.info("Cleaned up permissions for {} deleted menus", deletedMenus.size());
     }
 
     // ===== HELPER METHODS FOR NEW FUNCTIONALITY =====
@@ -621,7 +573,6 @@ public class MenuServiceImpl implements MenuService {
      */
     @Transactional
     public void initializeNewMenuForAllUsers(MenuItemEntity newMenu) {
-        log.info("Initializing permissions for new menu '{}' for all users", newMenu.getCode());
 
         List<UserEntity> allUsers = userRepository.findAll();
         List<MenuPermissionEntity> newPermissions = new ArrayList<>();
@@ -646,7 +597,6 @@ public class MenuServiceImpl implements MenuService {
         }
 
         menuPermissionRepository.saveAll(newPermissions);
-        log.info("Created {} permissions for new menu '{}'", newPermissions.size(), newMenu.getCode());
     }
 
     /**
@@ -654,7 +604,6 @@ public class MenuServiceImpl implements MenuService {
      */
     @Transactional
     public void handleDeletedMenuPermissions(Long menuId) {
-        log.info("Handling permissions for deleted menu ID: {}", menuId);
 
         List<MenuPermissionEntity> permissions = menuPermissionRepository
                 .findByMenuItemIdAndStatus(menuId, Status.ACTIVE);
@@ -665,7 +614,6 @@ public class MenuServiceImpl implements MenuService {
 
         if (!permissions.isEmpty()) {
             menuPermissionRepository.saveAll(permissions);
-            log.info("Soft deleted {} permissions for menu ID: {}", permissions.size(), menuId);
         }
     }
 }

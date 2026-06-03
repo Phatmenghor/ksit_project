@@ -34,4 +34,3 @@ public class StudentStudiesHistoryEntity extends BaseEntity {
     private UserEntity user;
 }
 
-

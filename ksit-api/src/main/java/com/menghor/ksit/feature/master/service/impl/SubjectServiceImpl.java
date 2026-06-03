@@ -32,7 +32,6 @@ public class SubjectServiceImpl implements SubjectService {
     @Override
     @Transactional
     public SubjectResponseDto createSubject(SubjectRequestDto subjectRequest) {
-        log.info("Creating new subject with name: {}", subjectRequest.getName());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = subjectRequest.getStatus() != null ?
@@ -59,25 +58,21 @@ public class SubjectServiceImpl implements SubjectService {
         }
 
         SubjectEntity savedSubject = subjectRepository.save(subject);
-        log.info("Subject created successfully with ID: {}", savedSubject.getId());
 
         return subjectMapper.toResponseDto(savedSubject);
     }
 
     @Override
     public SubjectResponseDto getSubjectById(Long id) {
-        log.info("Fetching subject by ID: {}", id);
 
         SubjectEntity subject = findSubjectById(id);
 
-        log.info("Retrieved subject with ID: {}", id);
         return subjectMapper.toResponseDto(subject);
     }
 
     @Override
     @Transactional
     public SubjectResponseDto updateSubjectById(SubjectRequestDto subjectRequestDto, Long id) {
-        log.info("Updating subject with ID: {}", id);
 
         // Find the existing entity
         SubjectEntity existingSubject = findSubjectById(id);
@@ -119,7 +114,6 @@ public class SubjectServiceImpl implements SubjectService {
 
         // Save the updated entity
         SubjectEntity updatedSubject = subjectRepository.save(existingSubject);
-        log.info("Subject updated successfully with ID: {}", id);
 
         return subjectMapper.toResponseDto(updatedSubject);
     }
@@ -127,20 +121,17 @@ public class SubjectServiceImpl implements SubjectService {
     @Override
     @Transactional
     public SubjectResponseDto deleteSubjectById(Long id) {
-        log.info("Deleting subject with ID: {}", id);
 
         SubjectEntity subject = findSubjectById(id);
         subject.setStatus(Status.DELETED);
 
         subject = subjectRepository.save(subject);
-        log.info("Subject deleted successfully with ID: {}", id);
 
         return subjectMapper.toResponseDto(subject);
     }
 
     @Override
     public CustomPaginationResponseDto<SubjectResponseDto> getAllSubjects(SubjectFilterDto filterDto) {
-        log.info("Fetching all subjects with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -162,7 +153,6 @@ public class SubjectServiceImpl implements SubjectService {
         // Apply status correction for any null statuses
         subjectPage.getContent().forEach(subject -> {
             if (subject.getStatus() == null) {
-                log.debug("Correcting null status to ACTIVE for subject ID: {}", subject.getId());
                 subject.setStatus(Status.ACTIVE);
                 subjectRepository.save(subject);
             }
@@ -170,10 +160,6 @@ public class SubjectServiceImpl implements SubjectService {
 
         // Map to response DTO
         CustomPaginationResponseDto<SubjectResponseDto> response = subjectMapper.toSubjectAllResponseDto(subjectPage);
-        log.info("Retrieved {} subjects (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }

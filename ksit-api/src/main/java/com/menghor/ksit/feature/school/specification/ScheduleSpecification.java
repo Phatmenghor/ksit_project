@@ -166,7 +166,6 @@ public class ScheduleSpecification {
                     return criteriaBuilder.equal(criteriaBuilder.literal(1), 0);
                 }
 
-                log.info("Filtering schedules by student ID: {} (class ID: {})", studentId, student.getClasses().getId());
                 return criteriaBuilder.equal(root.get("classes").get("id"), student.getClasses().getId());
             } catch (Exception e) {
                 log.error("Error filtering by student ID: {}", studentId, e);

@@ -30,7 +30,6 @@ public class AttendanceScoreServiceImpl implements AttendanceScoreService {
     private final ScheduleRepository scheduleRepository;
     private final SemesterRepository semesterRepository;
 
-
     @Override
     public List<AttendanceScoreDto> calculateForClass(Long classId, Long scheduleId) {
         return calculateClassScores(classId, scheduleId);

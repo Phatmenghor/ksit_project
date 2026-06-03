@@ -71,17 +71,14 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentUserResponseDto registerStudent(StudentCreateRequestDto requestDto) {
-        log.info("Registering new student with email: {}", requestDto.getEmail());
 
         // Generate student identifier based on class code
         String identifyNumber = identifierGenerator.generateStudentIdentifier(requestDto.getClassId());
-        log.info("Generated identifyNumber: {}", identifyNumber);
 
         // Set username to identifyNumber if not provided
         String username = requestDto.getUsername();
         if (username == null || username.isEmpty()) {
             username = identifyNumber;
-            log.info("Using identifyNumber as username: {}", username);
         }
 
         // Check if username already exists
@@ -106,7 +103,6 @@ public class StudentServiceImpl implements StudentService {
 
         try {
             menuService.initializeMenuPermissionsForNewUser(savedStudent.getId());
-            log.info("Menu permissions initialized for new student user: {}", savedStudent.getId());
         } catch (Exception e) {
             log.error("Failed to initialize menu permissions for student user {}: {}", savedStudent.getId(), e.getMessage());
         }
@@ -116,8 +112,6 @@ public class StudentServiceImpl implements StudentService {
 
         // Use eager loading to fetch the student with all relationships
         UserEntity refreshedStudent = loadStudentWithAllRelationships(savedStudent.getId());
-        log.info("Student registered successfully with ID: {}, username: {}, identifyNumber: {}",
-                refreshedStudent.getId(), refreshedStudent.getUsername(), refreshedStudent.getIdentifyNumber());
 
         return studentMapper.toStudentUserDto(refreshedStudent);
     }
@@ -125,7 +119,6 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public List<StudentResponseDto> batchRegisterStudents(StudentBatchCreateRequestDto batchRequest) {
-        log.info("Batch registering {} students for class ID: {}", batchRequest.getQuantity(), batchRequest.getClassId());
 
         // Check if class exists
         ClassEntity classEntity = classRepository.findById(batchRequest.getClassId())
@@ -170,13 +163,8 @@ public class StudentServiceImpl implements StudentService {
                         // Save student
                         UserEntity savedStudent = userRepository.save(student);
 
-                        log.info("Batch created student #{} with ID: {}, username: {}, identifyNumber: {}",
-                                (i + 1), savedStudent.getId(), savedStudent.getUsername(),
-                                savedStudent.getIdentifyNumber());
-
                         try {
                             menuService.initializeMenuPermissionsForNewUser(savedStudent.getId());
-                            log.debug("Menu permissions initialized for batch student #{}: {}", (i + 1), savedStudent.getId());
                         } catch (Exception e) {
                             log.error("Failed to initialize menu permissions for batch student #{}: {}", (i + 1), e.getMessage());
                         }
@@ -192,7 +180,6 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentUserAllResponseDto getAllStudentUsers(StudentUserFilterRequestDto filterDto) {
-        log.info("Searching student users with filter: {}", filterDto);
 
         // Validate pagination parameters
         PaginationUtils.validatePagination(filterDto.getPageNo(), filterDto.getPageSize());
@@ -220,7 +207,6 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public List<StudentUserListResponseDto> getAllStudentListUsers(StudentUserFilterRequestDto filterDto) {
-        log.info("Searching student users with filter: {}", filterDto);
 
         Sort sort = Sort.by(Sort.Direction.ASC, "identifyNumber");
 
@@ -233,10 +219,8 @@ public class StudentServiceImpl implements StudentService {
         return studentMapper.toStudentUserDtoList(userPage);
     }
 
-
     @Override
     public StudentUserResponseDto getStudentUserById(Long id) {
-        log.info("Fetching student user with ID: {}", id);
 
         // Use eager loading for single user fetch
         UserEntity user = loadStudentWithAllRelationships(id);
@@ -246,7 +230,6 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentUserResponseDto updateStudentUser(Long id, StudentUpdateRequestDto updateDto) {
-        log.info("=== Starting student user update for ID: {} ===", id);
 
         UserEntity student = userRepository.findById(id)
                 .orElseThrow(() -> {
@@ -260,31 +243,25 @@ public class StudentServiceImpl implements StudentService {
         }
 
         // Step 1: Update basic fields
-        log.info("Step 1: Updating basic fields for student ID: {}", id);
         updateStudentBasicFields(student, updateDto);
 
         // Step 2: Save basic changes first
-        log.info("Step 2: Saving basic field changes for student ID: {}", id);
         UserEntity savedStudent = userRepository.save(student);
         userRepository.flush(); // Force flush to database
 
         // Step 3: Handle relationship updates
-        log.info("Step 3: Handling relationship updates for student ID: {}", id);
         handleStudentRelationshipUpdates(savedStudent, updateDto);
 
         // Step 4: Clear entity manager and load final result with all relationships
-        log.info("Step 4: Loading final entity with all updated relationships");
         entityManager.clear(); // Ensure fresh data
         UserEntity finalStudent = loadStudentWithAllRelationships(savedStudent.getId());
 
-        log.info("=== Student user update completed successfully for ID: {} ===", id);
         return studentMapper.toStudentUserDto(finalStudent);
     }
 
     @Override
     @Transactional
     public StudentUserResponseDto deleteStudentUser(Long id) {
-        log.info("Deleting/deactivating student user with ID: {}", id);
 
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> {
@@ -297,7 +274,6 @@ public class StudentServiceImpl implements StudentService {
         user.setStatus(Status.DELETED);
         UserEntity deactivatedUser = userRepository.save(user);
 
-        log.info("Student user with ID {} deactivated successfully", id);
         return studentMapper.toStudentUserDto(deactivatedUser);
     }
 
@@ -309,7 +285,6 @@ public class StudentServiceImpl implements StudentService {
      * FIXED: Load student user with all relationships eagerly to avoid lazy loading issues
      */
     private UserEntity loadStudentWithAllRelationships(Long studentId) {
-        log.debug("Loading student with all relationships for ID: {}", studentId);
         
         try {
             // First, load the user with basic relationships (non-collections)
@@ -329,10 +304,6 @@ public class StudentServiceImpl implements StudentService {
             loadStudentParents(user);
             loadStudentSiblings(user);
             
-            log.debug("Successfully loaded student with {} studies history, {} parents, {} siblings", 
-                    user.getStudentStudiesHistory().size(),
-                    user.getStudentParent().size(), 
-                    user.getStudentSibling().size());
             
             return user;
         } catch (Exception e) {
@@ -375,11 +346,9 @@ public class StudentServiceImpl implements StudentService {
      * FIXED: Handle student relationship updates with better transaction management
      */
     private void handleStudentRelationshipUpdates(UserEntity student, StudentUpdateRequestDto updateDto) {
-        log.info("=== Starting relationship updates for student ID: {} ===", student.getId());
 
         try {
             // Handle StudentStudiesHistory
-            log.info("Updating StudentStudiesHistory relationships");
             relationshipUpdateHandler.updateRelationshipsSimple(
                     student.getStudentStudiesHistory(), // This will be ignored in favor of DB lookup
                     updateDto.getStudentStudiesHistories(),
@@ -392,7 +361,6 @@ public class StudentServiceImpl implements StudentService {
             );
 
             // Handle StudentParent
-            log.info("Updating StudentParent relationships");
             relationshipUpdateHandler.updateRelationshipsSimple(
                     student.getStudentParent(),
                     updateDto.getStudentParents(),
@@ -405,7 +373,6 @@ public class StudentServiceImpl implements StudentService {
             );
 
             // Handle StudentSibling
-            log.info("Updating StudentSibling relationships");
             relationshipUpdateHandler.updateRelationshipsSimple(
                     student.getStudentSibling(),
                     updateDto.getStudentSiblings(),
@@ -416,8 +383,6 @@ public class StudentServiceImpl implements StudentService {
                     "StudentSibling",
                     StudentSiblingDto::getId
             );
-
-            log.info("=== All student relationship updates completed successfully ===");
 
         } catch (Exception e) {
             log.error("Error during relationship updates for student ID {}: {}", student.getId(), e.getMessage(), e);
@@ -473,11 +438,9 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private void createInitialStudentRelationships(UserEntity savedStudent, StudentCreateRequestDto requestDto) {
-        log.info("Creating initial relationships for student ID: {}", savedStudent.getId());
 
         // Handle student studies history
         if (requestDto.getStudentStudiesHistories() != null && !requestDto.getStudentStudiesHistories().isEmpty()) {
-            log.debug("Creating {} studies history entries", requestDto.getStudentStudiesHistories().size());
             for (StudentStudiesHistoryDto dto : requestDto.getStudentStudiesHistories()) {
                 StudentStudiesHistoryEntity entity = createStudentStudiesHistoryEntity(dto, savedStudent);
                 studentStudiesHistoryRepository.save(entity);
@@ -486,7 +449,6 @@ public class StudentServiceImpl implements StudentService {
 
         // Handle student parent information
         if (requestDto.getStudentParents() != null && !requestDto.getStudentParents().isEmpty()) {
-            log.debug("Creating {} parent entries", requestDto.getStudentParents().size());
             for (StudentParentDto dto : requestDto.getStudentParents()) {
                 StudentParentEntity entity = createStudentParentEntity(dto, savedStudent);
                 studentParentRepository.save(entity);
@@ -495,7 +457,6 @@ public class StudentServiceImpl implements StudentService {
 
         // Handle student siblings
         if (requestDto.getStudentSiblings() != null && !requestDto.getStudentSiblings().isEmpty()) {
-            log.debug("Creating {} sibling entries", requestDto.getStudentSiblings().size());
             for (StudentSiblingDto dto : requestDto.getStudentSiblings()) {
                 StudentSiblingEntity entity = createStudentSiblingEntity(dto, savedStudent);
                 studentSiblingRepository.save(entity);
@@ -504,7 +465,6 @@ public class StudentServiceImpl implements StudentService {
 
         // Force flush to ensure all relationships are persisted
         entityManager.flush();
-        log.info("Initial relationships created successfully for student ID: {}", savedStudent.getId());
     }
 
     private void updateStudentBasicFields(UserEntity student, StudentUpdateRequestDto updateDto) {

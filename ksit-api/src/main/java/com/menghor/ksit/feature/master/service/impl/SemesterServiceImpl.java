@@ -37,9 +37,6 @@ public class SemesterServiceImpl implements SemesterService {
     @Override
     @Transactional
     public SemesterResponseDto createSemester(SemesterRequestDto semesterRequestDto) {
-        log.info("Creating new semester: {}, academyYear: {}, startDate: {}, endDate: {}",
-                semesterRequestDto.getSemester(), semesterRequestDto.getAcademyYear(),
-                semesterRequestDto.getStartDate(), semesterRequestDto.getEndDate());
 
         // Validate semester doesn't already exist
         validateSemesterCreation(semesterRequestDto);
@@ -52,25 +49,21 @@ public class SemesterServiceImpl implements SemesterService {
         }
 
         SemesterEntity savedSemester = semesterRepository.save(semester);
-        log.info("Semester created successfully with ID: {}", savedSemester.getId());
 
         return semesterMapper.toResponseDto(savedSemester);
     }
 
     @Override
     public SemesterResponseDto getSemesterById(Long id) {
-        log.info("Fetching semester by ID: {}", id);
 
         SemesterEntity semester = findSemesterById(id);
 
-        log.info("Retrieved semester with ID: {}", id);
         return semesterMapper.toResponseDto(semester);
     }
 
     @Override
     @Transactional
     public SemesterResponseDto updateSemesterById(Long id, SemesterUpdateDto semesterRequestDto) {
-        log.info("Updating semester with ID: {}", id);
 
         // Find the existing entity
         SemesterEntity existingSemester = findSemesterById(id);
@@ -83,7 +76,6 @@ public class SemesterServiceImpl implements SemesterService {
 
         // Save the updated entity
         SemesterEntity updatedSemester = semesterRepository.save(existingSemester);
-        log.info("Semester updated successfully with ID: {}", id);
 
         return semesterMapper.toResponseDto(updatedSemester);
     }
@@ -91,20 +83,17 @@ public class SemesterServiceImpl implements SemesterService {
     @Override
     @Transactional
     public SemesterResponseDto deleteSemesterById(Long id) {
-        log.info("Deleting semester with ID: {}", id);
 
         SemesterEntity semester = findSemesterById(id);
         semester.setStatus(Status.DELETED);
 
         semester = semesterRepository.save(semester);
-        log.info("SemesterEnum deleted successfully with ID: {}", id);
 
         return semesterMapper.toResponseDto(semester);
     }
 
     @Override
     public CustomPaginationResponseDto<SemesterResponseDto> getAllSemesters(SemesterFilterDto filterDto) {
-        log.info("Fetching all semesters with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -127,7 +116,6 @@ public class SemesterServiceImpl implements SemesterService {
         // Apply status correction for any null statuses
         semesterPage.getContent().forEach(semester -> {
             if (semester.getStatus() == null) {
-                log.debug("Correcting null status to ACTIVE for semester ID: {}", semester.getId());
                 semester.setStatus(Status.ACTIVE);
                 semesterRepository.save(semester);
             }
@@ -135,10 +123,6 @@ public class SemesterServiceImpl implements SemesterService {
 
         // Map to response DTO
         CustomPaginationResponseDto<SemesterResponseDto> response = semesterMapper.toSemesterAllResponseDto(semesterPage);
-        log.info("Retrieved {} semesters (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }
@@ -227,7 +211,6 @@ public class SemesterServiceImpl implements SemesterService {
             // This validation will be handled by the duplicate semester type check above
         }
     }
-
 
     /**
      * Helper method to find a semester by ID or throw NotFoundException

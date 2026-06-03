@@ -30,7 +30,6 @@ public interface SurveyReportService {
      */
     List<SurveyReportHeaderDto> getFilteredSurveyReportHeaders(SurveyReportHeaderFilterDto filterDto);
 
-
     // ===== NEW ACTIVE-ONLY REPORT METHODS (ONLY ACTIVE QUESTIONS) =====
 
     /**

@@ -25,6 +25,4 @@ public interface MajorService {
     List<MajorResponseDto> getAllListMajors(MajorFilterDto filterDto);
     List<MajorResponseDto> getAllMyListMajors(MajorFilterDto filterDto);
 
-
-
 }

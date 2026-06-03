@@ -28,7 +28,6 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     public StatisticsResponseDto getOverallStatistics() {
-        log.info("Fetching overall system statistics for active entities");
 
         try {
             // Count active rooms
@@ -61,9 +60,6 @@ public class StatisticsServiceImpl implements StatisticsService {
                     .totalMajors(totalMajors)
                     .totalDepartments(totalDepartments)
                     .build();
-
-            log.info("Statistics fetched successfully: Rooms={}, Students={}, Teachers={}, Courses={}, Classes={}, Majors={}, Departments={}",
-                    totalRooms, totalStudents, totalTeachers, totalCourses, totalClasses, totalMajors, totalDepartments);
 
             return statistics;
 

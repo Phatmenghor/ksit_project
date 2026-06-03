@@ -215,9 +215,6 @@ public class AttendanceMapper {
                 ));
             }
 
-            log.debug("Attendance score calculated for student {} in schedule {}: {}/{} sessions = {}%",
-                    studentId, scheduleId, sessionsPresent, totalFinalizedSessions, percentage);
-
         } catch (Exception e) {
             log.error("Error calculating attendance score info: {}", e.getMessage());
             // Set default values on error

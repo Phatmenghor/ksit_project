@@ -53,7 +53,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDto login(LoginRequestDto loginRequestDto) {
-        log.info("Attempting login for username: {}", loginRequestDto.getUsername());
 
         // Validate input
         if (!StringUtils.hasText(loginRequestDto.getUsername()) || !StringUtils.hasText(loginRequestDto.getPassword())) {
@@ -87,8 +86,6 @@ public class AuthServiceImpl implements AuthService {
             List<RoleEnum> roles = user.getRoles().stream()
                     .map(Role::getName)
                     .collect(Collectors.toList());
-
-            log.info("Login successful for username: {} with roles: {}", loginRequestDto.getUsername(), roles);
 
             // Use builder to create response with user information
             return AuthResponseDto.builder()
@@ -163,7 +160,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDto refreshToken(String refreshToken) {
-        log.info("Attempting token refresh");
 
         if (!StringUtils.hasText(refreshToken)) {
             throw new BadRequestException("Refresh token is required");
@@ -193,8 +189,6 @@ public class AuthServiceImpl implements AuthService {
             List<RoleEnum> roles = userEntity.getRoles().stream()
                     .map(Role::getName)
                     .collect(Collectors.toList());
-
-            log.info("Token refreshed successfully for user: {}", username);
 
             return AuthResponseDto.builder()
                     .accessToken(newToken)
@@ -239,7 +233,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public StaffUserResponseDto changePasswordStaff(ChangePasswordRequestDto requestDto) {
-        log.info("Changing password for staff user");
 
         validatePasswordChangeRequest(requestDto);
 
@@ -266,14 +259,12 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         UserEntity updatedUser = userRepository.save(user);
-        log.info("Password changed successfully for user ID: {}", user.getId());
 
         return staffMapper.toStaffUserDto(updatedUser);
     }
 
     @Override
     public StudentUserResponseDto changePasswordByAdmin(ChangePasswordByAdminRequestDto requestDto) {
-        log.info("Admin changing password for user ID: {}", requestDto.getId());
 
         validateAdminPasswordChangeRequest(requestDto);
 
@@ -298,7 +289,6 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         UserEntity updatedUser = userRepository.save(user);
-        log.info("Password changed successfully by admin for user ID: {}", requestDto.getId());
 
         return studentMapper.toStudentUserDto(updatedUser);
     }

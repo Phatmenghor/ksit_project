@@ -15,13 +15,11 @@ import com.menghor.ksit.feature.attendance.service.StudentScoreService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/score")
 @RequiredArgsConstructor
-@Slf4j
 public class ScoreController {
 
     private final ScoreSessionService scoreSessionService;
@@ -32,9 +30,7 @@ public class ScoreController {
     @PostMapping("/configuration")
     public ApiResponse<ScoreConfigurationResponseDto> createOrUpdateScoreConfiguration(
             @Valid @RequestBody ScoreConfigurationRequestDto requestDto) {
-        log.info("REST request to create/update score configuration: {}", requestDto);
         ScoreConfigurationResponseDto responseDto = scoreConfigurationService.createOrUpdateScoreConfiguration(requestDto);
-        log.info("Score configuration created/updated successfully");
         return new ApiResponse<>(
                 "success",
                 "Score configuration saved successfully",
@@ -44,9 +40,7 @@ public class ScoreController {
 
     @GetMapping("/configuration")
     public ApiResponse<ScoreConfigurationResponseDto> getScoreConfiguration() {
-        log.info("REST request to get score configuration");
         ScoreConfigurationResponseDto responseDto = scoreConfigurationService.getScoreConfiguration();
-        log.info("Score configuration retrieved successfully");
         return new ApiResponse<>(
                 "success",
                 "Score configuration retrieved successfully",
@@ -57,9 +51,7 @@ public class ScoreController {
     // Score Session Endpoints
     @PostMapping("/initialize")
     public ApiResponse<ScoreSessionResponseDto> initializeScoreSession(@Valid @RequestBody ScoreSessionRequestDto requestDto) {
-        log.info("REST request to initialize score session: {}", requestDto);
         ScoreSessionResponseDto responseDto = scoreSessionService.initializeScoreSession(requestDto);
-        log.info("Score session initialized successfully");
         return new ApiResponse<>(
                 "success",
                 "Score session initialized successfully",
@@ -69,9 +61,7 @@ public class ScoreController {
 
     @GetMapping("/session/{id}")
     public ApiResponse<ScoreSessionResponseDto> getScoreSessionById(@PathVariable Long id) {
-        log.info("REST request to get score session by ID: {}", id);
         ScoreSessionResponseDto responseDto = scoreSessionService.getScoreSessionById(id);
-        log.info("Score session retrieved successfully");
         return new ApiResponse<>(
                 "success",
                 "Score session retrieved successfully",
@@ -82,9 +72,7 @@ public class ScoreController {
     @PutMapping("/submission-update")
     public ApiResponse<ScoreSessionResponseDto> updateScoreSession(
             @Valid @RequestBody ScoreSessionUpdateDto updateDto) {
-        log.info("REST request to update score session: {}", updateDto);
         ScoreSessionResponseDto responseDto = scoreSessionService.updateScoreSession(updateDto);
-        log.info("Score session updated successfully");
         return new ApiResponse<>(
                 "success",
                 "Score session updated successfully",
@@ -95,10 +83,8 @@ public class ScoreController {
     @PostMapping("/all")
     public ApiResponse<CustomPaginationResponseDto<ScoreSessionResponseDto>> getAllScoreSessions(
             @Valid @RequestBody ScoreSessionFilterDto filterDto) {
-        log.info("REST request to get all score sessions with filter: {}", filterDto);
         CustomPaginationResponseDto<ScoreSessionResponseDto> response =
                 scoreSessionService.getAllScoreSessions(filterDto);
-        log.info("Score sessions retrieved successfully");
         return new ApiResponse<>(
                 "success",
                 "Score sessions retrieved successfully",
@@ -109,9 +95,7 @@ public class ScoreController {
     // Student Score Endpoints
     @GetMapping("/{id}")
     public ApiResponse<StudentScoreResponseDto> getStudentScoreById(@PathVariable Long id) {
-        log.info("REST request to get student score by ID: {}", id);
         StudentScoreResponseDto responseDto = studentScoreService.getStudentScoreById(id);
-        log.info("Student score retrieved successfully");
         return new ApiResponse<>(
                 "success",
                 "Student score retrieved successfully",
@@ -122,9 +106,7 @@ public class ScoreController {
     @PutMapping("/score-update")
     public ApiResponse<StudentScoreResponseDto> updateStudentScore(
             @Valid @RequestBody StudentScoreUpdateDto updateDto) {
-        log.info("REST request to update student score: {}", updateDto);
         StudentScoreResponseDto responseDto = studentScoreService.updateStudentScore(updateDto);
-        log.info("Student score updated successfully");
         return new ApiResponse<>(
                 "success",
                 "Student score updated successfully",

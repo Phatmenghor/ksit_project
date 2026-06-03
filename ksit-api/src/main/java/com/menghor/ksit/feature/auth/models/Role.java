@@ -1,6 +1,5 @@
 package com.menghor.ksit.feature.auth.models;
 
-
 import com.menghor.ksit.enumations.RoleEnum;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;

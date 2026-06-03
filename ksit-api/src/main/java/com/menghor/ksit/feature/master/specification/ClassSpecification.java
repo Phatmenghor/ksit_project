@@ -36,7 +36,6 @@ public class ClassSpecification {
         };
     }
 
-
     // Enhanced search that includes code, and optionally other fields
     public static Specification<ClassEntity> search(String searchTerm) {
         return (root, query, criteriaBuilder) -> {
@@ -49,7 +48,6 @@ public class ClassSpecification {
         };
     }
 
-
     public static Specification<ClassEntity> forUserRole(UserEntity user) {
         return (root, query, criteriaBuilder) -> {
             if (user == null) {
@@ -57,15 +55,10 @@ public class ClassSpecification {
                 return criteriaBuilder.disjunction();
             }
 
-            log.debug("Applying role-based filtering for user: {} with roles: {}",
-                    user.getUsername(),
-                    user.getRoles().stream().map(role -> role.getName().name()).toList());
-
             boolean hasAdminAccess = user.getRoles().stream()
                     .anyMatch(role -> role.getName() == RoleEnum.ADMIN || role.getName() == RoleEnum.DEVELOPER);
 
             if (hasAdminAccess) {
-                log.debug("User has admin access, returning all classes");
                 return criteriaBuilder.conjunction();
             }
 
@@ -78,7 +71,6 @@ public class ClassSpecification {
                     return criteriaBuilder.disjunction();
                 }
 
-                log.debug("User is staff/teacher, filtering by department ID: {}", user.getDepartment().getId());
                 Join<ClassEntity, MajorEntity> majorJoin = root.join("major", JoinType.INNER);
                 Join<MajorEntity, DepartmentEntity> departmentJoin = majorJoin.join("department", JoinType.INNER);
                 return criteriaBuilder.equal(departmentJoin.get("id"), user.getDepartment().getId());
@@ -93,7 +85,6 @@ public class ClassSpecification {
                     return criteriaBuilder.disjunction();
                 }
 
-                log.debug("User is student, filtering by class ID: {}", user.getClasses().getId());
                 return criteriaBuilder.equal(root.get("id"), user.getClasses().getId());
             }
 

@@ -40,8 +40,6 @@ public class MajorServiceImpl implements MajorService {
     @Override
     @Transactional
     public MajorResponseDto createMajor(MajorRequestDto majorRequestDto) {
-        log.info("Creating new major with code: {}, name: {}, departmentId: {}",
-                majorRequestDto.getCode(), majorRequestDto.getName(), majorRequestDto.getDepartmentId());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = majorRequestDto.getStatus() != null ?
@@ -74,25 +72,21 @@ public class MajorServiceImpl implements MajorService {
         }
 
         MajorEntity savedMajor = majorRepository.save(majorEntity);
-        log.info("Major created successfully with ID: {}", savedMajor.getId());
 
         return majorMapper.toResponseDto(savedMajor);
     }
 
     @Override
     public MajorResponseDto getMajorById(Long id) {
-        log.info("Fetching major by ID: {}", id);
 
         MajorEntity majorEntity = findMajorById(id);
 
-        log.info("Retrieved major with ID: {}", id);
         return majorMapper.toResponseDto(majorEntity);
     }
 
     @Override
     @Transactional
     public MajorResponseDto updateMajorById(Long id, MajorUpdateDto majorUpdateDto) {
-        log.info("Updating major with ID: {}", id);
 
         // Find the existing entity
         MajorEntity existingMajor = findMajorById(id);
@@ -140,7 +134,6 @@ public class MajorServiceImpl implements MajorService {
 
         // Save the updated entity
         MajorEntity updatedMajor = majorRepository.save(existingMajor);
-        log.info("Major updated successfully with ID: {}", id);
 
         return majorMapper.toResponseDto(updatedMajor);
     }
@@ -148,20 +141,17 @@ public class MajorServiceImpl implements MajorService {
     @Override
     @Transactional
     public MajorResponseDto deleteMajorById(Long id) {
-        log.info("Deleting major with ID: {}", id);
 
         MajorEntity majorEntity = findMajorById(id);
         majorEntity.setStatus(Status.DELETED);
 
         majorEntity = majorRepository.save(majorEntity);
-        log.info("Major deleted successfully with ID: {}", id);
 
         return majorMapper.toResponseDto(majorEntity);
     }
 
     @Override
     public CustomPaginationResponseDto<MajorResponseDto> getAllMajors(MajorFilterDto filterDto) {
-        log.info("Fetching all majors with filter: {}", filterDto);
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -184,7 +174,6 @@ public class MajorServiceImpl implements MajorService {
         // Apply status correction for any null statuses
         majorPage.getContent().forEach(major -> {
             if (major.getStatus() == null) {
-                log.debug("Correcting null status to ACTIVE for major ID: {}", major.getId());
                 major.setStatus(Status.ACTIVE);
                 majorRepository.save(major);
             }
@@ -192,21 +181,14 @@ public class MajorServiceImpl implements MajorService {
 
         // Map to response DTO
         CustomPaginationResponseDto<MajorResponseDto> response = majorMapper.toMajorAllResponseDto(majorPage);
-        log.info("Retrieved {} majors (page {}/{})",
-                response.getContent().size(),
-                response.getPageNo(),
-                response.getTotalPages());
 
         return response;
     }
 
     @Override
     public CustomPaginationResponseDto<MajorResponseDto> getMyMajors(MajorFilterDto filterDto) {
-        log.info("Fetching user-specific majors with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("Current user: {} with roles: {}", currentUser.getUsername(),
-                currentUser.getRoles().stream().map(role -> role.getName().name()).toList());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -229,15 +211,12 @@ public class MajorServiceImpl implements MajorService {
 
         // Map to response DTO
         CustomPaginationResponseDto<MajorResponseDto> response = majorMapper.toMajorAllResponseDto(majorPage);
-        log.info("User-specific majors retrieved successfully: {} majors (page {}/{})",
-                response.getContent().size(), response.getPageNo(), response.getTotalPages());
 
         return response;
     }
 
     @Override
     public List<MajorResponseDto> getAllListMajors(MajorFilterDto filterDto) {
-        log.info("Fetching user-specific majors with filter: {}", filterDto);
 
         // Use the enhanced specification with role-based filtering
         Specification<MajorEntity> spec = MajorSpecification.combineWithUserRole(
@@ -252,11 +231,8 @@ public class MajorServiceImpl implements MajorService {
 
     @Override
     public List<MajorResponseDto> getAllMyListMajors(MajorFilterDto filterDto) {
-        log.info("Fetching user-specific majors with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("Current user: {} with roles: {}", currentUser.getUsername(),
-                currentUser.getRoles().stream().map(role -> role.getName().name()).toList());
 
         // Use the enhanced specification with role-based filtering
         Specification<MajorEntity> spec = MajorSpecification.combineWithUserRole(

@@ -55,12 +55,9 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
     @Override
     @Transactional
     public AttendanceSessionDto generateAttendanceSession(AttendanceSessionRequest request) {
-        log.info("Generating attendance session for schedule ID: {}", request.getScheduleId());
 
         // Get current authenticated user
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("Current user attempting to generate session: {} (ID: {})",
-                currentUser.getUsername(), currentUser.getId());
 
         // Validate schedule exists
         ScheduleEntity schedule = scheduleRepository.findById(request.getScheduleId())
@@ -76,9 +73,6 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
                     "Only the assigned teacher can perform this action.");
         }
 
-        log.info("Authorization successful: User {} is the assigned teacher for schedule {}",
-                currentUser.getUsername(), request.getScheduleId());
-
         // Get current date/time
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
@@ -93,8 +87,6 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
         // If a draft session exists for today, return it (don't create a new one)
         if (draftSession.isPresent()) {
-            log.info("Draft attendance session already exists for today, returning existing session ID: {}",
-                    draftSession.get().getId());
             // Sorting will be handled by the mapper
             return attendanceMapper.toDto(draftSession.get());
         }
@@ -133,8 +125,6 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         // Save all attendance records
         attendanceRepository.saveAll(attendances);
 
-        log.info("Created new attendance session with ID: {} with {} students", savedSession.getId(), attendances.size());
-
         // ✅ FIX: Fetch the session fresh from database to include attendances
         AttendanceSessionEntity refreshedSession = sessionRepository.findById(savedSession.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Session not found after creation"));
@@ -142,7 +132,6 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         // The sorting will be handled automatically in the mapper
         return attendanceMapper.toDto(refreshedSession);
     }
-
 
     /**
      * Find all attendance sessions for a schedule on a specific date

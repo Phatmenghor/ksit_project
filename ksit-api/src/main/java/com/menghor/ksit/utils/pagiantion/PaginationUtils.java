@@ -1,7 +1,6 @@
 package com.menghor.ksit.utils.pagiantion;
 
 import com.menghor.ksit.exceptoins.error.InvalidPaginationException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -9,7 +8,6 @@ import org.springframework.data.domain.Sort;
 /**
  * Utility class for pagination-related operations
  */
-@Slf4j
 public class PaginationUtils {
 
     /**
@@ -55,9 +53,6 @@ public class PaginationUtils {
         // Convert to 0-based page number
         int zeroBasedPageNo = pageNo - 1;
 
-        log.debug("Creating pageable with page {} (zero-based: {}), size {}, sorted by createdAt DESC",
-                pageNo, zeroBasedPageNo, pageSize);
-
         // Create pageable with sorting by createdAt in descending order
         return PageRequest.of(zeroBasedPageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
     }
@@ -88,9 +83,6 @@ public class PaginationUtils {
         if (sortDirection != null && sortDirection.equalsIgnoreCase("ASC")) {
             direction = Sort.Direction.ASC;
         }
-
-        log.debug("Creating pageable with page {} (zero-based: {}), size {}, sorted by {} {}",
-                pageNo, zeroBasedPageNo, pageSize, sortBy, direction);
 
         return PageRequest.of(zeroBasedPageNo, pageSize, Sort.by(direction, sortBy));
     }

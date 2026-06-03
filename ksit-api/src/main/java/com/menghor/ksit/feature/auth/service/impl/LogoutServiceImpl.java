@@ -34,7 +34,6 @@ public class LogoutServiceImpl implements LogoutService {
     @Override
     @Transactional
     public void logout(String token) {
-        log.info("Initiating logout process");
 
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
@@ -60,7 +59,6 @@ public class LogoutServiceImpl implements LogoutService {
             blacklistedTokenRepository.save(blacklistedTokenEntity);
             SecurityContextHolder.clearContext();
 
-            log.info("Logout successful. Token blacklisted for user: {}", username);
         } catch (Exception e) {
             log.error("Logout failed: Invalid or malformed token", e);
         }
@@ -75,6 +73,5 @@ public class LogoutServiceImpl implements LogoutService {
     public void removeExpiredBlacklistedTokens() {
         LocalDateTime now = LocalDateTime.now();
         int deletedCount = blacklistedTokenRepository.deleteExpiredTokens(now);
-        log.info("Scheduled cleanup: {} expired blacklisted tokens removed at {}", deletedCount, now);
     }
 }

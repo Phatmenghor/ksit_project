@@ -65,8 +65,6 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleResponseDto createSchedule(ScheduleRequestDto requestDto) {
-        log.info("Creating new schedule for class ID: {}, day: {}, time: {}-{}",
-                requestDto.getClassId(), requestDto.getDay(), requestDto.getStartTime(), requestDto.getEndTime());
 
         // Validate all required relationships
         ClassEntity classEntity = findClassById(requestDto.getClassId());
@@ -91,14 +89,12 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
 
         ScheduleEntity savedSchedule = scheduleRepository.save(schedule);
-        log.info("Schedule created successfully with ID: {}", savedSchedule.getId());
 
         return scheduleMapper.toResponseDto(savedSchedule);
     }
 
     @Override
     public ScheduleResponseDto getScheduleById(Long id) {
-        log.info("Fetching schedule by ID: {}", id);
         ScheduleEntity schedule = findScheduleById(id);
         ScheduleResponseDto responseDto = scheduleMapper.toResponseDto(schedule);
 
@@ -111,7 +107,6 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleResponseDto updateSchedule(Long id, ScheduleUpdateDto updateDto) {
-        log.info("Updating schedule with ID: {}", id);
 
         ScheduleEntity existingSchedule = findScheduleById(id);
 
@@ -122,7 +117,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         updateRelationships(existingSchedule, updateDto);
 
         ScheduleEntity updatedSchedule = scheduleRepository.save(existingSchedule);
-        log.info("Schedule updated successfully with ID: {}", id);
 
         return scheduleMapper.toResponseDto(updatedSchedule);
     }
@@ -130,20 +124,17 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleResponseDto deleteSchedule(Long id) {
-        log.info("Deleting schedule with ID: {}", id);
         ScheduleEntity schedule = findScheduleById(id);
 
         schedule.setStatus(Status.DELETED);
 
         schedule = scheduleRepository.save(schedule);
 
-        log.info("Schedule deleted successfully with ID: {}", id);
         return scheduleMapper.toResponseDto(schedule);
     }
 
     @Override
     public CustomPaginationResponseDto<ScheduleResponseDto> getAllSchedules(ScheduleFilterDto filterDto) {
-        log.info("Fetching all schedules with filter: {}", filterDto);
 
         // Create specification using the helper
         Specification<ScheduleEntity> spec = ScheduleSpecification.createSpecification(filterDto, userRepository);
@@ -165,7 +156,6 @@ public class ScheduleServiceImpl implements ScheduleService {
             UserEntity currentUser = securityUtils.getCurrentUser();
             addSurveyStatusToSchedules(response.getContent(), currentUser.getId());
         } catch (Exception e) {
-            log.debug("Could not determine current user or add survey status: {}", e.getMessage());
             // Set all schedules to NONE status when no user context
             response.getContent().forEach(schedule -> {
                 schedule.setSurveyStatus(SurveyStatus.NONE);
@@ -174,15 +164,11 @@ public class ScheduleServiceImpl implements ScheduleService {
             });
         }
 
-        log.info("Retrieved {} schedules (page {}/{})",
-                response.getContent().size(), response.getPageNo(), response.getTotalPages());
-
         return response;
     }
 
     @Override
     public List<ScheduleResponseDto> getAllSchedulesSimple(ScheduleFilterDto filterDto) {
-        log.info("Fetching all schedules without pagination with filter: {}", filterDto);
 
         // Create specification using the helper
         Specification<ScheduleEntity> spec = ScheduleSpecification.createSpecification(filterDto, userRepository);
@@ -198,9 +184,6 @@ public class ScheduleServiceImpl implements ScheduleService {
                         Collectors.counting()
                 ));
 
-        log.info("Schedule distribution by day: {}", dayCount);
-        log.info("Total schedules found: {}", schedules.size());
-
         // Convert to response DTOs
         List<ScheduleResponseDto> responseDtos = scheduleMapper.toResponseDtoList(schedules);
 
@@ -209,19 +192,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         // DEBUG: Log the actual sorting result
         responseDtos.forEach(schedule ->
-                log.debug("Schedule ID: {}, Day: {}, Time: {} - {}",
-                        schedule.getId(),
-                        schedule.getDay(),
-                        schedule.getStartTime(),
-                        schedule.getEndTime())
-        );
 
         // Add survey status to each schedule for current user (if user is a student)
         try {
             UserEntity currentUser = securityUtils.getCurrentUser();
             addSurveyStatusToSchedules(responseDtos, currentUser.getId());
         } catch (Exception e) {
-            log.debug("Could not determine current user or add survey status: {}", e.getMessage());
             // Set all schedules to NONE status when no user context
             responseDtos.forEach(schedule -> {
                 schedule.setSurveyStatus(SurveyStatus.NONE);
@@ -230,28 +206,20 @@ public class ScheduleServiceImpl implements ScheduleService {
             });
         }
 
-        log.info("Retrieved {} schedules without pagination", responseDtos.size());
         return responseDtos;
     }
 
     @Override
     public CustomPaginationResponseDto<ScheduleResponseDto> getMySchedules(ScheduleFilterDto filterDto) {
-        log.info("Fetching user-specific schedules with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("Current user: {} with roles: {}", currentUser.getUsername(),
-                currentUser.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toList()));
 
         // Determine user access level
         if (hasAdminAccess(currentUser)) {
-            log.info("User has admin access, returning all schedules");
             return getAllSchedules(filterDto);
         } else if (isTeacherOrStaff(currentUser)) {
-            log.info("User is teacher/staff, filtering by teacher ID: {}", currentUser.getId());
             return getSchedulesForTeacher(currentUser.getId(), filterDto);
         } else if (isStudent(currentUser)) {
-            log.info("User is student, filtering by class ID: {}",
-                    currentUser.getClasses() != null ? currentUser.getClasses().getId() : "none");
             return getSchedulesForStudent(currentUser, filterDto);
         } else {
             log.warn("User {} has unknown or no roles, returning empty schedules", currentUser.getUsername());
@@ -263,9 +231,6 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleBulkDuplicateResponseDto bulkDuplicateSchedules(ScheduleBulkDuplicateRequestDto requestDto) {
-        log.info("Starting bulk duplication from class: {} semester: {} to class: {} semester: {}",
-                requestDto.getSourceClassId(), requestDto.getSourceSemesterId(),
-                requestDto.getTargetClassId(), requestDto.getTargetSemesterId());
 
         // Validate source and target entities
         ClassEntity sourceClass = findClassById(requestDto.getSourceClassId());
@@ -280,8 +245,6 @@ public class ScheduleServiceImpl implements ScheduleService {
                         criteriaBuilder.equal(root.get("semester").get("id"), requestDto.getSourceSemesterId()),
                         criteriaBuilder.equal(root.get("status"), Status.ACTIVE)
                 ));
-
-        log.info("Found {} schedules to duplicate", sourceSchedules.size());
 
         if (sourceSchedules.isEmpty()) {
             return createEmptyDuplicateResponse(requestDto, sourceClass, sourceSemester, targetClass, targetSemester);
@@ -300,8 +263,6 @@ public class ScheduleServiceImpl implements ScheduleService {
                         requestDto.getTargetSemesterId());
 
                 if (exists) {
-                    log.info("Schedule already exists for day: {} time: {}-{}, skipping",
-                            sourceSchedule.getDay(), sourceSchedule.getStartTime(), sourceSchedule.getEndTime());
                     skippedCount++;
                     continue;
                 }
@@ -313,9 +274,6 @@ public class ScheduleServiceImpl implements ScheduleService {
                 ScheduleResponseDto duplicatedDto = scheduleMapper.toResponseDto(savedSchedule);
                 duplicatedSchedules.add(duplicatedDto);
                 successCount++;
-
-                log.info("Successfully duplicated schedule ID: {} to new ID: {}",
-                        sourceSchedule.getId(), savedSchedule.getId());
 
             } catch (Exception e) {
                 failedCount++;
@@ -347,7 +305,6 @@ public class ScheduleServiceImpl implements ScheduleService {
                 skippedCount, failedCount);
         response.setMessage(message);
 
-        log.info("Bulk duplication completed: {}", message);
         return response;
     }
 
@@ -399,22 +356,15 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public List<ScheduleResponseDto> getMySchedulesSimple(ScheduleFilterDto filterDto) {
-        log.info("Fetching user-specific schedules without pagination with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("Current user: {} with roles: {}", currentUser.getUsername(),
-                currentUser.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toList()));
 
         // Determine user access level
         if (hasAdminAccess(currentUser)) {
-            log.info("User has admin access, returning all schedules");
             return getAllSchedulesSimple(filterDto);
         } else if (isTeacherOrStaff(currentUser)) {
-            log.info("User is teacher/staff, filtering by teacher ID: {}", currentUser.getId());
             return getSchedulesForTeacherSimple(currentUser.getId(), filterDto);
         } else if (isStudent(currentUser)) {
-            log.info("User is student, filtering by class ID: {}",
-                    currentUser.getClasses() != null ? currentUser.getClasses().getId() : "none");
             return getSchedulesForStudentSimple(currentUser, filterDto);
         } else {
             log.warn("User {} has unknown or no roles, returning empty schedules", currentUser.getUsername());
@@ -480,9 +430,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         // Apply custom sorting
         response.setContent(applySortingToSchedules(response.getContent()));
 
-        log.info("Retrieved {} schedules for teacher (page {}/{})",
-                response.getContent().size(), response.getPageNo(), response.getTotalPages());
-
         return response;
     }
 
@@ -494,8 +441,6 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         // Apply custom sorting
         responseDtos = applySortingToSchedules(responseDtos);
-
-        log.info("Retrieved {} schedules for teacher without pagination", responseDtos.size());
 
         return responseDtos;
     }
@@ -519,9 +464,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         // ALWAYS add survey status for student - this is critical for frontend alerts
         addSurveyStatusToSchedules(response.getContent(), student.getId());
 
-        log.info("Retrieved {} schedules for student (page {}/{})",
-                response.getContent().size(), response.getPageNo(), response.getTotalPages());
-
         return response;
     }
 
@@ -543,19 +485,16 @@ public class ScheduleServiceImpl implements ScheduleService {
         // ALWAYS add survey status for student - this is critical for frontend alerts
         addSurveyStatusToSchedules(responseDtos, student.getId());
 
-        log.info("Retrieved {} schedules for student without pagination", responseDtos.size());
         return responseDtos;
     }
 
     private void addSurveyStatusToSchedules(List<ScheduleResponseDto> schedules, Long userId) {
-        log.info("Adding survey status for {} schedules for user ID: {}", schedules.size(), userId);
 
         // Get current user to check roles and enrollment
         UserEntity currentUser = null;
         try {
             currentUser = securityUtils.getCurrentUser();
         } catch (Exception e) {
-            log.debug("Could not get current user: {}", e.getMessage());
         }
 
         for (ScheduleResponseDto schedule : schedules) {
@@ -573,8 +512,6 @@ public class ScheduleServiceImpl implements ScheduleService {
                     schedule.setSurveyResponseId(null);
                 }
 
-                log.debug("Schedule ID: {} - Survey Status: {}", schedule.getId(), status);
-
             } catch (Exception e) {
                 log.error("Error checking survey status for schedule {} and user {}: {}",
                         schedule.getId(), userId, e.getMessage());
@@ -586,14 +523,12 @@ public class ScheduleServiceImpl implements ScheduleService {
             }
         }
 
-        // Log summary for debugging
         Map<SurveyStatus, Long> statusCount = schedules.stream()
                 .collect(Collectors.groupingBy(
                         ScheduleResponseDto::getSurveyStatus,
                         Collectors.counting()
                 ));
 
-        log.info("Survey status summary for user {}: {}", userId, statusCount);
     }
 
     /**
@@ -602,14 +537,11 @@ public class ScheduleServiceImpl implements ScheduleService {
     private SurveyStatus determineSurveyStatus(UserEntity currentUser, ScheduleResponseDto schedule, Long userId) {
         // Case 1: No current user or user is not a student
         if (currentUser == null || !isStudent(currentUser)) {
-            log.debug("User {} is not a student, setting survey status to NONE", userId);
             return SurveyStatus.NONE;
         }
 
         // Case 2: Student is not enrolled in this schedule's class
         if (!isStudentEnrolledInSchedule(currentUser, schedule)) {
-            log.debug("Student {} is not enrolled in schedule {}, setting survey status to NONE",
-                    userId, schedule.getId());
             return SurveyStatus.NONE;
         }
 
@@ -618,10 +550,8 @@ public class ScheduleServiceImpl implements ScheduleService {
                 surveyResponseRepository.findByUserIdAndScheduleId(userId, schedule.getId());
 
         if (responseOpt.isPresent()) {
-            log.debug("Student {} has completed survey for schedule {}", userId, schedule.getId());
             return SurveyStatus.COMPLETED;
         } else {
-            log.debug("Student {} has not started survey for schedule {}", userId, schedule.getId());
             return SurveyStatus.NOT_STARTED;
         }
     }
@@ -649,8 +579,6 @@ public class ScheduleServiceImpl implements ScheduleService {
             schedule.setSurveySubmittedAt(response.getSubmittedAt());
             schedule.setSurveyResponseId(response.getId());
 
-            log.debug("Set survey completion details for schedule {}: submitted at {}, response ID {}",
-                    schedule.getId(), response.getSubmittedAt(), response.getId());
         }
     }
 
@@ -665,19 +593,14 @@ public class ScheduleServiceImpl implements ScheduleService {
             // Set submission details based on status
             if (status == SurveyStatus.COMPLETED) {
                 setSurveyCompletionDetails(schedule, currentUser.getId());
-                log.info("User {} has COMPLETED survey for schedule {}",
-                        currentUser.getId(), schedule.getId());
             } else {
                 // Clear submission details for non-completed surveys
                 schedule.setSurveySubmittedAt(null);
                 schedule.setSurveyResponseId(null);
 
-                log.info("User {} survey status for schedule {}: {}",
-                        currentUser.getId(), schedule.getId(), status);
             }
 
         } catch (Exception e) {
-            log.debug("Could not determine survey status: {}", e.getMessage());
             // Default to NONE for any errors
             schedule.setSurveyStatus(SurveyStatus.NONE);
             schedule.setSurveySubmittedAt(null);

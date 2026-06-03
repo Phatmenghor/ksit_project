@@ -42,35 +42,27 @@ public class RelationshipUpdateHandler {
             String relationshipName,
             Function<D, Long> getDtoId) {
         
-        log.info("=== Starting {} relationship update for user {} ===", relationshipName, parent.getId());
         
         // If update list is null, don't change anything
         if (updateDtos == null) {
-            log.info("No {} update data provided (null), skipping update", relationshipName);
             return;
         }
 
         // CRITICAL FIX: Always load fresh data from database, ignore passed collection
         final List<T> actualExistingItems = loadExistingItemsFromDatabase(parent.getId(), relationshipName);
-        log.info("Found {} existing {} items in database", actualExistingItems.size(), relationshipName);
         
-        // Log existing IDs for debugging
         Set<Long> existingDbIds = actualExistingItems.stream()
                 .map(this::getEntityId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        log.info("Existing {} IDs in database: {}", relationshipName, existingDbIds);
         
         // If empty array provided, delete all existing
         if (updateDtos.isEmpty()) {
-            log.info("Empty {} array provided, deleting ALL {} existing items", relationshipName, actualExistingItems.size());
             if (!actualExistingItems.isEmpty()) {
                 repository.deleteAll(actualExistingItems);
                 repository.flush();
                 entityManager.clear(); // Clear to ensure deletion is committed
-                log.info("Successfully deleted all {} items", relationshipName);
             } else {
-                log.info("No existing {} items to delete", relationshipName);
             }
             return;
         }
@@ -81,7 +73,6 @@ public class RelationshipUpdateHandler {
                 .collect(Collectors.toMap(this::getEntityId, Function.identity()));
         
         final Set<Long> existingIds = existingEntityMap.keySet();
-        log.info("Existing {} item IDs in database: {}", relationshipName, existingIds);
         
         // Process requested DTOs
         final Set<Long> validRequestedIds = new HashSet<>();
@@ -93,7 +84,6 @@ public class RelationshipUpdateHandler {
                 .map(getDtoId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        log.info("All requested {} IDs: {}", relationshipName, allRequestedIds);
         
         for (D dto : updateDtos) {
             Long dtoId = getDtoId.apply(dto);
@@ -102,14 +92,11 @@ public class RelationshipUpdateHandler {
                 // Valid existing ID → Update
                 validRequestedIds.add(dtoId);
                 validRequestedDtos.put(dtoId, dto);
-                log.debug("DTO with ID {} → UPDATE existing item", dtoId);
             } else {
                 // Invalid ID or No ID → Create new
                 itemsToCreate.add(dto);
                 if (dtoId != null) {
-                    log.debug("DTO with invalid ID {} → CREATE new item (ID not found in database)", dtoId);
                 } else {
-                    log.debug("DTO with no ID → CREATE new item");
                 }
             }
         }
@@ -118,10 +105,6 @@ public class RelationshipUpdateHandler {
         final Set<Long> idsToDelete = new HashSet<>(existingIds);
         idsToDelete.removeAll(validRequestedIds);
         
-        log.info("Processing plan for {}:", relationshipName);
-        log.info("- {} items to UPDATE: {}", validRequestedIds.size(), validRequestedIds);
-        log.info("- {} items to CREATE", itemsToCreate.size());
-        log.info("- {} items to DELETE: {}", idsToDelete.size(), idsToDelete);
         
         // Step 1: Delete items not in request (MOST IMPORTANT FIX)
         if (!idsToDelete.isEmpty()) {
@@ -130,19 +113,16 @@ public class RelationshipUpdateHandler {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
             
-            log.info("🗑️ Deleting {} {} items with IDs: {}", entitiesToDelete.size(), relationshipName, idsToDelete);
             
             // CRITICAL FIX: Delete one by one with immediate flush to ensure deletion
             for (T entityToDelete : entitiesToDelete) {
                 Long deleteId = getEntityId(entityToDelete);
-                log.info("Deleting {} item with ID: {}", relationshipName, deleteId);
                 repository.delete(entityToDelete);
                 repository.flush(); // Immediate flush for each deletion
             }
             
             // Clear entity manager to ensure deletions are committed
             entityManager.clear();
-            log.info("Successfully deleted {} items with IDs: {}", entitiesToDelete.size(), idsToDelete);
             
             // Verify deletion by reloading
             List<T> remainingItems = loadExistingItemsFromDatabase(parent.getId(), relationshipName);
@@ -150,7 +130,6 @@ public class RelationshipUpdateHandler {
                     .map(this::getEntityId)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
-            log.info("After deletion, remaining {} IDs: {}", relationshipName, remainingIds);
         }
         
         // Step 2: Update existing items
@@ -163,7 +142,6 @@ public class RelationshipUpdateHandler {
             Optional<T> reloadedEntityOpt = repository.findById(id);
             if (reloadedEntityOpt.isPresent()) {
                 T existingEntity = reloadedEntityOpt.get();
-                log.debug("Updating {} item with ID: {}", relationshipName, id);
                 updateEntity.accept(dto, existingEntity);
                 repository.save(existingEntity);
                 updatedCount++;
@@ -173,18 +151,15 @@ public class RelationshipUpdateHandler {
             }
         }
         repository.flush();
-        log.info("Successfully updated {} items", updatedCount);
         
         // Step 3: Create new items
         final List<T> newEntities = new ArrayList<>();
         for (D dto : itemsToCreate) {
-            log.debug("➕ Creating new {} item", relationshipName);
             T newEntity = createEntity.apply(dto);
             T savedEntity = repository.save(newEntity);
             newEntities.add(savedEntity);
         }
         repository.flush();
-        log.info("Successfully created {} new items", newEntities.size());
         
         // Final verification
         entityManager.clear(); // Clear to ensure fresh data
@@ -194,18 +169,12 @@ public class RelationshipUpdateHandler {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         
-        log.info("=== {} relationship update completed ===", relationshipName);
-        log.info("Summary: {} updated, {} created, {} deleted", 
-                updatedCount, newEntities.size(), idsToDelete.size());
-        log.info("Final {} IDs in database: {}", relationshipName, finalIds);
-        log.info("Expected final IDs: {}", validRequestedIds);
         
         // Verify the result matches expectations
         Set<Long> expectedFinalIds = new HashSet<>(validRequestedIds);
         if (!finalIds.equals(expectedFinalIds)) {
             log.error("MISMATCH: Expected IDs {} but found {}", expectedFinalIds, finalIds);
         } else {
-            log.info("SUCCESS: Final IDs match expected IDs");
         }
     }
 
@@ -221,15 +190,12 @@ public class RelationshipUpdateHandler {
             final List<T> items = entityManager.createQuery(jpql)
                     .setParameter("userId", userId)
                     .getResultList();
-            log.debug("Loaded {} existing {} items using JPQL query", items.size(), relationshipName);
             
-            // Log the IDs for debugging
             if (!items.isEmpty()) {
                 List<Long> ids = items.stream()
                         .map(this::getEntityId)
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
-                log.debug("Loaded {} IDs from database: {}", relationshipName, ids);
             }
             
             return items;

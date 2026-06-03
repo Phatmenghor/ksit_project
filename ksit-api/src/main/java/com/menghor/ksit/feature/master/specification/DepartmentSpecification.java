@@ -53,11 +53,9 @@ public class DepartmentSpecification {
     public static Specification<DepartmentEntity> hasDepartmentId(Long departmentId) {
         return (root, query, criteriaBuilder) -> {
             if (departmentId == null) {
-                log.debug("Department ID is null, returning all departments");
                 return criteriaBuilder.conjunction();
             }
 
-            log.debug("Filtering departments by specific ID: {}", departmentId);
             return criteriaBuilder.equal(root.get("id"), departmentId);
         };
     }
@@ -88,16 +86,11 @@ public class DepartmentSpecification {
                 return criteriaBuilder.disjunction(); // Return no results
             }
 
-            log.debug("Applying role-based filtering for user: {} with roles: {}",
-                    user.getUsername(),
-                    user.getRoles().stream().map(role -> role.getName().name()).toList());
-
             // Check if user has admin access (ADMIN or DEVELOPER)
             boolean hasAdminAccess = user.getRoles().stream()
                     .anyMatch(role -> role.getName() == RoleEnum.ADMIN || role.getName() == RoleEnum.DEVELOPER);
 
             if (hasAdminAccess) {
-                log.debug("User has admin access, returning all departments");
                 return criteriaBuilder.conjunction(); // Return all departments
             }
 
@@ -111,7 +104,6 @@ public class DepartmentSpecification {
                     return criteriaBuilder.disjunction(); // Return no results
                 }
 
-                log.debug("User is staff/teacher, filtering by department ID: {}", user.getDepartment().getId());
                 return criteriaBuilder.equal(root.get("id"), user.getDepartment().getId());
             }
 
@@ -127,7 +119,6 @@ public class DepartmentSpecification {
                 }
 
                 Long departmentId = user.getClasses().getMajor().getDepartment().getId();
-                log.debug("User is student, filtering by department ID: {}", departmentId);
                 return criteriaBuilder.equal(root.get("id"), departmentId);
             }
 

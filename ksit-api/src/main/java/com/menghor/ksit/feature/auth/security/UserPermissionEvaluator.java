@@ -4,7 +4,6 @@ import com.menghor.ksit.enumations.RoleEnum;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import java.util.Optional;
  */
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class UserPermissionEvaluator {
 
     private final UserRepository userRepository;

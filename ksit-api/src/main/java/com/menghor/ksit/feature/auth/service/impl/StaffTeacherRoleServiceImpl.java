@@ -32,7 +32,6 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
 
     @Override
     public List<UserRoleResponseDto> getUserStaffTeacherRoles(Long userId) {
-        log.info("Getting STAFF/TEACHER roles for user ID: {}", userId);
 
         UserEntity user = getUserById(userId);
         
@@ -55,15 +54,12 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
                 .build()
         );
 
-        log.info("User ID: {} role status - STAFF: {}, TEACHER: {}", 
-                userId, result.get(0).getHasRole(), result.get(1).getHasRole());
         return result;
     }
 
     @Override
     @Transactional
     public List<UserRoleResponseDto> updateUserStaffTeacherRoles(Long userId, UserRoleUpdateRequestDto updateDto) {
-        log.info("Updating STAFF/TEACHER roles for user ID: {} to: {}", userId, updateDto.getRoles());
 
         UserEntity user = getUserById(userId);
 
@@ -99,7 +95,6 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
         // Refresh menu permissions
         try {
             menuService.refreshUserMenuPermissionsAfterRoleChange(userId);
-            log.info("Menu permissions refreshed for user: {}", userId);
         } catch (Exception e) {
             log.error("Failed to refresh menu permissions for user {}: {}", userId, e.getMessage());
         }
@@ -118,8 +113,6 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
                 .build()
         );
 
-        log.info("Successfully updated roles for user ID: {} - STAFF: {}, TEACHER: {}", 
-                userId, result.get(0).getHasRole(), result.get(1).getHasRole());
         return result;
     }
 

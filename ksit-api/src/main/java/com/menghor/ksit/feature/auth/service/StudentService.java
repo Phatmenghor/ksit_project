@@ -32,7 +32,6 @@ public interface StudentService {
      */
     StudentUserResponseDto getStudentUserById(Long id);
 
-
     List<StudentResponseDto> batchRegisterStudents(StudentBatchCreateRequestDto batchRequest);
 
     /**

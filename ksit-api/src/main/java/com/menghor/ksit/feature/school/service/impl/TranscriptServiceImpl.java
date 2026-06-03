@@ -57,7 +57,6 @@ public class TranscriptServiceImpl implements TranscriptService {
     }
 
     private TranscriptResponseDto generateCompleteTranscript(UserEntity student) {
-        log.info("Generating complete transcript for student: {} (ID: {})", student.getUsername(), student.getId());
 
         // Validate student has a class
         if (student.getClasses() == null) {
@@ -72,16 +71,11 @@ public class TranscriptServiceImpl implements TranscriptService {
             return createEmptyTranscript(student);
         }
 
-        log.info("Found {} total schedules for student", allSchedules.size());
-
         // Group schedules by semester and year
         Map<String, List<ScheduleEntity>> groupedSchedules = groupSchedulesBySemester(allSchedules);
 
         // Build complete transcript response
         TranscriptResponseDto transcript = buildCompleteTranscript(student, groupedSchedules);
-
-        log.info("Complete transcript generated for student {} with {} semesters",
-                student.getId(), transcript.getSemesters().size());
 
         return transcript;
     }
@@ -233,7 +227,6 @@ public class TranscriptServiceImpl implements TranscriptService {
 
     // FIXED: Complete rewrite of course DTO building with proper calculations
     private TranscriptCourseDto buildCourseDto(UserEntity student, ScheduleEntity schedule) {
-        log.debug("Building course DTO for student {} and schedule {}", student.getId(), schedule.getId());
         
         TranscriptCourseDto courseDto = transcriptMapper.toCourseDto(schedule);
 
@@ -241,7 +234,6 @@ public class TranscriptServiceImpl implements TranscriptService {
         ScoreSessionInfo sessionInfo = findStudentScoreWithSessionInfo(student.getId(), schedule.getId());
 
         if (sessionInfo.scoreEntity != null && sessionInfo.scoreSession != null) {
-            log.debug("Found completed score for student {} in schedule {}", student.getId(), schedule.getId());
             
             StudentScoreEntity score = sessionInfo.scoreEntity;
             ScoreSessionEntity scoreSession = sessionInfo.scoreSession;
@@ -252,16 +244,12 @@ public class TranscriptServiceImpl implements TranscriptService {
             // Update the entity's total if needed
             if (score.getTotalScore() == null || 
                 score.getTotalScore().compareTo(calculatedTotal) != 0) {
-                log.debug("Updating total score from {} to {} for student {} schedule {}", 
-                         score.getTotalScore(), calculatedTotal, student.getId(), schedule.getId());
                 score.setTotalScore(calculatedTotal);
             }
 
             // FIXED: Use GradeUtilityService for proper grade calculation
             String calculatedGrade = gradeUtilityService.calculateGrade(calculatedTotal);
             if (score.getGrade() == null || !score.getGrade().equals(calculatedGrade)) {
-                log.debug("Updating grade from {} to {} for student {} schedule {}", 
-                         score.getGrade(), calculatedGrade, student.getId(), schedule.getId());
                 score.setGrade(calculatedGrade);
             }
 
@@ -284,11 +272,7 @@ public class TranscriptServiceImpl implements TranscriptService {
             courseDto.setSubmissionDate(scoreSession.getSubmissionDate() != null ? 
                                        scoreSession.getSubmissionDate().toString() : null);
 
-            log.debug("Completed course DTO - Total: {}, Grade: {}, Points: {}, Status: {}", 
-                     calculatedTotal, calculatedGrade, gradePoints, scoreSession.getStatus());
-
         } else {
-            log.debug("No approved score found for student {} in schedule {}", student.getId(), schedule.getId());
             
             // No approved score found - set defaults for in progress
             courseDto.setTotalScore(BigDecimal.ZERO);
@@ -306,7 +290,6 @@ public class TranscriptServiceImpl implements TranscriptService {
                 courseDto.setSubmissionStatus(anySession.getStatus());
                 courseDto.setScoreSessionId(anySession.getId());
                 courseDto.setSubmissionDate(null); // No submission date for non-approved
-                log.debug("Found non-approved session with status: {}", anySession.getStatus());
             } else {
                 courseDto.setSubmissionStatus(null); // No session at all
                 courseDto.setScoreSessionId(null);

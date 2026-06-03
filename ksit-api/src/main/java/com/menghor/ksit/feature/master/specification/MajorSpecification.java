@@ -63,11 +63,9 @@ public class MajorSpecification {
     public static Specification<MajorEntity> hasMajorId(Long majorId) {
         return (root, query, criteriaBuilder) -> {
             if (majorId == null) {
-                log.debug("Major ID is null, returning all majors");
                 return criteriaBuilder.conjunction();
             }
 
-            log.debug("Filtering majors by specific ID: {}", majorId);
             return criteriaBuilder.equal(root.get("id"), majorId);
         };
     }
@@ -98,16 +96,11 @@ public class MajorSpecification {
                 return criteriaBuilder.disjunction(); // Return no results
             }
 
-            log.debug("Applying role-based filtering for user: {} with roles: {}",
-                    user.getUsername(),
-                    user.getRoles().stream().map(role -> role.getName().name()).toList());
-
             // Check if user has admin access (ADMIN or DEVELOPER)
             boolean hasAdminAccess = user.getRoles().stream()
                     .anyMatch(role -> role.getName() == RoleEnum.ADMIN || role.getName() == RoleEnum.DEVELOPER);
 
             if (hasAdminAccess) {
-                log.debug("User has admin access, returning all majors");
                 return criteriaBuilder.conjunction(); // Return all majors
             }
 
@@ -121,7 +114,6 @@ public class MajorSpecification {
                     return criteriaBuilder.disjunction(); // Return no results
                 }
 
-                log.debug("User is staff/teacher, filtering by department ID: {}", user.getDepartment().getId());
                 return criteriaBuilder.equal(root.get("department").get("id"), user.getDepartment().getId());
             }
 
@@ -136,7 +128,6 @@ public class MajorSpecification {
                 }
 
                 Long majorId = user.getClasses().getMajor().getId();
-                log.debug("User is student, filtering by major ID: {}", majorId);
                 return criteriaBuilder.equal(root.get("id"), majorId);
             }
 

@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-
 // ភាសាបរទេស
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -23,5 +22,4 @@ public class TeacherLanguageEntity extends BaseEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 }
-
 

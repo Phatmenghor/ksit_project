@@ -17,7 +17,6 @@ import com.menghor.ksit.utils.database.SecurityUtils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -26,7 +25,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/attendance")
 @RequiredArgsConstructor
-@Slf4j
 public class AttendanceController {
     private final AttendanceService attendanceService;
     private final AttendanceSessionService sessionService;
@@ -34,7 +32,6 @@ public class AttendanceController {
 
     @GetMapping("/{id}")
     public ApiResponse<AttendanceDto> getAttendance(@PathVariable Long id) {
-        log.info("Fetching attendance with ID: {}", id);
         return new ApiResponse<>(
                 "success",
                 "Attendance retrieved successfully",
@@ -44,7 +41,6 @@ public class AttendanceController {
 
     @PutMapping("/update")
     public ApiResponse<AttendanceDto> updateAttendance(@RequestBody AttendanceUpdateRequest request) {
-        log.info("Updating attendance with request: {}", request);
         return new ApiResponse<>(
                 "success",
                 "Attendance updated retrieved successfully",
@@ -56,15 +52,9 @@ public class AttendanceController {
     public ApiResponse<AttendanceSessionDto> getAttendanceSession(
             @PathVariable @Positive Long id) {
 
-        log.info("Getting attendance session with ID: {}", id);
-
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("User {} retrieving attendance session {}", currentUser.getUsername(), id);
 
         AttendanceSessionDto session = sessionService.findById(id);
-
-        log.info("Successfully retrieved attendance session - ID: {}",
-                session.getId());
 
         return new ApiResponse<>(
                 "success",
@@ -76,7 +66,6 @@ public class AttendanceController {
     @PostMapping("/history")
     public ApiResponse<CustomPaginationResponseDto<AttendanceDto>> getAttendanceHistory(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
-        log.info("Fetching attendance history with filter: {}", filterDto);
         CustomPaginationResponseDto<AttendanceDto> response =
                 attendanceService.findAttendanceHistory(filterDto);
         return new ApiResponse<>(
@@ -89,9 +78,7 @@ public class AttendanceController {
     @PostMapping("/history/all")
     public ApiResponse<List<AttendanceDto>> getAllAttendanceHistory(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
-        log.info("Fetching all attendance history (no pagination) with filter: {}", filterDto);
         List<AttendanceDto> response = attendanceService.findAllAttendanceHistory(filterDto);
-        log.info("Retrieved {} attendance records without pagination", response.size());
         return new ApiResponse<>(
                 "success",
                 "All attendance history retrieved successfully",
@@ -102,9 +89,7 @@ public class AttendanceController {
     @PostMapping("/history/count")
     public ApiResponse<Long> getAttendanceHistoryCount(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
-        log.info("Fetching attendance history count with filter: {}", filterDto);
         Long count = attendanceService.countAttendanceHistory(filterDto);
-        log.info("Found {} total attendance records matching filter criteria", count);
         return new ApiResponse<>(
                 "success",
                 "Attendance history count retrieved successfully",
@@ -115,10 +100,8 @@ public class AttendanceController {
     @PostMapping("/history/token")
     public ApiResponse<CustomPaginationResponseDto<AttendanceDto>> getMyAttendanceHistory(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
-        log.info("Fetching enhanced attendance history for current user with filter: {}", filterDto);
 
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("User {} requesting their enhanced attendance history", currentUser.getUsername());
 
         // Check if user has STUDENT role
         boolean isStudent = currentUser.getRoles().stream()
@@ -126,7 +109,6 @@ public class AttendanceController {
                 .anyMatch(role -> role == RoleEnum.STUDENT);
 
         if (!isStudent) {
-            log.info("User {} is not a student, returning empty list", currentUser.getUsername());
             CustomPaginationResponseDto<AttendanceDto> emptyResponse = new CustomPaginationResponseDto<>(
                     Collections.emptyList(),
                     filterDto.getPageNo() != null ? filterDto.getPageNo() : 1,
@@ -148,16 +130,8 @@ public class AttendanceController {
         CustomPaginationResponseDto<AttendanceDto> response =
                 attendanceService.findAttendanceHistory(filterDto);
 
-        log.info("Retrieved {} enhanced attendance records for current user with complete details", response.getContent().size());
-
-        // Log enhanced details for student
         if (!response.getContent().isEmpty()) {
             AttendanceDto sample = response.getContent().get(0);
-            log.info("Student enhanced attendance - Course: {} ({} credits, {}/{}/{} hours), Day: {}, Time: {}-{}, Room: {}, Semester: {}",
-                    sample.getCourseName(), sample.getCredit(),
-                    sample.getTheory(), sample.getExecute(), sample.getApply(),
-                    sample.getDay(), sample.getStartTime(), sample.getEndTime(),
-                    sample.getRoomName(), sample.getSemesterName());
         }
 
         return new ApiResponse<>(
@@ -171,12 +145,7 @@ public class AttendanceController {
     public ApiResponse<AttendanceSessionDto> generateSession(
             @Valid @RequestBody AttendanceSessionRequest request) {
 
-        log.info("Generating new attendance session for subject");
-
         AttendanceSessionDto session = sessionService.generateAttendanceSession(request);
-
-        log.info("Successfully generated attendance session - ID: {}",
-                session.getId());
 
         return new ApiResponse<>(
                 "success",
@@ -189,16 +158,9 @@ public class AttendanceController {
     public ApiResponse<AttendanceSessionDto> markAttendanceByQr(
             @Valid @RequestBody QrAttendanceRequest request) {
 
-        log.info("Processing QR attendance for session ID");
-
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("User {} marking attendance for session",
-                currentUser.getUsername());
 
         AttendanceSessionDto session = sessionService.markAttendanceByQr(request);
-
-        log.info("Successfully marked attendance - User: {}, Session: {}",
-                currentUser.getUsername(), session.getId());
 
         return new ApiResponse<>(
                 "success",
@@ -211,18 +173,11 @@ public class AttendanceController {
     public ApiResponse<AttendanceSessionDto> markTokenAttendanceByQr(
             @Valid @RequestBody QrAttendanceRequest request) {
 
-        log.info("Processing QR attendance for session ID token");
-
         UserEntity currentUser = securityUtils.getCurrentUser();
-        log.info("User {} marking attendance for session token",
-                currentUser.getUsername());
 
         request.setStudentId(securityUtils.getUserIdFromToken());
 
         AttendanceSessionDto session = sessionService.markAttendanceByQr(request);
-
-        log.info("Successfully marked attendance token - User: {}, Session: {}",
-                currentUser.getUsername(), session.getId());
 
         return new ApiResponse<>(
                 "success",
@@ -235,12 +190,7 @@ public class AttendanceController {
     public ApiResponse<AttendanceSessionDto> finalizeSession(
             @PathVariable @Positive Long sessionId) {
 
-        log.info("Finalizing attendance session with ID: {}", sessionId);
-
         AttendanceSessionDto session = sessionService.finalizeAttendanceSession(sessionId);
-
-        log.info("Successfully finalized attendance session - ID: {}",
-                session.getId());
 
         return new ApiResponse<>(
                 "success",

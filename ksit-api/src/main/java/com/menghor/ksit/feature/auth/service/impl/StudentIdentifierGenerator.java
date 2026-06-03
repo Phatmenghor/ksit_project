@@ -81,7 +81,6 @@ public class StudentIdentifierGenerator {
         // Generate full identifier
         String identifier = prefix + sequenceFormatted;
         
-        log.info("Generated student identifier: {} for class ID: {}", identifier, classId);
         return identifier;
     }
     

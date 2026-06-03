@@ -128,7 +128,6 @@ public abstract class SurveyResponseMapper {
         return semesterName;
     }
 
-
     @Named("mapUserBasicInfo")
     public UserBasicInfoDto mapUserBasicInfo(UserEntity user) {
         if (user == null) return null;

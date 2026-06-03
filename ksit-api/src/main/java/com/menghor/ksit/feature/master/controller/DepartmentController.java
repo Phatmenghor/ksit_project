@@ -9,22 +9,18 @@ import com.menghor.ksit.feature.master.service.DepartmentService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@Slf4j
 @RequestMapping("/api/v1/departments")
 public class DepartmentController {
     private final DepartmentService departmentService;
 
     @PostMapping
     public ApiResponse<DepartmentResponseDto> create(@Valid @RequestBody DepartmentRequestDto departmentRequestDto) {
-        log.info("Received request to create new department: {}", departmentRequestDto);
         DepartmentResponseDto department = departmentService.createDepartment(departmentRequestDto);
-        log.info("Department created successfully with ID: {}", department.getId());
         return new ApiResponse<>(
                 "success",
                 "Department created successfully...!",
@@ -34,9 +30,7 @@ public class DepartmentController {
 
     @GetMapping("/{id}")
     public ApiResponse<DepartmentResponseDto> getDepartmentById(@PathVariable Long id) {
-        log.info("Received request to get department by ID: {}", id);
         DepartmentResponseDto department = departmentService.getDepartmentById(id);
-        log.info("Successfully retrieved department with ID: {}", id);
         return new ApiResponse<>(
                 "success",
                 "Get department by id "+ id + " successfully...!",
@@ -46,9 +40,7 @@ public class DepartmentController {
 
     @PostMapping("/updateById/{id}")
     public ApiResponse<DepartmentResponseDto> updateById(@Valid @RequestBody DepartmentUpdateDto departmentRequestDto, @PathVariable Long id) {
-        log.info("Received request to update department with ID: {}, update data: {}", id, departmentRequestDto);
         DepartmentResponseDto department = departmentService.updateDepartmentById(departmentRequestDto, id);
-        log.info("Successfully updated department with ID: {}", id);
         return new ApiResponse<>(
                 "success",
                 "Update department by id " + id + " successfully...!",
@@ -58,9 +50,7 @@ public class DepartmentController {
 
     @DeleteMapping("/{id}")
     public ApiResponse<DepartmentResponseDto> deleteById(@PathVariable Long id) {
-        log.info("Received request to delete department with ID: {}", id);
         DepartmentResponseDto department = departmentService.deleteDepartmentById(id);
-        log.info("Successfully deleted department with ID: {}", id);
         return new ApiResponse<>(
                 "success",
                 "Delete department by id " + id + " successfully...!",
@@ -70,9 +60,7 @@ public class DepartmentController {
 
     @PostMapping("/all")
     public ApiResponse<CustomPaginationResponseDto<DepartmentResponseDto>> getAllDepartments(@RequestBody DepartmentFilter filterDto) {
-        log.info("Received request to fetch all departments with filter: {}", filterDto);
         CustomPaginationResponseDto<DepartmentResponseDto> department = departmentService.getAllDepartments(filterDto);
-        log.info("Successfully fetched {} departments", department.getTotalPages());
         return new ApiResponse<>(
                 "success",
                 "All departments fetched successfully...!",
@@ -82,9 +70,7 @@ public class DepartmentController {
 
     @PostMapping("/my-departments")
     public ApiResponse<CustomPaginationResponseDto<DepartmentResponseDto>> getMyDepartments(@RequestBody DepartmentFilter filterDto) {
-        log.info("Received request to get user-specific departments with filter: {}", filterDto);
         CustomPaginationResponseDto<DepartmentResponseDto> department = departmentService.getMyDepartments(filterDto);
-        log.info("User departments retrieved successfully: {}", department.getTotalElements());
         return new ApiResponse<>(
                 "success",
                 "User departments retrieved successfully...!",

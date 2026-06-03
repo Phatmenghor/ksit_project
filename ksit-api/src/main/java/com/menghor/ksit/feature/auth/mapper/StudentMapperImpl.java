@@ -53,7 +53,6 @@ public class StudentMapperImpl implements StudentMapper {
                 .identifyNumber(user.getIdentifyNumber())
                 .studentStatus(user.getStudentStatus());
 
-
         // Map student-specific fields
         dto.memberSiblings(user.getMemberSiblings())
                 .numberOfSiblings(user.getNumberOfSiblings());
@@ -139,7 +138,6 @@ public class StudentMapperImpl implements StudentMapper {
 
         return responseDto;
     }
-
 
     @Override
     public List<StudentUserListResponseDto> toStudentUserDtoList(List<UserEntity> entities) {

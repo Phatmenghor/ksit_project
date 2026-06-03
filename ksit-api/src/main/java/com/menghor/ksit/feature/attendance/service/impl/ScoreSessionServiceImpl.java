@@ -26,7 +26,6 @@ import com.menghor.ksit.utils.database.SecurityUtils;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -41,7 +40,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class ScoreSessionServiceImpl implements ScoreSessionService {
 
     private final ScoreSessionRepository scoreSessionRepository;
@@ -55,7 +53,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     @Override
     @Transactional
     public ScoreSessionResponseDto initializeScoreSession(ScoreSessionRequestDto requestDto) {
-        log.info("Starting score session initialization for scheduleId={}", requestDto.getScheduleId());
 
         // Check if ANY score session exists for this schedule (regardless of status)
         Specification<ScoreSessionEntity> existingSessionSpec = ScoreSessionSpecification
@@ -69,9 +66,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
             // Use the latest session regardless of its status
             ScoreSessionEntity latestSession = existingSessionsPage.getContent().get(0);
 
-            log.info("Found existing session for scheduleId={}, using sessionId={}, status={}",
-                    requestDto.getScheduleId(), latestSession.getId(), latestSession.getStatus());
-
             return handleExistingSession(latestSession);
         } else {
             return createNewSession(requestDto);
@@ -79,18 +73,15 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     }
 
     private ScoreSessionResponseDto handleExistingSession(ScoreSessionEntity session) {
-        log.info("Handling existing score session sessionId={}, status={}", session.getId(), session.getStatus());
 
         ScheduleEntity schedule = session.getSchedule();
         Long classId = schedule.getClasses().getId();
 
         // Get ALL current students in the class (including newly added ones)
         List<UserEntity> allStudentsInClass = findStudentsByClass(classId);
-        log.info("Retrieved {} total students from classId={}", allStudentsInClass.size(), classId);
 
         // Get existing student scores for this session
         List<StudentScoreEntity> existingScores = findStudentScoresBySession(session.getId());
-        log.info("Found {} existing student scores in sessionId={}", existingScores.size(), session.getId());
 
         // Create a map of existing scores by student ID for quick lookup
         Map<Long, StudentScoreEntity> existingScoresMap = existingScores.stream()
@@ -101,29 +92,18 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
 
         if (!newScores.isEmpty()) {
             studentScoreRepository.saveAll(newScores);
-            log.info("Created {} new student scores with initial 0 values for newly added students", newScores.size());
 
-            // Log details of new students added
             newScores.forEach(score ->
-                    log.info("Added new student score for studentId={} in sessionId={} with initial scores of 0",
-                            score.getStudent().getId(), session.getId())
-            );
         } else {
-            log.info("No new students found - all current class students already have scores in this session");
         }
 
         // Refresh the session to get updated relationships
         ScoreSessionEntity refreshedSession = scoreSessionRepository.findById(session.getId()).orElse(session);
 
-        log.info("Session initialization complete - sessionId={} now has {} total student scores",
-                refreshedSession.getId(),
-                refreshedSession.getStudentScores() != null ? refreshedSession.getStudentScores().size() : 0);
-
         return scoreSessionMapper.toDto(refreshedSession);
     }
 
     private ScoreSessionResponseDto createNewSession(ScoreSessionRequestDto requestDto) {
-        log.info("Creating new score session for scheduleId={}", requestDto.getScheduleId());
 
         ScheduleEntity schedule = findScheduleById(requestDto.getScheduleId());
         UserEntity currentUser = securityUtils.getCurrentUser();
@@ -137,19 +117,14 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         studentScoreRepository.saveAll(studentScores);
         savedSession.setStudentScores(studentScores);
 
-        log.info("Created session sessionId={} with {} students", savedSession.getId(), studentScores.size());
-
         return scoreSessionMapper.toDto(savedSession);
     }
 
     @Override
     public ScoreSessionResponseDto getScoreSessionById(Long id) {
-        log.info("Retrieving score session sessionId={}", id);
 
         ScoreSessionEntity scoreSession = scoreSessionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Score session not found with ID: " + id));
-
-        log.info("Found score session with {} student scores", scoreSession.getStudentScores().size());
 
         return scoreSessionMapper.toDto(scoreSession);
     }
@@ -157,7 +132,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     @Override
     @Transactional
     public ScoreSessionResponseDto updateScoreSession(ScoreSessionUpdateDto updateDto) {
-        log.info("Updating score session sessionId={}", updateDto.getId());
 
         ScoreSessionEntity scoreSession = scoreSessionRepository.findById(updateDto.getId())
                 .orElseThrow(() -> new NotFoundException("Score session not found with ID: " + updateDto.getId()));
@@ -165,14 +139,12 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         updateScoreSessionFields(scoreSession, updateDto);
 
         ScoreSessionEntity updatedSession = scoreSessionRepository.save(scoreSession);
-        log.info("Score session updated successfully");
 
         return scoreSessionMapper.toDto(updatedSession);
     }
 
     @Override
     public CustomPaginationResponseDto<ScoreSessionResponseDto> getAllScoreSessions(ScoreSessionFilterDto filterDto) {
-        log.info("Retrieving score sessions with filters: {}", filterDto);
 
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),
@@ -188,8 +160,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         List<ScoreSessionResponseDto> content = scoreSessionPage.getContent().stream()
                 .map(scoreSessionMapper::toDto)
                 .collect(Collectors.toList());
-
-        log.info("Retrieved {} score sessions", content.size());
 
         return new CustomPaginationResponseDto<>(
                 content,
@@ -235,13 +205,11 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
                 .filter(student -> !existingScoresMap.containsKey(student.getId()))
                 .map(student -> {
                     StudentScoreEntity newScore = createDefaultStudentScore(student, session);
-                    log.debug("Creating new score for studentId={} with initial 0 values", student.getId());
                     return newScore;
                 })
                 .collect(Collectors.toList());
 
         if (!newScores.isEmpty()) {
-            log.info("Will create {} new student score records for newly added students", newScores.size());
         }
 
         return newScores;
@@ -262,9 +230,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         Optional<ScoreConfigurationEntity> scoreConfig = scoreConfigRepository.findByStatus(Status.ACTIVE);
         scoreConfig.ifPresent(config -> {
             studentScore.setScoreConfiguration(config);
-            log.debug("Applied score configuration to studentId={}: attendance={}%, assignment={}%, midterm={}%, final={}%",
-                    student.getId(), config.getAttendancePercentage(), config.getAssignmentPercentage(),
-                    config.getMidtermPercentage(), config.getFinalPercentage());
         });
 
         // Initialize all scores to 0
@@ -273,8 +238,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         studentScore.setMidtermScore(BigDecimal.ZERO);
         studentScore.setFinalScore(BigDecimal.ZERO);
         studentScore.setTotalScore(BigDecimal.ZERO);
-
-        log.debug("Created default student score for studentId={} with all scores initialized to 0", student.getId());
 
         return studentScore;
     }
