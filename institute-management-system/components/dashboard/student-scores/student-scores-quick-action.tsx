@@ -1,19 +1,18 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, RotateCcw, Save, X } from "lucide-react";
 
 interface QuickActionProps {
   unsavedChanges: Set<number>;
-  setUnsavedChanges: (changes: Set<number>) => void;
   handleResetChanges: () => void;
   handleSaveScores: () => void;
   isSavingAll: boolean;
 }
+
 export default function StudentScoresQuickAction({
   unsavedChanges,
-  setUnsavedChanges,
   handleResetChanges,
   handleSaveScores,
   isSavingAll,
@@ -26,13 +25,13 @@ export default function StudentScoresQuickAction({
             <Badge variant="destructive" className="animate-pulse">
               {unsavedChanges.size}
             </Badge>
-            <span className="text-sm font-medium">Pending Changes</span>
+            <span className="text-sm font-medium">Unsaved Changes</span>
           </div>
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => setUnsavedChanges(new Set())}
-            className="text-gray-500 hover:text-gray-700"
+            size="icon"
+            onClick={handleResetChanges}
+            className="h-7 w-7 text-gray-500 hover:text-gray-700"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -42,10 +41,10 @@ export default function StudentScoresQuickAction({
             variant="outline"
             size="sm"
             onClick={handleResetChanges}
-            className="flex-1 hover:bg-red-100 text-red-600"
+            className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700"
           >
-            <X className="h-4 w-4 mr-1" />
-            Reset
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Discard
           </Button>
           <Button
             size="sm"
@@ -56,7 +55,7 @@ export default function StudentScoresQuickAction({
             {isSavingAll ? (
               <Loader2 className="h-4 w-4 mr-1 animate-spin" />
             ) : (
-              <Upload className="h-4 w-4 mr-1" />
+              <Save className="h-4 w-4 mr-1" />
             )}
             Save All
           </Button>
