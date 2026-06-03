@@ -90,7 +90,7 @@ export default function ChangePasswordPage() {
                   id="currentPassword"
                   placeholder="••••••••"
                   type={showCurrentPassword ? "text" : "password"}
-                  className="h-10 text-sm placeholder:text-gray-400"
+                  className="h-10 text-sm placeholder:text-gray-400 pr-10"
                   {...register("currentPassword")}
                 />
                 <button
@@ -120,7 +120,7 @@ export default function ChangePasswordPage() {
                   id="newPassword"
                   placeholder="••••••••"
                   type={showNewPassword ? "text" : "password"}
-                  className="h-10 text-sm placeholder:text-gray-400"
+                  className="h-10 text-sm placeholder:text-gray-400 pr-10"
                   {...register("newPassword")}
                 />
                 <button
