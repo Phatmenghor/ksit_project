@@ -190,9 +190,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         // Apply custom sorting: Monday to Sunday, then by time
         responseDtos = applySortingToSchedules(responseDtos);
 
-        // DEBUG: Log the actual sorting result
-        responseDtos.forEach(schedule ->
-
         // Add survey status to each schedule for current user (if user is a student)
         try {
             UserEntity currentUser = securityUtils.getCurrentUser();

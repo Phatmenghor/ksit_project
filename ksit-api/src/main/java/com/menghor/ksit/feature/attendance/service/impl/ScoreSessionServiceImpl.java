@@ -93,8 +93,6 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         if (!newScores.isEmpty()) {
             studentScoreRepository.saveAll(newScores);
 
-            newScores.forEach(score ->
-        } else {
         }
 
         // Refresh the session to get updated relationships

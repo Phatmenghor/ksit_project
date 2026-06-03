@@ -250,13 +250,7 @@ public class MenuPermissionConfig {
         return new HashMap<>(menuPermissions); // Return a copy to prevent external modification
     }
 
-    /**
-     * Print all menu permissions (useful for debugging)
-     */
     public void printAllPermissions() {
-        menuPermissions.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> 
     }
 
     /**
