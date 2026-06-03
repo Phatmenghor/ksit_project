@@ -3,17 +3,6 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
 import { ChangePasswordService } from "@/service/auth/auth.service";
@@ -33,11 +22,49 @@ const changePasswordSchema = z
 
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
-export default function ChangePasswordPage() {
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+const inputClass =
+  "w-full h-10 rounded-md border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
 
+function PasswordField({
+  id,
+  label,
+  error,
+  registration,
+}: {
+  id: string;
+  label: string;
+  error?: string;
+  registration: React.InputHTMLAttributes<HTMLInputElement>;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="space-y-1">
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          placeholder="••••••••"
+          className={inputClass}
+          {...registration}
+        />
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          tabIndex={-1}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
+
+export default function ChangePasswordPage() {
   const {
     register,
     handleSubmit,
@@ -66,130 +93,57 @@ export default function ChangePasswordPage() {
         back
         breadcrumbs={[
           { label: "Dashboard", href: ROUTE.DASHBOARD },
-          {
-            label: "Change Password",
-            href: "",
-          },
+          { label: "Change Password", href: "" },
         ]}
       />
-      <Card className="mt-2 p-4 space-y-2">
-        <CardHeader className="p-0">
-          <CardTitle className="font-medium text-base">
-            Change your password
-          </CardTitle>
-        </CardHeader>
-        <Separator className="bg-gray-300" />
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-2 p-0">
-            <div className="space-y-1">
-              <Label htmlFor="currentPassword" className="text-sm">
-                Current Password *
-              </Label>
-              <div className="relative">
-                <Input
-                  id="currentPassword"
-                  placeholder="••••••••"
-                  type={showCurrentPassword ? "text" : "password"}
-                  style={{ paddingRight: "2.5rem" }}
-                  {...register("currentPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                >
-                  {showCurrentPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {errors.currentPassword && (
-                <p className="text-xs text-red-500">
-                  {errors.currentPassword.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="newPassword" className="text-sm">
-                New Password *
-              </Label>
-              <div className="relative">
-                <Input
-                  id="newPassword"
-                  placeholder="••••••••"
-                  type={showNewPassword ? "text" : "password"}
-                  style={{ paddingRight: "2.5rem" }}
-                  {...register("newPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {errors.newPassword && (
-                <p className="text-xs text-red-500">
-                  {errors.newPassword.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="confirmNewPassword" className="text-sm">
-                Confirm New Password *
-              </Label>
-              <div className="relative">
-                <Input
-                  id="confirmNewPassword"
-                  placeholder="••••••••"
-                  type={showConfirmNewPassword ? "text" : "password"}
-                  style={{ paddingRight: "2.5rem" }}
-                  {...register("confirmNewPassword")}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowConfirmNewPassword(!showConfirmNewPassword)
-                  }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                >
-                  {showConfirmNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {errors.confirmNewPassword && (
-                <p className="text-xs text-red-500">
-                  {errors.confirmNewPassword.message}
-                </p>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end gap-2 p-0 pt-4">
-            <Button
+
+      <div className="mt-2 rounded-lg border bg-white p-6 shadow-sm">
+        <h2 className="text-base font-medium text-gray-900">
+          Change your password
+        </h2>
+        <hr className="my-3 border-gray-200" />
+
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <PasswordField
+              id="currentPassword"
+              label="Current Password"
+              error={errors.currentPassword?.message}
+              registration={register("currentPassword")}
+            />
+            <PasswordField
+              id="newPassword"
+              label="New Password"
+              error={errors.newPassword?.message}
+              registration={register("newPassword")}
+            />
+            <PasswordField
+              id="confirmNewPassword"
+              label="Confirm New Password"
+              error={errors.confirmNewPassword?.message}
+              registration={register("confirmNewPassword")}
+            />
+          </div>
+
+          <div className="mt-6 flex justify-end gap-2">
+            <button
               type="button"
-              variant="outline"
-              size="lg"
               onClick={() => reset()}
               disabled={isSubmitting}
+              className="h-10 rounded-md border border-gray-300 bg-white px-6 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               Discard
-            </Button>
-            <Button type="submit" size="lg" disabled={isSubmitting}>
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-10 rounded-md bg-teal-900 px-6 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
+            >
               {isSubmitting ? "Changing..." : "Change"}
-            </Button>
-          </CardFooter>
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }
