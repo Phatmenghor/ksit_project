@@ -1,47 +1,18 @@
-# =========================
+# Claude Code local configuration and temporary files
+.claude/
+
 # IDE
-# =========================
 .idea/
 .vscode/
-*.iml
+*.swp
+*.swo
+*~
 
-# =========================
 # OS
-# =========================
 .DS_Store
 Thumbs.db
 
-# =========================
-# LOGS
-# =========================
-*.log
-
-# =========================
-# NEXT.JS (FRONTEND)
-# =========================
-institute-management-system/node_modules/
-institute-management-system/.next/
-institute-management-system/out/
-institute-management-system/.turbo/
-
-
-# =========================
-# SPRING BOOT (BACKEND)
-# =========================
-ksit-api/target/
-ksit-api/*.jar
-ksit-api/*.war
-
-
-# =========================
-# TEMP / CACHE
-# =========================
-*.tmp
-*.swp
-*.bak
-.cache/
-
-# =========================
-# CLAUDE
-# =========================
-.claude/
+# Build artifacts
+target/
+build/
+dist/
