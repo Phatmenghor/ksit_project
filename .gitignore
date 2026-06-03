@@ -1,0 +1,63 @@
+# =========================
+# IDE
+# =========================
+.idea/
+.vscode/
+*.iml
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Next.js
+# =========================
+institute-management-system/node_modules/
+institute-management-system/.next/
+institute-management-system/out/
+institute-management-system/.turbo/
+
+
+# =========================
+# Spring Boot / Maven
+# =========================
+ksit-api/target/
+ksit-api/.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# =========================
+# Temporary Files
+# =========================
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# =========================
+# Claude Code
+# =========================
+.claude/
+
+# =========================
+# Coverage & Reports
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# Cache
+# =========================
+.cache/
