@@ -28,18 +28,14 @@
     </appender>
 
     <!-- Application specific logging -->
-    <logger name="com.menghor.ksit" level="TRACE" additivity="false">
+    <logger name="com.menghor.ksit" level="INFO" additivity="false">
         <appender-ref ref="FILE" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <!-- Lombok logging -->
-    <logger name="lombok" level="TRACE" />
-    <logger name="lombok.extern.slf4j" level="TRACE" />
-
     <!-- Database/SQL logging -->
-    <logger name="org.hibernate.SQL" level="TRACE" />
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />
+    <logger name="org.hibernate.SQL" level="WARN" />
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN" />
 
     <!-- Third-party library logging levels -->
     <logger name="org.springframework" level="INFO" />
