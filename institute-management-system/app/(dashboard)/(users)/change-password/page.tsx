@@ -90,7 +90,8 @@ export default function ChangePasswordPage() {
                   id="currentPassword"
                   placeholder="••••••••"
                   type={showCurrentPassword ? "text" : "password"}
-                  className="placeholder:text-gray-400 pr-10"
+                  className="placeholder:text-gray-400"
+                  style={{ paddingRight: "2.5rem" }}
                   {...register("currentPassword")}
                 />
                 <button
@@ -120,7 +121,8 @@ export default function ChangePasswordPage() {
                   id="newPassword"
                   placeholder="••••••••"
                   type={showNewPassword ? "text" : "password"}
-                  className="placeholder:text-gray-400 pr-10"
+                  className="placeholder:text-gray-400"
+                  style={{ paddingRight: "2.5rem" }}
                   {...register("newPassword")}
                 />
                 <button
@@ -150,7 +152,8 @@ export default function ChangePasswordPage() {
                   id="confirmNewPassword"
                   placeholder="••••••••"
                   type={showConfirmNewPassword ? "text" : "password"}
-                  className="placeholder:text-gray-400 pr-10"
+                  className="placeholder:text-gray-400"
+                  style={{ paddingRight: "2.5rem" }}
                   {...register("confirmNewPassword")}
                 />
                 <button
