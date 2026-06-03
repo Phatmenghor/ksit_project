@@ -63,7 +63,6 @@ export default function LoginPage() {
       }
     } catch (error) {
       if (error instanceof Error) {
-        console.error("Login error:", error.message);
         toast.error(error.message);
       } else {
         console.error("Unexpected error:", error);
@@ -142,9 +141,9 @@ export default function LoginPage() {
                         required
                       />
                     </div>
-                    {errors.username && (
+                    {errors.password && (
                       <p className="text-sm text-red-500">
-                        {errors.username.message}
+                        {errors.password.message}
                       </p>
                     )}
                   </div>
