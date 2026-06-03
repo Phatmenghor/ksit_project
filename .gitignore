@@ -6,19 +6,18 @@
 *.iml
 
 # =========================
-# OS Files
+# OS
 # =========================
 .DS_Store
 Thumbs.db
 
 # =========================
-# Logs
+# LOGS
 # =========================
 *.log
-logs/
 
 # =========================
-# Next.js
+# NEXT.JS (FRONTEND)
 # =========================
 institute-management-system/node_modules/
 institute-management-system/.next/
@@ -27,37 +26,22 @@ institute-management-system/.turbo/
 
 
 # =========================
-# Spring Boot / Maven
+# SPRING BOOT (BACKEND)
 # =========================
 ksit-api/target/
-ksit-api/.mvn/wrapper/maven-wrapper.jar
+ksit-api/*.jar
+ksit-api/*.war
 
-# Java
-*.class
-*.jar
-*.war
-*.ear
 
 # =========================
-# Temporary Files
+# TEMP / CACHE
 # =========================
 *.tmp
-*.temp
-*.bak
 *.swp
+*.bak
+.cache/
 
 # =========================
-# Claude Code
+# CLAUDE
 # =========================
 .claude/
-
-# =========================
-# Coverage & Reports
-# =========================
-coverage/
-.nyc_output/
-
-# =========================
-# Cache
-# =========================
-.cache/
