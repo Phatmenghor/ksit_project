@@ -3,6 +3,10 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
 import { ChangePasswordService } from "@/service/auth/auth.service";
@@ -22,9 +26,6 @@ const changePasswordSchema = z
 
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
-const inputClass =
-  "w-full h-10 rounded-md border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20";
-
 function PasswordField({
   id,
   label,
@@ -39,22 +40,22 @@ function PasswordField({
   const [show, setShow] = useState(false);
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+      <Label htmlFor={id} className="text-sm">
         {label} <span className="text-red-500">*</span>
-      </label>
+      </Label>
       <div className="relative">
-        <input
+        <Input
           id={id}
           type={show ? "text" : "password"}
           placeholder="••••••••"
-          className={inputClass}
+          style={{ paddingRight: "2.5rem" }}
           {...registration}
         />
         <button
           type="button"
-          onClick={() => setShow((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           tabIndex={-1}
+          onClick={() => setShow((v) => !v)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -97,11 +98,11 @@ export default function ChangePasswordPage() {
         ]}
       />
 
-      <div className="mt-2 rounded-lg border bg-white p-6 shadow-sm">
-        <h2 className="text-base font-medium text-gray-900">
+      <div className="mt-2 rounded-lg border bg-card p-6 shadow-sm">
+        <h2 className="text-base font-medium text-card-foreground">
           Change your password
         </h2>
-        <hr className="my-3 border-gray-200" />
+        <Separator className="my-3" />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -126,21 +127,18 @@ export default function ChangePasswordPage() {
           </div>
 
           <div className="mt-6 flex justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="lg"
               onClick={() => reset()}
               disabled={isSubmitting}
-              className="h-10 rounded-md border border-gray-300 bg-white px-6 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               Discard
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-10 rounded-md bg-teal-900 px-6 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
-            >
+            </Button>
+            <Button type="submit" size="lg" disabled={isSubmitting}>
               {isSubmitting ? "Changing..." : "Change"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
