@@ -60,7 +60,6 @@ export function ComboboxSelectClass({
       });
 
       if (!result) {
-        console.error("No data returned from getAllClassService");
         return;
       }
 
@@ -74,7 +73,6 @@ export function ComboboxSelectClass({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching classes:", error);
     } finally {
       setLoading(false);
     }

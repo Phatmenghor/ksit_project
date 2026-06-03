@@ -57,7 +57,6 @@ export function ComboboxSelectMajor({
       });
 
       if (!result) {
-        console.error("No data returned from getAllMajorService");
         return;
       }
 
@@ -69,7 +68,6 @@ export function ComboboxSelectMajor({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching majors:", error);
     } finally {
       setLoading(false);
     }

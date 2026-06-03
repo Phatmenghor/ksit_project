@@ -136,7 +136,6 @@ const AllSchedulePage = () => {
 
       setIsLoading(true);
       try {
-        console.log("## ===", selectedSemester);
         // Create base filters object
         const baseFilters = {
           classId: classId,
@@ -160,7 +159,6 @@ const AllSchedulePage = () => {
           return;
         }
       } catch (error) {
-        console.error("Error fetching schedule data:", error);
         toast.error("An error occurred while loading classes");
         setScheduleData(null);
       } finally {
@@ -241,7 +239,6 @@ const AllSchedulePage = () => {
         toast.error("Failed to delete schedule");
       }
     } catch (error) {
-      console.error("Error deleting schedule:", error);
       toast.error("An error occurred while deleting the schedule");
     } finally {
       setIsSubmitting(false);

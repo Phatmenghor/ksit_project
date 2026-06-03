@@ -190,13 +190,10 @@ export default function AddSchedule() {
       const result = await getClassByIdService(Number(classId));
 
       if (!result) {
-        console.error("No data returned from getClassByIdService");
         return;
       }
-      console.log("#classId: ", result);
       setInitialClass(result);
     } catch (error) {
-      console.error("Error fetching classes:", error);
     } finally {
       setIsLoadingClass(false);
     }
@@ -235,7 +232,6 @@ export default function AddSchedule() {
         toast.warning("No semesters found for the selected year");
       }
     } catch (error) {
-      console.error("Error fetching semesters:", error);
       toast.error("Failed to load semesters");
       setSemesters([]);
     } finally {
@@ -265,12 +261,6 @@ export default function AddSchedule() {
         return;
       }
 
-      console.log("Fetching schedule with:", {
-        classId,
-        instructorId,
-        semesterId,
-        academyYear,
-      });
 
       setIsLoadingSchedule(true);
       try {
@@ -279,7 +269,6 @@ export default function AddSchedule() {
 
         // Priority: If both are selected, use instructor first
         if (hasValidInstructorId) {
-          console.log("Fetching by instructor:", instructorId);
           res = await getAllSimpleScheduleService({
             classId: hasValidClassId ? classId : undefined, // Include classId if valid
             teacherId: instructorId,
@@ -288,23 +277,18 @@ export default function AddSchedule() {
             status: StatusEnum.ACTIVE,
           });
           setIsTeacherPreviewAvailable(true);
-          console.log("Instructor Schedule Preview: ", res);
         } else if (hasValidClassId) {
-          console.log("Fetching by class:", classId);
           res = await getAllSimpleScheduleService({
             classId,
             academyYear,
             semester,
             status: StatusEnum.ACTIVE,
           });
-          console.log("Class Schedule Preview: ", res);
           setIsSchedulePreviewAvailable(true);
         }
 
-        console.log("Schedule API response:", res);
         setScheduleData(res);
       } catch (error) {
-        console.error("Failed to fetch schedule", error);
         toast.error("Failed to load schedule preview");
         setScheduleData([]);
       } finally {
@@ -376,7 +360,6 @@ export default function AddSchedule() {
 
       const response = await createScheduleService(scheduleData);
 
-      console.log("#Submit schedule", response);
       if (response) {
         toast.success("Schedule created successfully!");
 
@@ -441,7 +424,6 @@ export default function AddSchedule() {
         error.message ||
         "Failed to create schedule";
       toast.error(errorMessage);
-      console.error("Error creating schedule:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -460,7 +442,6 @@ export default function AddSchedule() {
 
   const handleInstructorChange = useCallback(
     (instructor: StaffModel) => {
-      console.log("Instructor changed:", instructor);
       selections.setSelectedInstructor(instructor);
       form.setValue("instructorId", instructor.id, {
         shouldValidate: true,
@@ -473,7 +454,6 @@ export default function AddSchedule() {
 
   const handleClassChange = useCallback(
     (classData: ClassModel) => {
-      console.log("Class changed:", classData);
       selections.setSelectedClass(classData);
       form.setValue("classId", classData.id, {
         shouldValidate: true,

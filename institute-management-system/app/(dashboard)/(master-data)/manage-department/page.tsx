@@ -119,7 +119,6 @@ export default function ManageDepartmentPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch departments:");
         }
       } catch (error) {
         toast.error("An error occurred while loading departments");

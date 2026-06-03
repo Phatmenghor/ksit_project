@@ -92,7 +92,6 @@ export default function PaymentPage() {
           nationality: response.nationality,
         });
       } catch (error) {
-        console.error(" Failed to fetch profile by token:", error);
         toast.error("Failed to load profile data");
       }
     };
@@ -217,7 +216,6 @@ export default function PaymentPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch payments");
         }
       } catch (error) {
         toast.error("An error occurred while loading payments");

@@ -106,7 +106,6 @@ export default function RequestPage() {
           return;
         }
       } catch (error: any) {
-        console.error("Error fetching requests:", error);
         toast.error("An error occurred while loading classes");
         setRequestData(null);
       } finally {
@@ -134,14 +133,12 @@ export default function RequestPage() {
           });
           counts[type.value] = response?.totalElements || 0;
         } catch (error) {
-          console.error(`Error fetching count for ${type.value}:`, error);
           counts[type.value] = 0;
         }
       }
 
       setRequestCounts(counts);
     } catch (error) {
-      console.error("Error fetching request counts:", error);
     } finally {
       setIsLoadingCounts(false);
     }

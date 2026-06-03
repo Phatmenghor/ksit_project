@@ -185,7 +185,6 @@ const MyClassPage = () => {
   };
 
   const handleViewSchedule = (classData: ClassModel) => {
-    console.log("Class ID:", classData.id);
 
     router.push(`/my-schedule/${classData.id}`);
   };

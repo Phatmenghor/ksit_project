@@ -108,7 +108,6 @@ export default function ScoreSettingPage() {
       try {
         setIsLoading(true);
         const response = await getConfigurationScoreService();
-        console.log("response data: ", response);
 
         setScoreData(response);
 
@@ -120,10 +119,8 @@ export default function ScoreSettingPage() {
           finalPercentage: response?.finalPercentage ?? 0,
         };
 
-        console.log("Setting form data:", formData);
         reset(formData);
       } catch (error) {
-        console.error("Failed to fetch score settings:", error);
         toast.error("Failed to fetch score settings. Please try again.");
       } finally {
         setIsLoading(false);
@@ -154,13 +151,11 @@ export default function ScoreSettingPage() {
       finalPercentage: watchedValues.finalPercentage ?? 0,
     };
 
-    console.log("Capturing original values for discard:", currentFormValues);
     setOriginalValues(currentFormValues);
     setIsEditing(true);
   };
 
   const handleDiscard = () => {
-    console.log("Discarding changes, restoring to:", originalValues);
 
     // Reset form to the captured original values
     if (originalValues) {
@@ -173,7 +168,6 @@ export default function ScoreSettingPage() {
         midtermPercentage: scoreData?.midtermPercentage ?? 0,
         finalPercentage: scoreData?.finalPercentage ?? 0,
       };
-      console.log("Using fallback values:", fallbackValues);
       reset(fallbackValues);
     }
 
@@ -203,7 +197,6 @@ export default function ScoreSettingPage() {
         toast.error("Failed to update score settings.");
       }
     } catch (error) {
-      console.error("Error saving score settings:", error);
       toast.error("Something went wrong while saving. Please try again.");
     } finally {
       setIsSaving(false);

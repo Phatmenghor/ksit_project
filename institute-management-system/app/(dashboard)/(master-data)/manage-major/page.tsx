@@ -105,7 +105,6 @@ export default function ManageMajorPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch rooms:");
         }
       } catch (error) {
         toast.error("An error occurred while loading rooms");

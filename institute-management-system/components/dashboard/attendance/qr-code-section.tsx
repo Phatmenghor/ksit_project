@@ -69,7 +69,6 @@ export function QRCodeSection({
 
       toast.success("QR code generated successfully (expires in 15 minutes)");
     } catch (error) {
-      console.error("Error generating QR code:", error);
       toast.error("Failed to generate QR code");
       setStatus("idle");
     } finally {

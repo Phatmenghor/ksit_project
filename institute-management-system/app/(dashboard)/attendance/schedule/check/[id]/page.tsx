@@ -126,7 +126,6 @@ const AttendanceCheckPage = () => {
       setScheduleDetail(response);
     } catch (error) {
       toast.error("Error fetching schedule data");
-      console.error("Error fetching class data:", error);
     } finally {
       setLoading(false);
     }
@@ -174,7 +173,6 @@ const AttendanceCheckPage = () => {
         }
       } catch (error) {
         toast.error("Error fetching attendance data");
-        console.error("Error fetching attendance data:", error);
       } finally {
         if (showLoader) {
           // Add a small delay for smooth animation
@@ -367,7 +365,6 @@ const AttendanceCheckPage = () => {
       );
     } catch (error) {
       toast.error("Failed to save attendance records");
-      console.error("Error saving records:", error);
     } finally {
       setIsSavingAll(false);
     }
@@ -387,7 +384,6 @@ const AttendanceCheckPage = () => {
       const response = await submitAttendanceSessionService(
         attendanceGenerate?.id
       );
-      console.log("##after submit attendance: ", response);
       setIsSubmitted(true);
       setSubmissionTime(new Date());
 
@@ -400,7 +396,6 @@ const AttendanceCheckPage = () => {
       });
     } catch (error) {
       toast.error("Failed to submit attendance to staff");
-      console.error("Error submitting attendance:", error);
     } finally {
       setIsSubmittingToStaff(false);
     }

@@ -165,7 +165,6 @@ export default function AddCoursePage() {
       router.replace(ROUTE.MASTER_DATA.COURSES.INDEX);
     } catch (error: any) {
       toast.error(error.message || "Failed to create course");
-      console.error("Error submitting course:", error);
     } finally {
       setIsUploading(false);
       setIsSubmitting(false);

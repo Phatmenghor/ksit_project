@@ -93,7 +93,6 @@ export default function StudentForm({
       setIsFormDirty(isDirty);
       setIsFormValid(Object.keys(errors).length === 0 && isValid);
 
-      console.log("Dirty:", isDirty, "Valid:", isValid, "Errors:", errors);
     });
     return () => subscription.unsubscribe();
   }, [methods]);
@@ -129,7 +128,6 @@ export default function StudentForm({
     try {
       await onSubmit(data);
     } catch (error) {
-      console.error("Form submission error:", error);
     }
   };
 

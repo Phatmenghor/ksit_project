@@ -87,7 +87,6 @@ const HistoryRecordSchedulePage = () => {
           return;
         }
       } catch (error) {
-        console.error("Error fetching schedule data:", error);
         toast.error("An error occurred while loading classes");
         setScheduleData(null);
       } finally {

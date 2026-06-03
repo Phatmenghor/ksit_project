@@ -726,7 +726,6 @@ const SurveyManager: React.FC = () => {
         setSurveyData(surveyData);
         setSections(surveyData.sections || []);
       } else {
-        console.warn("No survey data found");
         setSurveyData(null);
         setSections([]);
       }
@@ -837,12 +836,10 @@ const SurveyManager: React.FC = () => {
         sections: sections,
       };
 
-      console.log("## Saving before survey data:", updatedSurveyData);
 
       // Clean the data by removing temp properties and handling IDs properly
       const cleanedData = cleanDataForApi(updatedSurveyData);
 
-      console.log("## Saving survey data:", cleanedData);
       const response = await updateSurveyService(cleanedData);
 
       if (response) {
@@ -851,13 +848,11 @@ const SurveyManager: React.FC = () => {
         setSections(surveyData.sections || []);
         toast.success("Survey saved successfully!");
       } else {
-        console.warn("No survey data found");
         setSurveyData(null);
         setSections([]);
         toast.error("Failed to save survey data");
       }
     } catch (error) {
-      console.error("Error saving survey data:", error);
       toast.error("Failed to save survey data. Please try again.");
     } finally {
       setIsSubmitting(false);

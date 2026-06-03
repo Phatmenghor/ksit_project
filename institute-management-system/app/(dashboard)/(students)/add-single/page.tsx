@@ -79,7 +79,6 @@ export default function AddSingleStudentPage() {
         toast.error("Failed to create student");
       }
     } catch (error) {
-      console.error("Failed to create student:", error);
       toast.error("Failed to create student");
     } finally {
       setLoading(false);

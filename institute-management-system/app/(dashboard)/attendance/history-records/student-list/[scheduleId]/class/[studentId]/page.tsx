@@ -89,7 +89,6 @@ export default function HistoryRecordsPage() {
           pageNo: currentPage || 1,
           pageSize: 30,
         });
-        console.log(response);
 
         setAttendanceHistoryData(response);
         // Handle case where current page exceeds total pages
@@ -98,14 +97,13 @@ export default function HistoryRecordsPage() {
           return;
         }
       } catch (error: any) {
-        console.error("Error fetching requests:", error);
         toast.error("An error occurred while loading attendance history");
         setAttendanceHistoryData(null);
       } finally {
         setIsLoading(false);
       }
     },
-    [studentId, scheduleId, currentPage] // Added id to dependencies
+    [studentId, scheduleId, currentPage]
   );
 
   useEffect(() => {
@@ -155,7 +153,6 @@ export default function HistoryRecordsPage() {
       setScheduleDetail(response);
     } catch (error) {
       toast.error("Error fetching schedule data");
-      console.error("Error fetching class data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -269,7 +266,6 @@ export default function HistoryRecordsPage() {
             cell.value = new Date(cell.value as string);
             cell.numFmt = "dd-mm-yyyy";
           } catch (error) {
-            console.warn("Date parsing failed for:", cell.value);
           }
         }
       });
@@ -290,7 +286,6 @@ export default function HistoryRecordsPage() {
         `Excel file exported successfully! Total records: ${allDataResponse.length}`
       );
     } catch (error: unknown) {
-      console.error("Error exporting to Excel:", error);
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
       setIsSubmitting(false);

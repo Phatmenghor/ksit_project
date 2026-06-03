@@ -183,7 +183,6 @@ export default function PaymentPage() {
         toast.error("Error getting student data");
       }
     } catch (error) {
-      console.error("Error fetching student data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -209,7 +208,6 @@ export default function PaymentPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch payments");
         }
       } catch (error) {
         toast.error("An error occurred while loading payments");

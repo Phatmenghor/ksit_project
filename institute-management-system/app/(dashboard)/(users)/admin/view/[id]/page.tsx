@@ -25,7 +25,6 @@ export default function AdminDetailPage() {
         toast.error("Error getting admin data");
       }
     } catch (error) {
-      console.error("Error fetching admin data:", error);
     } finally {
       setIsLoading(false);
     }

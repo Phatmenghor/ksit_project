@@ -35,7 +35,6 @@ export default function TeacherViewPage() {
         toast.error("Error getting teacher data");
       }
     } catch (error) {
-      console.error("Error fetching teacher data:", error);
     } finally {
       setIsLoading(false);
     }

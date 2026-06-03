@@ -31,7 +31,6 @@ const UserRoleManagement: React.FC<UserRoleManagementProps> = ({
   const [isApplying, setIsApplying] = useState(false);
 
   const handleRoleChange = (role: string, checked: boolean) => {
-    console.log("Role change:", role, checked); // Debug log
     setUserRoles((prev) =>
       prev.map((r) => (r.role === role ? { ...r, hasRole: checked } : r))
     );
@@ -49,17 +48,14 @@ const UserRoleManagement: React.FC<UserRoleManagementProps> = ({
         .filter((role) => role.hasRole)
         .map((role) => role.role);
 
-      console.log("Applying roles:", selectedRoles); // Debug log
       await onApplyRoles(selectedRoles);
     } catch (error) {
-      console.error("Error applying roles:", error);
     } finally {
       setIsApplying(false);
     }
   };
 
   const handleUserSelect = (user: StaffModel) => {
-    console.log("Selected user:", user); // Debug log
     setSelectedUser(user || null);
   };
 

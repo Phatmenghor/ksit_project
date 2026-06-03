@@ -58,7 +58,6 @@ export function ComboboxSelectUser({
       });
 
       if (!result) {
-        console.error("No data returned from getAllStaffService");
         return;
       }
 
@@ -70,7 +69,6 @@ export function ComboboxSelectUser({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
     }

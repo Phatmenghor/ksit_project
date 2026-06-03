@@ -55,14 +55,12 @@ export default function SurveyFormPage() {
       setIsLoading(true);
       const response = await getAllSurveySectionService();
 
-      console.log("Survey Data:", response);
       if (!response) {
         throw new Error("Failed to fetch survey data");
       }
 
       setSurveyData(response);
     } catch (error) {
-      console.error("Error fetching survey data:", error);
       toast.error("Failed to load survey data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -141,13 +139,10 @@ export default function SurveyFormPage() {
         transformedData
       );
 
-      console.log("Submitted Data:", transformedData);
       setSurveyInfo(response);
       setSurveySuccessDialogOpen(true);
-      console.log("Response Data:", response);
       toast.success("Survey submitted successfully!");
     } catch (error: any) {
-      console.error("Error submitting survey:", error);
       toast.error(
         error.message || "Failed to submit survey. Please try again."
       );

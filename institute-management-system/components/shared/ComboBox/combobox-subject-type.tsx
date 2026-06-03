@@ -57,7 +57,6 @@ export function ComboboxSelectSubject({
       });
 
       if (!result) {
-        console.error("No data returned from getAllSubjectService");
         return;
       }
 
@@ -69,7 +68,6 @@ export function ComboboxSelectSubject({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching subjects:", error);
     } finally {
       setLoading(false);
     }

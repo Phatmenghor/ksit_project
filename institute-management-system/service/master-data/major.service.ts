@@ -10,7 +10,6 @@ export async function getAllMajorService(data: AllMajorFilterModel) {
     const response = await axiosClientWithAuth.post(`/v1/majors/all`, data);
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all major:", error);
     return null;
   }
 }
@@ -24,7 +23,6 @@ export async function getScheduleAllListService(data: AllMajorFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all major:", error);
     return null;
   }
 }
@@ -34,11 +32,9 @@ export async function createMajorService(data: CreateMajorModel) {
     const response = await axiosClientWithAuth.post(`/v1/majors`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating major:", error);
     throw error;
   }
 }
@@ -54,12 +50,10 @@ export async function updateMajorService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating major:", error);
     throw error;
   }
 }

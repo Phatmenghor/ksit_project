@@ -60,7 +60,6 @@ export function ConfirmReturnModal({
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error("Error returning request:", error);
     } finally {
       setIsSubmitting(false);
     }

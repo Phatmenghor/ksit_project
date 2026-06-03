@@ -30,27 +30,22 @@ export function RequestTranscript(param: RequestParam) {
   const fetchTranscriptReq = useCallback(async () => {
     // Check if studentId exists and is valid
     if (!param.studentId || param.studentId <= 0) {
-      console.warn("Invalid or missing studentId:", param.studentId);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log("Fetching transcript for studentId:", param.studentId);
       const response = await getDetailRequestTranscriptService(param.studentId);
 
       // Check if response is valid
       if (!response) {
-        console.warn("No data received from service");
         toast.error("No transcript data found");
         return;
       }
 
-      console.log("Transcript data received:", response);
       setTranscriptReqData(response);
     } catch (error: any) {
-      console.error("Error fetching transcript requests:", error);
       toast.error("Error occurred while loading transcript");
     } finally {
       setIsLoading(false);

@@ -65,7 +65,6 @@ export default function LoginPage() {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        console.error("Unexpected error:", error);
       }
     } finally {
       reset();

@@ -45,7 +45,6 @@ export function ResetPasswordDialog({
       await onConfirm();
       setShowSuccess(true);
     } catch (error) {
-      console.error("Reset failed:", error);
     } finally {
       setIsSubmitting(false);
     }

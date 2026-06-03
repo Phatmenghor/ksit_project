@@ -35,7 +35,6 @@ export default function Permissions() {
   const [selectedPermissions, setSelectedPermissions] = useState<Set<number>>(
     new Set()
   );
-  // Load menu data for selected user
   const loadMenuData = useCallback(async () => {
     if (selectedUser === null) {
       setMenuData([]);
@@ -45,18 +44,14 @@ export default function Permissions() {
 
     setMenuIsLoading(true);
     try {
-      console.log("Loading menu data for user:", selectedUser.id);
       const response = await getMenuByUserIdService(selectedUser.id);
-      console.log("Menu data response:", response);
 
       if (response) {
         setMenuData(response);
       } else {
-        console.error("Failed to fetch menu data");
         setMenuData([]);
       }
     } catch (error) {
-      console.error("Error loading menu data:", error);
       toast.error("An error occurred while loading menu data");
       setMenuData([]);
     } finally {
@@ -64,7 +59,6 @@ export default function Permissions() {
     }
   }, [selectedUser]);
 
-  // Initialize selected permissions based on canView property
   useEffect(() => {
     const initialPermissions = new Set<number>();
 
@@ -85,24 +79,21 @@ export default function Permissions() {
 
   const loadUserRoles = useCallback(async () => {
     if (selectedUser === null) {
-      setUserRoles([]); // Clear roles when no user selected
+      setUserRoles([]);
       return;
     }
 
     setIsUserLoading(true);
     try {
-      console.log("Loading roles for user:", selectedUser.id); // Debug log
       const response = await getUserForPermissionService(selectedUser.id);
-      console.log("User roles response:", response); // Debug log
       setUserRoles(response);
-    } catch (error) {
-      console.error("Error loading user roles:", error); // Debug log
+    } catch {
       toast.error("An error occurred while loading user roles");
-      setUserRoles([]); // Clear roles on error
+      setUserRoles([]);
     } finally {
       setIsUserLoading(false);
     }
-  }, [selectedUser]); // Added selectedUser dependency
+  }, [selectedUser]);
 
   const loadUserDataAndMenu = useCallback(async () => {
     if (selectedUser === null) {
@@ -115,27 +106,19 @@ export default function Permissions() {
     setIsUserLoading(true);
     setMenuIsLoading(true);
     try {
-      // Load both user roles and menu data in parallel
       const [userRolesResponse, menuDataResponse] = await Promise.all([
         getUserForPermissionService(selectedUser.id),
         getMenuByUserIdService(selectedUser.id),
       ]);
 
-      console.log("User roles response:", userRolesResponse);
-      console.log("Menu data response:", menuDataResponse);
-
-      // Update user roles
       setUserRoles(userRolesResponse || []);
 
-      // Update menu data
       if (menuDataResponse) {
         setMenuData(menuDataResponse);
       } else {
-        console.error("Failed to fetch menu data");
         setMenuData([]);
       }
     } catch (error) {
-      console.error("Error loading user data and menu:", error);
       toast.error("An error occurred while loading user data");
       setUserRoles([]);
       setMenuData([]);
@@ -151,7 +134,7 @@ export default function Permissions() {
 
   useEffect(() => {
     loadUserRoles();
-  }, [loadUserRoles]); // Simplified dependency
+  }, [loadUserRoles]);
 
   const handlePermissionChange = useCallback(
     (menuId: number, checked: boolean) => {
@@ -179,12 +162,10 @@ export default function Permissions() {
         setUsers(response);
         toast.success("Roles updated successfully!");
 
-        // Reload user roles to get the updated data
-        await loadUserRoles();
+          await loadUserRoles();
 
         // Optionally reload users list if needed
       } catch (error) {
-        console.error("Error updating roles:", error);
 
         toast.error("An error occurred while updating roles");
       } finally {
@@ -194,7 +175,6 @@ export default function Permissions() {
     [selectedUser, loadUserRoles]
   );
 
-  // Updated handleApplyPermissions to use the API
   const handleApplyPermissions = useCallback(async () => {
     if (selectedUser === null) {
       toast.error("Please select a user first");
@@ -203,9 +183,6 @@ export default function Permissions() {
 
     setIsSubmitting(true);
     try {
-      console.log("Applying permissions:", Array.from(selectedPermissions));
-
-      // Create the request payload
       const getAllMenuIds = (menus: MenuModel[]): number[] => {
         const ids: number[] = [];
         menus.forEach((menu) => {
@@ -227,8 +204,6 @@ export default function Permissions() {
         menuPermissions,
       };
 
-      console.log("Sending permission update request:", requestData);
-
       const response = await updateUserPermissionService(
         selectedUser.id,
         requestData
@@ -237,20 +212,17 @@ export default function Permissions() {
       if (response) {
         toast.success("Permissions updated successfully!");
 
-        // Reload menu data to get the updated permissions
         await loadMenuData();
       } else {
         toast.error("Failed to update permissions");
       }
     } catch (error) {
-      console.error("Error updating permissions:", error);
       toast.error("An error occurred while updating permissions");
     } finally {
       setIsSubmitting(false);
     }
   }, [selectedUser, selectedPermissions, menuData, loadMenuData]);
 
-  // Sort menu items by display order
   const sortedMenuData = [...menuData].sort(
     (a, b) => a.displayOrder - b.displayOrder
   );

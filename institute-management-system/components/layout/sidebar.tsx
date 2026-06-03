@@ -98,7 +98,6 @@ export function Sidebar() {
       });
       setOpenSections(initialOpenSections);
     } catch (error) {
-      console.log("fail to fetch menu: ", error);
     }
   };
 

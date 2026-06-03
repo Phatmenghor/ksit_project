@@ -12,7 +12,6 @@ export async function getAllSubjectService(data: AllSubjectFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all subject:", error);
     return null;
   }
 }
@@ -22,11 +21,9 @@ export async function createSubjectService(data: CreateSubjectModel) {
     const response = await axiosClientWithAuth.post(`/v1/subjects`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating subject:", error);
     throw error;
   }
 }
@@ -42,12 +39,10 @@ export async function updateSubjectService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating subject:", error);
     throw error;
   }
 }

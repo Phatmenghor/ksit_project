@@ -30,7 +30,6 @@ export function RequestHistory(param: RequestParam) {
     useState<AllHistoryReqModel | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  console.log("## ==param.userId", param.userId);
 
   const fetchHistoryReq = useCallback(
     async (filters: HistoryReqFilterModel = {}) => {
@@ -43,7 +42,6 @@ export function RequestHistory(param: RequestParam) {
         });
         setHistoryReqData(response);
       } catch (error: any) {
-        console.error("Error fetching history requests:", error);
         toast.error("error occurred while loading classes");
         setHistoryReqData(null);
       } finally {

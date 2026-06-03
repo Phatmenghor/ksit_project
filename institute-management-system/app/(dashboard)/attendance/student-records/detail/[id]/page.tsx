@@ -128,7 +128,6 @@ export default function StudentAttendancePage() {
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           ...filter,
         });
-        console.log(response);
 
         setAttendanceHistoryData(response);
         if (response.totalPages > 0 && currentPage > response.totalPages) {
@@ -136,7 +135,6 @@ export default function StudentAttendancePage() {
           return;
         }
       } catch (error: any) {
-        console.error("Error fetching requests:", error);
         toast.error("An error occurred while loading attendance history");
         setAttendanceHistoryData(null);
       } finally {
@@ -266,7 +264,6 @@ export default function StudentAttendancePage() {
       const allDataResponse: AttendanceHistoryModel[] =
         await getAllAttedanceHistoryExcelService(exportFilter);
 
-      console.log("Export response:", allDataResponse);
 
       // Use API data if available, otherwise use current data
       const workbook = new ExcelJS.Workbook();
@@ -358,7 +355,6 @@ export default function StudentAttendancePage() {
             cell.value = new Date(cell.value as string);
             cell.numFmt = "dd-mm-yyyy";
           } catch (error) {
-            console.warn("Date parsing failed for:", cell.value);
           }
         }
       });
@@ -379,7 +375,6 @@ export default function StudentAttendancePage() {
         `Excel file exported successfully! Total records: ${allDataResponse.length}`
       );
     } catch (error: unknown) {
-      console.error("Error exporting to Excel:", error);
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
       setIsSubmitting(false);

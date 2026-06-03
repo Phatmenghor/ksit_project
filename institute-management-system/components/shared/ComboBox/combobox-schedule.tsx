@@ -137,7 +137,6 @@ export function ComboboxSelectSchedule({
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
-        console.error("Error fetching schedules:", error);
         setError(error.message || "Failed to load schedules");
         setData([]);
       }

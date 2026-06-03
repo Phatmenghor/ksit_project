@@ -13,7 +13,6 @@ export async function getAllDepartmentService(data: AllDepartmentFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all departments:", error);
     return null;
   }
 }
@@ -23,7 +22,6 @@ export async function getDepartmentByIdService(id: number) {
     const response = await axiosClientWithAuth.get(`/v1/departments/${id}`);
     return response.data.data;
   } catch (error: any) {
-    console.error("Error get department by id:", error);
     return null;
   }
 }
@@ -33,11 +31,9 @@ export async function createDepartmentService(data: CreateDepartmentModel) {
     const response = await axiosClientWithAuth.post(`/v1/departments`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating department:", error);
     throw error;
   }
 }
@@ -53,12 +49,10 @@ export async function updateDepartmentService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating department:", error);
     throw error;
   }
 }
@@ -82,7 +76,6 @@ export async function getMyDepartmentService(data: AllDepartmentFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all department:", error);
     return null;
   }
 }

@@ -79,26 +79,21 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({
   // Fetch academic transcript data
   const fetchTranscriptData = useCallback(async () => {
     if (!param?.id || param.id <= 0) {
-      console.warn("Invalid or missing studentId:", param?.id);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log("Fetching transcript for studentId:", param.id);
       const response = await getDetailRequestTranscriptService(param.id);
 
       if (!response) {
-        console.warn("No data received from service");
         setTranscriptData(null);
         return;
       }
 
-      console.log("Transcript data received:", response);
       setTranscriptData(response);
     } catch (error: any) {
-      console.error("Error fetching transcript:", error);
       setTranscriptData(null);
     } finally {
       setIsLoading(false);

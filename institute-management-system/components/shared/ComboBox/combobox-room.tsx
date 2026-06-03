@@ -57,7 +57,6 @@ export function ComboboxSelectRoom({
       });
 
       if (!result) {
-        console.error("No data returned from getAllRoomService");
         return;
       }
 
@@ -69,7 +68,6 @@ export function ComboboxSelectRoom({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching rooms:", error);
     } finally {
       setLoading(false);
     }

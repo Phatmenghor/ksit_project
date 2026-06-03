@@ -99,10 +99,8 @@ export default function StudentDetail() {
         // Set the request status from the API response
         setRequestStatus(response.status as RequestEnum);
       } else {
-        console.error("Error getting student data");
       }
     } catch (error) {
-      console.error("Error fetching student data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -119,10 +117,8 @@ export default function StudentDetail() {
       if (response) {
         setStudent(response);
       } else {
-        console.error("Error getting student data");
       }
     } catch (error) {
-      console.error("Error fetching student data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -211,7 +207,6 @@ export default function StudentDetail() {
   };
 
   const handleReturn = async (message: string) => {
-    console.log("Return with message:", message);
     try {
       setIsLoading(true);
 
@@ -228,9 +223,7 @@ export default function StudentDetail() {
       // Optionally reload the request data to ensure consistency
       await loadRequest();
 
-      console.log("Request returned successfully");
     } catch (error) {
-      console.error("Error returning request:", error);
       toast.error("An error occurred while update return request");
     } finally {
       setIsLoading(false);
@@ -238,7 +231,6 @@ export default function StudentDetail() {
   };
 
   const handleAccept = async () => {
-    console.log("Accept request");
     try {
       setIsLoading(true);
 
@@ -250,9 +242,7 @@ export default function StudentDetail() {
       toast.success("Request updated to accept successfully");
 
       await loadRequest();
-      console.log("Request accepted successfully");
     } catch (error) {
-      console.error("Error accepting request:", error);
       toast.error("An error occurred while update accept request");
     } finally {
       setIsLoading(false);
@@ -260,7 +250,6 @@ export default function StudentDetail() {
   };
 
   const handleReject = async (message: string) => {
-    console.log("Reject with message:", message);
     try {
       setIsLoading(true);
 
@@ -273,9 +262,7 @@ export default function StudentDetail() {
       toast.success("Request updated to reject successfully");
 
       await loadRequest();
-      console.log("Request rejected successfully");
     } catch (error) {
-      console.error("Error rejecting request:", error);
       toast.error("An error occurred while update reject request");
     } finally {
       setIsLoading(false);
@@ -287,7 +274,6 @@ export default function StudentDetail() {
   };
 
   const handleRequestCompleted = async () => {
-    console.log("Request marked as completed");
     try {
       setIsLoading(true);
 
@@ -299,9 +285,7 @@ export default function StudentDetail() {
       toast.success("Request updated to done successfully");
 
       await loadRequest();
-      console.log("Request completed successfully");
     } catch (error) {
-      console.error("Error completing request:", error);
       toast.error("An error occurred while update complete request");
     } finally {
       setIsLoading(false);

@@ -57,7 +57,6 @@ export function ComboboxSelectStudent({
       });
 
       if (!result) {
-        console.error("No data returned from getAllStudentService");
         return;
       }
 
@@ -69,7 +68,6 @@ export function ComboboxSelectStudent({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching students:", error);
     } finally {
       setLoading(false);
     }

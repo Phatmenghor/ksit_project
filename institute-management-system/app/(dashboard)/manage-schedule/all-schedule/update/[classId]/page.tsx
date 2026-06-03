@@ -145,7 +145,6 @@ export default function UpdateSchedule() {
         setIsLoading(true);
         const data = await getDetailScheduleService(scheduleId);
 
-        console.log("##data", data);
 
         if (data) {
           setScheduleData(data);
@@ -183,7 +182,6 @@ export default function UpdateSchedule() {
         }
       } catch (error: any) {
         toast.error(error.message || "Failed to load schedule data");
-        console.error("Error fetching schedule:", error);
         router.replace(ROUTE.SCHEDULE.DEPARTMENT);
       } finally {
         setIsLoading(false);
@@ -223,9 +221,6 @@ export default function UpdateSchedule() {
                 shouldValidate: true,
               });
             } else {
-              console.warn(
-                "Original semester not found in current year's semesters"
-              );
               toast.warning(
                 "Original semester not available for the selected year"
               );
@@ -233,7 +228,6 @@ export default function UpdateSchedule() {
           }
         }
       } catch (error) {
-        console.error("Error fetching semesters:", error);
         toast.error("Failed to load semesters");
       } finally {
         setIsLoadingSemesters(false);
@@ -264,12 +258,6 @@ export default function UpdateSchedule() {
         return;
       }
 
-      console.log("Fetching schedule with:", {
-        classId,
-        instructorId,
-        semesterId,
-        academyYear,
-      });
 
       setIsSchedulePreviewLoading(true);
       try {
@@ -278,7 +266,6 @@ export default function UpdateSchedule() {
 
         // Priority: If both are selected, use instructor first
         if (hasValidInstructorId) {
-          console.log("Fetching by instructor:", instructorId);
           res = await getAllSimpleScheduleService({
             classId: hasValidClassId ? classId : undefined, // Include classId if valid
             teacherId: instructorId,
@@ -286,22 +273,17 @@ export default function UpdateSchedule() {
             semester,
             status: StatusEnum.ACTIVE,
           });
-          console.log("Instructor Schedule Preview: ", res);
         } else if (hasValidClassId) {
-          console.log("Fetching by class:", classId);
           res = await getAllSimpleScheduleService({
             classId,
             academyYear,
             semester,
             status: StatusEnum.ACTIVE,
           });
-          console.log("Class Schedule Preview: ", res);
         }
 
-        console.log("Schedule API response:", res);
         setSchedulePreviewData(res);
       } catch (error) {
-        console.error("Failed to fetch schedule", error);
         toast.error("Failed to load schedule preview");
         setSchedulePreviewData([]);
       } finally {
@@ -365,7 +347,6 @@ export default function UpdateSchedule() {
       router.back();
     } catch (error: any) {
       toast.error(error.message || "Failed to update schedule");
-      console.error("Error updating schedule:", error);
     } finally {
       setIsSubmitting(false);
     }

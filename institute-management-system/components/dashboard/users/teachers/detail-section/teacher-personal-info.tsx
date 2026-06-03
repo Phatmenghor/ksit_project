@@ -156,19 +156,10 @@ export default function PersonalHistoryForm() {
               name="gender"
               control={control}
               render={({ field }) => {
-                console.log("$$Gender field value:", field.value);
-                console.log("$$Gender field value type:", typeof field.value);
-                console.log("$$GenderEnum.MALE:", GenderEnum.MALE);
-                console.log("$$GenderEnum.FEMALE:", GenderEnum.FEMALE);
-                console.log(
-                  "$$Are they equal?",
-                  field.value === GenderEnum.MALE
-                );
 
                 return (
                   <Select
                     onValueChange={(value) => {
-                      console.log("Select changed to:", value);
                       field.onChange(value);
                     }}
                     disabled={isSubmitting}

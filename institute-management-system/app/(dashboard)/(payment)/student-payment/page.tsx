@@ -106,9 +106,7 @@ export default function StudentsListPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-          console.log(">>>", response);
         } else {
-          console.error("Failed to fetch departments:");
         }
       } catch (error) {
         toast.error("An error occurred while loading departments");

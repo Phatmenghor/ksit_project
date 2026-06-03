@@ -98,7 +98,6 @@ export default function StuffOfficerListPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch staff:");
         }
       } catch (error) {
         toast.error("An error occurred while loading staff");
@@ -148,7 +147,6 @@ export default function StuffOfficerListPage() {
         toast.error("Failed to delete staff");
       }
     } catch (error) {
-      console.error("Error deleting teacher:", error);
       toast.error("An error occurred while deleting the staff");
       loadData({});
     } finally {

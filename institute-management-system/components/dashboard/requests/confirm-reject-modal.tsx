@@ -60,7 +60,6 @@ export function ConfirmRejectModal({
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      console.error("Error rejecting request:", error);
     } finally {
       setIsSubmitting(false);
     }

@@ -90,7 +90,6 @@ export default function ManageClassPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch departments:");
         }
       } catch (error) {
         toast.error("An error occurred while loading departments");
@@ -108,10 +107,8 @@ export default function ManageClassPage() {
       if (response) {
         setStatisticsData(response);
       } else {
-        console.error("Failed to fetch statistics");
       }
     } catch (error) {
-      console.error("Error loading statistics:", error);
       toast.error("An error occurred while loading statistics");
     } finally {
       setIsLoading(false);

@@ -10,7 +10,6 @@ export async function getAllRoomService(data: AllRoomFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all room:", error);
     return null;
   }
 }
@@ -20,11 +19,9 @@ export async function createRoomService(data: CreateRoomModel) {
     const response = await axiosClientWithAuth.post(`/v1/rooms`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating room:", error);
     throw error;
   }
 }
@@ -40,12 +37,10 @@ export async function updateRoomService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating room:", error);
     throw error;
   }
 }

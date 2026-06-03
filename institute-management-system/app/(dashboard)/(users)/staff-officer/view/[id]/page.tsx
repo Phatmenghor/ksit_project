@@ -33,7 +33,6 @@ export default function StaffViewPage() {
         toast.error("Error getting staff data");
       }
     } catch (error) {
-      console.error("Error fetching staff data:", error);
     } finally {
       setIsLoading(false);
     }

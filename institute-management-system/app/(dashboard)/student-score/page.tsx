@@ -33,7 +33,6 @@ import ScheduleCard from "@/components/shared/schedule-card";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleFilterModel } from "@/model/attendance/schedule/schedule-filter";
 
 export default function AllSchedulePage() {
@@ -58,7 +57,7 @@ export default function AllSchedulePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.SCORES.STUDENT_SCORE,
       defaultPageSize: 10,
@@ -106,8 +105,7 @@ export default function AllSchedulePage() {
           updateUrlWithPage(response.totalPages);
           return;
         }
-      } catch (error) {
-        console.error("Error fetching schedule data:", error);
+      } catch {
         toast.error("An error occurred while loading classes");
         setScheduleData(null);
       } finally {

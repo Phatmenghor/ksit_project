@@ -10,13 +10,10 @@ const filterDto = {
   userId: 10,
 };
 export async function getAllPaymentService(data: AllPaymentFilterModel) {
-  console.log("data filter", data);
   try {
     const response = await axiosClientWithAuth.post("/v1/payments/all", data);
-    console.log("this respone", response);
     return response.data.data;
   } catch (error: any) {
-    console.error("AllPaymentService error:", error);
     return null;
   }
 }
@@ -25,11 +22,9 @@ export async function createPaymentService(data: PaymentRequest) {
     const response = await axiosClientWithAuth.post(`/v1/payments`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating payment:", error);
     throw error;
   }
 }
@@ -45,12 +40,10 @@ export async function updatePaymentService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating payment:", error);
     throw error;
   }
 }
@@ -79,12 +72,10 @@ export async function createMyPaymentByTokenService(data: PaymentRequest) {
     const response = await axiosClientWithAuth.post(`/v1/payments/token`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating payment:", error);
     throw error;
   }
 }
@@ -100,12 +91,10 @@ export async function updateMyPaymentByTokenIdService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating payment:", error);
     throw error;
   }
 }

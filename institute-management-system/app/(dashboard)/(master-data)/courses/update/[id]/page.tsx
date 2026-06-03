@@ -130,7 +130,6 @@ export default function CourseFormPage() {
           router.replace(ROUTE.MASTER_DATA.COURSES.INDEX);
         }
       } catch (error) {
-        console.error("Error fetching course details:", error);
         toast.error("Failed to load course details");
       } finally {
         setIsLoading(false);
@@ -195,10 +194,6 @@ export default function CourseFormPage() {
     } catch (error: any) {
       toast.error(
         error.message || `Failed to ${isEditMode ? "update" : "create"} course`
-      );
-      console.error(
-        `Error ${isEditMode ? "updating" : "creating"} course:`,
-        error
       );
     } finally {
       setIsUploading(false);

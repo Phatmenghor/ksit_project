@@ -58,7 +58,6 @@ export function ComboboxSelectInstructor({
       });
 
       if (!result) {
-        console.error("No data returned from getAllStaffService");
         return;
       }
 
@@ -70,7 +69,6 @@ export function ComboboxSelectInstructor({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching instructors:", error);
     } finally {
       setLoading(false);
     }

@@ -60,7 +60,6 @@ export function ComboboxSelectSemester({
       });
 
       if (!result) {
-        console.error("No data returned from getAllSemesterService");
         return;
       }
 
@@ -72,7 +71,6 @@ export function ComboboxSelectSemester({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching semesters:", error);
     } finally {
       setLoading(false);
     }

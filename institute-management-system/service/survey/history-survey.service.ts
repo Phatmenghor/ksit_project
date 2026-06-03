@@ -11,7 +11,6 @@ export async function getAllStudentSurveyService({
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching student survey sections:", error);
     return null;
   }
 }

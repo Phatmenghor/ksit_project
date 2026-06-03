@@ -13,7 +13,6 @@ export async function getAllRequestService(data: RequestFilterModel) {
     const response = await axiosClientWithAuth.post(`/v1/requests/all`, data);
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching requests:", error);
     return null;
   }
 }
@@ -23,7 +22,6 @@ export async function getDetailRequestService(id: string) {
     const response = await axiosClientWithAuth.get(`/v1/requests/${id}`);
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching request detail:", error);
     return null;
   }
 }
@@ -33,11 +31,9 @@ export async function createRequestService(data: CreateRequestModel) {
     const response = await axiosClientWithAuth.post(`/v1/requests`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating request:", error);
     throw error;
   }
 }
@@ -50,16 +46,13 @@ export async function updateRequestService(
     const response = await axiosClientWithAuth.put(`/v1/requests/${id}`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error updating request:", error);
     throw error;
   }
 }
 
-// History
 export async function getAllHistoryReqService(data: HistoryReqFilterModel) {
   try {
     const response = await axiosClientWithAuth.post(
@@ -68,12 +61,10 @@ export async function getAllHistoryReqService(data: HistoryReqFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching history requests:", error);
     return null;
   }
 }
 
-// transcript
 export async function getDetailRequestTranscriptService(studentId: number) {
   try {
     const response = await axiosClientWithAuth.get(
@@ -81,7 +72,6 @@ export async function getDetailRequestTranscriptService(studentId: number) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching transcript detail:", error);
     return null;
   }
 }

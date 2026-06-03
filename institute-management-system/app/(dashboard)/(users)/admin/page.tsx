@@ -115,11 +115,9 @@ export default function AdminsListPage() {
           return;
         }
       } else {
-        console.error("Failed to fetch admin data");
         setData(null);
       }
     } catch (error) {
-      console.error("Error loading admins:", error);
       toast.error("An error occurred while loading admins");
       setData(null);
     } finally {
@@ -194,7 +192,6 @@ export default function AdminsListPage() {
         }
       }
     } catch (error: any) {
-      console.error("Error submitting admin form:", error);
       toast.error(error.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
@@ -223,7 +220,6 @@ export default function AdminsListPage() {
         toast.error("Failed to delete admin");
       }
     } catch (error) {
-      console.error("Error deleting admin:", error);
       toast.error("An error occurred while deleting the admin");
     } finally {
       setIsSubmitting(false);

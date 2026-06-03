@@ -141,7 +141,6 @@ export default function StudentsListPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch student:");
         }
       } catch (error) {
         toast.error("An error occurred while loading student");
@@ -223,7 +222,6 @@ export default function StudentsListPage() {
         toast.error("Failed to delete student");
       }
     } catch (error) {
-      console.error("Error deleting student:", error);
       toast.error("An error occurred while deleting the student");
       loadStudents({});
     } finally {
@@ -356,7 +354,6 @@ export default function StudentsListPage() {
         `Excel file exported successfully! Total records: ${allStudentsRes?.length}`
       );
     } catch (error: unknown) {
-      console.error("Error exporting to Excel:", error);
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
       setIsSubmitting(false);

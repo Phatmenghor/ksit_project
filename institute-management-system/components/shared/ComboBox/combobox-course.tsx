@@ -57,7 +57,6 @@ export function ComboboxSelectCourse({
       });
 
       if (!result) {
-        console.error("No data returned from getAllCourseService");
         return;
       }
 
@@ -69,7 +68,6 @@ export function ComboboxSelectCourse({
       setPage(result.pageNo);
       setLastPage(result.last);
     } catch (error) {
-      console.error("Error fetching courses:", error);
     } finally {
       setLoading(false);
     }

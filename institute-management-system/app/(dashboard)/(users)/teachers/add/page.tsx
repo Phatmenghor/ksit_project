@@ -156,7 +156,6 @@ export default function AddTeacherPage() {
         toast.error("Failed to create teacher");
       }
     } catch (error: any) {
-      console.error("Failed to create teacher:", error);
 
       toast.error(error.message || "Unknown error");
     } finally {

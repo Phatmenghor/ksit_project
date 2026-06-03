@@ -82,7 +82,6 @@ export default function EditSingleStudentPage() {
           nationality: response.nationality,
         });
       } catch (error) {
-        console.error(" Failed to fetch student by id:", error);
         toast.error("Failed to load student data");
       }
     };
@@ -98,7 +97,6 @@ export default function EditSingleStudentPage() {
 
       if (!parsed.success) {
         toast.error("Invalid form data");
-        console.error(parsed.error);
         return;
       }
 
@@ -170,7 +168,6 @@ export default function EditSingleStudentPage() {
         toast.error("Failed to update student");
       }
     } catch (error) {
-      console.error("Failed to update student:", error);
       toast.error("Failed to update student");
     } finally {
       setLoading(false);

@@ -36,7 +36,6 @@ export default function EditStudentProfilePage() {
           nationality: response.nationality,
         });
       } catch (error) {
-        console.error(" Failed to fetch profile by token:", error);
         toast.error("Failed to load profile data");
       }
     };
@@ -56,7 +55,6 @@ export default function EditStudentProfilePage() {
 
       if (!parsed.success) {
         toast.error("Invalid form data");
-        console.error(parsed.error);
         return;
       }
 
@@ -128,7 +126,6 @@ export default function EditStudentProfilePage() {
         toast.error("Failed to update profile");
       }
     } catch (error) {
-      console.error("Failed to update profile:", error);
       toast.error("Failed to update profile");
     } finally {
       setLoading(false);

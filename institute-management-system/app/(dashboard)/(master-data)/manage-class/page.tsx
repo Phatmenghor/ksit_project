@@ -119,7 +119,6 @@ export default function ManageClassPage() {
           toast.error("Failed to fetch class data");
         }
       } catch (error) {
-        console.error("Error fetching class data:", error);
         toast.error("An error occurred while loading class data");
       } finally {
         setIsLoading(false);
@@ -191,7 +190,6 @@ export default function ManageClassPage() {
         toast.error("Failed to delete class");
       }
     } catch (error) {
-      console.error("Error deleting class:", error);
       toast.error("An error occurred while deleting the class");
       loadClass({});
     } finally {
@@ -264,7 +262,6 @@ export default function ManageClassPage() {
         }
       }
     } catch (error: any) {
-      console.error("Error submitting class form:", error);
       toast.error(error.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);

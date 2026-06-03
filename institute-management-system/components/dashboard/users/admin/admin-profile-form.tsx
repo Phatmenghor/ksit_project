@@ -121,7 +121,6 @@ export default function AdminForm({
         Object.keys(errors).length === 0 && form.formState.isValid
       );
 
-      console.log("Dirty:", isDirty, "Valid:", isValid, "Errors:", errors);
     });
     return () => subscription.unsubscribe();
   }, [form]);
@@ -153,14 +152,12 @@ export default function AdminForm({
         roles: [RoleEnum.ADMIN],
       };
 
-      console.log("##Submitted Data: ", submitData);
       if (initialData?.id) {
         submitData.id = initialData?.id;
       }
 
       onSubmit(submitData);
     } catch (error) {
-      console.error("Error submitting form:", error);
       toast.error("An error occurred while saving profile");
     }
   };

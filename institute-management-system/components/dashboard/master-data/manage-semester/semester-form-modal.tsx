@@ -120,7 +120,6 @@ export function SemesterFormModal({
         }
       }
     } catch (e) {
-      console.error("Error parsing date:", e);
     }
 
     // Fallback to current date
@@ -130,7 +129,6 @@ export function SemesterFormModal({
   useEffect(() => {
     if (isOpen) {
       if (initialData && mode === "edit") {
-        console.log("Initializing form with data:", initialData);
 
         // Parse dates properly
         const startDate = parseDateString(initialData.startDate);

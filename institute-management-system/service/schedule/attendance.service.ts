@@ -13,7 +13,6 @@ export async function getAllAttendanceGenerateService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all schedule:", error);
     return null;
   }
 }
@@ -28,12 +27,10 @@ export async function getAllAttendanceHistoryService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching requests:", error);
     return null;
   }
 }
 
-// update attendance session
 export async function updateAttendanceSessionService(
   data: UpdateAttendanceModel
 ) {
@@ -44,7 +41,6 @@ export async function updateAttendanceSessionService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error updating attendance session:", error);
     return null;
   }
 }
@@ -59,7 +55,6 @@ export async function getAllAttedanceHistoryExcelService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching requests:", error);
     return null;
   }
 }
@@ -74,7 +69,6 @@ export async function getAllAttedanceHistoryCountService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching requests:", error);
     return null;
   }
 }
@@ -86,7 +80,6 @@ export async function getAttendanceSessionService(id: number) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching attendance by id:", error);
     return null;
   }
 }
@@ -98,7 +91,6 @@ export async function submitAttendanceSessionService(sessionId: number) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error submitting attendance session:", error);
     return null;
   }
 }
@@ -110,7 +102,6 @@ export async function getAttendanceSessionByIdService(scheduleId: number) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error get attendance session by Id:", error);
     return null;
   }
 }
@@ -125,7 +116,6 @@ export async function getAttendanceHistoryAllService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching requests:", error);
     return null;
   }
 }

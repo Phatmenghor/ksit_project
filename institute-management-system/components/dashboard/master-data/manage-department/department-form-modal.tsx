@@ -190,7 +190,6 @@ export function DepartmentFormModal({
 
       return response;
     } catch (error: any) {
-      console.error("Error uploading image:", error);
       throw error;
     }
   };
@@ -202,7 +201,6 @@ export function DepartmentFormModal({
 
       // If a new file was selected, upload it first
       if (selectedFile && logoChanged) {
-        console.log("Uploading new image...");
         try {
           const response = await uploadImage(selectedFile);
 
@@ -213,13 +211,11 @@ export function DepartmentFormModal({
           // Clean up the object URL
           if (logoPreview && logoPreview.startsWith("blob:")) {
             URL.revokeObjectURL(logoPreview);
-            console.log("Cleaned up object URL");
           }
 
           // Update preview to use the actual URL
           setLogoPreview(response.imageUrl);
         } catch (error: any) {
-          console.error("Image upload failed:", error);
           toast.error(error.message || "Failed to upload image");
           setIsUploading(false);
           return; // Stop form submission if image upload fails
@@ -229,7 +225,6 @@ export function DepartmentFormModal({
         data.imageId = "";
         data.urlLogo = "";
       } else {
-        console.log("No logo changes");
       }
 
       // Prepare the submit data
@@ -243,16 +238,13 @@ export function DepartmentFormModal({
         submitData.id = initialData.id;
       }
 
-      console.log("Final submit data:", submitData);
 
       // Reset flags
       setLogoChanged(false);
 
       // Submit the form
-      console.log("Calling onSubmit with data");
       onSubmit(submitData);
     } catch (error) {
-      console.error("Error submitting department form:", error);
       toast.error("An error occurred while saving department");
     } finally {
       setIsUploading(false);

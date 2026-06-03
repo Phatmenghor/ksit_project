@@ -92,12 +92,9 @@ export default function TeacherForm({
       const response = await getDepartmentByIdService(departmentId);
       if (response) {
         setSelectedDepartment(response);
-        console.log("Department loaded:", response);
       } else {
-        console.error("Failed to get department by id:", departmentId);
       }
     } catch (error) {
-      console.error("An error occurred while loading department:", error);
     } finally {
       setIsDepartmentLoading(false);
     }
@@ -123,7 +120,6 @@ export default function TeacherForm({
 
       // Load department if departmentId exists
       if (initialValues?.departmentId) {
-        console.log("Loading department for ID:", initialValues?.departmentId);
         loadDepartmentById(initialValues?.departmentId);
       }
 
@@ -153,7 +149,6 @@ export default function TeacherForm({
     try {
       await onSubmit(data);
     } catch (error) {
-      console.error("Form submission error:", error);
     }
   };
 

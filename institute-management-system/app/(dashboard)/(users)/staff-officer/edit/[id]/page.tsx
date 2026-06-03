@@ -96,7 +96,6 @@ export default function EditStaffOfficerPage() {
 
         setInitialValues(payload);
       } catch (error) {
-        console.error("Failed to fetch teacher:", error);
         toast.error("Failed to load teacher data");
       }
     };
@@ -241,7 +240,6 @@ export default function EditStaffOfficerPage() {
         toast.error("Failed to update information for Staff");
       }
     } catch (error) {
-      console.error("Failed to update Staff:", error);
       toast.error("Failed to update information for Staff");
       setLoading(false);
     }

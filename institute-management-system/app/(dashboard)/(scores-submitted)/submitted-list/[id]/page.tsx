@@ -75,10 +75,8 @@ export default function ScoreSubmissionDetailPage() {
       try {
         setIsLoading(true);
         const response = await getConfigurationScoreService();
-        console.log("response data: ", response);
         setScoreData(response);
       } catch (error) {
-        console.error("Failed to fetch score settings:", error);
         toast.error("Failed to fetch score settings. Please try again.");
       } finally {
         setIsLoading(false);
@@ -91,12 +89,10 @@ export default function ScoreSubmissionDetailPage() {
     setIsLoading(true);
     try {
       const response = await getSubmissionScoreByIdService(Number(id));
-      console.log("##Submission detail: ", response);
 
       if (response) {
         setSubmissions(response);
       } else {
-        console.error("Failed to fetch student:");
       }
     } catch (error) {
       toast.error("An error occurred while loading student");
@@ -116,7 +112,6 @@ export default function ScoreSubmissionDetailPage() {
       const response = await getDetailScheduleService(submission.scheduleId);
       setScheduleDetail(response);
     } catch (error) {
-      console.error("Error fetching schedule data:", error);
       toast.error("An error occurred while loading schedule");
       setScheduleDetail(null);
     } finally {
@@ -152,7 +147,6 @@ export default function ScoreSubmissionDetailPage() {
       }
     } catch (error) {
       toast.error("Failed to return score");
-      console.error("Error return score:", error);
     }
   };
 
@@ -178,7 +172,6 @@ export default function ScoreSubmissionDetailPage() {
       }
     } catch (error) {
       toast.error("Failed to approve score to staff");
-      console.error("Error approving score:", error);
     }
   };
 

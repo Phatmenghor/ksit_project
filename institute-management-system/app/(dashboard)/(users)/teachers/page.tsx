@@ -100,7 +100,6 @@ export default function TeachersListPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch teachers:");
         }
       } catch (error) {
         toast.error("An error occurred while loading teachers");
@@ -153,7 +152,6 @@ export default function TeachersListPage() {
         toast.error("Failed to delete teacher");
       }
     } catch (error) {
-      console.error("Error deleting teacher:", error);
       toast.error("An error occurred while deleting the teacher");
       loadTeachers({});
     } finally {

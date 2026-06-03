@@ -128,10 +128,8 @@ export default function ScoreSubmittedPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch submissions:");
         }
       } catch (error) {
-        console.error("Error loading submissions:", error);
         toast.error("An error occurred while loading submissions");
       } finally {
         setIsLoading(false);

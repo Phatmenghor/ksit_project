@@ -53,7 +53,6 @@ export default function CourseDetailPage() {
         setCourseData(data);
       }
     } catch (err: any) {
-      console.error("Error fetching course detail:", err);
     } finally {
       setIsLoading(false);
     }

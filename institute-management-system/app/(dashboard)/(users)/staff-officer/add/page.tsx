@@ -158,7 +158,6 @@ export default function AddStaffOfficerPage() {
         toast.error("Failed to create staff");
       }
     } catch (error: any) {
-      console.error("Failed to create Staff:", error);
       toast.error(error.message || "Unknown error");
     } finally {
       setLoading(false);

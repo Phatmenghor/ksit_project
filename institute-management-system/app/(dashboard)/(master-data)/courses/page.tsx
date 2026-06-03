@@ -113,7 +113,6 @@ export default function CoursesPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch departments:");
         }
       } catch (error) {
         toast.error("An error occurred while loading departments");
@@ -163,7 +162,6 @@ export default function CoursesPage() {
         toast.error("Failed to delete class");
       }
     } catch (error) {
-      console.error("Error deleting course:", error);
       toast.error("An error occurred while deleting the course");
       loadCourses({});
     } finally {

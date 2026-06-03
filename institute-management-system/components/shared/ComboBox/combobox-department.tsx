@@ -141,7 +141,6 @@ export function ComboboxSelectDepartment({
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
-        console.error("Error fetching departments:", error);
         setError(error.message || "Failed to load departments");
         setData([]); // Clear data on error
       }

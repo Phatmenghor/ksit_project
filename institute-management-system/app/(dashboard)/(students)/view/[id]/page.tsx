@@ -44,7 +44,6 @@ export default function StudentViewPage() {
         toast.error("Error getting student data");
       }
     } catch (error) {
-      console.error("Error fetching student data:", error);
     } finally {
       setIsLoading(false);
     }

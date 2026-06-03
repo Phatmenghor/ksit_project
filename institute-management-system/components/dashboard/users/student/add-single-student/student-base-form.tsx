@@ -24,7 +24,6 @@ export function StudentBasicForm() {
   } = useFormContext();
 
   const handleClassChange = (selectedClass: ClassModel | null) => {
-    console.log("##class: ", selectedClass?.id);
     setSelectedClass(selectedClass);
     setValue("classId", selectedClass?.id ?? null, {
       shouldValidate: true,

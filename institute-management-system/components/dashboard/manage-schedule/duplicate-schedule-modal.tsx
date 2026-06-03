@@ -76,7 +76,6 @@ export default function DuplicateScheduleModal({
         toast.warning("No semesters found for the selected year");
       }
     } catch (error) {
-      console.error("Error fetching semesters:", error);
       toast.error("Failed to load semesters");
       setSemesters([]);
     } finally {
@@ -139,7 +138,6 @@ export default function DuplicateScheduleModal({
             );
           }
         } catch (sourceError) {
-          console.error("Error duplicating from source:", source, sourceError);
           errors.push(
             `Error duplicating from source class ${source.sourceClassId}`
           );
@@ -224,13 +222,6 @@ export default function DuplicateScheduleModal({
       }
 
       // Log detailed results for debugging
-      console.log("Duplication Results:", {
-        total,
-        results,
-        errors,
-        targetClass: selectedClass.code,
-        targetSemester: selectedSemester,
-      });
 
       // Call success callback with comprehensive data
       if (onSuccess && results.length > 0) {
@@ -244,7 +235,6 @@ export default function DuplicateScheduleModal({
       onOpenChange(false);
       resetForm();
     } catch (error) {
-      console.error("Unexpected error during duplication:", error);
       toast.error(
         "An unexpected error occurred while duplicating schedules. Please try again."
       );

@@ -10,7 +10,6 @@ export async function getAllSemesterService(data: AllSemesterFilterModel) {
     const response = await axiosClientWithAuth.post(`/v1/semesters/all`, data);
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching all semesters:", error);
     return null;
   }
 }
@@ -20,11 +19,9 @@ export async function createSemesterService(data: CreateSemesterModel) {
     const response = await axiosClientWithAuth.post(`/v1/semesters`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
-    console.error("Error creating semester:", error);
     throw error;
   }
 }
@@ -40,12 +37,10 @@ export async function updateSemesterService(
     );
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating semester:", error);
     throw error;
   }
 }

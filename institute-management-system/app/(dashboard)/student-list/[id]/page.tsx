@@ -80,7 +80,6 @@ export default function StudentListPage() {
 
         const response = await getAllStudentsService(baseFilters);
 
-        console.log(response);
         setStudents(response);
         // Handle case where current page exceeds total pages
         if (response.totalPages > 0 && currentPage > response.totalPages) {
@@ -88,7 +87,6 @@ export default function StudentListPage() {
           return;
         }
       } catch (error) {
-        console.error("Error fetching schedule data:", error);
         toast.error("An error occurred while loading classes");
         setStudents(null);
       } finally {
@@ -105,7 +103,6 @@ export default function StudentListPage() {
 
       setSchedule(response);
     } catch (error) {
-      console.error("Error fetching class data:", error);
       toast.error("An error occurred while loading classes");
       setSchedule(null);
     } finally {

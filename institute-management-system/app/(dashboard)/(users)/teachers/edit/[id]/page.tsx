@@ -113,7 +113,6 @@ export default function EditTeacherPage() {
 
         setInitialValues(payload);
       } catch (error) {
-        console.error("Failed to fetch teacher:", error);
         toast.error("Failed to load teacher data");
       }
     };
@@ -127,12 +126,10 @@ export default function EditTeacherPage() {
       return;
     }
 
-    // console.log("## After Change teacherId", teacherId);
-
+    //
     setLoading(true);
 
-    // console.log("## After Change department:data ", data);
-
+    //
     try {
       const payload: EditStaffModel = {
         email: cleanField(data.email),
@@ -265,7 +262,6 @@ export default function EditTeacherPage() {
         toast.error("Failed to update teacher");
       }
     } catch (error) {
-      console.error("Failed to update teacher:", error);
       toast.error("Failed to update teacher");
       setLoading(false);
     }

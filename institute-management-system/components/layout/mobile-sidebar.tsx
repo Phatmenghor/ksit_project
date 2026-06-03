@@ -107,7 +107,6 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       });
       setOpenSections(initialOpenSections);
     } catch (error) {
-      console.log("fail to fetch menu: ", error);
     }
   };
 

@@ -86,7 +86,6 @@ export function Header() {
           : username.charAt(0).toUpperCase();
       }
     } catch (error) {
-      console.log("Error getting username:", error);
     }
     return "U";
   };
@@ -139,10 +138,8 @@ export function Header() {
   const fetchUser = async () => {
     try {
       const response = await getStaffByTokenService();
-      console.log("fetch user profile by token: ", response);
       setUser(response);
     } catch (error) {
-      console.log("Error to fetch user profile: ", error);
     }
   };
 

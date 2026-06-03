@@ -56,7 +56,6 @@ export default function StudentProfileUploadCard() {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Failed to upload image", error);
     } finally {
       setIsUploading(false);
     }

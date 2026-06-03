@@ -180,7 +180,6 @@ export default function SurveyResultPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching survey results:", error);
       } finally {
         setIsLoading(false);
       }
@@ -364,7 +363,6 @@ export default function SurveyResultPage() {
             }
           }
 
-          // Return the actual data value or fallback
           return item[key] || "---";
         });
 
@@ -419,7 +417,6 @@ export default function SurveyResultPage() {
       );
       setIsSubmitting(false);
     } catch (error: unknown) {
-      console.error("Error exporting to Excel:", error);
       toast.error("Failed to export data to Excel.");
       setIsSubmitting(false);
     } finally {

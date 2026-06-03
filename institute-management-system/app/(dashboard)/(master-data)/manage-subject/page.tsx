@@ -107,7 +107,6 @@ export default function ManageSubjectPage() {
             return;
           }
         } else {
-          console.error("Failed to fetch subject:");
         }
       } catch (error) {
         toast.error("An error occurred while loading subject");
@@ -136,7 +135,6 @@ export default function ManageSubjectPage() {
 
       status: room.status,
     };
-    console.log(formData);
 
     setModalMode("edit");
     setInitialData(formData);

@@ -78,7 +78,6 @@ export const useExportScoreHandlers = (
         { id: "excel-export" }
       );
     } catch (error) {
-      console.error("Excel export error:", error);
       toast.error("Failed to export Excel file. Please try again.", {
         id: "excel-export",
       });
@@ -120,7 +119,6 @@ export const useExportScoreHandlers = (
         { id: "excel-export" }
       );
     } catch (error) {
-      console.error("Excel export error:", error);
       toast.error("Failed to export Excel file. Please try again.", {
         id: "excel-export",
       });
@@ -148,7 +146,6 @@ export const useExportScoreHandlers = (
 
       toast.loading("Generating PDF report...", { id: "pdf-export" });
 
-      console.log("##Schedule: ", schedule);
       await exportSubmissionStudentsToPDF(
         submission?.studentScores ?? [],
         fileName,
@@ -181,7 +178,6 @@ export const useExportScoreHandlers = (
         { id: "pdf-export" }
       );
     } catch (error) {
-      console.error("PDF export error:", error);
       toast.error("Failed to generate PDF report. Please try again.", {
         id: "pdf-export",
       });
@@ -212,7 +208,6 @@ export const useExportScoreHandlers = (
         id: "batch-export",
       });
     } catch (error) {
-      console.error("Batch export error:", error);
       toast.error("Failed to export files. Please try again.", {
         id: "batch-export",
       });

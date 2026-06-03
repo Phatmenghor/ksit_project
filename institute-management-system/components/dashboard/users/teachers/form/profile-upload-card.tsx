@@ -75,7 +75,6 @@ export default function ProfileUploadCard() {
             setLogoPreview(response.imageUrl);
           }
         } catch (uploadError) {
-          console.error("Failed to upload image", uploadError);
           // Revert to no image on upload failure
           URL.revokeObjectURL(previewUrl);
           setLogoPreview(null);
@@ -84,7 +83,6 @@ export default function ProfileUploadCard() {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Failed to process image", error);
       setImageError(true);
     } finally {
       setIsUploading(false);

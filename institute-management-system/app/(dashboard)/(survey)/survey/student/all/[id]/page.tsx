@@ -43,7 +43,6 @@ const AllStduentView = () => {
       if (response) {
         setStudentData(response);
       } else {
-        console.error("Failed to fetch student:");
       }
     } catch (error) {
       toast.error("An error occurred while loading student");

@@ -117,7 +117,6 @@ export default function ManageSemester() {
             return;
           }
         } else {
-          console.error("Failed to fetch semesters:");
         }
       } catch (error) {
         toast.error("An error occurred while loading semester");

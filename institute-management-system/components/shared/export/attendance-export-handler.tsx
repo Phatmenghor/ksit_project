@@ -71,7 +71,6 @@ export const useExportAttendanceHandlers = (
         { id: "excel-export" }
       );
     } catch (error) {
-      console.error("Excel export error:", error);
       toast.error("Failed to export Excel file. Please try again.", {
         id: "excel-export",
       });
@@ -99,7 +98,6 @@ export const useExportAttendanceHandlers = (
 
       toast.loading("Generating PDF report...", { id: "pdf-export" });
 
-      console.log("##Schedule: ", schedule);
       await exportAttendanceToExcelAdvanced(
         attendances?.attendances ?? [],
         fileName,
@@ -115,7 +113,6 @@ export const useExportAttendanceHandlers = (
         { id: "pdf-export" }
       );
     } catch (error) {
-      console.error("PDF export error:", error);
       toast.error("Failed to generate PDF report. Please try again.", {
         id: "pdf-export",
       });
@@ -146,7 +143,6 @@ export const useExportAttendanceHandlers = (
         id: "batch-export",
       });
     } catch (error) {
-      console.error("Batch export error:", error);
       toast.error("Failed to export files. Please try again.", {
         id: "batch-export",
       });

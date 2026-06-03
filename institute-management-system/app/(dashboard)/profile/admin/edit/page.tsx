@@ -43,7 +43,6 @@ export default function EditAdminProfilePage() {
 
         setInitialValues(payload);
       } catch (error) {
-        console.error("Failed to fetch profile:", error);
         toast.error("Failed to load profile data");
       }
     };
@@ -89,7 +88,6 @@ export default function EditAdminProfilePage() {
 
       setLoading(false);
     } catch (error) {
-      console.error("Failed to update profile:", error);
       toast.error("Failed to update profile");
       setLoading(false);
     }

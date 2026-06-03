@@ -122,14 +122,6 @@ export default function AdminModalForm({
           form.formState.isValid
       );
 
-      console.log(
-        "Dirty:",
-        form.formState.isDirty,
-        "Valid:",
-        form.formState.isValid,
-        "Errors:",
-        form.formState.errors
-      );
     });
     return () => subscription.unsubscribe();
   }, [form]);
@@ -172,11 +164,9 @@ export default function AdminModalForm({
         submitData.id = initialData.id;
       }
 
-      console.log("##Submitting data:", submitData);
 
       onSubmit(submitData);
     } catch (error) {
-      console.error("Error submitting form:", error);
       toast.error("An error occurred while saving admin");
     }
   };

@@ -185,7 +185,6 @@ export function ClassFormModal({
 
       onSubmit(submitData);
     } catch (error) {
-      console.error("Error submitting form:", error);
       toast.error("An error occurred while saving class");
     }
   };

@@ -114,14 +114,11 @@ const ScheduleAllPage = () => {
           ...filters,
         };
 
-        console.log("##Fetching schedule with filters:", baseFilters);
 
         const response = await getAllMyScheduleService(baseFilters);
 
-        console.log("##Schedule data received:", response);
         setScheduleData(response);
       } catch (error) {
-        console.error("Error fetching schedule data:", error);
         toast.error("An error occurred while loading classes");
         setScheduleData(null);
       } finally {

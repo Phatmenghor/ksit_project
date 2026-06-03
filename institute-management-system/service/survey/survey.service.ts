@@ -12,7 +12,6 @@ export async function getAllSurveySectionService() {
     const response = await axiosClientWithAuth.get("/v1/surveys/main");
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching survey sections:", error);
     return null;
   }
 }
@@ -22,12 +21,10 @@ export async function updateSurveyService(data: SurveyMainModel) {
     const response = await axiosClientWithAuth.put(`/v1/surveys/main`, data);
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error updating survey:", error);
     throw error;
   }
 }
@@ -43,7 +40,6 @@ export async function getSurveyReportHeadersService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching survey report headers:", error);
     return null;
   }
 }
@@ -56,7 +52,6 @@ export async function getAllSurveyResultService(data: AllSurveyFilterModel) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching survey results:", error);
     return null;
   }
 }
@@ -70,16 +65,13 @@ export async function submitSurveyService(
       `/v1/surveys/schedule/${scheduleId}/submit`,
       data
     );
-    console.log("Service Data:", response.data.data);
 
     return response.data.data;
   } catch (error: any) {
-    // Extract error message from response if available
     if (error.response && error.response.data && error.response.data.message) {
       throw new Error(error.response.data.message);
     }
 
-    console.error("Error submitting survey answer:", error);
     throw error;
   }
 }
@@ -94,7 +86,6 @@ export async function getAllSurveyResultExcelService(
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching survey results for Excel:", error);
     return null;
   }
 }
