@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://159.223.34.241:5432/ks_it_school
+    username: postgres
+    password: Hour1819
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.menghor.ksit: INFO
+    org.hibernate.SQL: WARN
