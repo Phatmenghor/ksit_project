@@ -64,6 +64,15 @@ public class StudentScoreServiceImpl implements StudentScoreService {
         // Track what was updated for logging
         boolean hasUpdates = false;
 
+        // Allow manual editing of attendance score (does not affect the attendance-tracking module)
+        if (updateDto.getAttendanceScore() != null) {
+            validateScoreLimit(updateDto.getAttendanceScore(), config.getAttendancePercentage(), "Attendance");
+            studentScore.setAttendanceScore(BigDecimal.valueOf(updateDto.getAttendanceScore()));
+            log.info("Attendance score updated to {} for studentScoreId={}",
+                    updateDto.getAttendanceScore(), updateDto.getId());
+            hasUpdates = true;
+        }
+
         // Validate and update scores with percentage limits
         if (updateDto.getAssignmentScore() != null) {
             validateScoreLimit(updateDto.getAssignmentScore(), config.getAssignmentPercentage(), "Assignment");

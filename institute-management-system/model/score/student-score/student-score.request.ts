@@ -4,6 +4,7 @@ export interface RequestStudentScoreModel {
 
 export interface UpdateScoreModel {
   id: number;
+  attendanceScore: number;
   assignmentScore: number;
   midtermScore: number;
   finalScore: number;
