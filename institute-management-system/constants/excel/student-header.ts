@@ -1,0 +1,17 @@
+export const StudentListExcelTableHeader = [
+  "ID",
+  "Username",
+  "Email",
+  "Status",
+  "Identify Number",
+  "Khmer First Name",
+  "Khmer Last Name",
+  "English First Name",
+  "English Last Name",
+  "Gender",
+  "Student Status",
+  "Date of Birth",
+  "Phone Number",
+  "Class",
+  "Created At",
+];

@@ -1,0 +1,65 @@
+export interface AttendanceGenerateModel {
+  id: number;
+  sessionDate: string;
+  qrCode: string;
+  qrExpiryTime: string;
+  finalizationStatus: string;
+  status: string;
+  scheduleId: number;
+  courseName: string;
+  roomName: string;
+  className: string;
+  teacherId: number;
+  teacherName: string;
+  totalStudents: number;
+  totalPresent: number;
+  totalAbsent: number;
+  attendances: AttendancModel[];
+}
+
+export interface AttendancModel {
+  id: number;
+  status: string;
+  attendanceType: string;
+  identifyNumber: string;
+  comment: any;
+  recordedTime: string;
+  finalizationStatus: string;
+  studentId: number;
+  studentName: any;
+  attendanceSessionId: number;
+  teacherId: number;
+  teacherName: string;
+  gender: any;
+  dateOfBirth: any;
+  scheduleId: number;
+  courseName: string;
+  courseNameKH: string;
+  courseNameEn: string;
+  courseCode: string;
+  credit: number;
+  theory: number;
+  execute: number;
+  apply: number;
+  totalHour: number;
+  departmentImageUrl: string;
+  startTime: string;
+  endTime: string;
+  day: string;
+  yearLevel: string;
+  roomId: number;
+  roomName: string;
+  classId: number;
+  classCode: string;
+  semesterId: number;
+  semester: string;
+  semesterName: string;
+  academyYear: number;
+  createdAt: any;
+  totalSessionsConducted: number;
+  sessionsAttended: number;
+  attendancePercentage: number;
+  attendanceScore: number;
+  maxAttendanceScore: number;
+  attendanceScoreDescription: string;
+}
