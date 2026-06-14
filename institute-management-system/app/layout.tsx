@@ -42,6 +42,7 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://telegram.org/js/telegram-web-app.js" />
       </head>
       <body
         className={`${inter.variable} ${notoSansKhmer.variable} ${notoSansTC.variable} antialiased h-full overflow-hidden`}
