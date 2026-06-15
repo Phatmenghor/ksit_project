@@ -12,6 +12,9 @@ import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FilterConfig, FilterPanelConfig } from "./filter-types";
 
+const CONTROL_H = "h-9";
+const FILTER_MIN_W = "min-w-[148px]";
+
 function isFilterActive(f: FilterConfig): boolean {
   const v = f.value;
   if (v === undefined || v === null) return false;
@@ -19,18 +22,23 @@ function isFilterActive(f: FilterConfig): boolean {
   return true;
 }
 
+function LabelRow({ label }: { label: string }) {
+  return <span className="text-xs font-medium text-foreground/80">{label}</span>;
+}
+
 function renderFilter(filter: FilterConfig): React.ReactNode {
   switch (filter.type) {
     case "select":
       return (
         <div key={filter.id} className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-foreground/80">{filter.label}</label>
+          <LabelRow label={filter.label} />
           <select
             value={filter.value?.toString() ?? ""}
             onChange={(e) => filter.onChange(e.target.value || undefined)}
             disabled={filter.disabled}
             className={cn(
-              "h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm",
+              CONTROL_H,
+              "w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm",
               "transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary",
               "hover:border-primary/50",
               filter.disabled && "opacity-50 cursor-not-allowed"
@@ -49,14 +57,14 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
     case "input-text":
       return (
         <div key={filter.id} className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-foreground/80">{filter.label}</label>
+          <LabelRow label={filter.label} />
           <Input
             type="text"
             placeholder={filter.placeholder ?? "Enter text..."}
             value={filter.value ?? ""}
             onChange={(e) => filter.onChange(e.target.value)}
             disabled={filter.disabled}
-            className="h-9 text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors"
+            className={cn(CONTROL_H, "text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors")}
           />
         </div>
       );
@@ -64,7 +72,7 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
     case "input-number":
       return (
         <div key={filter.id} className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-foreground/80">{filter.label}</label>
+          <LabelRow label={filter.label} />
           <Input
             type="number"
             placeholder={filter.placeholder ?? "0"}
@@ -76,7 +84,7 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
             min={filter.min}
             max={filter.max}
             disabled={filter.disabled}
-            className="h-9 text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors"
+            className={cn(CONTROL_H, "text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors")}
           />
         </div>
       );
@@ -84,17 +92,17 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
     case "date": {
       const dateVal = filter.value ? parseISO(filter.value) : undefined;
       const isValidDate = dateVal && isValid(dateVal);
-
       return (
         <div key={filter.id} className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-foreground/80">{filter.label}</label>
+          <LabelRow label={filter.label} />
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 disabled={filter.disabled}
                 className={cn(
-                  "h-9 w-full justify-start px-3 font-normal text-sm",
+                  CONTROL_H,
+                  "w-full justify-start px-3 font-normal text-sm",
                   !isValidDate && "text-muted-foreground",
                   "hover:bg-primary/10 hover:border-primary/50 transition-colors"
                 )}
@@ -106,10 +114,7 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
                 {isValidDate && (
                   <X
                     className="h-3.5 w-3.5 opacity-50 hover:opacity-100 hover:text-red-500 transition-colors shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      filter.onChange(undefined);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); filter.onChange(undefined); }}
                   />
                 )}
               </Button>
@@ -132,25 +137,23 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
       const minYear = filter.minYear ?? currentYear - 10;
       const maxYear = filter.maxYear ?? currentYear + 5;
       const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i);
-
       return (
         <div key={filter.id} className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-foreground/80">{filter.label}</label>
+          <LabelRow label={filter.label} />
           <select
             value={filter.value}
             onChange={(e) => filter.onChange(parseInt(e.target.value))}
             disabled={filter.disabled}
             className={cn(
-              "h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm",
+              CONTROL_H,
+              "w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm",
               "transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary",
               "hover:border-primary/50",
               filter.disabled && "opacity-50 cursor-not-allowed"
             )}
           >
             {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
+              <option key={year} value={year}>{year}</option>
             ))}
           </select>
         </div>
@@ -196,7 +199,7 @@ export function CollapsibleFilterPanel({
     <Card className="border border-gray-100 shadow-sm">
       <CardContent className="py-3 px-4 space-y-3">
 
-        {/* Title row: title left, button right */}
+        {/* Title left | Add button right */}
         <div className="flex items-center justify-between gap-2">
           <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800 truncate">
             {config.title}
@@ -208,7 +211,7 @@ export function CollapsibleFilterPanel({
                 disabled={config.buttonDisabled}
                 variant="default"
                 onClick={config.onButtonClick}
-                className="gap-1.5 h-9 px-3 text-sm"
+                className={cn("gap-1.5 px-3 text-sm", CONTROL_H)}
                 title={config.buttonTooltip}
               >
                 <Plus className="h-4 w-4" />
@@ -218,37 +221,52 @@ export function CollapsibleFilterPanel({
           </div>
         </div>
 
-        {/* Search + essential filters: search grows, filters wrap right */}
+        {/* Search (flex-1, max-w) + filters (min-w each) + clear icon */}
         <div className="flex flex-wrap items-end gap-2">
-          <div className="relative flex-1 min-w-[180px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="search"
-              placeholder={config.searchPlaceholder}
-              className="pl-8 h-9 w-full text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors"
-              value={config.searchValue}
-              onChange={config.onSearchChange}
-            />
+
+          {/* Search — grows but caps at max-width */}
+          <div className="flex flex-col gap-1 flex-1 min-w-[180px] max-w-[320px]">
+            <span className="text-xs font-medium text-foreground/80 invisible select-none">Search</span>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="search"
+                placeholder={config.searchPlaceholder}
+                className={cn("pl-8 w-full text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors", CONTROL_H)}
+                value={config.searchValue}
+                onChange={config.onSearchChange}
+              />
+            </div>
           </div>
 
+          {/* Essential filters — each with min-width */}
           {essentialFilters.map((filter) => (
-            <div key={filter.id} className="w-[160px] flex-shrink-0">
+            <div key={filter.id} className={cn("flex-shrink-0", FILTER_MIN_W)}>
               {renderFilter(filter)}
             </div>
           ))}
 
+          {/* Clear icon button — same height, no text */}
           {anyFilterActive && config.onClearAll && (
-            <button
-              type="button"
-              onClick={config.onClearAll}
-              className="h-9 self-end text-xs font-medium text-primary hover:underline flex-shrink-0"
-            >
-              Clear all
-            </button>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs invisible select-none">x</span>
+              <button
+                type="button"
+                onClick={config.onClearAll}
+                title="Clear all filters"
+                className={cn(
+                  CONTROL_H,
+                  "w-9 flex items-center justify-center rounded-md border border-input bg-background",
+                  "hover:bg-red-50 hover:border-red-300 hover:text-red-500 transition-colors text-muted-foreground"
+                )}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Advanced filters */}
+        {/* Advanced / more filters */}
         {advancedFilters.length > 0 && (
           <div className="border-t pt-3">
             <button
@@ -262,20 +280,12 @@ export function CollapsibleFilterPanel({
                   {advancedActiveCount} active
                 </Badge>
               )}
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-200",
-                  showAdvanced && "rotate-180"
-                )}
-              />
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", showAdvanced && "rotate-180")} />
             </button>
 
             {showAdvanced && (
               <div className="mt-3 pt-3 border-t border-dashed">
-                <div
-                  className="grid gap-3 w-full"
-                  style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}
-                >
+                <div className="grid gap-3 w-full" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
                   {advancedFilters.map((filter) => renderFilter(filter))}
                 </div>
               </div>
