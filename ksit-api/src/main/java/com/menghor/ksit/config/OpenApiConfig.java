@@ -37,13 +37,7 @@ public class OpenApiConfig {
     public GroupedOpenApi authGroup() {
         return GroupedOpenApi.builder()
                 .group("1. Authentication & Users")
-                .pathsToMatch(
-                        "/api/v1/auth/**",
-                        "/api/v1/students/**",
-                        "/api/v1/staff/**",
-                        "/api/v1/staff-teacher-roles/**",
-                        "/api/v1/payments/**"
-                )
+                .packagesToScan("com.menghor.ksit.feature.auth.controller")
                 .build();
     }
 
@@ -51,14 +45,7 @@ public class OpenApiConfig {
     public GroupedOpenApi masterDataGroup() {
         return GroupedOpenApi.builder()
                 .group("2. Master Data")
-                .pathsToMatch(
-                        "/api/v1/classes/**",
-                        "/api/v1/departments/**",
-                        "/api/v1/majors/**",
-                        "/api/v1/rooms/**",
-                        "/api/v1/semesters/**",
-                        "/api/v1/subjects/**"
-                )
+                .packagesToScan("com.menghor.ksit.feature.master.controller")
                 .build();
     }
 
@@ -66,12 +53,7 @@ public class OpenApiConfig {
     public GroupedOpenApi schoolGroup() {
         return GroupedOpenApi.builder()
                 .group("3. School")
-                .pathsToMatch(
-                        "/api/v1/courses/**",
-                        "/api/v1/schedules/**",
-                        "/api/v1/transcript/**",
-                        "/api/v1/requests/**"
-                )
+                .packagesToScan("com.menghor.ksit.feature.school.controller")
                 .build();
     }
 
@@ -79,10 +61,7 @@ public class OpenApiConfig {
     public GroupedOpenApi attendanceGroup() {
         return GroupedOpenApi.builder()
                 .group("4. Attendance & Score")
-                .pathsToMatch(
-                        "/api/v1/attendance/**",
-                        "/api/v1/score/**"
-                )
+                .packagesToScan("com.menghor.ksit.feature.attendance.controller")
                 .build();
     }
 
@@ -90,7 +69,7 @@ public class OpenApiConfig {
     public GroupedOpenApi surveyGroup() {
         return GroupedOpenApi.builder()
                 .group("5. Survey")
-                .pathsToMatch("/api/v1/surveys/**")
+                .packagesToScan("com.menghor.ksit.feature.survey.controller")
                 .build();
     }
 
@@ -98,7 +77,7 @@ public class OpenApiConfig {
     public GroupedOpenApi menuGroup() {
         return GroupedOpenApi.builder()
                 .group("6. Menu & Permissions")
-                .pathsToMatch("/api/v1/menus/**")
+                .packagesToScan("com.menghor.ksit.feature.menu.controller")
                 .build();
     }
 
@@ -106,11 +85,7 @@ public class OpenApiConfig {
     public GroupedOpenApi settingGroup() {
         return GroupedOpenApi.builder()
                 .group("7. Settings & Utilities")
-                .pathsToMatch(
-                        "/api/images/**",
-                        "/api/v1/enums/**",
-                        "/api/v1/statistics/**"
-                )
+                .packagesToScan("com.menghor.ksit.feature.setting.controller")
                 .build();
     }
 }
