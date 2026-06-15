@@ -2,11 +2,14 @@ package com.menghor.ksit.config;
 
 import com.menghor.ksit.enumations.RoleEnum;
 import com.menghor.ksit.enumations.Status;
+import com.menghor.ksit.feature.auth.models.Role;
+import com.menghor.ksit.feature.auth.models.UserEntity;
+import com.menghor.ksit.feature.auth.repository.UserRepository;
 import com.menghor.ksit.feature.menu.models.MenuItemEntity;
 import com.menghor.ksit.feature.menu.models.MenuPermissionEntity;
 import com.menghor.ksit.feature.menu.repository.MenuItemRepository;
 import com.menghor.ksit.feature.menu.repository.MenuPermissionRepository;
-import com.menghor.ksit.feature.menu.service.MenuService;
+import com.menghor.ksit.utils.component.MenuPermissionConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -14,9 +17,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +28,8 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
     private final MenuItemRepository menuItemRepository;
     private final MenuPermissionRepository menuPermissionRepository;
-    private final MenuService menuService;
+    private final UserRepository userRepository;
+    private final MenuPermissionConfig menuPermissionConfig;
 
     @Override
     @Transactional
@@ -34,15 +37,17 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         log.info("=== Menu initialization started ===");
         removeObsoleteMenus();
         seedMenus();
-        menuService.syncAllUserMenuPermissions();
+        syncAllUserMenuPermissions();
         log.info("=== Menu initialization complete ===");
     }
+
+    // ─── Obsolete menu cleanup ────────────────────────────────────────────────
 
     private void removeObsoleteMenus() {
         List<String> obsoleteCodes = List.of("my-class");
         for (String code : obsoleteCodes) {
             menuItemRepository.findByCodeAndStatus(code, Status.ACTIVE).ifPresent(menu -> {
-                log.info("Removing obsolete menu item: code={}, route={}", menu.getCode(), menu.getRoute());
+                log.info("Removing obsolete menu: code={}", menu.getCode());
                 menu.setStatus(Status.DELETED);
                 menuItemRepository.save(menu);
 
@@ -51,11 +56,12 @@ public class DefaultMenuInitializer implements CommandLineRunner {
                 perms.forEach(p -> p.setStatus(Status.DELETED));
                 if (!perms.isEmpty()) {
                     menuPermissionRepository.saveAll(perms);
-                    log.info("Removed {} permission records for obsolete menu [{}]", perms.size(), code);
                 }
             });
         }
     }
+
+    // ─── Menu seeding ─────────────────────────────────────────────────────────
 
     private void seedMenus() {
         log.info("Seeding menu items...");
@@ -189,14 +195,76 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         log.info("Menu items seeded successfully.");
     }
 
+    // ─── User permission sync ─────────────────────────────────────────────────
+
+    private void syncAllUserMenuPermissions() {
+        log.info("Syncing user menu permissions...");
+
+        List<UserEntity> allUsers = userRepository.findAll();
+        List<MenuItemEntity> activeMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
+        Set<Long> activeMenuIds = activeMenus.stream()
+                .map(MenuItemEntity::getId)
+                .collect(Collectors.toSet());
+
+        int processed = 0;
+        int errors = 0;
+
+        for (UserEntity user : allUsers) {
+            try {
+                syncUserPermissions(user, activeMenus, activeMenuIds);
+                processed++;
+            } catch (Exception e) {
+                log.error("Error syncing permissions for user [{}]: {}", user.getUsername(), e.getMessage());
+                errors++;
+            }
+        }
+
+        log.info("User permissions sync complete — processed: {}, errors: {}", processed, errors);
+    }
+
+    private void syncUserPermissions(UserEntity user, List<MenuItemEntity> activeMenus, Set<Long> activeMenuIds) {
+        Set<RoleEnum> roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+
+        List<MenuPermissionEntity> existing = menuPermissionRepository
+                .findByUserIdAndStatus(user.getId(), Status.ACTIVE);
+        Set<Long> existingMenuIds = existing.stream()
+                .map(p -> p.getMenuItem().getId())
+                .collect(Collectors.toSet());
+
+        List<MenuPermissionEntity> toSave = new ArrayList<>();
+
+        for (MenuItemEntity menu : activeMenus) {
+            if (!existingMenuIds.contains(menu.getId())) {
+                MenuPermissionEntity perm = new MenuPermissionEntity();
+                perm.setUser(user);
+                perm.setMenuItem(menu);
+                perm.setCanView(menuPermissionConfig.hasAnyRoleAccess(menu.getCode(), roles));
+                perm.setDisplayOrder(menu.getDisplayOrder());
+                perm.setStatus(Status.ACTIVE);
+                toSave.add(perm);
+            }
+        }
+
+        for (MenuPermissionEntity perm : existing) {
+            if (!activeMenuIds.contains(perm.getMenuItem().getId())) {
+                perm.setStatus(Status.DELETED);
+                toSave.add(perm);
+            }
+        }
+
+        if (!toSave.isEmpty()) {
+            menuPermissionRepository.saveAll(toSave);
+        }
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
     private MenuItemEntity upsertMenuItem(
-            String code,
-            String title,
-            String route,
-            MenuItemEntity parent,
-            String icon,
-            boolean isParent,
-            int displayOrder) {
+            String code, String title, String route,
+            MenuItemEntity parent, String icon,
+            boolean isParent, int displayOrder) {
 
         MenuItemEntity item = menuItemRepository.findByCodeAndStatus(code, Status.ACTIVE)
                 .orElse(new MenuItemEntity());

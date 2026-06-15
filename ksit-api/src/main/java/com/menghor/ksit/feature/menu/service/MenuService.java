@@ -11,25 +11,29 @@ import java.util.List;
 
 public interface MenuService {
 
-    List<MenuItemResponseDto> getAllMenuItems();
+    // ─── Frontend: menu display ───────────────────────────────────────────────
 
     List<UserMenuResponseDto> getAllMenusWithPermissions(Long userId);
 
+    List<UserMenuResponseDto> getUserViewableMenus(Long userId);
+
     List<UserMenuResponseDto> getMenusByRole(RoleEnum role);
+
+    List<MenuItemResponseDto> getAllMenuItems();
+
+    // ─── Frontend: permission management ─────────────────────────────────────
 
     List<UserMenuResponseDto> updateUserMenuPermissions(Long userId, UserMenuUpdateDto updateDto);
 
-    List<UserMenuResponseDto> getUserViewableMenus(Long userId);
-
     List<UserMenuResponseDto> resetUserMenusToDefault(Long userId);
+
+    // ─── Backend: called by other services ───────────────────────────────────
 
     void initializeMenuPermissionsForNewUser(Long userId);
 
     List<UserMenuResponseDto> refreshUserMenuPermissionsAfterRoleChange(Long userId);
 
-    void syncAllUserMenuPermissions();
-
-    void updateAllUsersToNewPermissions();
+    // ─── Admin: menu item management ─────────────────────────────────────────
 
     MenuItemResponseDto createMenuItem(MenuCreateDto createDto);
 
