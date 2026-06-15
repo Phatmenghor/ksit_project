@@ -1,6 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -17,12 +16,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Pencil, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
-import { YearSelector } from "@/components/shared/year-selector";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
 import {
   createClassService,
@@ -49,8 +46,9 @@ import { useDebounce } from "@/utils/debounce/debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSearchParams } from "next/navigation";
-import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
 
 export default function ManageClassPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -278,14 +276,12 @@ export default function ManageClassPage() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardContent className="p-6 space-y-2">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
@@ -293,37 +289,52 @@ export default function ManageClassPage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <h3 className="text-xl font-bold">Manage Class</h3>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search class..."
-                className="pl-8 w-[100%]"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <ComboboxSelectMajor
-              dataSelect={selectedMajor}
-              onChangeSelected={handleMajorChange}
-              disabled={isSubmitting}
-            />
-            <div className="flex items-center gap-2">
-              <YearSelector value={selectedYear} onChange={handleYearChange} />
-
-              <Button
-                onClick={handleOpenAddModal}
-                className="bg-teal-900 text-white hover:bg-teal-950"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add New
-              </Button>
-            </div>
-          </div>
         </CardContent>
       </Card>
+
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Classes",
+          totalCount: allClassData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search class...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddModal,
+          filters: [
+            {
+              id: "major",
+              type: "custom",
+              label: "Major",
+              value: selectedMajor,
+              onChange: (v) => setSelectedMajor(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Major</label>
+                  <ComboboxSelectMajor
+                    dataSelect={value}
+                    onChangeSelected={onChange}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ),
+            },
+            {
+              id: "year",
+              type: "year",
+              label: "Academy Year",
+              value: selectedYear,
+              onChange: handleYearChange,
+            },
+          ],
+          onClearAll: () => {
+            setSelectedMajor(null);
+            setSelectedYear(new Date().getFullYear());
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={["major", "year"]}
+      />
       <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
         {isLoading ? (
           <Loading />
