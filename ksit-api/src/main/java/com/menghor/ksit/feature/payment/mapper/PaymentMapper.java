@@ -4,7 +4,7 @@ import com.menghor.ksit.feature.payment.dto.request.PaymentCreateDTO;
 import com.menghor.ksit.feature.payment.dto.response.PaymentResponseDTO;
 import com.menghor.ksit.feature.payment.dto.update.PaymentUpdateDto;
 import com.menghor.ksit.feature.payment.models.PaymentEntity;
-import com.menghor.ksit.feature.payment.models.UserEntity;
+import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import org.mapstruct.*;
 import org.springframework.data.domain.Page;

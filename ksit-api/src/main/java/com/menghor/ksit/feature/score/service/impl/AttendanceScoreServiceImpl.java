@@ -2,11 +2,11 @@ package com.menghor.ksit.feature.score.service.impl;
 
 import com.menghor.ksit.enumations.AttendanceStatus;
 import com.menghor.ksit.feature.score.dto.response.AttendanceScoreDto;
-import com.menghor.ksit.feature.score.models.AttendanceEntity;
-import com.menghor.ksit.feature.score.repository.AttendanceRepository;
-import com.menghor.ksit.feature.score.repository.AttendanceSessionRepository;
+import com.menghor.ksit.feature.attendance.models.AttendanceEntity;
+import com.menghor.ksit.feature.attendance.repository.AttendanceRepository;
+import com.menghor.ksit.feature.attendance.repository.AttendanceSessionRepository;
 import com.menghor.ksit.feature.score.service.AttendanceScoreService;
-import com.menghor.ksit.feature.score.specification.AttendanceSpecification;
+import com.menghor.ksit.feature.attendance.specification.AttendanceSpecification;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import com.menghor.ksit.feature.master.repository.SemesterRepository;

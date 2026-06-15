@@ -5,7 +5,7 @@ import com.menghor.ksit.feature.score.models.StudentScoreEntity;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.score.dto.response.TranscriptCourseDto;
 import com.menghor.ksit.feature.score.dto.response.TranscriptResponseDto;
-import com.menghor.ksit.feature.score.model.ScheduleEntity;
+import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

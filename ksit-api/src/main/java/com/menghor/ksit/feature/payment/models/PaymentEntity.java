@@ -3,6 +3,7 @@ package com.menghor.ksit.feature.payment.models;
 import com.menghor.ksit.enumations.GenderEnum;
 import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.enumations.StudentTypePayment;
+import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;

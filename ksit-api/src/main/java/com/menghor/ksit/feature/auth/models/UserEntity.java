@@ -4,6 +4,7 @@ import com.menghor.ksit.enumations.GenderEnum;
 import com.menghor.ksit.enumations.RoleEnum;
 import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.enumations.StudentStatus;
+import com.menghor.ksit.feature.payment.models.PaymentEntity;
 import com.menghor.ksit.feature.school.model.CourseEntity;
 import com.menghor.ksit.feature.master.model.ClassEntity;
 import com.menghor.ksit.feature.master.model.DepartmentEntity;
