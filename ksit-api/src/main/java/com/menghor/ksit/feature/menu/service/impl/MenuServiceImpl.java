@@ -218,13 +218,17 @@ public class MenuServiceImpl implements MenuService {
     // ─── Private helpers ──────────────────────────────────────────────────────
 
     private UserEntity getUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+        return userRepository.findById(userId).orElseThrow(() -> {
+            log.error("User not found with ID: {}", userId);
+            return new NotFoundException("User not found with ID: " + userId);
+        });
     }
 
     private MenuItemEntity getMenuItemById(Long menuId) {
-        return menuItemRepository.findById(menuId)
-                .orElseThrow(() -> new NotFoundException("Menu item not found with ID: " + menuId));
+        return menuItemRepository.findById(menuId).orElseThrow(() -> {
+            log.error("Menu item not found with ID: {}", menuId);
+            return new NotFoundException("Menu item not found with ID: " + menuId);
+        });
     }
 
     private void initializeUserPermissions(UserEntity user) {
