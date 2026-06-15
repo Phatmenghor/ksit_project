@@ -50,8 +50,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         log.info("=== Menu initialization complete ===");
     }
 
-    // ─── Obsolete menu cleanup ────────────────────────────────────────────────
-
     private void removeObsoleteMenus() {
         List<String> obsoleteCodes = List.of("my-class");
         for (String code : obsoleteCodes) {
@@ -71,17 +69,13 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         }
     }
 
-    // ─── Menu seeding ─────────────────────────────────────────────────────────
-
     private void seedMenus() {
         log.info("Seeding menu items...");
 
-        // 1. Dashboard
         MenuItemEntity dashboard = upsertMenuItem("dashboard", "Dashboard", "/", null, "dashboard", false, 1);
         addPermissions(dashboard, 1,
                 RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 2. Master Data
         MenuItemEntity masterData = upsertMenuItem("master-data", "Master Data", null, null, "database", true, 2);
         addPermissions(masterData, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -106,7 +100,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity courses = upsertMenuItem("manage-course", "Courses", "/master-data/courses", masterData, "graduation-cap", false, 7);
         addPermissions(courses, 7, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 3. Users
         MenuItemEntity users = upsertMenuItem("users", "Users", null, null, "users", true, 3);
         addPermissions(users, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -119,7 +112,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity teachers = upsertMenuItem("teachers", "Teachers", "/users/teachers", users, "user-pen", false, 3);
         addPermissions(teachers, 3, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 4. Students
         MenuItemEntity studentsParent = upsertMenuItem("students", "Students", null, null, "graduation-cap", true, 4);
         addPermissions(studentsParent, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -132,7 +124,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity addMultiple = upsertMenuItem("add-multiple-users", "Add Multiple", "/students/add-multiple", studentsParent, "users-round", false, 3);
         addPermissions(addMultiple, 3, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 5. Attendance
         MenuItemEntity attendance = upsertMenuItem("attendance", "Attendance", null, null, "clipboard-check", true, 5);
         addPermissions(attendance, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -145,16 +136,13 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity studentRecords = upsertMenuItem("student-records", "Student Records", "/attendance/records", attendance, "file-text", false, 3);
         addPermissions(studentRecords, 3, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 6. Schedule
         MenuItemEntity schedule = upsertMenuItem("schedule", "Schedule", "/schedule", null, "calendar", false, 6);
         addPermissions(schedule, 1,
                 RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 7. Manage Schedule
         MenuItemEntity manageSchedule = upsertMenuItem("manage-schedule", "Manage Schedule", "/manage-schedule", null, "calendar-cog", false, 7);
         addPermissions(manageSchedule, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 8. Scores
         MenuItemEntity scores = upsertMenuItem("scores-submitted", "Scores", null, null, "bar-chart-2", true, 8);
         addPermissions(scores, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -167,7 +155,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity scoreSettings = upsertMenuItem("score-setting", "Score Settings", "/scores/settings", scores, "settings", false, 3);
         addPermissions(scoreSettings, 3, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 9. Payments
         MenuItemEntity payment = upsertMenuItem("payment", "Payments", null, null, "credit-card", true, 9);
         addPermissions(payment, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -177,7 +164,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity myPayment = upsertMenuItem("my-payment", "My Payment", "/my-payment", payment, "wallet", false, 2);
         addPermissions(myPayment, 2, RoleEnum.STUDENT);
 
-        // 10. Survey
         MenuItemEntity survey = upsertMenuItem("survey", "Survey", null, null, "clipboard", true, 10);
         addPermissions(survey, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
@@ -194,23 +180,18 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity surveyStudentRecords = upsertMenuItem("survey-student-records", "Student Records", "/survey/records", survey, "file-user", false, 4);
         addPermissions(surveyStudentRecords, 4, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 11. Requests
         MenuItemEntity requests = upsertMenuItem("request", "Requests", "/requests", null, "inbox", false, 11);
         addPermissions(requests, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        // 12. Role & Permissions
         MenuItemEntity rolePermission = upsertMenuItem("role-permission", "Role & Permissions", "/permissions", null, "shield", false, 12);
         addPermissions(rolePermission, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         log.info("Menu items seeded successfully.");
     }
 
-    // ─── User permission sync ─────────────────────────────────────────────────
-
     private void syncAllUserMenuPermissions(TransactionTemplate tx) {
         log.info("Syncing user menu permissions...");
 
-        // Collect IDs only — no lazy collections accessed here
         List<Long> userIds = userRepository.findAll().stream()
                 .map(UserEntity::getId)
                 .collect(Collectors.toList());
@@ -226,7 +207,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         for (Long userId : userIds) {
             try {
                 tx.execute(status -> {
-                    // Re-fetch inside the transaction so roles lazy-load within the same session
                     UserEntity user = userRepository.findById(userId).orElseThrow();
                     syncUserPermissions(user, activeMenus, activeMenuIds);
                     return null;
@@ -285,8 +265,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
         log.info("User [{}] permissions synced — added: {}, removed: {}", user.getUsername(), added, removed);
     }
-
-    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private MenuItemEntity upsertMenuItem(
             String code, String title, String route,
