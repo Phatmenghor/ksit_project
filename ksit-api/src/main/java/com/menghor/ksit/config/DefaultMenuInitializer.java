@@ -202,7 +202,11 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     private void syncAllUserMenuPermissions(TransactionTemplate tx) {
         log.info("Syncing user menu permissions...");
 
-        List<UserEntity> allUsers = userRepository.findAll();
+        // Collect IDs only — no lazy collections accessed here
+        List<Long> userIds = userRepository.findAll().stream()
+                .map(UserEntity::getId)
+                .collect(Collectors.toList());
+
         List<MenuItemEntity> activeMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
         Set<Long> activeMenuIds = activeMenus.stream()
                 .map(MenuItemEntity::getId)
@@ -211,15 +215,17 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         int processed = 0;
         int errors = 0;
 
-        for (UserEntity user : allUsers) {
+        for (Long userId : userIds) {
             try {
                 tx.execute(status -> {
+                    // Re-fetch inside the transaction so roles lazy-load within the same session
+                    UserEntity user = userRepository.findById(userId).orElseThrow();
                     syncUserPermissions(user, activeMenus, activeMenuIds);
                     return null;
                 });
                 processed++;
             } catch (Exception e) {
-                log.error("Error syncing permissions for user [{}]: {}", user.getUsername(), e.getMessage());
+                log.error("Error syncing permissions for user id={}: {}", userId, e.getMessage());
                 errors++;
             }
         }
