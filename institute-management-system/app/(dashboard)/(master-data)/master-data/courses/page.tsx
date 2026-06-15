@@ -1,15 +1,6 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,8 +10,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
-import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import {
   AllCourseModel,
   CourseModel,
@@ -33,18 +23,14 @@ import {
 } from "@/service/master-data/course.service";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import { CourseTableHeader } from "@/constants/table/master-data";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import PaginationPage from "@/components/shared/pagination-page";
-import Loading from "@/components/shared/loading";
 import { ComboboxSelectDepartment } from "@/components/shared/ComboBox/combobox-department";
 import { DepartmentModel } from "@/model/master-data/department/all-department-model";
-import { useForm } from "react-hook-form";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { string } from "zod";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function CoursesPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,13 +46,10 @@ export default function CoursesPage() {
   );
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentModel | null>(null);
-  type FormValues = {
-    departmentId: number;
-  };
 
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.COURSES.INDEX,
       defaultPageSize: 10,
@@ -81,16 +64,12 @@ export default function CoursesPage() {
     }
   };
 
-  // Then add this effect for initial URL setup
   useEffect(() => {
     const pageParam = searchParams.get("pageNo");
     if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
       updateUrlWithPage(1, true);
     }
   }, [searchParams, updateUrlWithPage]);
-
-  const { setValue } = useForm<FormValues>();
 
   const loadCourses = useCallback(
     async (param: AllCourseFilterModel) => {
@@ -112,10 +91,9 @@ export default function CoursesPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
-        toast.error("An error occurred while loading departments");
+        toast.error("An error occurred while loading courses");
       } finally {
         setIsLoading(false);
       }
@@ -170,41 +148,105 @@ export default function CoursesPage() {
     }
   }
 
-  const handleDepartmentChange = (department: DepartmentModel | null) => {
-    if (!department) {
-      // If combobox cleared selection
-      setSelectedDepartment(null);
-      setValue("departmentId", 0 as number, {
-        shouldValidate: true,
-      });
-      return;
-    }
-
-    if (selectedDepartment?.id === department.id) {
-      // Unselect if the same department is clicked
-      setSelectedDepartment(null);
-      setValue("departmentId", 0 as number, {
-        shouldValidate: true,
-      });
-    } else {
-      // Select new department
-      setSelectedDepartment(department);
-      setValue("departmentId", department.id as number, {
-        shouldValidate: true,
-      });
-    }
+  const handleOpenAddCourse = () => {
+    router.push(ROUTE.MASTER_DATA.COURSES.ADD);
   };
 
+  const columns: TableColumn<CourseModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => {
+        const page = currentPage ?? 1;
+        return (page - 1) * 30 + index + 1;
+      },
+    },
+    {
+      key: "code",
+      label: "Code",
+      render: (course) => (
+        <span className="rounded bg-gray-100 px-2 py-1">{course?.code || "---"}</span>
+      ),
+    },
+    {
+      key: "nameKH",
+      label: "Name (KH)",
+      render: (course) => course?.nameKH || "---",
+    },
+    {
+      key: "nameEn",
+      label: "Name (EN)",
+      render: (course) => course?.nameEn || "---",
+    },
+    {
+      key: "credit",
+      label: "Credit",
+      render: (course) =>
+        `${course?.credit || "---"} (${course?.theory},${course?.execute},${course?.apply})`,
+    },
+    {
+      key: "instructor",
+      label: "Instructor",
+      render: (course) =>
+        course?.user?.englishFirstName && course?.user?.englishLastName
+          ? `${course.user.englishFirstName} ${course.user.englishLastName}`
+          : course?.user?.khmerFirstName && course?.user?.khmerLastName
+          ? `${course.user.khmerFirstName} ${course.user.khmerLastName}`
+          : course?.user?.username || "---",
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (course) => (
+        <div className="flex justify-start space-x-2">
+          <Button
+            onClick={() =>
+              router.push(ROUTE.MASTER_DATA.COURSES.VIEW(String(course.id || "")))
+            }
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-gray-200"
+            disabled={!course.id}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() =>
+              router.push(ROUTE.MASTER_DATA.COURSES.UPDATE(String(course.id || "")))
+            }
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-gray-200"
+            disabled={!course.id}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedCourse(course);
+              setIsDeleteDialogOpen(true);
+            }}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+            disabled={isSubmitting || !course.id}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
@@ -212,171 +254,63 @@ export default function CoursesPage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <h3 className="text-xl font-bold">Manage Course</h3>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search course..."
-                className="pl-8 w-full"
-                value={searchQuery || ""} // Handle null/undefined searchQuery
-                onChange={handleSearchChange}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <ComboboxSelectDepartment
-                dataSelect={selectedDepartment}
-                onChangeSelected={handleDepartmentChange}
-              />
-
-              <Link href={ROUTE.MASTER_DATA.COURSES.ADD}>
-                <Button className="bg-green-900 text-white hover:bg-green-950">
-                  <Plus className="mr-2 h-2 w-2" />
-                  Add New
-                </Button>
-              </Link>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {CourseTableHeader?.map(
-                  (
-                    header,
-                    index // Handle null CourseTableHeader
-                  ) => (
-                    <TableHead key={index} className={header?.className || ""}>
-                      {header?.label || ""}
-                    </TableHead>
-                  )
-                ) || null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {/* Handle null/empty allCourseData */}
-              {!allCourseData?.content || allCourseData.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No Course found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allCourseData.content.map((course, index) => {
-                  // Handle null course object
-                  if (!course) return null;
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Courses",
+          totalCount: allCourseData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search course...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddCourse,
+          filters: [
+            {
+              id: "department",
+              type: "custom",
+              label: "Department",
+              value: selectedDepartment,
+              onChange: (v) => setSelectedDepartment(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Department</label>
+                  <ComboboxSelectDepartment
+                    dataSelect={value}
+                    onChangeSelected={onChange}
+                  />
+                </div>
+              ),
+            },
+          ],
+          onClearAll: () => {
+            setSelectedDepartment(null);
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={["department"]}
+      />
 
-                  return (
-                    <TableRow key={course.id || index}>
-                      <TableCell>
-                        {getDisplayIndex ? getDisplayIndex(index) : index + 1}
-                      </TableCell>
-
-                      <TableCell>
-                        <span className="rounded bg-gray-100 px-2 py-1">
-                          {course?.code || "---"}
-                        </span>
-                      </TableCell>
-                      <TableCell>{course?.nameKH || "---"}</TableCell>
-                      <TableCell>{course?.nameEn || "---"}</TableCell>
-
-                      <TableCell>
-                        {course?.credit || "---"} ({course?.theory},
-                        {course?.execute},{course?.apply})
-                      </TableCell>
-                      <TableCell>
-                        {course?.user?.englishFirstName &&
-                        course?.user?.englishLastName
-                          ? `${course?.user?.englishFirstName} ${course?.user?.englishLastName}`
-                          : course?.user?.khmerFirstName &&
-                            course?.user?.khmerLastName
-                          ? `${course?.user?.khmerFirstName} ${course?.user?.khmerLastName}`
-                          : course?.user?.username || "---"}
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                ROUTE.MASTER_DATA.COURSES.VIEW(
-                                  String(course.id || "")
-                                )
-                              )
-                            }
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200"
-                            disabled={!course.id} // Disable if no ID
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                ROUTE.MASTER_DATA.COURSES.UPDATE(
-                                  String(course.id || "")
-                                )
-                              )
-                            }
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200"
-                            disabled={!course.id} // Disable if no ID
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setSelectedCourse(course);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                            disabled={isSubmitting || !course.id} // Disable if no ID or submitting
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {/* Handle null allCourseData for pagination */}
-      {!isLoading && allCourseData && allCourseData.totalPages > 1 && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage || 1} // Handle null currentPage
-            totalPages={allCourseData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <DataTable
+        data={allCourseData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allCourseData?.totalPages ?? 0}
+        totalElements={allCourseData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No courses found"
+        getRowKey={(course) => course.id}
+      />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={handleDeleteClass}
         title="Delete Course"
-        description={`Are you sure you want to delete the course:`}
-        itemName={selectedCourse?.nameEn || "Unknown Course"} // Handle null nameEn
+        description="Are you sure you want to delete the course:"
+        itemName={selectedCourse?.nameEn || "Unknown Course"}
         isSubmitting={isSubmitting}
       />
     </div>
