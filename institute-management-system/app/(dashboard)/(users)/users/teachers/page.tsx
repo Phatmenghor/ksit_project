@@ -5,29 +5,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
 import {
   deletedStaffService,
   getAllStaffService,
 } from "@/service/user/user.service";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
-import PaginationPage from "@/components/shared/pagination-page";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
-import { StaffTableHeader, TeacherTableHeader } from "@/constants/table/user";
 import {
   AllStaffModel,
   StaffModel,
@@ -35,9 +33,9 @@ import {
 import { useDebounce } from "@/utils/debounce/debounce";
 import { StaffListRequest } from "@/model/user/staff/staff.request.model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import Loading from "@/components/shared/loading";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function TeachersListPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -99,7 +97,6 @@ export default function TeachersListPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading teachers");
@@ -160,164 +157,192 @@ export default function TeachersListPage() {
     }
   }
 
+  const columns: TableColumn<StaffModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, i) => getDisplayIndex(i),
+    },
+    {
+      key: "username",
+      label: "Username",
+      render: (teacher) => teacher.username.trim() || "---",
+    },
+    {
+      key: "khmerName",
+      label: "Khmer Name",
+      render: (teacher) =>
+        `${teacher.khmerFirstName || ""} ${teacher.khmerLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "englishName",
+      label: "English Name",
+      render: (teacher) =>
+        `${teacher.englishFirstName ?? ""} ${teacher.englishLastName ?? ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "identifyNumber",
+      label: "ID Number",
+      render: (teacher) => teacher.identifyNumber || "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (teacher) => teacher.gender || "---",
+    },
+    {
+      key: "dateOfBirth",
+      label: "Date of Birth",
+      render: (teacher) => teacher.dateOfBirth || "---",
+    },
+    {
+      key: "phoneNumber",
+      label: "Phone",
+      render: (teacher) => teacher.phoneNumber?.trim() || "---",
+    },
+    {
+      key: "department",
+      label: "Department",
+      render: (teacher) => teacher.department?.name?.trim() || "---",
+    },
+    {
+      key: "actions",
+      label: "",
+      width: "160px",
+      render: (teacher) => (
+        <div className="flex justify-start space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    router.push(
+                      `${ROUTE.USERS.VIEW_TEACHER(String(teacher.id))}`
+                    );
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>teacher Detail</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() =>
+                    router.push(
+                      ROUTE.USERS.EDIT_TEACHER(String(teacher.id))
+                    )
+                  }
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedTeacher(teacher);
+                    setIsChangePasswordDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reset Password</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedTeacher(teacher);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Teacher List", href: "" },
-        ]}
-        searchValue={searchQuery}
-        searchPlaceholder="Search..."
-        onSearchChange={handleSearchChange}
-        buttonText="Add New"
-        buttonHref={ROUTE.USERS.ADD_TEACHER}
-        buttonIcon={<Plus className="mr-2 h-2 w-2" />}
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Teacher List</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
+
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Teachers",
+          totalCount: allTeachersData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: () => router.push(ROUTE.USERS.ADD_TEACHER),
+          filters: [],
+          onClearAll: () => {
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={[]}
       />
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {TeacherTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allTeachersData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={TeacherTableHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No teacher found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allTeachersData?.content.map((teacher, index) => {
-                  return (
-                    <TableRow key={teacher.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{teacher.username.trim() || "---"}</TableCell>
-                      <TableCell>
-                        {`${teacher.khmerFirstName || ""} ${
-                          teacher.khmerLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${teacher.englishFirstName ?? ""}
-                        ${teacher.englishLastName ?? ""}`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>{teacher.identifyNumber || "---"}</TableCell>
-                      <TableCell>{teacher.gender || "---"}</TableCell>
-                      <TableCell>{teacher.dateOfBirth || "---"}</TableCell>
-                      <TableCell>
-                        {teacher.phoneNumber?.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {teacher.department?.name?.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    router.push(
-                                      `${ROUTE.USERS.VIEW_TEACHER(
-                                        String(teacher.id)
-                                      )}`
-                                    );
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>teacher Detail</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() =>
-                                    router.push(
-                                      ROUTE.USERS.EDIT_TEACHER(
-                                        String(teacher.id)
-                                      )
-                                    )
-                                  }
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedTeacher(teacher);
-                                    setIsChangePasswordDialogOpen(true);
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <RotateCcw className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Reset Password</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedTeacher(teacher);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                                  disabled={isSubmitting}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={allTeachersData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allTeachersData?.totalPages ?? 0}
+        totalElements={allTeachersData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No teacher found"
+        getRowKey={(teacher) => teacher.id}
+      />
 
       <ChangePasswordModal
         isOpen={isChangePasswordDialogOpen}
@@ -340,16 +365,6 @@ export default function TeachersListPage() {
         itemName={selectedTeacher?.username}
         isSubmitting={isSubmitting}
       />
-
-      {!isLoading && allTeachersData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allTeachersData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
     </div>
   );
 }

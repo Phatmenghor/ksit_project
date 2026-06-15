@@ -6,7 +6,6 @@ import {
   Download,
   Eye,
   Pencil,
-  Plus,
   RotateCcw,
   Tally1,
   Trash2,
@@ -18,13 +17,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -33,12 +33,9 @@ import {
   getAllStudentsService,
 } from "@/service/user/student.service";
 import { StatusEnum } from "@/constants/constant";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import { YearSelector } from "@/components/shared/year-selector";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { StudentTableHeader } from "@/constants/table/user";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import {
@@ -48,8 +45,6 @@ import {
 } from "@/model/user/student/student.request.model";
 import Loading from "@/components/shared/loading";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import PaginationPage from "@/components/shared/pagination-page";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
 import { Constants } from "@/constants/text-string";
 import ExcelJS from "exceljs";
@@ -60,6 +55,8 @@ import { AppIcons } from "@/constants/icons/icon";
 import { formatDate } from "@/utils/date/date";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function StudentsListPage() {
   // Core state
@@ -141,7 +138,6 @@ export default function StudentsListPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading student");
@@ -169,8 +165,8 @@ export default function StudentsListPage() {
     selectedSchedule,
   ]);
 
-  const handleYearChange = (e: number) => {
-    setSelectAcademicYear(e);
+  const handleYearChange = (year: number) => {
+    setSelectAcademicYear(year);
   };
 
   const handleClassChange = (e: ClassModel | null) => {
@@ -180,6 +176,7 @@ export default function StudentsListPage() {
   const handleScheduleChange = (e: ScheduleModel | null) => {
     setSelectedSchedule(e ?? undefined);
   };
+
   // Delete selected student (optimistic UI update)
   async function handleDeleteStudent() {
     if (!selectedStudent) return;
@@ -231,13 +228,12 @@ export default function StudentsListPage() {
     }
   }
 
-  // Export to Excel - Fixed version
+  // Export to Excel
   const exportToExcel = async (): Promise<void> => {
     setIsSubmitting(true);
 
     try {
       setIsLoading(true);
-      // Create a proper filter object for the API call
 
       const studentData = allStudentData?.content?.length;
 
@@ -362,218 +358,253 @@ export default function StudentsListPage() {
     }
   };
 
+  const tableColumns: TableColumn<StudentModel>[] = [
+    {
+      key: "index",
+      label: "#",
+      width: "50px",
+      render: (_item, index) => getDisplayIndex(index),
+    },
+    {
+      key: "username",
+      label: "Username",
+      render: (student) => student.username || "---",
+    },
+    {
+      key: "fullnameKH",
+      label: "Fullname (KH)",
+      render: (student) =>
+        `${student.khmerFirstName || ""} ${student.khmerLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "fullnameEN",
+      label: "Fullname (EN)",
+      render: (student) =>
+        `${student.englishFirstName || ""} ${student.englishLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (student) => student.gender || "---",
+    },
+    {
+      key: "dateOfBirth",
+      label: "Date Of Birth",
+      render: (student) => student.dateOfBirth || "---",
+    },
+    {
+      key: "classCode",
+      label: "Class code",
+      render: (student) =>
+        `${student?.studentClass?.code || ""} - ${student?.studentClass?.major?.name || ""}` ||
+        "---",
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      width: "160px",
+      render: (student) => (
+        <div className="flex justify-start space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    router.push(
+                      `${ROUTE.STUDENTS.VIEW(String(student.id))}`
+                    );
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Student Detail</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() =>
+                    router.push(
+                      `${ROUTE.STUDENTS.EDIT_STUDENT(String(student.id))}`
+                    )
+                  }
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedStudent(student);
+                    setIsChangePasswordDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reset Password</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedStudent(student);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Student List", href: "" },
-        ]}
-        searchValue={searchQuery}
-        searchPlaceholder="Search..."
-        onSearchChange={handleSearchChange}
-        buttonText="Add New"
-        buttonHref={ROUTE.STUDENTS.ADD_NEW}
-        buttonIcon={<Plus className="mr-2 h-2 w-2" />}
-        customSelect={
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-4">
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <div className="w-full min-w-[200px]">
-                <YearSelector
-                  title="Select Year"
-                  onChange={handleYearChange}
-                  value={selectAcademicYear || 0}
-                />
-              </div>
-            </div>
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Student List</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
 
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <ComboboxSelectClass
-                dataSelect={selectedClass ?? null}
-                onChangeSelected={handleClassChange}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <ComboboxSelectSchedule
-                dataSelect={selectedSchedule ?? null}
-                onChangeSelected={handleScheduleChange}
-                disabled={isSubmitting}
-              />
-            </div>
-            {/* export excel */}
-            <div>
-              <div className="flex items-center gap-2 justify-end">
-                <Button
-                  onClick={exportToExcel}
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-2 border-gray-200 py-5"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loading />
-                  ) : (
-                    <>
-                      <img
-                        src={AppIcons.Excel}
-                        alt="excel Icon"
-                        className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0"
-                      />{" "}
-                      <span className="ml-1 text-xs font-medium">Excel</span>
-                      <Tally1 className="-mr-[12px] text-gray-300" />
-                      <Download className="h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        }
+      <CollapsibleFilterPanel
+        config={{
+          title: "Student List",
+          totalCount: allStudentData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: () => router.push(ROUTE.STUDENTS.ADD_NEW),
+          filters: [
+            {
+              id: "year",
+              type: "year",
+              label: "Academic Year",
+              value: selectAcademicYear ?? 0,
+              onChange: handleYearChange,
+            },
+            {
+              id: "class",
+              type: "custom",
+              label: "Class",
+              value: selectedClass ?? null,
+              onChange: (v) => setSelectedClass(v ?? undefined),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Class</label>
+                  <ComboboxSelectClass
+                    dataSelect={value}
+                    onChangeSelected={onChange}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ),
+            },
+            {
+              id: "schedule",
+              type: "custom",
+              label: "Schedule",
+              value: selectedSchedule ?? null,
+              onChange: (v) => setSelectedSchedule(v ?? undefined),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Schedule</label>
+                  <ComboboxSelectSchedule
+                    dataSelect={value}
+                    onChangeSelected={onChange}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ),
+            },
+          ],
+          onClearAll: () => {
+            setSelectAcademicYear(undefined);
+            setSelectedClass(undefined);
+            setSelectedSchedule(undefined);
+            setSearchQuery("");
+          },
+          extraActions: (
+            <Button
+              onClick={exportToExcel}
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 border-gray-200 py-5"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loading />
+              ) : (
+                <>
+                  <img
+                    src={AppIcons.Excel}
+                    alt="excel Icon"
+                    className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0"
+                  />{" "}
+                  <span className="ml-1 text-xs font-medium">Excel</span>
+                  <Tally1 className="-mr-[12px] text-gray-300" />
+                  <Download className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          ),
+        }}
+        essentialFilterIds={["year", "class"]}
       />
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {StudentTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allStudentData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={StudentTableHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No student found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allStudentData?.content.map((student, index) => {
-                  return (
-                    <TableRow key={student.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{student.username || "---"}</TableCell>
-                      <TableCell>
-                        {`${student.khmerFirstName || ""} ${
-                          student.khmerLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${student.englishFirstName || ""} ${
-                          student.englishLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>{student.gender || "---"}</TableCell>
-                      <TableCell>{student.dateOfBirth || "---"}</TableCell>
-                      <TableCell>
-                        {`${(student || student)?.studentClass?.code || ""} - ${
-                          (student || student)?.studentClass?.major?.name || ""
-                        }` || "---"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    router.push(
-                                      `${ROUTE.STUDENTS.VIEW(
-                                        String(student.id)
-                                      )}`
-                                    );
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Student Detail</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() =>
-                                    router.push(
-                                      `${ROUTE.STUDENTS.EDIT_STUDENT(
-                                        String(student.id)
-                                      )}`
-                                    )
-                                  }
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedStudent(student);
-                                    setIsChangePasswordDialogOpen(true);
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <RotateCcw className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Reset Password</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedStudent(student);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                                  disabled={isSubmitting}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={allStudentData?.content ?? null}
+        columns={tableColumns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allStudentData?.totalPages ?? 0}
+        totalElements={allStudentData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No student found"
+        getRowKey={(student) => student.id}
+      />
 
       <ChangePasswordModal
         isOpen={isChangePasswordDialogOpen}
@@ -593,16 +624,6 @@ export default function StudentsListPage() {
         itemName={selectedStudent?.username}
         isSubmitting={isSubmitting}
       />
-
-      {!isLoading && allStudentData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allStudentData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
     </div>
   );
 }

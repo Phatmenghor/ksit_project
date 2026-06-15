@@ -20,24 +20,15 @@ import {
 import { getAllStudentsService } from "@/service/user/student.service";
 import { toast } from "sonner";
 import { Separator } from "@radix-ui/react-separator";
-import Loading from "@/components/shared/loading";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { StudentListTableHeader } from "@/constants/table/user";
-import PaginationPage from "@/components/shared/pagination-page";
-import { Constants } from "@/constants/text-string";
 import { getScheduleByIdService } from "@/service/schedule/schedule.service";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constants/icons/icon";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
+import { Constants } from "@/constants/text-string";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
+
+type StudentItem = AllStudentModel["content"][number];
 
 export default function StudentListPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -116,9 +107,43 @@ export default function StudentListPage() {
   }, [currentPage, fetchClassDetail]);
   const router = useRouter();
 
-  const handleBackNavigation = () => {
-    router.back();
-  };
+  const tableColumns: TableColumn<StudentItem>[] = [
+    {
+      key: "index",
+      label: "#",
+      width: "50px",
+      render: (_item, index) => getDisplayIndex(index),
+    },
+    {
+      key: "username",
+      label: "Student ID",
+      render: (student) => student.username || "---",
+    },
+    {
+      key: "fullnameKH",
+      label: "Fullname (KH)",
+      render: (student) =>
+        `${student.khmerFirstName || ""} ${student.khmerLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "fullnameEN",
+      label: "Fullname (EN)",
+      render: (student) =>
+        `${student.englishFirstName || ""} ${student.englishLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (student) => student.gender || "---",
+    },
+    {
+      key: "dateOfBirth",
+      label: "Date Of Birth",
+      render: (student) => student.dateOfBirth || "---",
+    },
+  ];
 
   return (
     <div>
@@ -222,66 +247,17 @@ export default function StudentListPage() {
         </CardContent>
       </Card>
 
-      {/* Form */}
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {StudentListTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No student found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                students?.content.map((student, index) => {
-                  return (
-                    <TableRow key={student.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{student.username || "---"}</TableCell>
-                      <TableCell>
-                        {`${student.khmerFirstName || ""} ${
-                          student.khmerLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${student.englishFirstName || ""} ${
-                          student.englishLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>{student.gender || "---"}</TableCell>
-                      <TableCell>{student.dateOfBirth || "---"}</TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-      {!isLoading && students && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={students.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <DataTable
+        data={students?.content ?? null}
+        columns={tableColumns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={students?.totalPages ?? 0}
+        totalElements={students?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No student found"
+        getRowKey={(student) => student.id}
+      />
     </div>
   );
 }

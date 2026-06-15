@@ -2,18 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Pencil, Trash2, Plus, RotateCcw, Eye } from "lucide-react";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
+import { Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
-import PaginationPage from "@/components/shared/pagination-page";
 import { RoleEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import {
@@ -24,7 +23,6 @@ import {
 } from "@/service/user/user.service";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import AdminModalForm from "@/components/dashboard/users/admin/admin-modal";
-import { AdminTableHeader } from "@/constants/table/user";
 import { useDebounce } from "@/utils/debounce/debounce";
 import {
   AddStaffModel,
@@ -46,10 +44,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRouter, useSearchParams } from "next/navigation";
-import Loading from "@/components/shared/loading";
-import { useIsMobile } from "@/hooks/use-mobile";
 import ResetPasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function AdminsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,154 +225,161 @@ export default function AdminsListPage() {
     }
   }
 
+  const columns: TableColumn<StaffModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, i) => getDisplayIndex(i),
+    },
+    {
+      key: "username",
+      label: "Username",
+      render: (admin) => admin.username.trim() || "---",
+    },
+    {
+      key: "email",
+      label: "Email",
+      render: (admin) => admin?.email || "---",
+    },
+    {
+      key: "name",
+      label: "Name",
+      render: (admin) =>
+        `${admin.khmerFirstName || ""} ${admin.khmerLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "actions",
+      label: "",
+      width: "160px",
+      render: (admin) => (
+        <div className="flex justify-start space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    router.push(
+                      `${ROUTE.USERS.ADMIN.ADMIN_VIEW(String(admin.id))}`
+                    );
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Admin Detail</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => handleOpenEditModal(admin)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedAdmin(admin);
+                    setIsChangePasswordDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reset Password</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedAdmin(admin);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Admin List", href: "" },
-        ]}
-        searchValue={searchQuery}
-        searchPlaceholder="Search..."
-        onSearchChange={handleSearchChange}
-        buttonText="Add New"
-        openModal={handleOpenAddModal}
-        buttonIcon={<Plus className="mr-2 h-2 w-2" />}
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Admin List</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
+
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Admins",
+          totalCount: data?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddModal,
+          filters: [],
+          onClearAll: () => {
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={[]}
       />
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {AdminTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={AdminTableHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No admin found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data?.content.map((admin, index) => (
-                  <TableRow key={admin.id}>
-                    <TableCell>{getDisplayIndex(index)}</TableCell>
-                    <TableCell>{admin.username.trim() || "---"}</TableCell>
-                    <TableCell>{admin?.email || "---"}</TableCell>
-                    <TableCell>
-                      {`${admin.khmerFirstName || ""} ${
-                        admin.khmerLastName || ""
-                      }`.trim() || "---"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-start space-x-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => {
-                                  router.push(
-                                    `${ROUTE.USERS.ADMIN.ADMIN_VIEW(
-                                      String(admin.id)
-                                    )}`
-                                  );
-                                }}
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                disabled={isSubmitting}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Admin Detail</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => handleOpenEditModal(admin)}
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                disabled={isSubmitting}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => {
-                                  setSelectedAdmin(admin);
-                                  setIsChangePasswordDialogOpen(true);
-                                }}
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                disabled={isSubmitting}
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Reset Password</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => {
-                                  setSelectedAdmin(admin);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                                disabled={isSubmitting}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {!isLoading && data && data.totalPages > 1 && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={data.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <DataTable
+        data={data?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No admin found"
+        getRowKey={(admin) => admin.id}
+      />
 
       <AdminModalForm
         isOpen={isModalOpen}

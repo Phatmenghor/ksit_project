@@ -1,29 +1,27 @@
 "use client";
 
-import { Eye, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import React, { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
 
 import {
   deletedStaffService,
   getAllStaffService,
 } from "@/service/user/user.service";
-import { StaffTableHeader } from "@/constants/table/user";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
-import PaginationPage from "@/components/shared/pagination-page";
 import { RoleEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import {
@@ -37,9 +35,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import Loading from "@/components/shared/loading";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function StuffOfficerListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,7 +95,6 @@ export default function StuffOfficerListPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading staff");
@@ -155,156 +152,170 @@ export default function StuffOfficerListPage() {
     }
   };
 
+  const columns: TableColumn<StaffModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, i) => getDisplayIndex(i),
+    },
+    {
+      key: "username",
+      label: "Username",
+      render: (staff) => staff.username.trim() || "---",
+    },
+    {
+      key: "khmerName",
+      label: "Khmer Name",
+      render: (staff) =>
+        `${staff.khmerFirstName || ""} ${staff.khmerLastName || ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "englishName",
+      label: "English Name",
+      render: (staff) =>
+        `${staff.englishFirstName ?? ""} ${staff.englishLastName ?? ""}`.trim() ||
+        "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (staff) => staff.gender || "---",
+    },
+    {
+      key: "actions",
+      label: "",
+      width: "160px",
+      render: (staff) => (
+        <div className="flex justify-start space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    router.push(
+                      `${ROUTE.USERS.VIEW_STAFF(String(staff.id))}`
+                    );
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Staff Detail</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() =>
+                    router.push(ROUTE.USERS.EDIT_STAFF(String(staff.id)))
+                  }
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedStaff(staff);
+                    setIsChangePasswordDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reset Password</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedStaff(staff);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Stuff-Officer-List", href: "" },
-        ]}
-        searchValue={searchQuery}
-        buttonHref={ROUTE.USERS.ADD_STAFF}
-        searchPlaceholder="Search..."
-        onSearchChange={handleSearchChange}
-        buttonText="Add New"
-        buttonIcon={<Plus className="mr-2 h-2 w-2" />}
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Stuff-Officer-List</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
+
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Staff",
+          totalCount: data?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: () => router.push(ROUTE.USERS.ADD_STAFF),
+          filters: [],
+          onClearAll: () => {
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={[]}
       />
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {" "}
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {StaffTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={StaffTableHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No staff found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data?.content.map((staff, index) => {
-                  return (
-                    <TableRow key={staff.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{staff.username.trim() || "---"}</TableCell>
-                      <TableCell>
-                        {`${staff.khmerFirstName || ""} ${
-                          staff.khmerLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${staff.englishFirstName ?? ""}
-                        ${staff.englishLastName ?? ""}`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>{staff.gender || "---"}</TableCell>
-
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    router.push(
-                                      `${ROUTE.USERS.VIEW_STAFF(
-                                        String(staff.id)
-                                      )}`
-                                    );
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Staff Detail</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() =>
-                                    router.push(
-                                      ROUTE.USERS.EDIT_STAFF(String(staff.id))
-                                    )
-                                  }
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Edit</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedStaff(staff);
-                                    setIsChangePasswordDialogOpen(true);
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <RotateCcw className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Reset Password</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    setSelectedStaff(staff);
-                                    setIsDeleteDialogOpen(true);
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                                  disabled={isSubmitting}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Delete</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={data?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No staff found"
+        getRowKey={(staff) => staff.id}
+      />
 
       <ChangePasswordModal
         isOpen={isChangePasswordDialogOpen}
@@ -327,16 +338,6 @@ export default function StuffOfficerListPage() {
         itemName={selectedStaff?.username}
         isSubmitting={isSubmitting}
       />
-
-      {!isLoading && data && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={data.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
     </div>
   );
 }
