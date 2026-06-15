@@ -70,7 +70,7 @@ export function AsyncCombobox<T>({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-between h-10 px-3 transition-all duration-200 border-input",
+              "w-full justify-between h-9 px-3 transition-all duration-200 border-input",
               !value && "text-muted-foreground",
               "hover:bg-primary/10 hover:border-primary hover:text-primary",
               open && "bg-primary/10 border-primary",
