@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Optional;
+import java.util.ArrayList;
 
 @Component
 @RequiredArgsConstructor
@@ -29,6 +33,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         log.info("Syncing default menu items and routes...");
+        migrateMenuData();
         seedMenus();
         log.info("Menu items synced successfully.");
     }
@@ -199,6 +204,105 @@ public class DefaultMenuInitializer implements CommandLineRunner {
             perm.setDisplayOrder(order++);
             perm.setStatus(Status.ACTIVE);
             menuPermissionRepository.save(perm);
+        }
+    }
+
+    private void migrateMenuData() {
+        log.info("Migrating old uppercase menu codes to lowercase-hyphenated codes...");
+        
+        Map<String, String> migrationMap = new LinkedHashMap<>();
+        migrationMap.put("DASHBOARD", "dashboard");
+        migrationMap.put("MASTER_DATA", "master-data");
+        migrationMap.put("MANAGE_CLASS", "manage-class");
+        migrationMap.put("MANAGE_SEMESTER", "manage-semester");
+        migrationMap.put("MANAGE_MAJOR", "manage-major");
+        migrationMap.put("MANAGE_DEPARTMENT", "manage-department");
+        migrationMap.put("MANAGE_ROOM", "manage-room");
+        migrationMap.put("MANAGE_COURSE", "manage-course");
+        migrationMap.put("MANAGE_SUBJECT", "manage-subject");
+        migrationMap.put("USERS", "users");
+        migrationMap.put("ADMIN", "admin");
+        migrationMap.put("STAFF_OFFICER", "staff-officer");
+        migrationMap.put("TEACHERS", "teachers");
+        migrationMap.put("STUDENTS", "students");
+        migrationMap.put("ADD_MULTIPLE_USERS", "add-multiple-users");
+        migrationMap.put("ADD_SINGLE_USER", "add-single-user");
+        migrationMap.put("STUDENTS_LIST", "students-list");
+        migrationMap.put("ATTENDANCE", "attendance");
+        migrationMap.put("CLASS_SCHEDULE", "class-schedule");
+        migrationMap.put("HISTORY_RECORDS", "history-records");
+        migrationMap.put("STUDENT_RECORDS", "student-records");
+        migrationMap.put("SURVEY", "survey");
+        migrationMap.put("RESULT_LIST", "result-list");
+        migrationMap.put("MANAGE_QA", "manage-qa");
+        migrationMap.put("SURVEY_STUDENT_RECORDS", "survey-student-records");
+        migrationMap.put("SURVEY_STUDENT", "survey-student");
+        migrationMap.put("SCORE_SUBMITTED", "scores-submitted");
+        migrationMap.put("SUBMITTED_LIST", "submitted-list");
+        migrationMap.put("SCORE_SETTING", "score-setting");
+        migrationMap.put("STUDENT_SCORE", "student-score");
+        migrationMap.put("SCHEDULE", "schedule");
+        migrationMap.put("MANAGE_SCHEDULE", "manage-schedule");
+        migrationMap.put("REQUEST", "request");
+        migrationMap.put("PAYMENT", "payment");
+        migrationMap.put("MY_PAYMENT", "my-payment");
+        migrationMap.put("ROLE_PERMISSION", "role-permission");
+
+        for (Map.Entry<String, String> entry : migrationMap.entrySet()) {
+            String oldCode = entry.getKey();
+            String newCode = entry.getValue();
+
+            Optional<MenuItemEntity> oldMenuOpt = menuItemRepository.findByCodeAndStatus(oldCode, Status.ACTIVE);
+            Optional<MenuItemEntity> newMenuOpt = menuItemRepository.findByCodeAndStatus(newCode, Status.ACTIVE);
+
+            if (oldMenuOpt.isPresent()) {
+                MenuItemEntity oldMenu = oldMenuOpt.get();
+                if (newMenuOpt.isPresent()) {
+                    MenuItemEntity newMenu = newMenuOpt.get();
+                    log.info("Merging permissions from old menu {} to new menu {}", oldCode, newCode);
+                    
+                    // Re-point children of old menu to new menu
+                    List<MenuItemEntity> children = menuItemRepository.findChildMenusByParentIdAndStatus(oldMenu.getId(), Status.ACTIVE);
+                    for (MenuItemEntity child : children) {
+                        child.setParent(newMenu);
+                        menuItemRepository.save(child);
+                    }
+                    
+                    // Transfer permissions from old menu item to new menu item
+                    List<MenuPermissionEntity> oldPermissions = menuPermissionRepository.findByMenuItemIdAndStatus(oldMenu.getId(), Status.ACTIVE);
+                    for (MenuPermissionEntity oldPerm : oldPermissions) {
+                        boolean exists = false;
+                        if (oldPerm.getUser() != null) {
+                            exists = menuPermissionRepository.existsByUserIdAndMenuItemIdAndStatus(
+                                    oldPerm.getUser().getId(), newMenu.getId(), Status.ACTIVE);
+                        } else if (oldPerm.getRole() != null) {
+                            exists = menuPermissionRepository.findByMenuItemIdAndRoleAndStatus(
+                                    newMenu.getId(), oldPerm.getRole(), Status.ACTIVE).isPresent();
+                        }
+                        
+                        if (!exists) {
+                            oldPerm.setMenuItem(newMenu);
+                            menuPermissionRepository.save(oldPerm);
+                        } else {
+                            oldPerm.setStatus(Status.DELETED);
+                            menuPermissionRepository.save(oldPerm);
+                        }
+                    }
+                    
+                    // De-associate relationships to prevent foreign key errors
+                    oldMenu.setParent(null);
+                    oldMenu.setChildren(new ArrayList<>());
+                    menuItemRepository.save(oldMenu);
+                    
+                    // Delete old menu item
+                    menuItemRepository.delete(oldMenu);
+                } else {
+                    // Rename old to new
+                    log.info("Renaming menu code from {} to {}", oldCode, newCode);
+                    oldMenu.setCode(newCode);
+                    menuItemRepository.save(oldMenu);
+                }
+            }
         }
     }
 }
