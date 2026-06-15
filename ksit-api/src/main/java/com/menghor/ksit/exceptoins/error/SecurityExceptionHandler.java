@@ -12,6 +12,7 @@ import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -19,172 +20,95 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.Date;
 
-/**
- * Exception handler specifically for security-related exceptions
- * Handles all Spring Security authentication and authorization exceptions
- */
 @ControllerAdvice
+@Slf4j
 public class SecurityExceptionHandler {
 
-    /**
-     * Handle access denied exceptions (403 Forbidden)
-     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorObject> handleAccessDeniedException(
             AccessDeniedException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.FORBIDDEN.value());
-        errorObject.setMessage("Access denied: You do not have permission to access this resource");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.FORBIDDEN);
+        log.warn("Access denied at path={}: {}", path, ex.getMessage());
+        return buildErrorResponse(HttpStatus.FORBIDDEN,
+                "Access denied: You do not have permission to access this resource", path);
     }
 
-    /**
-     * Handle bad credentials (invalid username/password)
-     */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorObject> handleBadCredentialsException(
             BadCredentialsException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Invalid username or password");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Bad credentials at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid username or password", path);
     }
 
-    /**
-     * Handle disabled account (Status.INACTIVE)
-     */
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ErrorObject> handleDisabledException(
             DisabledException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Account is inactive. Please contact administrator");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Disabled account login attempt at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Account is inactive. Please contact administrator", path);
     }
 
-    /**
-     * Handle locked account (Status.DELETED)
-     */
     @ExceptionHandler(LockedException.class)
     public ResponseEntity<ErrorObject> handleLockedException(
             LockedException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Account has been deleted. Please contact administrator");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Locked account login attempt at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Account has been deleted. Please contact administrator", path);
     }
 
-    /**
-     * Handle account expired
-     */
     @ExceptionHandler(AccountExpiredException.class)
     public ResponseEntity<ErrorObject> handleAccountExpiredException(
             AccountExpiredException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Account has expired. Please contact administrator");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Expired account login attempt at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Account has expired. Please contact administrator", path);
     }
 
-    /**
-     * Handle credentials expired
-     */
     @ExceptionHandler(CredentialsExpiredException.class)
     public ResponseEntity<ErrorObject> handleCredentialsExpiredException(
             CredentialsExpiredException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Password has expired. Please change your password");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Expired credentials at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Password has expired. Please change your password", path);
     }
 
-    /**
-     * Handle username not found
-     */
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorObject> handleUsernameNotFoundException(
             UsernameNotFoundException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Invalid username or password");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Username not found at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid username or password", path);
     }
 
-    /**
-     * Handle insufficient authentication
-     */
     @ExceptionHandler(InsufficientAuthenticationException.class)
     public ResponseEntity<ErrorObject> handleInsufficientAuthenticationException(
             InsufficientAuthenticationException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
-
-        ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Authentication required. Please login to access this resource");
-        errorObject.setTimestamp(new Date());
-        errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        log.warn("Insufficient authentication at path={}", path);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Authentication required. Please login to access this resource", path);
     }
 
-    /**
-     * Handle generic authentication exceptions (fallback)
-     */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorObject> handleAuthenticationException(
             AuthenticationException ex, WebRequest request) {
-
         String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+        log.error("Authentication exception at path={}", path, ex);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Authentication failed: " + ex.getMessage(), path);
+    }
 
+    private ResponseEntity<ErrorObject> buildErrorResponse(HttpStatus status, String message, String path) {
         ErrorObject errorObject = new ErrorObject();
-        errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        errorObject.setMessage("Authentication failed: " + ex.getMessage());
+        errorObject.setStatusCode(status.value());
+        errorObject.setMessage(message);
         errorObject.setTimestamp(new Date());
         errorObject.setPath(path);
-
-        return new ResponseEntity<>(errorObject, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(errorObject, status);
     }
 }

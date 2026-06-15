@@ -11,12 +11,14 @@ import com.menghor.ksit.feature.attendance.service.StudentScoreService;
 import com.menghor.ksit.utils.service.GradeUtilityService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StudentScoreServiceImpl implements StudentScoreService {
 
     private final StudentScoreRepository studentScoreRepository;
@@ -33,6 +35,7 @@ public class StudentScoreServiceImpl implements StudentScoreService {
     @Override
     @Transactional
     public StudentScoreResponseDto updateStudentScore(StudentScoreUpdateDto updateDto) {
+        log.info("Updating student score id={}", updateDto.getId());
         StudentScoreEntity studentScore = studentScoreRepository.findById(updateDto.getId())
                 .orElseThrow(() -> new NotFoundException("Student score not found with ID: " + updateDto.getId()));
 
@@ -78,6 +81,7 @@ public class StudentScoreServiceImpl implements StudentScoreService {
 
         calculateTotalScoreAndGrade(studentScore);
         StudentScoreEntity updatedScore = studentScoreRepository.save(studentScore);
+        log.info("Student score id={} updated successfully. totalScore={}", updateDto.getId(), updatedScore.getTotalScore());
         return studentScoreMapper.toDto(updatedScore);
     }
 

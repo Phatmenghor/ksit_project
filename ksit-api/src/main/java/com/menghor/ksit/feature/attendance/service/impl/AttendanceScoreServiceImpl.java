@@ -14,6 +14,7 @@ import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import com.menghor.ksit.feature.school.repository.ScheduleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttendanceScoreServiceImpl implements AttendanceScoreService {
     private final AttendanceSessionRepository sessionRepository;
     private final AttendanceRepository attendanceRepository;

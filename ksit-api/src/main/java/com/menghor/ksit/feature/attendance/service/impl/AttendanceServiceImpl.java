@@ -15,6 +15,7 @@ import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
@@ -54,25 +56,24 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceDto updateAttendance(AttendanceUpdateRequest request) {
+        log.info("Updating attendance id={}", request.getId());
         AttendanceEntity attendance = attendanceRepository.findById(request.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Attendance not found with id: " + request.getId()));
 
-        // Only update if not null
         if (request.getStatus() != null) {
             attendance.setStatus(request.getStatus());
         }
-
         if (request.getAttendanceType() != null) {
             attendance.setAttendanceType(request.getAttendanceType());
         }
-
         if (request.getComment() != null) {
             attendance.setComment(request.getComment());
         }
 
-        // Always update recorded time when any field is modified
         attendance.setRecordedTime(LocalDateTime.now());
-        return attendanceMapper.toDto(attendanceRepository.save(attendance));
+        AttendanceDto result = attendanceMapper.toDto(attendanceRepository.save(attendance));
+        log.info("Attendance id={} updated successfully", request.getId());
+        return result;
     }
 
     @Override

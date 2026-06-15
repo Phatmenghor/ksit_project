@@ -15,102 +15,80 @@ import com.menghor.ksit.feature.attendance.service.StudentScoreService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/score")
 @RequiredArgsConstructor
+@Slf4j
 public class ScoreController {
 
     private final ScoreSessionService scoreSessionService;
     private final StudentScoreService studentScoreService;
     private final ScoreConfigurationService scoreConfigurationService;
 
-    // Score Configuration Endpoints
     @PostMapping("/configuration")
     public ApiResponse<ScoreConfigurationResponseDto> createOrUpdateScoreConfiguration(
             @Valid @RequestBody ScoreConfigurationRequestDto requestDto) {
+        log.info("Create/update score configuration request received");
         ScoreConfigurationResponseDto responseDto = scoreConfigurationService.createOrUpdateScoreConfiguration(requestDto);
-        return new ApiResponse<>(
-                "success",
-                "Score configuration saved successfully",
-                responseDto
-        );
+        log.info("Score configuration saved successfully");
+        return new ApiResponse<>("success", "Score configuration saved successfully", responseDto);
     }
 
     @GetMapping("/configuration")
     public ApiResponse<ScoreConfigurationResponseDto> getScoreConfiguration() {
+        log.info("Get score configuration request received");
         ScoreConfigurationResponseDto responseDto = scoreConfigurationService.getScoreConfiguration();
-        return new ApiResponse<>(
-                "success",
-                "Score configuration retrieved successfully",
-                responseDto
-        );
+        return new ApiResponse<>("success", "Score configuration retrieved successfully", responseDto);
     }
 
-    // Score Session Endpoints
     @PostMapping("/initialize")
     public ApiResponse<ScoreSessionResponseDto> initializeScoreSession(@Valid @RequestBody ScoreSessionRequestDto requestDto) {
+        log.info("Initialize score session request received. scheduleId={}", requestDto.getScheduleId());
         ScoreSessionResponseDto responseDto = scoreSessionService.initializeScoreSession(requestDto);
-        return new ApiResponse<>(
-                "success",
-                "Score session initialized successfully",
-                responseDto
-        );
+        log.info("Score session initialized successfully. id={}", responseDto.getId());
+        return new ApiResponse<>("success", "Score session initialized successfully", responseDto);
     }
 
     @GetMapping("/session/{id}")
     public ApiResponse<ScoreSessionResponseDto> getScoreSessionById(@PathVariable Long id) {
+        log.info("Get score session id={} request received", id);
         ScoreSessionResponseDto responseDto = scoreSessionService.getScoreSessionById(id);
-        return new ApiResponse<>(
-                "success",
-                "Score session retrieved successfully",
-                responseDto
-        );
+        return new ApiResponse<>("success", "Score session retrieved successfully", responseDto);
     }
 
     @PutMapping("/submission-update")
     public ApiResponse<ScoreSessionResponseDto> updateScoreSession(
             @Valid @RequestBody ScoreSessionUpdateDto updateDto) {
+        log.info("Update score session id={} request received", updateDto.getId());
         ScoreSessionResponseDto responseDto = scoreSessionService.updateScoreSession(updateDto);
-        return new ApiResponse<>(
-                "success",
-                "Score session updated successfully",
-                responseDto
-        );
+        log.info("Score session id={} updated successfully", updateDto.getId());
+        return new ApiResponse<>("success", "Score session updated successfully", responseDto);
     }
 
     @PostMapping("/all")
     public ApiResponse<CustomPaginationResponseDto<ScoreSessionResponseDto>> getAllScoreSessions(
             @Valid @RequestBody ScoreSessionFilterDto filterDto) {
-        CustomPaginationResponseDto<ScoreSessionResponseDto> response =
-                scoreSessionService.getAllScoreSessions(filterDto);
-        return new ApiResponse<>(
-                "success",
-                "Score sessions retrieved successfully",
-                response
-        );
+        log.info("Get all score sessions request received");
+        CustomPaginationResponseDto<ScoreSessionResponseDto> response = scoreSessionService.getAllScoreSessions(filterDto);
+        return new ApiResponse<>("success", "Score sessions retrieved successfully", response);
     }
 
-    // Student Score Endpoints
     @GetMapping("/{id}")
     public ApiResponse<StudentScoreResponseDto> getStudentScoreById(@PathVariable Long id) {
+        log.info("Get student score id={} request received", id);
         StudentScoreResponseDto responseDto = studentScoreService.getStudentScoreById(id);
-        return new ApiResponse<>(
-                "success",
-                "Student score retrieved successfully",
-                responseDto
-        );
+        return new ApiResponse<>("success", "Student score retrieved successfully", responseDto);
     }
 
     @PutMapping("/score-update")
     public ApiResponse<StudentScoreResponseDto> updateStudentScore(
             @Valid @RequestBody StudentScoreUpdateDto updateDto) {
+        log.info("Update student score id={} request received", updateDto.getId());
         StudentScoreResponseDto responseDto = studentScoreService.updateStudentScore(updateDto);
-        return new ApiResponse<>(
-                "success",
-                "Student score updated successfully",
-                responseDto
-        );
+        log.info("Student score id={} updated successfully", updateDto.getId());
+        return new ApiResponse<>("success", "Student score updated successfully", responseDto);
     }
 }

@@ -7,6 +7,7 @@ import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.RoleRepository;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,7 +19,8 @@ import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
-@Order(2) // Run after DefaultRoleInitializer
+@Slf4j
+@Order(2)
 public class DefaultUserInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -31,12 +33,9 @@ public class DefaultUserInitializer implements CommandLineRunner {
         if (userRepository.count() > 0) {
             return;
         }
+        log.info("Initializing default developer user...");
         createDeveloperUser();
-//        createAdminUser();
-//        createStaffUser();
-//        createTeacherUser();
-//        createStudentUser();
-//        createMultiRoleUser();
+        log.info("Default developer user initialized successfully");
     }
 
     private void createDeveloperUser() {

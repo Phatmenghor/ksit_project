@@ -26,6 +26,7 @@ import com.menghor.ksit.utils.database.SecurityUtils;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ScoreSessionServiceImpl implements ScoreSessionService {
 
     private final ScoreSessionRepository scoreSessionRepository;
@@ -92,10 +94,9 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
 
         if (!newScores.isEmpty()) {
             studentScoreRepository.saveAll(newScores);
-
+            log.info("Added {} new student scores to session id={}", newScores.size(), session.getId());
         }
 
-        // Refresh the session to get updated relationships
         ScoreSessionEntity refreshedSession = scoreSessionRepository.findById(session.getId()).orElse(session);
 
         return scoreSessionMapper.toDto(refreshedSession);
@@ -199,18 +200,10 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
             Map<Long, StudentScoreEntity> existingScoresMap,
             ScoreSessionEntity session) {
 
-        List<StudentScoreEntity> newScores = allStudentsInClass.stream()
+        return allStudentsInClass.stream()
                 .filter(student -> !existingScoresMap.containsKey(student.getId()))
-                .map(student -> {
-                    StudentScoreEntity newScore = createDefaultStudentScore(student, session);
-                    return newScore;
-                })
+                .map(student -> createDefaultStudentScore(student, session))
                 .collect(Collectors.toList());
-
-        if (!newScores.isEmpty()) {
-        }
-
-        return newScores;
     }
 
     private List<StudentScoreEntity> createStudentScoresForSession(List<UserEntity> students, ScoreSessionEntity session) {

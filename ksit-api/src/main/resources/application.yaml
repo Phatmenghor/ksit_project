@@ -17,9 +17,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc.batch_size: 20
+        jdbc:
+          batch_size: 20
+          time_zone: Asia/Phnom_Penh
         order_inserts: true
         order_updates: true
+
+  jackson:
+    time-zone: Asia/Phnom_Penh
+    date-format: yyyy-MM-dd HH:mm:ss
 
 server:
   port: 7000
@@ -43,13 +49,16 @@ springdoc:
 logging:
   level:
     root: INFO
-    org.springframework: INFO
+    com.menghor.ksit: INFO
+    org.springframework: WARN
+    org.springframework.web: WARN
+    org.springframework.security: WARN
     org.hibernate: WARN
     org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
-    com.menghor.ksit: INFO
-  file:
-    name: logs/ks-it-school.log
-  pattern:
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    org.hibernate.type.descriptor.sql: WARN
+    org.apache.catalina: WARN
+    org.apache.tomcat: WARN
+    org.apache.coyote: WARN
+    com.github.benmanes.caffeine: WARN
+    io.lettuce.core: WARN
+    com.zaxxer.hikari: WARN
