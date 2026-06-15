@@ -133,8 +133,6 @@ public class MenuPermissionConfig {
         permissions.put("student-payment", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
         permissions.put("my-payment", Set.of(RoleEnum.STUDENT));
 
-        permissions.put("my-class", Set.of(RoleEnum.STUDENT, RoleEnum.TEACHER));
-
         permissions.put("role-permission", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
         return permissions;
