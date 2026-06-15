@@ -16,17 +16,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization", "Content-Type", "Content-Disposition");
-
-        // Note: If you need credentials, you can't use "*" for origins
-        // Instead, you would need to specify exact origins:
-        /*
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000", "https://yourdomain.com")
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .exposedHeaders("Authorization", "Content-Type", "Content-Disposition")
-                .allowCredentials(true);
-        */
     }
 
     @Override
