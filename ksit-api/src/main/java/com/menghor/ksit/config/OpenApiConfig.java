@@ -36,56 +36,109 @@ public class OpenApiConfig {
     @Bean
     public GroupedOpenApi authGroup() {
         return GroupedOpenApi.builder()
-                .group("1. Authentication & Users")
-                .packagesToScan("com.menghor.ksit.feature.auth.controller")
+                .group("1. Authentication")
+                .pathsToMatch("/api/v1/auth/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi studentsGroup() {
+        return GroupedOpenApi.builder()
+                .group("2. Students")
+                .pathsToMatch("/api/v1/students/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi staffGroup() {
+        return GroupedOpenApi.builder()
+                .group("3. Staff")
+                .pathsToMatch(
+                        "/api/v1/staff/**",
+                        "/api/v1/staff-teacher-roles/**"
+                )
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi paymentsGroup() {
+        return GroupedOpenApi.builder()
+                .group("4. Payments")
+                .pathsToMatch("/api/v1/payments/**")
                 .build();
     }
 
     @Bean
     public GroupedOpenApi masterDataGroup() {
         return GroupedOpenApi.builder()
-                .group("2. Master Data")
-                .packagesToScan("com.menghor.ksit.feature.master.controller")
+                .group("5. Master Data")
+                .pathsToMatch(
+                        "/api/v1/classes/**",
+                        "/api/v1/departments/**",
+                        "/api/v1/majors/**",
+                        "/api/v1/rooms/**",
+                        "/api/v1/semesters/**",
+                        "/api/v1/subjects/**"
+                )
                 .build();
     }
 
     @Bean
     public GroupedOpenApi schoolGroup() {
         return GroupedOpenApi.builder()
-                .group("3. School")
-                .packagesToScan("com.menghor.ksit.feature.school.controller")
+                .group("6. School")
+                .pathsToMatch(
+                        "/api/v1/courses/**",
+                        "/api/v1/schedules/**",
+                        "/api/v1/requests/**"
+                )
                 .build();
     }
 
     @Bean
     public GroupedOpenApi attendanceGroup() {
         return GroupedOpenApi.builder()
-                .group("4. Attendance & Score")
-                .packagesToScan("com.menghor.ksit.feature.attendance.controller")
+                .group("7. Attendance")
+                .pathsToMatch("/api/v1/attendance/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi scoresGroup() {
+        return GroupedOpenApi.builder()
+                .group("8. Scores & Transcripts")
+                .pathsToMatch(
+                        "/api/v1/score/**",
+                        "/api/v1/transcript/**"
+                )
                 .build();
     }
 
     @Bean
     public GroupedOpenApi surveyGroup() {
         return GroupedOpenApi.builder()
-                .group("5. Survey")
-                .packagesToScan("com.menghor.ksit.feature.survey.controller")
+                .group("9. Survey")
+                .pathsToMatch("/api/v1/surveys/**")
                 .build();
     }
 
     @Bean
     public GroupedOpenApi menuGroup() {
         return GroupedOpenApi.builder()
-                .group("6. Menu & Permissions")
-                .packagesToScan("com.menghor.ksit.feature.menu.controller")
+                .group("10. Menu & Permissions")
+                .pathsToMatch("/api/v1/menus/**")
                 .build();
     }
 
     @Bean
     public GroupedOpenApi settingGroup() {
         return GroupedOpenApi.builder()
-                .group("7. Settings & Utilities")
-                .packagesToScan("com.menghor.ksit.feature.setting.controller")
+                .group("11. Settings & Utilities")
+                .pathsToMatch(
+                        "/api/images/**",
+                        "/api/v1/enums/**",
+                        "/api/v1/statistics/**"
+                )
                 .build();
     }
 }
