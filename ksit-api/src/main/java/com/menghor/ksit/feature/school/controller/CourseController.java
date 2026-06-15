@@ -9,9 +9,11 @@ import com.menghor.ksit.feature.school.service.CourseService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Courses", description = "Manage course enrollment and subject assignments")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/courses")

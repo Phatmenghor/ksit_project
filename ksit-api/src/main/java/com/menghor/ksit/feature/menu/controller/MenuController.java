@@ -14,12 +14,14 @@ import com.menghor.ksit.feature.menu.service.impl.MenuServiceImpl;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Menu & Permissions", description = "Manage role-based menu access permissions")
 @RestController
 @RequestMapping("/api/v1/menus")
 @RequiredArgsConstructor

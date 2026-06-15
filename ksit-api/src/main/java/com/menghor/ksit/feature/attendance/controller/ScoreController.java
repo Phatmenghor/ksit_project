@@ -15,9 +15,11 @@ import com.menghor.ksit.feature.attendance.service.StudentScoreService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Scores", description = "Manage student scores, grades, and score configurations")
 @RestController
 @RequestMapping("/api/v1/score")
 @RequiredArgsConstructor

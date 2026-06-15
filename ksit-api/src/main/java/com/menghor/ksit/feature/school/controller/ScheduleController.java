@@ -11,11 +11,13 @@ import com.menghor.ksit.feature.school.service.ScheduleService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Schedules", description = "Manage class schedules and timetables")
 @RestController
 @RequestMapping("/api/v1/schedules")
 @RequiredArgsConstructor

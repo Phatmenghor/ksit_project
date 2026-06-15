@@ -10,6 +10,7 @@ import com.menghor.ksit.feature.school.dto.update.RequestUpdateDto;
 import com.menghor.ksit.feature.school.service.RequestService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import com.menghor.ksit.utils.database.SecurityUtils;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Requests", description = "Manage student requests and administrative approvals")
 @RestController
 @RequestMapping("/api/v1/requests")
 @RequiredArgsConstructor

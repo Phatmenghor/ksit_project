@@ -12,10 +12,12 @@ import com.menghor.ksit.feature.auth.service.StaffService;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Staff", description = "Register, update, delete and manage staff and teacher accounts")
 @RestController
 @RequestMapping("/api/v1/staff")
 @RequiredArgsConstructor

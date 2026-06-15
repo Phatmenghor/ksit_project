@@ -12,11 +12,13 @@ import com.menghor.ksit.feature.survey.service.SurveyService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Surveys", description = "Manage surveys, questions, and student responses")
 @RestController
 @RequestMapping("/api/v1/surveys")
 @RequiredArgsConstructor

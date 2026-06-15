@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Tag(name = "Enumerations", description = "Get available enum values for dropdowns and filters")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/enums")

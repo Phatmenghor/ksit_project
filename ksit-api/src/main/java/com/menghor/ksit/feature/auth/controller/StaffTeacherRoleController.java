@@ -6,11 +6,13 @@ import com.menghor.ksit.feature.auth.dto.update.UserRoleUpdateRequestDto;
 import com.menghor.ksit.feature.auth.service.StaffTeacherRoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Staff Teacher Roles", description = "Assign and manage teacher roles for staff")
 @RestController
 @RequestMapping("/api/v1/staff-teacher-roles")
 @RequiredArgsConstructor

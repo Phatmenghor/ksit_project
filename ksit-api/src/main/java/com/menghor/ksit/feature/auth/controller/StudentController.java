@@ -15,12 +15,14 @@ import com.menghor.ksit.feature.auth.service.StudentService;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Students", description = "Register, update, delete and manage student accounts")
 @RestController
 @RequestMapping("/api/v1/students")
 @RequiredArgsConstructor

@@ -9,12 +9,14 @@ import com.menghor.ksit.feature.master.service.MajorService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Majors", description = "Manage academic majors / specializations")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/majors")
