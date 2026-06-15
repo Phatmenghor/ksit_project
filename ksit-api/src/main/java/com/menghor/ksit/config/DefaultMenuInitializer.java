@@ -13,12 +13,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.Optional;
-import java.util.ArrayList;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +26,9 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
     private final MenuItemRepository menuItemRepository;
     private final MenuPermissionRepository menuPermissionRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     @Transactional
@@ -208,101 +209,93 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     }
 
     private void migrateMenuData() {
-        log.info("Migrating old uppercase menu codes to lowercase-hyphenated codes...");
-        
-        Map<String, String> migrationMap = new LinkedHashMap<>();
-        migrationMap.put("DASHBOARD", "dashboard");
-        migrationMap.put("MASTER_DATA", "master-data");
-        migrationMap.put("MANAGE_CLASS", "manage-class");
-        migrationMap.put("MANAGE_SEMESTER", "manage-semester");
-        migrationMap.put("MANAGE_MAJOR", "manage-major");
-        migrationMap.put("MANAGE_DEPARTMENT", "manage-department");
-        migrationMap.put("MANAGE_ROOM", "manage-room");
-        migrationMap.put("MANAGE_COURSE", "manage-course");
-        migrationMap.put("MANAGE_SUBJECT", "manage-subject");
-        migrationMap.put("USERS", "users");
-        migrationMap.put("ADMIN", "admin");
-        migrationMap.put("STAFF_OFFICER", "staff-officer");
-        migrationMap.put("TEACHERS", "teachers");
-        migrationMap.put("STUDENTS", "students");
-        migrationMap.put("ADD_MULTIPLE_USERS", "add-multiple-users");
-        migrationMap.put("ADD_SINGLE_USER", "add-single-user");
-        migrationMap.put("STUDENTS_LIST", "students-list");
-        migrationMap.put("ATTENDANCE", "attendance");
-        migrationMap.put("CLASS_SCHEDULE", "class-schedule");
-        migrationMap.put("HISTORY_RECORDS", "history-records");
-        migrationMap.put("STUDENT_RECORDS", "student-records");
-        migrationMap.put("SURVEY", "survey");
-        migrationMap.put("RESULT_LIST", "result-list");
-        migrationMap.put("MANAGE_QA", "manage-qa");
-        migrationMap.put("SURVEY_STUDENT_RECORDS", "survey-student-records");
-        migrationMap.put("SURVEY_STUDENT", "survey-student");
-        migrationMap.put("SCORE_SUBMITTED", "scores-submitted");
-        migrationMap.put("SUBMITTED_LIST", "submitted-list");
-        migrationMap.put("SCORE_SETTING", "score-setting");
-        migrationMap.put("STUDENT_SCORE", "student-score");
-        migrationMap.put("SCHEDULE", "schedule");
-        migrationMap.put("MANAGE_SCHEDULE", "manage-schedule");
-        migrationMap.put("REQUEST", "request");
-        migrationMap.put("PAYMENT", "payment");
-        migrationMap.put("MY_PAYMENT", "my-payment");
-        migrationMap.put("ROLE_PERMISSION", "role-permission");
-
-        for (Map.Entry<String, String> entry : migrationMap.entrySet()) {
-            String oldCode = entry.getKey();
-            String newCode = entry.getValue();
-
-            Optional<MenuItemEntity> oldMenuOpt = menuItemRepository.findByCodeAndStatus(oldCode, Status.ACTIVE);
-            Optional<MenuItemEntity> newMenuOpt = menuItemRepository.findByCodeAndStatus(newCode, Status.ACTIVE);
-
-            if (oldMenuOpt.isPresent()) {
-                MenuItemEntity oldMenu = oldMenuOpt.get();
-                if (newMenuOpt.isPresent()) {
-                    MenuItemEntity newMenu = newMenuOpt.get();
-                    log.info("Merging permissions from old menu {} to new menu {}", oldCode, newCode);
-                    
-                    // Re-point children of old menu to new menu
-                    List<MenuItemEntity> children = menuItemRepository.findChildMenusByParentIdAndStatus(oldMenu.getId(), Status.ACTIVE);
-                    for (MenuItemEntity child : children) {
-                        child.setParent(newMenu);
-                        menuItemRepository.save(child);
-                    }
-                    
-                    // Transfer permissions from old menu item to new menu item
-                    List<MenuPermissionEntity> oldPermissions = menuPermissionRepository.findByMenuItemIdAndStatus(oldMenu.getId(), Status.ACTIVE);
-                    for (MenuPermissionEntity oldPerm : oldPermissions) {
-                        boolean exists = false;
-                        if (oldPerm.getUser() != null) {
-                            exists = menuPermissionRepository.existsByUserIdAndMenuItemIdAndStatus(
-                                    oldPerm.getUser().getId(), newMenu.getId(), Status.ACTIVE);
-                        } else if (oldPerm.getRole() != null) {
-                            exists = menuPermissionRepository.findByMenuItemIdAndRoleAndStatus(
-                                    newMenu.getId(), oldPerm.getRole(), Status.ACTIVE).isPresent();
-                        }
-                        
-                        if (!exists) {
-                            oldPerm.setMenuItem(newMenu);
-                            menuPermissionRepository.save(oldPerm);
-                        } else {
-                            oldPerm.setStatus(Status.DELETED);
-                            menuPermissionRepository.save(oldPerm);
-                        }
-                    }
-                    
-                    // De-associate relationships to prevent foreign key errors
-                    oldMenu.setParent(null);
-                    oldMenu.setChildren(new ArrayList<>());
-                    menuItemRepository.save(oldMenu);
-                    
-                    // Delete old menu item
-                    menuItemRepository.delete(oldMenu);
-                } else {
-                    // Rename old to new
-                    log.info("Renaming menu code from {} to {}", oldCode, newCode);
-                    oldMenu.setCode(newCode);
-                    menuItemRepository.save(oldMenu);
-                }
-            }
+        log.info("Running database migration for old uppercase menu codes and routes...");
+        try {
+            String sql = """
+                DO $$
+                DECLARE
+                    old_id BIGINT;
+                    new_id BIGINT;
+                    mappings JSONB := '[
+                        {"old": "DASHBOARD", "new": "dashboard", "route": "/"},
+                        {"old": "MASTER_DATA", "new": "master-data", "route": null},
+                        {"old": "MANAGE_CLASS", "new": "manage-class", "route": "/master-data/classes"},
+                        {"old": "MANAGE_SEMESTER", "new": "manage-semester", "route": "/master-data/semesters"},
+                        {"old": "MANAGE_MAJOR", "new": "manage-major", "route": "/master-data/majors"},
+                        {"old": "MANAGE_DEPARTMENT", "new": "manage-department", "route": "/master-data/departments"},
+                        {"old": "MANAGE_ROOM", "new": "manage-room", "route": "/master-data/rooms"},
+                        {"old": "MANAGE_COURSE", "new": "manage-course", "route": "/master-data/courses"},
+                        {"old": "MANAGE_SUBJECT", "new": "manage-subject", "route": "/master-data/subjects"},
+                        {"old": "USERS", "new": "users", "route": null},
+                        {"old": "ADMIN", "new": "admin", "route": "/users/admins"},
+                        {"old": "STAFF_OFFICER", "new": "staff-officer", "route": "/users/staff"},
+                        {"old": "TEACHERS", "new": "teachers", "route": "/users/teachers"},
+                        {"old": "STUDENTS", "new": "students", "route": null},
+                        {"old": "ADD_MULTIPLE_USERS", "new": "add-multiple-users", "route": "/students/add-multiple"},
+                        {"old": "ADD_SINGLE_USER", "new": "add-single-user", "route": "/students/add-single"},
+                        {"old": "STUDENTS_LIST", "new": "students-list", "route": "/students"},
+                        {"old": "ATTENDANCE", "new": "attendance", "route": null},
+                        {"old": "CLASS_SCHEDULE", "new": "class-schedule", "route": "/attendance/schedule"},
+                        {"old": "HISTORY_RECORDS", "new": "history-records", "route": "/attendance/history"},
+                        {"old": "STUDENT_RECORDS", "new": "student-records", "route": "/attendance/records"},
+                        {"old": "SURVEY", "new": "survey", "route": null},
+                        {"old": "RESULT_LIST", "new": "result-list", "route": "/survey/results"},
+                        {"old": "MANAGE_QA", "new": "manage-qa", "route": "/survey/questions"},
+                        {"old": "SURVEY_STUDENT_RECORDS", "new": "survey-student-records", "route": "/survey/records"},
+                        {"old": "SURVEY_STUDENT", "new": "survey-student", "route": "/survey/student"},
+                        {"old": "SCORE_SUBMITTED", "new": "scores-submitted", "route": null},
+                        {"old": "SUBMITTED_LIST", "new": "submitted-list", "route": "/scores/submitted"},
+                        {"old": "SCORE_SETTING", "new": "score-setting", "route": "/scores/settings"},
+                        {"old": "STUDENT_SCORE", "new": "student-score", "route": "/scores/student"},
+                        {"old": "SCHEDULE", "new": "schedule", "route": "/schedule"},
+                        {"old": "MANAGE_SCHEDULE", "new": "manage-schedule", "route": "/manage-schedule"},
+                        {"old": "REQUEST", "new": "request", "route": "/requests"},
+                        {"old": "PAYMENT", "new": "payment", "route": null},
+                        {"old": "MY_PAYMENT", "new": "my-payment", "route": "/my-payment"},
+                        {"old": "ROLE_PERMISSION", "new": "role-permission", "route": "/permissions"}
+                    ]';
+                    mapping JSONB;
+                    old_code TEXT;
+                    new_code TEXT;
+                    new_route TEXT;
+                BEGIN
+                    FOR mapping IN SELECT * FROM jsonb_array_elements(mappings) LOOP
+                        old_code := mapping->>'old';
+                        new_code := mapping->>'new';
+                        new_route := mapping->>'route';
+                
+                        SELECT id INTO old_id FROM menu_items WHERE code = old_code AND status = 'ACTIVE';
+                        SELECT id INTO new_id FROM menu_items WHERE code = new_code AND status = 'ACTIVE';
+                
+                        IF old_id IS NOT NULL THEN
+                            IF new_id IS NOT NULL THEN
+                                UPDATE menu_items SET parent_id = new_id WHERE parent_id = old_id;
+                                
+                                UPDATE menu_permissions mp
+                                SET menu_item_id = new_id
+                                WHERE menu_item_id = old_id
+                                  AND NOT EXISTS (
+                                      SELECT 1 FROM menu_permissions mp2 
+                                      WHERE mp2.menu_item_id = new_id 
+                                        AND COALESCE(mp2.user_id, -999) = COALESCE(mp.user_id, -999)
+                                        AND COALESCE(mp2.role_name, ''NONE'') = COALESCE(mp.role_name, ''NONE'')
+                                  );
+                                  
+                                DELETE FROM menu_permissions WHERE menu_item_id = old_id;
+                                DELETE FROM menu_items WHERE id = old_id;
+                            ELSE
+                                UPDATE menu_items 
+                                SET code = new_code, route = new_route
+                                WHERE id = old_id;
+                            END IF;
+                        END IF;
+                    END LOOP;
+                END $$;
+                """;
+            entityManager.createNativeQuery(sql).executeUpdate();
+            log.info("Database migration completed successfully.");
+        } catch (Exception e) {
+            log.error("Failed to run database migration: {}", e.getMessage(), e);
         }
     }
 }
