@@ -37,7 +37,7 @@ jwt:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui/swagger-ui/index.html
+    path: /swagger-ui.html
     enabled: true
     tags-sorter: alpha
     operations-sorter: alpha

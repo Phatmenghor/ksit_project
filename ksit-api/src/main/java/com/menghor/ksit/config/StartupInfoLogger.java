@@ -29,7 +29,7 @@ public class StartupInfoLogger {
                 ║  Timezone  : Asia/Phnom_Penh (UTC+7)
                 ╠══════════════════════════════════════════════════════════╣
                 ║  API Base  : {}/api/v1
-                ║  Swagger   : {}/swagger-ui/swagger-ui/index.html
+                ║  Swagger   : {}/swagger-ui.html
                 ║  API Docs  : {}/v3/api-docs
                 ╚══════════════════════════════════════════════════════════╝
                 """,
