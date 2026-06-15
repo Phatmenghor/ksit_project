@@ -39,11 +39,11 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         log.info("=== Menu initialization started ===");
-        TransactionTemplate tx = new TransactionTemplate(transactionManager);
-        tx.execute(status -> { removeObsoleteMenus(); return null; });
-        tx.execute(status -> { seedMenus(); return null; });
+//        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+//        tx.execute(status -> { removeObsoleteMenus(); return null; });
+//        tx.execute(status -> { seedMenus(); return null; });
         if (menuDataChanged) {
-            syncAllUserMenuPermissions(tx);
+//            syncAllUserMenuPermissions(tx);
         } else {
             log.info("No menu changes detected — skipping user permission sync");
         }
