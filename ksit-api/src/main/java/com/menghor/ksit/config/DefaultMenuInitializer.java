@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -33,13 +34,19 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     private final MenuPermissionConfig menuPermissionConfig;
     private final PlatformTransactionManager transactionManager;
 
+    private boolean menuDataChanged = false;
+
     @Override
     public void run(String... args) {
         log.info("=== Menu initialization started ===");
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.execute(status -> { removeObsoleteMenus(); return null; });
         tx.execute(status -> { seedMenus(); return null; });
-        syncAllUserMenuPermissions(tx);
+        if (menuDataChanged) {
+            syncAllUserMenuPermissions(tx);
+        } else {
+            log.info("No menu changes detected — skipping user permission sync");
+        }
         log.info("=== Menu initialization complete ===");
     }
 
@@ -52,6 +59,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
                 log.info("Removing obsolete menu: code={}", menu.getCode());
                 menu.setStatus(Status.DELETED);
                 menuItemRepository.save(menu);
+                menuDataChanged = true;
 
                 List<MenuPermissionEntity> perms = menuPermissionRepository
                         .findByMenuItemIdAndStatus(menu.getId(), Status.ACTIVE);
@@ -286,7 +294,15 @@ public class DefaultMenuInitializer implements CommandLineRunner {
             boolean isParent, int displayOrder) {
 
         MenuItemEntity item = menuItemRepository.findByCodeAndStatus(code, Status.ACTIVE)
-                .orElse(new MenuItemEntity());
+                .orElse(null);
+
+        if (item == null) {
+            item = new MenuItemEntity();
+            menuDataChanged = true;
+        } else if (!Objects.equals(item.getRoute(), route) || !Objects.equals(item.getTitle(), title)) {
+            menuDataChanged = true;
+        }
+
         item.setCode(code);
         item.setTitle(title);
         item.setRoute(route);
