@@ -172,7 +172,6 @@ export default function StudentScoresTable({
               <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Fullname (KH)</th>
               <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Fullname (EN)</th>
               <th className="px-3 py-3 text-left font-semibold">Gender</th>
-              <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Birth Date</th>
               {scoreColumns.map((col) => (
                 <th key={col.field} className="px-3 py-3 text-center font-semibold whitespace-nowrap">
                   <div>{col.label}</div>
@@ -226,7 +225,6 @@ export default function StudentScoresTable({
                     <td className="px-3 py-2.5 font-medium">{student.studentNameKhmer?.trim() || "—"}</td>
                     <td className="px-3 py-2.5">{student.studentNameEnglish?.trim() || "—"}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{student.gender || "—"}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{student.dateOfBirth || "—"}</td>
 
                     {scoreColumns.map((col) => (
                       <td key={col.field} className="px-3 py-2 text-center">
