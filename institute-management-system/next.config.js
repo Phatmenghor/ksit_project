@@ -13,8 +13,16 @@ const nextConfig = {
 
   // ⚡ Performance
   compress: true,
-  swcMinify: true,
   productionBrowserSourceMaps: false,
+
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion", "@radix-ui/react-icons"],
+  },
+
+  // Turbopack config (used by next dev --turbopack)
+  turbopack: {
+    resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
+  },
 
   logging: {
     fetches: {

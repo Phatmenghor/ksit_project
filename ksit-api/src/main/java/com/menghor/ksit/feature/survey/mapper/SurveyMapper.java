@@ -106,6 +106,8 @@ public interface SurveyMapper {
     @Mapping(target = "schedule", ignore = true)
     @Mapping(target = "sections", ignore = true)
     @Mapping(target = "responses", ignore = true)
+    @Mapping(target = "activeSections", ignore = true)
+    @Mapping(target = "allSections", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateSurveyFromDto(SurveyUpdateDto dto, @MappingTarget SurveyEntity entity);

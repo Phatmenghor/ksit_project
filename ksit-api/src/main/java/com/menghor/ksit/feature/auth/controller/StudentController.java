@@ -15,88 +15,83 @@ import com.menghor.ksit.feature.auth.service.StudentService;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Students", description = "Register, update, delete and manage student accounts")
 @RestController
 @RequestMapping("/api/v1/students")
 @RequiredArgsConstructor
+@Slf4j
 public class StudentController {
 
     private final StudentService studentService;
     private final SecurityUtils securityUtils;
 
-    /**
-     * Register a new student
-     */
     @PostMapping("/register")
     public ApiResponse<StudentUserResponseDto> registerStudent(@Valid @RequestBody StudentCreateRequestDto requestDto) {
+        log.info("Register student request received");
         StudentUserResponseDto registeredStudent = studentService.registerStudent(requestDto);
+        log.info("Student registered successfully. id={}", registeredStudent.getId());
         return new ApiResponse<>("success", "Student registered successfully", registeredStudent);
     }
 
-    /**
-     * Register multiple students in a batch
-     */
     @PostMapping("/register/batch")
     public ApiResponse<List<StudentResponseDto>> registerStudentBatch(@Valid @RequestBody StudentBatchCreateRequestDto requestDto) {
+        log.info("Batch register students request received. quantity={}", requestDto.getQuantity());
         List<StudentResponseDto> registeredStudents = studentService.batchRegisterStudents(requestDto);
+        log.info("Batch registration completed. registered={}", registeredStudents.size());
         return new ApiResponse<>("success",
                 String.format("Successfully registered %d students", registeredStudents.size()),
                 registeredStudents);
     }
 
-    /**
-     * Get all student users with filtering
-     */
     @PostMapping("/all")
     public ApiResponse<StudentUserAllResponseDto> getAllStudentUsers(@RequestBody StudentUserFilterRequestDto filterDto) {
+        log.info("Get all students request received");
         StudentUserAllResponseDto users = studentService.getAllStudentUsers(filterDto);
         return new ApiResponse<>("success", "Student users retrieved successfully", users);
     }
 
     @PostMapping("/all-student-list")
     public ApiResponse<List<StudentUserListResponseDto>> getAllStudentListUsers(@RequestBody StudentUserFilterRequestDto filterDto) {
+        log.info("Get all student list request received");
         List<StudentUserListResponseDto> users = studentService.getAllStudentListUsers(filterDto);
         return new ApiResponse<>("success", "Student users retrieved successfully", users);
     }
 
-    /**
-     * Get student user by ID
-     */
     @GetMapping("/{id}")
     public ApiResponse<StudentUserResponseDto> getStudentUserById(@PathVariable Long id) {
+        log.info("Get student by id={} request received", id);
         StudentUserResponseDto user = studentService.getStudentUserById(id);
-        return new ApiResponse<>("'success'", "Student user fetched successfully", user);
+        return new ApiResponse<>("success", "Student user fetched successfully", user);
     }
 
-    /**
-     * Update student user
-     */
     @PutMapping("/{id}")
     public ApiResponse<StudentUserResponseDto> updateStudentUser(@PathVariable Long id, @Valid @RequestBody StudentUpdateRequestDto updateDto) {
+        log.info("Update student id={} request received", id);
         StudentUserResponseDto updatedUser = studentService.updateStudentUser(id, updateDto);
-        return new ApiResponse<>("'success'", "Student user updated successfully", updatedUser);
+        log.info("Student id={} updated successfully", id);
+        return new ApiResponse<>("success", "Student user updated successfully", updatedUser);
     }
 
-    /**
-     * Update student token user
-     */
     @PutMapping("token")
-    public ApiResponse<StudentUserResponseDto> updateStudentTokenUser( @Valid @RequestBody StudentUpdateRequestDto updateDto) {
+    public ApiResponse<StudentUserResponseDto> updateStudentTokenUser(@Valid @RequestBody StudentUpdateRequestDto updateDto) {
         final UserEntity currentEntity = securityUtils.getCurrentUser();
+        log.info("Update student by token request received. userId={}", currentEntity.getId());
         StudentUserResponseDto updatedUser = studentService.updateStudentUser(currentEntity.getId(), updateDto);
-        return new ApiResponse<>("'success'", "Student user updated successfully", updatedUser);
+        return new ApiResponse<>("success", "Student user updated successfully", updatedUser);
     }
 
-    /**
-     * Delete/deactivate student user
-     */
     @DeleteMapping("/{id}")
     public ApiResponse<StudentUserResponseDto> deleteStudentUser(@PathVariable Long id) {
+        log.info("Delete student id={} request received", id);
         StudentUserResponseDto user = studentService.deleteStudentUser(id);
+        log.info("Student id={} deactivated successfully", id);
         return new ApiResponse<>("success", "Student user deactivated successfully", user);
     }
 }

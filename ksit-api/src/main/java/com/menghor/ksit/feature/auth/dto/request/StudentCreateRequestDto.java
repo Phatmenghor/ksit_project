@@ -32,6 +32,7 @@ public class StudentCreateRequestDto {
     private String password;
 
     private String email;
+    @Builder.Default
     private StudentStatus studentStatus = StudentStatus.STUDYING;
 
     // Personal info
@@ -68,5 +69,6 @@ public class StudentCreateRequestDto {
     @Builder.Default
     private List<StudentSiblingDto> studentSiblings = new ArrayList<>();
 
+    @Builder.Default
     private Status status = Status.ACTIVE;
 }

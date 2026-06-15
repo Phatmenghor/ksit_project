@@ -28,6 +28,7 @@ public interface CourseMapper {
     @Mapping(target = "department", ignore = true)
     @Mapping(target = "subject", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "schedules", ignore = true)
     CourseEntity toEntity(CourseRequestDto requestDto);
 
     @Mapping(target = "department", source = "department")
@@ -46,6 +47,7 @@ public interface CourseMapper {
     @Mapping(target = "department", ignore = true)
     @Mapping(target = "subject", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "schedules", ignore = true)
     void updateEntityFromDto(CourseUpdateDto dto, @MappingTarget CourseEntity entity);
 
     default List<CourseResponseDto> toResponseDtoList(List<CourseEntity> entities) {

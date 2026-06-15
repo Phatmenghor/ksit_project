@@ -6,19 +6,24 @@ import com.menghor.ksit.feature.auth.dto.update.UserRoleUpdateRequestDto;
 import com.menghor.ksit.feature.auth.service.StaffTeacherRoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Staff Teacher Roles", description = "Assign and manage teacher roles for staff")
 @RestController
 @RequestMapping("/api/v1/staff-teacher-roles")
 @RequiredArgsConstructor
+@Slf4j
 public class StaffTeacherRoleController {
 
     private final StaffTeacherRoleService staffTeacherRoleService;
 
     @GetMapping("/users/{userId}")
     public ApiResponse<List<UserRoleResponseDto>> getUserRoles(@PathVariable Long userId) {
+        log.info("Get roles for userId={} request received", userId);
         List<UserRoleResponseDto> roles = staffTeacherRoleService.getUserStaffTeacherRoles(userId);
         return ApiResponse.success("User roles retrieved successfully", roles);
     }
@@ -27,7 +32,9 @@ public class StaffTeacherRoleController {
     public ApiResponse<List<UserRoleResponseDto>> updateUserRoles(
             @PathVariable Long userId,
             @Valid @RequestBody UserRoleUpdateRequestDto updateDto) {
+        log.info("Update roles for userId={} request received", userId);
         List<UserRoleResponseDto> updatedRoles = staffTeacherRoleService.updateUserStaffTeacherRoles(userId, updateDto);
+        log.info("Roles updated successfully for userId={}", userId);
         return ApiResponse.success("User roles updated successfully", updatedRoles);
     }
 }

@@ -1,56 +1,51 @@
 package com.menghor.ksit.feature.auth.security;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.spec.SecretKeySpec;
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class JWTGenerator {
 
     @Value("${jwt.secret.key}")
-    private String secretKey; // Injected secret key from properties
+    private String secretKey;
 
     @Value("${jwt.expiration-min}")
     private long jwtExpirationInMinutes;
 
-    /**
-     * Public method to get signing key
-     * @return Key used for signing and verifying JWT tokens
-     */
-    public Key getSigningKey() {
-        return new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName());
+    public SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     public String generateToken(Authentication authentication) {
         String username = authentication.getName();
         Date currentDate = new Date();
-
-        long expirationTimeInMs = jwtExpirationInMinutes * 60 * 1000;
-
-        Date expireDate = new Date(currentDate.getTime() + expirationTimeInMs);
+        Date expireDate = new Date(currentDate.getTime() + jwtExpirationInMinutes * 60 * 1000);
         return Jwts.builder()
-                .setIssuedAt(new Date())
-                .setExpiration(expireDate)
-                .setSubject(username)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .issuedAt(currentDate)
+                .expiration(expireDate)
+                .subject(username)
+                .signWith(getSigningKey())
                 .compact();
     }
 
     public String getUsernameFromJWT(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
         } catch (ExpiredJwtException e) {
             throw new ExpiredJwtException(e.getHeader(), e.getClaims(), "JWT token has expired");
         } catch (MalformedJwtException e) {
@@ -66,10 +61,10 @@ public class JWTGenerator {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
             throw new ExpiredJwtException(e.getHeader(), e.getClaims(), "JWT token has expired");
@@ -86,19 +81,14 @@ public class JWTGenerator {
         }
     }
 
-    /**
-     * Additional method to get token expiration
-     * @param token JWT token
-     * @return Expiration date of the token
-     */
     public Date getTokenExpiration(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+            return Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getExpiration();
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration();
         } catch (ExpiredJwtException e) {
             throw new ExpiredJwtException(e.getHeader(), e.getClaims(), "JWT token has expired");
         } catch (Exception e) {
@@ -106,19 +96,13 @@ public class JWTGenerator {
         }
     }
 
-    /**
-     * Check if token is expired without throwing exception
-     * @param token JWT token
-     * @return true if token is expired
-     */
     public boolean isTokenExpired(String token) {
         try {
-            Date expiration = getTokenExpiration(token);
-            return expiration.before(new Date());
+            return getTokenExpiration(token).before(new Date());
         } catch (ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
-            return true; // Consider invalid tokens as expired
+            return true;
         }
     }
 }

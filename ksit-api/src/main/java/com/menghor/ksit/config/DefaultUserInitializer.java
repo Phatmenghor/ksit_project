@@ -7,6 +7,7 @@ import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.RoleRepository;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,7 +19,8 @@ import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
-@Order(2) // Run after DefaultRoleInitializer
+@Slf4j
+@Order(2)
 public class DefaultUserInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -31,12 +33,9 @@ public class DefaultUserInitializer implements CommandLineRunner {
         if (userRepository.count() > 0) {
             return;
         }
+        log.info("Initializing default developer user...");
         createDeveloperUser();
-//        createAdminUser();
-//        createStaffUser();
-//        createTeacherUser();
-//        createStudentUser();
-//        createMultiRoleUser();
+        log.info("Default developer user initialized successfully");
     }
 
     private void createDeveloperUser() {
@@ -51,77 +50,5 @@ public class DefaultUserInitializer implements CommandLineRunner {
         developer.setRoles(Collections.singletonList(devRole));
 
         userRepository.save(developer);
-    }
-
-    private void createAdminUser() {
-        UserEntity admin = new UserEntity();
-        admin.setUsername("admin@ksit.com");
-        admin.setEmail("admin@ksit.com");
-        admin.setPassword(passwordEncoder.encode("88889999"));
-        admin.setStatus(Status.ACTIVE);
-
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + RoleEnum.ADMIN));
-        admin.setRoles(Collections.singletonList(adminRole));
-
-        userRepository.save(admin);
-    }
-
-    private void createStaffUser() {
-        UserEntity staff = new UserEntity();
-        staff.setUsername("staff@ksit.com");
-        staff.setEmail("staff@ksit.com");
-        staff.setPassword(passwordEncoder.encode("88889999"));
-        staff.setStatus(Status.ACTIVE);
-
-        Role staffRole = roleRepository.findByName(RoleEnum.STAFF)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + RoleEnum.STAFF));
-        staff.setRoles(Collections.singletonList(staffRole));
-
-        userRepository.save(staff);
-    }
-
-    private void createTeacherUser() {
-        UserEntity teacher = new UserEntity();
-        teacher.setUsername("teacher@ksit.com");
-        teacher.setEmail("teacher@ksit.com");
-        teacher.setPassword(passwordEncoder.encode("88889999"));
-        teacher.setStatus(Status.ACTIVE);
-
-        Role teacherRole = roleRepository.findByName(RoleEnum.TEACHER)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + RoleEnum.TEACHER));
-        teacher.setRoles(Collections.singletonList(teacherRole));
-
-        userRepository.save(teacher);
-    }
-
-    private void createStudentUser() {
-        UserEntity student = new UserEntity();
-        student.setUsername("student@ksit.com");
-        student.setEmail("student@ksit.com");
-        student.setPassword(passwordEncoder.encode("88889999"));
-        student.setStatus(Status.ACTIVE);
-
-        Role studentRole = roleRepository.findByName(RoleEnum.STUDENT)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + RoleEnum.STUDENT));
-        student.setRoles(Collections.singletonList(studentRole));
-
-        userRepository.save(student);
-    }
-
-    private void createMultiRoleUser() {
-        UserEntity headTeacher = new UserEntity();
-        headTeacher.setUsername("headteacher@ksit.com");
-        headTeacher.setEmail("headteacher@ksit.com");
-        headTeacher.setPassword(passwordEncoder.encode("88889999"));
-        headTeacher.setStatus(Status.ACTIVE);
-
-        Role staffRole = roleRepository.findByName(RoleEnum.STAFF)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + RoleEnum.STAFF));
-        Role adminRole = roleRepository.findByName(RoleEnum.ADMIN)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + RoleEnum.TEACHER));
-        headTeacher.setRoles(Arrays.asList(staffRole, adminRole));
-
-        userRepository.save(headTeacher);
     }
 }

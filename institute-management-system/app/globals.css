@@ -1,9 +1,9 @@
+/* Include Khmer font from Google Fonts — must be first, before @tailwind directives */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Include Khmer font from Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap");
 
 .grid-header {
   display: grid;

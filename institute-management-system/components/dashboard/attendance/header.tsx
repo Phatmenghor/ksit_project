@@ -29,7 +29,7 @@ export default function AttendanceHeader({ title, schedule }: Props) {
           </Link>
           <span>&gt;</span>
           <Link
-            href="/student-score"
+            href="/scores/student"
             className="hover:text-foreground whitespace-nowrap"
           >
             Student Score

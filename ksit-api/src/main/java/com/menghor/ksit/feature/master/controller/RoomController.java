@@ -9,62 +9,54 @@ import com.menghor.ksit.feature.master.service.RoomService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Rooms", description = "Manage classrooms and facilities")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/rooms")
+@Slf4j
 public class RoomController {
     private final RoomService roomService;
 
     @PostMapping
     public ApiResponse<RoomResponseDto> create(@Valid @RequestBody RoomRequestDto roomRequestDto) {
+        log.info("Create room request received");
         RoomResponseDto roomResponseDto = roomService.createRoom(roomRequestDto);
-        return new ApiResponse<>(
-                "success",
-                "Room created successfully...!"
-                , roomResponseDto
-        );
+        log.info("Room created successfully. id={}", roomResponseDto.getId());
+        return new ApiResponse<>("success", "Room created successfully", roomResponseDto);
     }
 
     @GetMapping("/{id}")
     public ApiResponse<RoomResponseDto> getById(@PathVariable Long id) {
+        log.info("Get room id={} request received", id);
         RoomResponseDto roomResponseDto = roomService.getRoomById(id);
-        return new ApiResponse<>(
-                "success",
-                "Get room by id " + id + " successfully...!",
-                roomResponseDto
-        );
+        return new ApiResponse<>("success", "Room fetched successfully", roomResponseDto);
     }
 
     @PostMapping("/updateById/{id}")
     public ApiResponse<RoomResponseDto> updateById(@Valid @RequestBody RoomUpdateDto roomRequest, @PathVariable Long id) {
+        log.info("Update room id={} request received", id);
         RoomResponseDto roomResponseDto = roomService.updateRoomById(roomRequest, id);
-        return new ApiResponse<>(
-                "success",
-                "Update room by id " + id + " successfully...!"
-                , roomResponseDto
-        );
+        log.info("Room id={} updated successfully", id);
+        return new ApiResponse<>("success", "Room updated successfully", roomResponseDto);
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<RoomResponseDto> deleteById(@PathVariable Long id) {
+        log.info("Delete room id={} request received", id);
         RoomResponseDto roomResponseDto = roomService.deleteRoomById(id);
-        return new ApiResponse<>(
-                "success",
-                "Delete room by id " + id + " successfully...!"
-                , roomResponseDto
-        );
+        log.info("Room id={} deleted successfully", id);
+        return new ApiResponse<>("success", "Room deleted successfully", roomResponseDto);
     }
 
     @PostMapping("/all")
     public ApiResponse<CustomPaginationResponseDto<RoomResponseDto>> getAllRooms(@RequestBody RoomFilterDto filterDto) {
+        log.info("Get all rooms request received");
         CustomPaginationResponseDto<RoomResponseDto> allRooms = roomService.getAllRoom(filterDto);
-        return new ApiResponse<>(
-                "success",
-                "All rooms fetched successfully...!"
-                , allRooms
-        );
+        return new ApiResponse<>("success", "All rooms fetched successfully", allRooms);
     }
 }

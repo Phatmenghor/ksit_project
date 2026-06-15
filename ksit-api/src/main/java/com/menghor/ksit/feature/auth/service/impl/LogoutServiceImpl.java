@@ -34,17 +34,16 @@ public class LogoutServiceImpl implements LogoutService {
     @Override
     @Transactional
     public void logout(String token) {
-
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
 
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(jwtGenerator.getSigningKey())
+            Claims claims = Jwts.parser()
+                    .verifyWith(jwtGenerator.getSigningKey())
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
 
             Date expirationDate = claims.getExpiration();
             String username = claims.getSubject();
@@ -58,20 +57,17 @@ public class LogoutServiceImpl implements LogoutService {
 
             blacklistedTokenRepository.save(blacklistedTokenEntity);
             SecurityContextHolder.clearContext();
+            log.info("User logged out successfully. username={}", username);
 
         } catch (Exception e) {
             log.error("Logout failed: Invalid or malformed token", e);
         }
     }
 
-    /**
-     * Scheduled task to remove expired blacklisted tokens
-     * Runs every day at midnight
-     */
     @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void removeExpiredBlacklistedTokens() {
-        LocalDateTime now = LocalDateTime.now();
-        int deletedCount = blacklistedTokenRepository.deleteExpiredTokens(now);
+        int deletedCount = blacklistedTokenRepository.deleteExpiredTokens(LocalDateTime.now());
+        log.info("Removed {} expired blacklisted tokens", deletedCount);
     }
 }

@@ -20,6 +20,7 @@ public interface RoomMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "schedules", ignore = true)
     RoomEntity toEntity(RoomRequestDto requestDto);
 
     @Mapping(target = "id", source = "id")
@@ -32,6 +33,7 @@ public interface RoomMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "schedules", ignore = true)
     void updateEntityFromDto(RoomUpdateDto dto, @MappingTarget RoomEntity entity);
 
     // Convert a list of RoomEntity to list of RoomResponseDto
