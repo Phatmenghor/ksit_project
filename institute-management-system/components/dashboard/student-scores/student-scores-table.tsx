@@ -201,7 +201,15 @@ export default function StudentScoresTable({
                 </td>
               </tr>
             ) : (
-              score.studentScores.map((student, index) => {
+              [...score.studentScores]
+                .sort((a, b) =>
+                  (a.studentIdentityNumber ?? "").localeCompare(
+                    b.studentIdentityNumber ?? "",
+                    undefined,
+                    { numeric: true, sensitivity: "base" }
+                  )
+                )
+                .map((student, index) => {
                 const hasChange = unsavedChanges.has(student.id);
                 const scoreValues: Record<string, number | string> = {
                   attendanceScore: student.attendanceScore ?? 0,
