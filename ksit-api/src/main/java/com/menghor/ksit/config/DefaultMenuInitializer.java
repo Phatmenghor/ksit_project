@@ -223,6 +223,8 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     }
 
     private void syncUserPermissions(UserEntity user, List<MenuItemEntity> activeMenus, Set<Long> activeMenuIds) {
+        log.info("Applying permissions for user [{}]...", user.getUsername());
+
         Set<RoleEnum> roles = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
@@ -234,6 +236,8 @@ public class DefaultMenuInitializer implements CommandLineRunner {
                 .collect(Collectors.toSet());
 
         List<MenuPermissionEntity> toSave = new ArrayList<>();
+        int added = 0;
+        int removed = 0;
 
         for (MenuItemEntity menu : activeMenus) {
             if (!existingMenuIds.contains(menu.getId())) {
@@ -244,6 +248,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
                 perm.setDisplayOrder(menu.getDisplayOrder());
                 perm.setStatus(Status.ACTIVE);
                 toSave.add(perm);
+                added++;
             }
         }
 
@@ -251,12 +256,15 @@ public class DefaultMenuInitializer implements CommandLineRunner {
             if (!activeMenuIds.contains(perm.getMenuItem().getId())) {
                 perm.setStatus(Status.DELETED);
                 toSave.add(perm);
+                removed++;
             }
         }
 
         if (!toSave.isEmpty()) {
             menuPermissionRepository.saveAll(toSave);
         }
+
+        log.info("User [{}] permissions synced — added: {}, removed: {}", user.getUsername(), added, removed);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
