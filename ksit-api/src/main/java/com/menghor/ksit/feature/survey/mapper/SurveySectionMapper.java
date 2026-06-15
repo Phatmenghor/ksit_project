@@ -23,6 +23,8 @@ public interface SurveySectionMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "survey", ignore = true)
     @Mapping(target = "questions", ignore = true)
+    @Mapping(target = "activeQuestions", ignore = true)
+    @Mapping(target = "allQuestions", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateSectionFromDto(SurveySectionUpdateDto dto, @MappingTarget SurveySectionEntity entity);
@@ -32,6 +34,8 @@ public interface SurveySectionMapper {
     @Mapping(target = "status", constant = "ACTIVE")
     @Mapping(target = "survey", ignore = true)
     @Mapping(target = "questions", ignore = true)
+    @Mapping(target = "activeQuestions", ignore = true)
+    @Mapping(target = "allQuestions", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     SurveySectionEntity createSectionFromDto(SurveySectionUpdateDto dto);

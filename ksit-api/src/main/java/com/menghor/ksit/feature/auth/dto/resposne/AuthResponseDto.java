@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthResponseDto {
     private String accessToken;
+    @Builder.Default
     private String tokenType = "Bearer ";
 
     // User basic information

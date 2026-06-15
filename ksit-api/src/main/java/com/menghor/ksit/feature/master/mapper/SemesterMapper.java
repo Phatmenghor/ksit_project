@@ -23,6 +23,7 @@ public interface SemesterMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "schedules", ignore = true)
     SemesterEntity toEntity(SemesterRequestDto requestDto);
 
     @Mapping(target = "id", source = "id")
@@ -68,6 +69,7 @@ public interface SemesterMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "schedules", ignore = true)
     void updateEntityFromDto(SemesterUpdateDto dto, @MappingTarget SemesterEntity entity);
 
     default List<SemesterResponseDto> toResponseDtoList(List<SemesterEntity> entities) {

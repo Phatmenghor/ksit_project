@@ -23,6 +23,7 @@ public interface ClassMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "major", ignore = true)
     @Mapping(target = "students", ignore = true)
+    @Mapping(target = "schedule", ignore = true)
     ClassEntity toEntity(ClassRequestDto classRequestDto);
 
     @Mapping(target = "id", source = "id")
@@ -42,6 +43,7 @@ public interface ClassMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "major", ignore = true)
     @Mapping(target = "students", ignore = true)
+    @Mapping(target = "schedule", ignore = true)
     void updateEntityFromDto(ClassUpdateDto dto, @MappingTarget ClassEntity entity);
 
     default List<ClassResponseDto> toResponseDtoList(List<ClassEntity> entities) {

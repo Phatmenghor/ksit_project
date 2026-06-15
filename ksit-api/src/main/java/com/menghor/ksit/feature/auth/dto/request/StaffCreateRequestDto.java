@@ -126,6 +126,6 @@ public class StaffCreateRequestDto {
     @Builder.Default
     private List<TeacherFamilyDto> teacherFamilies = new ArrayList<>();
 
-    // Status with default value
+    @Builder.Default
     private Status status = Status.ACTIVE;
 }

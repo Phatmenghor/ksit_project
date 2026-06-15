@@ -34,6 +34,7 @@ public interface ScheduleMapper {
     @Mapping(target = "course", ignore = true)
     @Mapping(target = "room", ignore = true)
     @Mapping(target = "semester", ignore = true)
+    @Mapping(target = "surveys", ignore = true)
     ScheduleEntity toEntity(ScheduleRequestDto requestDto);
 
     @Mapping(target = "classes", source = "classes")
@@ -56,6 +57,7 @@ public interface ScheduleMapper {
     @Mapping(target = "course", ignore = true)
     @Mapping(target = "room", ignore = true)
     @Mapping(target = "semester", ignore = true)
+    @Mapping(target = "surveys", ignore = true)
     void updateEntityFromDto(ScheduleUpdateDto dto, @MappingTarget ScheduleEntity entity);
 
     @Mapping(target = "id", ignore = true)
@@ -63,6 +65,7 @@ public interface ScheduleMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "classes", ignore = true)
     @Mapping(target = "semester", ignore = true)
+    @Mapping(target = "surveys", ignore = true)
     @Mapping(target = "user", source = "sourceSchedule.user")
     @Mapping(target = "course", source = "sourceSchedule.course")
     @Mapping(target = "room", source = "sourceSchedule.room")
