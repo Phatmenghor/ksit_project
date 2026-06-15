@@ -2,9 +2,10 @@
 
 import StudentScoreHeader from "@/components/dashboard/student-scores/layout/header-section";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import {
   StudentScoreModel,
@@ -41,7 +42,6 @@ type OriginalSnapshot = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Safely parse any value to a number; empty string / NaN → 0 */
 const toNum = (v: unknown): number => {
   const n = parseFloat(String(v));
   return isNaN(n) ? 0 : n;
@@ -60,14 +60,36 @@ const buildSnapshot = (s: StudentScoreModel): OriginalSnapshot => ({
   grade: s.grade,
 });
 
-const isDirtyRow = (
-  row: StudentScoreModel,
-  original: OriginalSnapshot
-): boolean =>
+const isDirtyRow = (row: StudentScoreModel, original: OriginalSnapshot): boolean =>
   toNum(row.attendanceScore) !== original.attendanceScore ||
   toNum(row.assignmentScore) !== original.assignmentScore ||
   toNum(row.midtermScore) !== original.midtermScore ||
   toNum(row.finalScore) !== original.finalScore;
+
+// ─── Score config summary card ────────────────────────────────────────────────
+
+function ScoreConfigBadges({ config }: { config: ScoreConfigurationModel | null }) {
+  if (!config) return null;
+  const items = [
+    { label: "Attendance", value: config.attendancePercentage },
+    { label: "Assignment", value: config.assignmentPercentage },
+    { label: "Midterm", value: config.midtermPercentage },
+    { label: "Final", value: config.finalPercentage },
+  ];
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/8 border border-primary/20 text-xs"
+        >
+          <span className="text-muted-foreground">{item.label}</span>
+          <span className="font-bold text-primary">{item.value}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -75,13 +97,11 @@ export default function StudentScoreDetailsPage() {
   const params = useParams();
   const id = params?.id ? Number(params.id) : null;
 
-  // ── Data state ──
   const [scheduleDetail, setScheduleDetail] = useState<ScheduleModel | null>(null);
   const [configureScore, setConfigureScore] = useState<ScoreConfigurationModel | null>(null);
   const [score, setScore] = useState<SubmissionScoreModel | null>(null);
   const [originalData, setOriginalData] = useState<Map<number, OriginalSnapshot>>(new Map());
 
-  // ── UI state ──
   const [mode, setMode] = useState<"view" | "edit-score">("view");
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -93,29 +113,24 @@ export default function StudentScoreDetailsPage() {
   const [isSubmittedDialogOpen, setIsSubmittedDialogOpen] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState<Set<number>>(new Set());
 
-  // Prevent double-init in React Strict Mode
   const initCalledRef = useRef(false);
 
-  // ─── Apply session response ───────────────────────────────────────────────
+  // ─── Apply session ────────────────────────────────────────────────────────
 
   const applySession = useCallback((response: SubmissionScoreModel) => {
     setScore(response);
     setIsInitialized(true);
-
-    const newMode = getModeFromStatus(response.status);
-    setMode(newMode);
-
+    setMode(getModeFromStatus(response.status));
     const notEditable = !isEditingAllowed(response.status);
     setIsSubmitted(notEditable);
     setIsSubmittingToStaff(notEditable);
-
     const map = new Map<number, OriginalSnapshot>();
     response.studentScores?.forEach((s) => map.set(s.id, buildSnapshot(s)));
     setOriginalData(map);
     setUnsavedChanges(new Set());
   }, []);
 
-  // ─── Data loaders ─────────────────────────────────────────────────────────
+  // ─── Loaders ─────────────────────────────────────────────────────────────
 
   const loadConfig = useCallback(async () => {
     try {
@@ -154,21 +169,19 @@ export default function StudentScoreDetailsPage() {
     [applySession]
   );
 
-  // ─── Effects ──────────────────────────────────────────────────────────────
+  // ─── Effects ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
     loadSchedule();
     loadConfig();
   }, [loadSchedule, loadConfig]);
 
-  // Auto-init once after schedule loads
   useEffect(() => {
     if (!scheduleDetail?.id || initCalledRef.current) return;
     initCalledRef.current = true;
     initializeSession(scheduleDetail.id);
   }, [scheduleDetail?.id, initializeSession]);
 
-  // Sync mode when status changes externally
   useEffect(() => {
     if (!score?.status) return;
     setMode(getModeFromStatus(score.status));
@@ -182,10 +195,8 @@ export default function StudentScoreDetailsPage() {
   const handleFieldChange = useCallback(
     (scoreId: number, field: string, value: string) => {
       if (isSubmitted) return;
-
       const original = originalData.get(scoreId);
 
-      // 1. Update the score row
       setScore((prev) => {
         if (!prev) return prev;
         return {
@@ -196,21 +207,17 @@ export default function StudentScoreDetailsPage() {
         };
       });
 
-      // 2. Track dirty state — build updated row from current score + new value
       setScore((prev) => {
         const row = prev?.studentScores.find((s) => s.id === scoreId);
         if (!row) return prev;
-
         const updatedRow = { ...row, [field]: value };
         const dirty = !original || isDirtyRow(updatedRow, original);
-
         setUnsavedChanges((prevSet) => {
           const next = new Set(prevSet);
           dirty ? next.add(scoreId) : next.delete(scoreId);
           return next;
         });
-
-        return prev; // no mutation — just reading
+        return prev;
       });
     },
     [originalData, isSubmitted]
@@ -220,13 +227,9 @@ export default function StudentScoreDetailsPage() {
 
   const handleSaveAllChanges = useCallback(async () => {
     if (unsavedChanges.size === 0 || isSubmitted || !score) return;
-
     setIsSavingAll(true);
     try {
-      const changed = score.studentScores.filter((s) =>
-        unsavedChanges.has(s.id)
-      );
-
+      const changed = score.studentScores.filter((s) => unsavedChanges.has(s.id));
       const responses = await Promise.all(
         changed.map((item) =>
           updateStudentsScoreService({
@@ -240,7 +243,6 @@ export default function StudentScoreDetailsPage() {
         )
       );
 
-      // Merge API responses back (backend recalculates grade + totalScore)
       setScore((prev) => {
         if (!prev) return prev;
         return {
@@ -252,7 +254,6 @@ export default function StudentScoreDetailsPage() {
         };
       });
 
-      // Update original snapshots so subsequent edits compare correctly
       const newOriginal = new Map(originalData);
       responses.forEach((r) => newOriginal.set(r.id, buildSnapshot(r)));
       setOriginalData(newOriginal);
@@ -269,11 +270,10 @@ export default function StudentScoreDetailsPage() {
     }
   }, [score, unsavedChanges, originalData, isSubmitted]);
 
-  // ─── Reset to original values (local — no API call) ───────────────────────
+  // ─── Reset ────────────────────────────────────────────────────────────────
 
   const handleResetChanges = useCallback(() => {
     if (isSubmitted) return;
-
     setScore((prev) => {
       if (!prev) return prev;
       return {
@@ -292,12 +292,11 @@ export default function StudentScoreDetailsPage() {
         }),
       };
     });
-
     setUnsavedChanges(new Set());
     toast.info("Changes discarded");
   }, [originalData, isSubmitted]);
 
-  // ─── Remove single row from unsaved ───────────────────────────────────────
+  // ─── Remove single row ────────────────────────────────────────────────────
 
   const handleRemoveFromUnsaved = useCallback(
     (scoreId: number) => {
@@ -331,30 +330,24 @@ export default function StudentScoreDetailsPage() {
     [originalData]
   );
 
-  // ─── Submit to staff ──────────────────────────────────────────────────────
+  // ─── Submit ───────────────────────────────────────────────────────────────
 
   const handleSubmit = useCallback(async () => {
     if (!score) return;
-
     if (unsavedChanges.size > 0) {
       toast.error("Please save all changes before submitting");
       return;
     }
-
     setIsSubmitting(true);
     try {
       await submittedScoreService({
         id: score.id ?? 0,
         status: SubmissionEnum.SUBMITTED,
       });
-
-      setScore((prev) =>
-        prev ? { ...prev, status: SubmissionEnum.SUBMITTED } : prev
-      );
+      setScore((prev) => prev ? { ...prev, status: SubmissionEnum.SUBMITTED } : prev);
       setMode("view");
       setIsSubmitted(true);
       setIsSubmittingToStaff(true);
-
       toast.success("Scores submitted to staff officer!", {
         duration: 3000,
         icon: <CheckCircle className="h-4 w-4" />,
@@ -377,55 +370,67 @@ export default function StudentScoreDetailsPage() {
       <StudentScoreHeader schedule={scheduleDetail} title="View Class Detail" />
 
       {showLoading ? (
-        <div className="flex justify-center py-16">
+        <div className="flex justify-center py-20">
           <Loading />
         </div>
       ) : (
-        <Card className="shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-bold text-xl">Student List</CardTitle>
-            <RenderModeBasedContent
-              isSubmittingToStaff={isSubmittingToStaff}
-              mode={mode}
-              scheduleDetail={scheduleDetail}
-              score={score}
-              setIsSubmittedDialogOpen={setIsSubmittedDialogOpen}
-              setMode={setMode}
-            />
+        <Card className="shadow-sm border border-border">
+          {/* Card header */}
+          <CardHeader className="pb-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-bold">Student Score List</CardTitle>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" />
+                    <span>{totalStudents} students</span>
+                  </span>
+                  {isSubmittingToStaff && score?.submissionDate && (
+                    <>
+                      <span className="text-border">|</span>
+                      <span>
+                        Submitted:{" "}
+                        <span className="font-semibold text-foreground">
+                          {formatDate(new Date(score.submissionDate), "PP")}
+                        </span>
+                      </span>
+                    </>
+                  )}
+                  {isSubmittingToStaff && (
+                    <Badge className="bg-green-100 text-green-800 border border-green-200 hover:bg-green-100">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Submitted
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <RenderModeBasedContent
+                isSubmittingToStaff={isSubmittingToStaff}
+                mode={mode}
+                scheduleDetail={scheduleDetail}
+                score={score}
+                setIsSubmittedDialogOpen={setIsSubmittedDialogOpen}
+                setMode={setMode}
+              />
+            </div>
           </CardHeader>
 
+          <div className="px-6 pt-4">
+            <Separator />
+          </div>
+
+          {/* Score weight badges */}
+          <div className="px-6 pt-4">
+            <ScoreConfigBadges config={configureScore} />
+          </div>
+
           {isRefreshing && (
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center py-6">
               <Loading />
             </div>
           )}
 
-          <div className="px-4">
-            <Separator />
-          </div>
-
-          <CardContent className="p-4 space-y-4">
-            {/* Meta row */}
-            <div className="flex flex-wrap items-center gap-4 text-sm">
-              <p>
-                <span className="text-muted-foreground">Total Students: </span>
-                <span className="font-semibold">{totalStudents}</span>
-              </p>
-
-              {isSubmittingToStaff && score?.submissionDate && (
-                <>
-                  <span className="text-muted-foreground">|</span>
-                  <p>
-                    <span className="text-muted-foreground">Submitted: </span>
-                    <span className="font-semibold">
-                      {formatDate(new Date(score.submissionDate), "PP")}
-                    </span>
-                  </p>
-                </>
-              )}
-            </div>
-
-            {/* Score table */}
+          <CardContent className="p-4 pt-4 space-y-4">
             <StudentScoresTable
               configureScore={configureScore}
               handleFieldChange={handleFieldChange}
@@ -438,7 +443,7 @@ export default function StudentScoreDetailsPage() {
             />
 
             {isInitialized && totalStudents === 0 && (
-              <div className="text-center py-12 text-muted-foreground text-sm">
+              <div className="text-center py-14 text-muted-foreground text-sm">
                 No students are enrolled in this class yet.
               </div>
             )}
@@ -446,7 +451,6 @@ export default function StudentScoreDetailsPage() {
         </Card>
       )}
 
-      {/* Floating save/reset panel */}
       {hasUnsaved && !isSubmitted && (
         <StudentScoresQuickAction
           handleResetChanges={handleResetChanges}
@@ -456,12 +460,10 @@ export default function StudentScoreDetailsPage() {
         />
       )}
 
-      {/* Unsaved-changes warning banner */}
       {hasUnsaved && (
         <StudentScoreAlert unsavedChanges={unsavedChanges} />
       )}
 
-      {/* Submit confirmation */}
       <ScoreSubmitConfirmDialog
         open={isSubmittedDialogOpen}
         title="Confirm Submit"
