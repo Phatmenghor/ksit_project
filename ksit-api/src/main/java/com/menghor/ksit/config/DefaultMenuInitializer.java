@@ -34,8 +34,8 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         log.info("Syncing default menu items and routes...");
-        migrateMenuData();
-        seedMenus();
+//        migrateMenuData();
+//        seedMenus();
         log.info("Menu items synced successfully.");
     }
 
