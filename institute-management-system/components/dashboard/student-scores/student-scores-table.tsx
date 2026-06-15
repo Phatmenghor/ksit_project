@@ -254,7 +254,7 @@ export default function StudentScoresTable({
                     <td className="px-3 py-2.5 text-center">
                       <span
                         className={`inline-block font-bold px-2.5 py-0.5 rounded-full text-xs ${
-                          gradeStyle[student.grade] ?? "bg-red-100 text-red-800 border border-red-200"
+                          gradeStyle[student.grade] ?? gradeStyle["I"]
                         }`}
                       >
                         {student.grade || "—"}

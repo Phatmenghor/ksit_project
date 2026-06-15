@@ -66,6 +66,20 @@ const isDirtyRow = (row: StudentScoreModel, original: OriginalSnapshot): boolean
   toNum(row.midtermScore) !== original.midtermScore ||
   toNum(row.finalScore) !== original.finalScore;
 
+// ─── Local grade calculator (mirrors backend GradeLevel enum exactly) ─────────
+
+const calcLocalGrade = (total: number): string => {
+  if (total === 0)           return "I";
+  if (total >= 85)           return "A";
+  if (total >= 80)           return "B+";
+  if (total >= 70)           return "B";
+  if (total >= 65)           return "C+";
+  if (total >= 50)           return "C";
+  if (total >= 45)           return "D";
+  if (total >= 40)           return "E";
+  return "F";
+};
+
 // ─── Score config summary card ────────────────────────────────────────────────
 
 function ScoreConfigBadges({ config }: { config: ScoreConfigurationModel | null }) {
@@ -199,19 +213,28 @@ export default function StudentScoreDetailsPage() {
 
       setScore((prev) => {
         if (!prev) return prev;
-        return {
-          ...prev,
-          studentScores: prev.studentScores.map((s) =>
-            s.id === scoreId ? { ...s, [field]: value } : s
-          ),
-        };
+        const studentScores = prev.studentScores.map((s) => {
+          if (s.id !== scoreId) return s;
+          const updated = { ...s, [field]: value };
+          // Real-time local preview — backend recalculates officially on save
+          const total =
+            toNum(updated.attendanceScore) +
+            toNum(updated.assignmentScore) +
+            toNum(updated.midtermScore) +
+            toNum(updated.finalScore);
+          return {
+            ...updated,
+            totalScore: total,
+            grade: calcLocalGrade(total),
+          };
+        });
+        return { ...prev, studentScores };
       });
 
       setScore((prev) => {
         const row = prev?.studentScores.find((s) => s.id === scoreId);
         if (!row) return prev;
-        const updatedRow = { ...row, [field]: value };
-        const dirty = !original || isDirtyRow(updatedRow, original);
+        const dirty = !original || isDirtyRow(row, original);
         setUnsavedChanges((prevSet) => {
           const next = new Set(prevSet);
           dirty ? next.add(scoreId) : next.delete(scoreId);
@@ -370,7 +393,7 @@ export default function StudentScoreDetailsPage() {
       <StudentScoreHeader schedule={scheduleDetail} title="View Class Detail" />
 
       {showLoading ? (
-        <div className="flex justify-center py-20">
+        <div className="flex justify-center py-16">
           <Loading />
         </div>
       ) : (
