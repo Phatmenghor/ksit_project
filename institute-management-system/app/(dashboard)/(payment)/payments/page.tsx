@@ -6,36 +6,34 @@ import { Eye } from "lucide-react";
 import { toast } from "sonner";
 import { getAllStudentsService } from "@/service/user/student.service";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import { YearSelector } from "@/components/shared/year-selector";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { BreadcrumbLink } from "@/components/ui/breadcrumb";
-import PaginationPage from "@/components/shared/pagination-page";
 import {
   AllStudentModel,
   RequestAllStudent,
+  StudentModel as StudentListModel,
 } from "@/model/user/student/student.request.model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import Loading from "@/components/shared/loading";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { StudentTablePaymentHeader } from "@/constants/payment/payment";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import { getRoles } from "@/utils/local-storage/user-info/roles";
 import { getUserId } from "@/utils/local-storage/user-info/userId";
-import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
+
+type StudentItem = StudentListModel;
 
 export default function StudentsListPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -44,7 +42,7 @@ export default function StudentsListPage() {
   const [selectAcademicYear, setSelectAcademicYear] = useState<
     number | undefined
   >();
-  const [selectedClass, setSelectedClass] = useState<ClassModel>();
+  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>();
   const [allStudentData, setAllStudentData] = useState<AllStudentModel | null>(
     null
   );
@@ -52,7 +50,6 @@ export default function StudentsListPage() {
     ScheduleModel | undefined
   >(undefined);
 
-  const isMobile = useIsMobile();
   const searchParams = useSearchParams();
   const router = useRouter();
   const roles = getRoles();
@@ -74,11 +71,9 @@ export default function StudentsListPage() {
     }
   };
 
-  // Then add this effect for initial URL setup
   useEffect(() => {
     const pageParam = searchParams.get("pageNo");
     if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
       updateUrlWithPage(1, true);
     }
   }, [searchParams, updateUrlWithPage]);
@@ -101,12 +96,10 @@ export default function StudentsListPage() {
 
         if (response) {
           setAllStudentData(response);
-          // Handle case where current page exceeds total pages
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading departments");
@@ -149,132 +142,147 @@ export default function StudentsListPage() {
     setSelectedSchedule(e ?? undefined);
   };
 
-  const iconColor = "text-black";
+  const columns: TableColumn<StudentItem>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => getDisplayIndex(index),
+    },
+    {
+      key: "username",
+      label: "Username",
+      render: (s) => s.username || "---",
+    },
+    {
+      key: "khmerName",
+      label: "Khmer Name",
+      render: (s) =>
+        `${s.khmerFirstName || ""} ${s.khmerLastName || ""}`.trim() || "---",
+    },
+    {
+      key: "englishName",
+      label: "English Name",
+      render: (s) =>
+        `${s.englishFirstName || ""} ${s.englishLastName || ""}`.trim() || "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (s) => s.gender || "---",
+    },
+    {
+      key: "dateOfBirth",
+      label: "Date of Birth",
+      render: (s) => s.dateOfBirth || "---",
+    },
+    {
+      key: "action",
+      label: "Action",
+      width: "100px",
+      render: (s) => (
+        <BreadcrumbLink href={ROUTE.PAYMENT.VIEW_PAYMENT(String(s.id))}>
+          <Button
+            variant="link"
+            size="icon"
+            className="text-black underline hover:text-blue-600 flex items-center"
+          >
+            <Eye className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+            <span className="text-sm transition-all duration-200"> Detail</span>
+          </Button>
+        </BreadcrumbLink>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Payment", href: ROUTE.PAYMENT.LIST },
-        ]}
-        title="Payment"
-        searchValue={searchQuery}
-        searchPlaceholder="Search..."
-        onSearchChange={handleSearchChange}
-        customSelect={
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-4">
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <div className="w-full min-w-[200px]">
-                <YearSelector
-                  title="Select Year"
-                  onChange={handleYearChange}
-                  value={selectAcademicYear || 0}
-                />
-              </div>
-            </div>
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Payment</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
 
-            <ComboboxSelectSchedule
-              dataSelect={selectedSchedule ?? null}
-              onChangeSelected={handleScheduleChange}
-            />
-
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <ComboboxSelectClass
-                dataSelect={selectedClass ?? null}
-                onChangeSelected={handleClassChange}
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
-        }
+      <CollapsibleFilterPanel
+        config={{
+          title: "Payment",
+          totalCount: allStudentData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search...",
+          onSearchChange: handleSearchChange,
+          filters: [
+            {
+              id: "class",
+              type: "custom",
+              label: "Class",
+              value: selectedClass,
+              onChange: (v) => setSelectedClass(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Class</label>
+                  <ComboboxSelectClass
+                    dataSelect={value ?? null}
+                    onChangeSelected={(e) => onChange(e ?? undefined)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ),
+            },
+            {
+              id: "schedule",
+              type: "custom",
+              label: "Schedule",
+              value: selectedSchedule,
+              onChange: (v) => setSelectedSchedule(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Schedule</label>
+                  <ComboboxSelectSchedule
+                    dataSelect={value ?? null}
+                    onChangeSelected={(e) => onChange(e ?? undefined)}
+                  />
+                </div>
+              ),
+            },
+            {
+              id: "year",
+              type: "year",
+              label: "Academic Year",
+              value: selectAcademicYear ?? new Date().getFullYear(),
+              onChange: handleYearChange,
+            },
+          ],
+          onClearAll: () => {
+            setSelectedClass(undefined);
+            setSelectedSchedule(undefined);
+            setSelectAcademicYear(undefined);
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={["class", "schedule", "year"]}
       />
 
-      <div className={`overflow-x-auto mt-4 ${isMobile ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <div>
-            <Loading />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {StudentTablePaymentHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allStudentData?.totalElements === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={StudentTablePaymentHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No student found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allStudentData?.content.map((student, index) => {
-                  return (
-                    <TableRow key={student.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{student.username || "---"}</TableCell>
-                      <TableCell>
-                        {`${student.khmerFirstName || ""} ${
-                          student.khmerLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${student.englishFirstName || ""} ${
-                          student.englishLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-
-                      <TableCell>{student.gender || "---"}</TableCell>
-                      <TableCell>{student.dateOfBirth || "---"}</TableCell>
-
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <BreadcrumbLink
-                            href={ROUTE.PAYMENT.VIEW_PAYMENT(
-                              String(student.id)
-                            )}
-                          >
-                            <Button
-                              variant="link"
-                              size="icon"
-                              className={`${iconColor} underline hover:text-blue-600 flex items-center`}
-                            >
-                              <Eye className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                              <span className="text-sm transition-all duration-200">
-                                {" "}
-                                Detail
-                              </span>
-                            </Button>
-                          </BreadcrumbLink>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {!isLoading && allStudentData && (
-        <div className="mt-8 flex justify-end duration-500 delay-1000">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allStudentData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <DataTable
+        data={allStudentData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allStudentData?.totalPages ?? 0}
+        totalElements={allStudentData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No student found"
+        getRowKey={(s) => s.id}
+      />
     </div>
   );
 }

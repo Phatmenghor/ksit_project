@@ -1,22 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import PaginationPage from "@/components/shared/pagination-page";
-import Loading from "@/components/shared/loading";
-import { PaymentTableHeader } from "@/constants/payment/payment";
 import {
   createMyPaymentByTokenService,
   deletedPaymentService,
@@ -47,6 +36,9 @@ import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmatio
 import { usePagination } from "@/hooks/use-pagination";
 import { PaymentRequest } from "@/model/payment/payment-request-model";
 import { getStudentByTokenService } from "@/service/user/user.service";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
+
+type PaymentItem = PaymentModel;
 
 export default function PaymentPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -77,7 +69,6 @@ export default function PaymentPage() {
       defaultPageSize: 10,
     });
 
-  // 1. Fetch teacher data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -99,11 +90,9 @@ export default function PaymentPage() {
     fetchData();
   }, []);
 
-  // Then add this effect for initial URL setup
   useEffect(() => {
     const pageParam = searchParams.get("pageNo");
     if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
       updateUrlWithPage(1, true);
     }
   }, [searchParams, updateUrlWithPage]);
@@ -215,7 +204,6 @@ export default function PaymentPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading payments");
@@ -280,6 +268,90 @@ export default function PaymentPage() {
     }
   };
 
+  const columns: TableColumn<PaymentItem>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => getDisplayIndex(index),
+    },
+    {
+      key: "item",
+      label: "Item",
+      render: (p) => p.item,
+    },
+    {
+      key: "type",
+      label: "Type",
+      render: (p) => p.type,
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      render: (p) => p.amount,
+    },
+    {
+      key: "percentage",
+      label: "Percentage",
+      render: (p) => p.percentage,
+    },
+    {
+      key: "date",
+      label: "Date",
+      render: (p) => p.date,
+    },
+    {
+      key: "commend",
+      label: "Comment",
+      render: (p) => p.commend,
+    },
+    {
+      key: "action",
+      label: "Action",
+      width: "100px",
+      render: (p) => (
+        <div className="flex gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => handleOpenEditModal(p)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Edit</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedPayment(p);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
+                  disabled={isSubmitting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Delete</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <CardHeaderSection
@@ -314,101 +386,19 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            {isLoading ? (
-              <Loading />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {PaymentTableHeader.map((header, index) => (
-                      <TableHead key={index} className={header.className}>
-                        {header.label}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allPaymentData?.content.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={PaymentTableHeader.length}
-                        className="text-center py-8 text-muted-foreground"
-                      >
-                        No Records
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    allPaymentData?.content.map((pay, index) => {
-                      return (
-                        <TableRow key={pay.id}>
-                          <TableCell>{getDisplayIndex(index)}</TableCell>
-                          <TableCell>{pay.item}</TableCell>
-                          <TableCell>{pay.type}</TableCell>
-                          <TableCell>{pay.amount}</TableCell>
-                          <TableCell>{pay.percentage}</TableCell>
-                          <TableCell>{pay.date}</TableCell>
-                          <TableCell>{pay.commend}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      onClick={() => handleOpenEditModal(pay)}
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                      disabled={isSubmitting}
-                                    >
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Edit</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      onClick={() => {
-                                        setSelectedPayment(pay);
-                                        setIsDeleteDialogOpen(true);
-                                      }}
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                                      disabled={isSubmitting}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Delete</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </div>
+          <DataTable
+            data={allPaymentData?.content ?? null}
+            columns={columns}
+            loading={isLoading}
+            currentPage={currentPage}
+            totalPages={allPaymentData?.totalPages ?? 0}
+            totalElements={allPaymentData?.totalElements}
+            onPageChange={handlePageChange}
+            emptyMessage="No Records"
+            getRowKey={(p) => p.id}
+          />
         </CardContent>
       </Card>
-
-      {!isLoading && allPaymentData && allPaymentData.totalPages > 1 && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allPaymentData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
 
       <PaymentFormModal
         isOpen={isModalOpen}
