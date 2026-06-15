@@ -219,18 +219,17 @@ const MyClassPage = () => {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <div className="flex items-center min-w-0 flex-1">
+          <div className="flex items-center min-w-0 flex-1 gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              asChild
-              className="rounded-full flex-shrink-0 hover:cursor-pointer"
+              className="rounded-full flex-shrink-0 h-9 w-9 hover:cursor-pointer"
             >
               <img
                 src={AppIcons.Back}
                 alt="back Icon"
-                className="h-4 w-4 mr-3 sm:mr-5 text-muted-foreground"
+                className="h-4 w-4 text-muted-foreground"
               />
             </Button>
             {allMajorData?.content?.[0]?.department?.name && (

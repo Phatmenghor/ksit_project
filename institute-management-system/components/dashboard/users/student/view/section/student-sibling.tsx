@@ -20,10 +20,10 @@ export default function StudentSiblingTable({ student }: StudentSiblingProps) {
             scrollbarColor: "#000000 #d1d5db",
           }}
         >
-          <table className="w-full text-sm border">
+          <table className="min-w-max w-full text-sm border">
             <thead>
               <tr className="bg-black text-white text-left">
-                <th className="p-2 border">លេខរៀង</th>
+                <th className="p-2 border whitespace-nowrap">លេខរៀង</th>
                 <th className="p-2 border">ឈ្មោះពេញ</th>
                 <th className="p-2 border">ភេទ</th>
                 <th className="p-2 border">ថ្ងៃខែឆ្នាំកំណើត</th>

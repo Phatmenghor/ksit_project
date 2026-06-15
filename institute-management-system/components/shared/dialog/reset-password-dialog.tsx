@@ -1,17 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { DialogTitle } from "@radix-ui/react-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { AppIcons } from "@/constants/icons/icon";
+import { KeyRound, CheckCircle2 } from "lucide-react";
+import { FormHeader } from "@/components/shared/form-field/form-header";
+import { FormBody } from "@/components/shared/form-field/form-body";
+import { FormFooter } from "@/components/shared/form-field/form-footer";
 
 interface ResetPasswordDialogProps {
   open: boolean;
@@ -25,137 +20,61 @@ interface ResetPasswordDialogProps {
   cancelText?: string;
 }
 
-export function ResetPasswordDialog({
-  open,
-  onOpenChange,
-  onDiscard,
-  title,
-  description,
-  cancelText = "Discard",
-  onConfirm,
-  subDescription,
-  confirmText = "Reset",
-}: ResetPasswordDialogProps) {
+export function ResetPasswordDialog({ open, onOpenChange, onDiscard, title, description, cancelText = "Discard", onConfirm, subDescription, confirmText = "Reset" }: ResetPasswordDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleConfirm = async () => {
     setIsSubmitting(true);
-    try {
-      await onConfirm();
-      setShowSuccess(true);
-    } catch (error) {
-    } finally {
-      setIsSubmitting(false);
-    }
+    try { await onConfirm(); setShowSuccess(true); }
+    catch {} finally { setIsSubmitting(false); }
   };
 
-  const handleClose = () => {
-    setShowSuccess(false);
-    onOpenChange(false);
-    onDiscard();
-  };
+  const handleClose = () => { setShowSuccess(false); onOpenChange(false); onDiscard(); };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-[95vw] mx-auto rounded-2xl border-0 shadow-2xl bg-white p-0">
-        <div className="p-8 space-y-4">
-          {showSuccess ? (
-            // Success Dialog
-            <>
-              <div className="flex flex-col items-center space-y-2">
-                <div className="flex items-center justify-center">
-                  <img
-                    src={AppIcons.Circle_alert_teal}
-                    alt="success icon"
-                    className="h-10 w-10 text-muted-foreground"
-                  />
-                </div>
-                <div className="text-center space-y-1">
-                  <DialogTitle className="text-xl font-bold text-gray-900">
-                    Password Reset!
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-500 text-base">
-                    User password has been reset to default password
-                  </DialogDescription>
-                </div>
+      <DialogContent className="w-full max-w-md p-0 flex flex-col gap-0">
+        {showSuccess ? (
+          <>
+            <FormHeader
+              title="Password Reset!"
+              description="User password has been reset to the default password."
+              icon={<CheckCircle2 className="h-5 w-5 text-green-600" />}
+              iconBg="bg-green-50 border-green-200"
+            />
+            <FormBody>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                The password has been successfully reset. Please inform the user of their new default password.
+              </p>
+            </FormBody>
+            <FormFooter>
+              <Button type="button" onClick={handleClose} className="bg-primary text-primary-foreground hover:bg-primary/90">Okay</Button>
+            </FormFooter>
+          </>
+        ) : (
+          <>
+            <FormHeader
+              title={title}
+              description="This will reset the user's password to the default value."
+              icon={<KeyRound className="h-5 w-5 text-yellow-600" />}
+              iconBg="bg-yellow-50 border-yellow-200"
+            />
+            <FormBody>
+              <div className="rounded-lg border border-yellow-100 bg-yellow-50 p-3 space-y-1">
+                <p className="text-sm text-yellow-800 font-medium">Are you sure you want to reset the password?</p>
+                <p className="text-sm text-yellow-700">{description}</p>
+                {subDescription && <p className="text-sm text-yellow-700">{subDescription}</p>}
               </div>
-
-              <Separator className="bg-slate-400" />
-
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  onClick={handleClose}
-                  className="bg-teal-900 hover:bg-teal-950 text-white font-medium px-8 py-2 rounded-lg"
-                >
-                  Okay
-                </Button>
-              </div>
-            </>
-          ) : (
-            // Confirmation Dialog
-            <>
-              <div className="flex flex-col items-center space-y-2">
-                <div className="flex items-center justify-center">
-                  <img
-                    src={AppIcons.reset}
-                    alt="reset icon"
-                    className="h-10 w-10 text-muted-foreground"
-                  />
-                </div>
-                <div className="text-center space-y-1">
-                  <DialogTitle className="text-xl font-bold text-gray-900">
-                    {title}
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-500 text-base">
-                    Are you sure you want to reset user password?
-                  </DialogDescription>
-                </div>
-              </div>
-
-              <div className="bg-amber-50 border-amber-200 rounded-lg p-4 space-y-4">
-                <div className="flex justify-center items-center">
-                  <div className="flex gap-4">
-                    <DialogDescription className="text-yellow-600 text-sm">
-                      <span>{description}</span>
-                      {subDescription && (
-                        <>
-                          <br />
-                          <span>{subDescription}</span>
-                        </>
-                      )}
-                    </DialogDescription>
-                  </div>
-                </div>
-              </div>
-
-              <Separator className="bg-slate-200" />
-
-              {/* Action buttons */}
-              <DialogFooter className="flex flex-row justify-end items-center gap-3 flex-wrap">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                  className="min-w-[100px]"
-                >
-                  {cancelText}
-                </Button>
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={handleConfirm}
-                  disabled={isSubmitting}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium min-w-[100px]"
-                >
-                  {isSubmitting ? "Resetting..." : confirmText}
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-        </div>
+            </FormBody>
+            <FormFooter>
+              <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>{cancelText}</Button>
+              <Button type="button" onClick={handleConfirm} disabled={isSubmitting} className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                {isSubmitting ? "Resetting..." : confirmText}
+              </Button>
+            </FormFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

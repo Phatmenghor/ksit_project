@@ -208,7 +208,7 @@ const ScheduleAllPage = () => {
                 onChange={handleSearchChange}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <YearSelector value={selectedYear} onChange={handleYearChange} />
               <ComboboxSelectCourse
                 dataSelect={selectedCourse}

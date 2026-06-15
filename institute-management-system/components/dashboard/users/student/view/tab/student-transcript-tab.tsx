@@ -99,7 +99,7 @@ export function TranscriptTabs(param: RequestParam) {
   return (
     <div>
       <Card>
-        <div className="overflow-x-auto p-8 space-y-6">
+        <div className="overflow-x-auto p-4 md:p-8 space-y-6">
           {isLoading ? (
             <Loading />
           ) : (

@@ -526,7 +526,7 @@ export default function StudentDetail() {
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-0 z-10 rounded-full"
+          className="absolute left-0 z-10 rounded-full h-10 w-10 sm:h-9 sm:w-9"
           onClick={scrollLeft}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -534,7 +534,7 @@ export default function StudentDetail() {
 
         <div
           ref={scrollContainerRef}
-          className="flex overflow-x-auto scrollbar-hide gap-2 px-16 scroll-smooth"
+          className="flex overflow-x-auto scrollbar-hide gap-2 px-10 sm:px-16 scroll-smooth"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {availableRequestTypes.map((type) => {
@@ -558,7 +558,7 @@ export default function StudentDetail() {
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-0 z-10 rounded-full"
+          className="absolute right-0 z-10 rounded-full h-10 w-10 sm:h-9 sm:w-9"
           onClick={scrollRight}
         >
           <ChevronRight className="h-4 w-4" />
@@ -574,7 +574,7 @@ export default function StudentDetail() {
           <Card className="bg-white shadow-sm mt-4">
             <CardContent className="p-6">
               {/* Header */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
                     Request Document
@@ -583,7 +583,7 @@ export default function StudentDetail() {
                     Request Date: {formatDate(requestData?.createdAt || "---")}
                   </p>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-2">
                   {requestStatus === RequestEnum.PENDING && (
                     <>
                       <Button

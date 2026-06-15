@@ -77,7 +77,7 @@ const SchedulePreviewTable = ({
                   scrollbarColor: "#000000 #d1d5db",
                 }}
               >
-                <table className="w-full">
+                <table className="min-w-max w-full">
                   <TableHeader />
                   <tbody className="bg-white">
                     {daySchedule.classes.length > 0 ? (

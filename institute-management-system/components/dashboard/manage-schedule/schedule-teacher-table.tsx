@@ -87,25 +87,14 @@ const ScheduleTeacherTable = ({
             <h1 className="text-xl font-semibold text-gray-900">
               Schedule For Teacher: {teacherScheduleInfo.teacherName}
             </h1>
-            <p className="text-sm text-gray-600">
-              Teaching Days:{" "}
-              {teacherScheduleInfo.teachingDays.length > 0
-                ? teacherScheduleInfo.teachingDays.join(", ")
-                : "No days scheduled"}{" "}
-              | Times:{" "}
-              {teacherScheduleInfo.timeSlots.length > 0
-                ? [
-                    ...new Set(
-                      teacherScheduleInfo.timeSlots.map((slot) => slot.time)
-                    ),
-                  ].join(", ")
-                : "No times scheduled"}{" "}
-              | Total Classes: {teacherScheduleInfo.totalClasses} | Class:{" "}
-              {scheduleData.classInfo?.class || "---"} | Semester:{" "}
-              {scheduleData.classInfo?.semester || "---"} | Major:{" "}
-              {scheduleData.classInfo.major || "---"} | Academic Year:{" "}
-              {scheduleData.classInfo?.academicYear || "---"}
-            </p>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600 mt-1">
+              <span className="whitespace-nowrap">Days: {teacherScheduleInfo.teachingDays.length > 0 ? teacherScheduleInfo.teachingDays.join(", ") : "---"}</span>
+              <span className="whitespace-nowrap">Total: {teacherScheduleInfo.totalClasses}</span>
+              <span className="whitespace-nowrap">Class: {scheduleData.classInfo?.class || "---"}</span>
+              <span className="whitespace-nowrap">Semester: {scheduleData.classInfo?.semester || "---"}</span>
+              <span className="whitespace-nowrap">Major: {scheduleData.classInfo.major || "---"}</span>
+              <span className="whitespace-nowrap">Year: {scheduleData.classInfo?.academicYear || "---"}</span>
+            </div>
           </div>
         </div>
 
@@ -127,7 +116,7 @@ const ScheduleTeacherTable = ({
                   scrollbarColor: "#000000 #d1d5db",
                 }}
               >
-                <table className="w-full">
+                <table className="min-w-max w-full">
                   <TableHeader />
                   <tbody className="bg-white">
                     {daySchedule.classes.length > 0 ? (

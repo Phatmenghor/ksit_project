@@ -433,7 +433,7 @@ export default function StudentAttendancePage() {
           <div className="flex flex-col gap-4">
             {/* First row: Search, Class, Year, and Semester */}
             <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-2">
-              <div className="relative w-full lg:min-w-[700px] min-w-[200px] md:w-auto md:flex-1">
+              <div className="relative w-full min-w-[200px] md:w-auto md:flex-1">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"

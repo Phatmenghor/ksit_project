@@ -394,7 +394,7 @@ export default function UpdateSchedule() {
       <div className="p-3 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           {/* Breadcrumb */}
-          <div className={isMobile ? "order-1 w-full" : "order-3"}>
+          <div className="order-1 w-full sm:w-auto sm:order-3">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>

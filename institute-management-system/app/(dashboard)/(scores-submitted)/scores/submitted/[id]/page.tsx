@@ -209,7 +209,7 @@ export default function ScoreSubmissionDetailPage() {
   // Approval Actions Component
   const ApprovalActionsCard = () => (
     <Card className="shadow-md">
-      <CardHeader className="flex flex-row justify-between items-center">
+      <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <CardTitle className="text-lg font-bold">Submitting Approval</CardTitle>
         <div className="flex gap-2">
           <Button onClick={() => setReturnDialog(true)} variant="outline">

@@ -344,7 +344,7 @@ export default function RequestPage() {
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-0 z-10 rounded-full transition-all duration-300 hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg"
+          className="absolute left-0 z-10 rounded-full h-10 w-10 sm:h-9 sm:w-9 transition-all duration-300 hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg"
           onClick={scrollLeft}
         >
           <ChevronLeft className="h-4 w-4 transition-all duration-300 group-hover:-translate-x-0.5 group-hover:text-amber-600" />
@@ -352,7 +352,7 @@ export default function RequestPage() {
 
         <div
           ref={scrollContainerRef}
-          className="flex overflow-x-auto scrollbar-hide gap-2 px-16 scroll-smooth"
+          className="flex overflow-x-auto scrollbar-hide gap-2 px-10 sm:px-16 scroll-smooth"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {REQUEST_TYPES.map((type) => {
@@ -384,7 +384,7 @@ export default function RequestPage() {
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-0 z-10 rounded-full"
+          className="absolute right-0 z-10 rounded-full h-10 w-10 sm:h-9 sm:w-9"
           onClick={scrollRight}
         >
           <ChevronRight className="h-4 w-4" />

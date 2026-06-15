@@ -84,7 +84,7 @@ export function DataTable<T = unknown>({
   return (
     <div className="space-y-3">
       <div className={cn("rounded-md border overflow-x-auto bg-white", className)}>
-        <table className="text-xs w-full" style={{ tableLayout: "fixed" }}>
+        <table className="text-xs w-full min-w-max">
           <thead className="bg-muted/50">
             <tr>
               {columns.map((col) => (
@@ -92,11 +92,11 @@ export function DataTable<T = unknown>({
                   key={col.key}
                   style={thStyle(col)}
                   className={cn(
-                    "px-3 py-2.5 text-left font-semibold text-xs text-muted-foreground border-b border-border",
+                    "px-3 py-2.5 text-left font-semibold text-xs text-muted-foreground border-b border-border whitespace-nowrap",
                     col.className
                   )}
                 >
-                  {col.label}
+                  {col.label || (col.key === "actions" ? "Actions" : "")}
                 </th>
               ))}
             </tr>
@@ -152,15 +152,15 @@ export function DataTable<T = unknown>({
       </div>
 
       {showPagination && totalPages > 0 && (
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
             {showPageSizeSelector && onPageSizeChange && (
               <div className="flex items-center gap-1.5">
                 <span>Rows:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                  className="h-7 rounded border border-input px-1.5 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary"
+                  className="h-9 sm:h-7 rounded border border-input px-1.5 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary"
                 >
                   {pageSizeOptions.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -174,17 +174,17 @@ export function DataTable<T = unknown>({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-wrap">
               <button
                 onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="h-7 px-2 flex items-center gap-1 rounded border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
+                className="h-9 sm:h-7 px-2 flex items-center gap-1 rounded border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
               >
                 <ChevronLeft className="h-3 w-3" />
                 <span className="hidden sm:inline">Prev</span>
               </button>
 
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-0.5 flex-wrap">
                 {getPaginationItems(currentPage, totalPages).map((item, i) =>
                   item === "ellipsis" ? (
                     <span key={`e-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
@@ -193,7 +193,7 @@ export function DataTable<T = unknown>({
                       key={item}
                       onClick={() => onPageChange(item)}
                       className={cn(
-                        "h-7 min-w-[28px] px-1 rounded text-xs font-medium transition-all border",
+                        "h-9 sm:h-7 min-w-[36px] sm:min-w-[28px] px-1 rounded text-xs font-medium transition-all border",
                         currentPage === item
                           ? "bg-primary text-white border-primary shadow-sm font-bold"
                           : "border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
@@ -208,7 +208,7 @@ export function DataTable<T = unknown>({
               <button
                 onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="h-7 px-2 flex items-center gap-1 rounded border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
+                className="h-9 sm:h-7 px-2 flex items-center gap-1 rounded border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
               >
                 <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="h-3 w-3" />

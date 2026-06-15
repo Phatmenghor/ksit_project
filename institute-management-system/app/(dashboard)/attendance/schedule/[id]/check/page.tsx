@@ -644,7 +644,7 @@ const AttendanceCheckPage = () => {
                   </div>
 
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[150px] transition-all duration-200">
+                    <SelectTrigger className="w-full sm:w-[150px] transition-all duration-200">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -658,7 +658,7 @@ const AttendanceCheckPage = () => {
                   </Select>
 
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-[150px] transition-all duration-200">
+                    <SelectTrigger className="w-full sm:w-[150px] transition-all duration-200">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -885,7 +885,7 @@ const AttendanceCheckPage = () => {
 
           {/* Quick Actions Panel - Only show when not submitted */}
           {attendanceGenerate && unsavedChanges.size > 0 && !isSubmitted && (
-            <Card className="fixed bottom-4 right-4 w-80 shadow-lg border-yellow-300 bg-yellow-50 z-50 animate-in slide-in-from-bottom-4 duration-300">
+            <Card className="fixed bottom-4 left-4 right-4 sm:left-auto sm:w-80 shadow-lg border-yellow-300 bg-yellow-50 z-50 animate-in slide-in-from-bottom-4 duration-300">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">

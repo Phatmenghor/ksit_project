@@ -1,58 +1,31 @@
 import React, { useCallback, useState, useEffect } from "react";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { YearSelector } from "@/components/shared/year-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusEnum } from "@/constants/constant";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
-import { Separator } from "@/components/ui/separator";
 import { DuplicateFilterModel } from "@/model/attendance/schedule/schedule-filter";
 import { toast } from "sonner";
 import { duplicateScheduleService } from "@/service/schedule/schedule.service";
 import { DuplicateScheduleResponse } from "@/model/attendance/schedule/schedule-model";
 import { SemesterModel } from "@/model/master-data/semester/semester-model";
 import { getAllSemesterService } from "@/service/master-data/semester.service";
+import { Copy, Loader2 } from "lucide-react";
+import { FormHeader } from "@/components/shared/form-field/form-header";
+import { FormBody } from "@/components/shared/form-field/form-body";
+import { FormFooter } from "@/components/shared/form-field/form-footer";
 
 type DuplicateScheduleModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   sources: { sourceClassId: number; sourceSemesterId: number }[];
-  onSuccess?: (
-    response: DuplicateScheduleResponse & {
-      summary?: {
-        success: number;
-        total: number;
-        failed: number;
-        skipped: number;
-      };
-      errors?: string[];
-    }
-  ) => void;
+  onSuccess?: (response: DuplicateScheduleResponse & { summary?: { success: number; total: number; failed: number; skipped: number }; errors?: string[] }) => void;
 };
 
-export default function DuplicateScheduleModal({
-  isOpen,
-  onOpenChange,
-  sources,
-  onSuccess,
-}: DuplicateScheduleModalProps) {
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+export default function DuplicateScheduleModal({ isOpen, onOpenChange, sources, onSuccess }: DuplicateScheduleModalProps) {
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [selectedClass, setSelectedClass] = useState<ClassModel | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,186 +34,66 @@ export default function DuplicateScheduleModal({
 
   const fetchSemesters = useCallback(async (academyYear: number) => {
     if (!academyYear) return;
-
     setIsLoadingSemesters(true);
     try {
-      const result = await getAllSemesterService({
-        academyYear,
-        status: StatusEnum.ACTIVE,
-      });
-
-      if (result?.content) {
-        setSemesters(result.content);
-      } else {
-        setSemesters([]);
-        toast.warning("No semesters found for the selected year");
-      }
-    } catch (error) {
-      toast.error("Failed to load semesters");
-      setSemesters([]);
-    } finally {
-      setIsLoadingSemesters(false);
-    }
+      const result = await getAllSemesterService({ academyYear, status: StatusEnum.ACTIVE });
+      if (result?.content) setSemesters(result.content);
+      else { setSemesters([]); toast.warning("No semesters found for the selected year"); }
+    } catch { toast.error("Failed to load semesters"); setSemesters([]); }
+    finally { setIsLoadingSemesters(false); }
   }, []);
 
-  // Load semesters when year changes
   useEffect(() => {
-    if (selectedYear) {
-      fetchSemesters(selectedYear);
-      // Reset semester selection when year changes
-      setSelectedSemester("");
-    }
+    if (selectedYear) { fetchSemesters(selectedYear); setSelectedSemester(""); }
   }, [selectedYear, fetchSemesters]);
 
-  // Load semesters when modal opens
   useEffect(() => {
-    if (isOpen && selectedYear) {
-      fetchSemesters(selectedYear);
-    }
+    if (isOpen && selectedYear) fetchSemesters(selectedYear);
   }, [isOpen, selectedYear, fetchSemesters]);
 
-  const getSemesterEnum = useCallback(
-    (id: number) => {
-      const semester = semesters.find((s) => s.id === id);
-      return semester?.semester || "SEMESTER_1";
-    },
-    [semesters]
-  );
+  const getSemesterEnum = useCallback((id: number) => {
+    const semester = semesters.find((s) => s.id === id);
+    return semester?.semester || "SEMESTER_1";
+  }, [semesters]);
 
   const handleSave = async () => {
-    if (!selectedClass || !selectedSemester || sources.length === 0) {
-      toast.error("Please select all required fields.");
-      return;
-    }
-
+    if (!selectedClass || !selectedSemester || sources.length === 0) { toast.error("Please select all required fields."); return; }
     setIsSubmitting(true);
-
     try {
       const results: DuplicateScheduleResponse[] = [];
       const errors: string[] = [];
-
-      // Process each source
       for (const source of sources) {
-        const data: DuplicateFilterModel = {
-          sourceClassId: source.sourceClassId,
-          sourceSemesterId: source.sourceSemesterId,
-          targetClassId: selectedClass.id,
-          targetSemesterId: parseInt(selectedSemester),
-        };
-
+        const data: DuplicateFilterModel = { sourceClassId: source.sourceClassId, sourceSemesterId: source.sourceSemesterId, targetClassId: selectedClass.id, targetSemesterId: parseInt(selectedSemester) };
         try {
           const result = await duplicateScheduleService(data);
-          if (result) {
-            results.push(result);
-          } else {
-            errors.push(
-              `Failed to duplicate from source class ${source.sourceClassId}`
-            );
-          }
-        } catch (sourceError) {
-          errors.push(
-            `Error duplicating from source class ${source.sourceClassId}`
-          );
-        }
+          if (result) results.push(result);
+          else errors.push(`Failed to duplicate from source class ${source.sourceClassId}`);
+        } catch { errors.push(`Error duplicating from source class ${source.sourceClassId}`); }
       }
 
-      // Check if we have any successful results
-      if (results.length === 0) {
-        toast.error(
-          "No schedules were successfully duplicated. Please try again."
-        );
-        return;
-      }
+      if (results.length === 0) { toast.error("No schedules were successfully duplicated. Please try again."); return; }
 
-      // Combine all results
-      const total = results.reduce(
-        (acc, r) => {
-          // Handle different possible response structures
-          const data = r?.data || r;
-          acc.success += data?.successfullyDuplicated || 0;
-          acc.total += data?.totalSourceSchedules || 0;
-          acc.failed += data?.failed || 0;
-          acc.skipped += data?.skipped || 0;
-          return acc;
-        },
-        { success: 0, total: 0, failed: 0, skipped: 0 }
-      );
+      const total = results.reduce((acc, r) => {
+        const data = r?.data || r;
+        acc.success += data?.successfullyDuplicated || 0;
+        acc.total += data?.totalSourceSchedules || 0;
+        acc.failed += data?.failed || 0;
+        acc.skipped += data?.skipped || 0;
+        return acc;
+      }, { success: 0, total: 0, failed: 0, skipped: 0 });
 
-      // Create comprehensive success message
-      const getSuccessMessage = () => {
-        const parts = [];
-
-        if (total.success > 0) {
-          parts.push(
-            `Successfully duplicated ${total.success} schedule${
-              total.success > 1 ? "s" : ""
-            }`
-          );
-        }
-
-        if (total.skipped > 0) {
-          parts.push(
-            `Skipped ${total.skipped} (already exist${
-              total.skipped > 1 ? "" : "s"
-            })`
-          );
-        }
-
-        if (total.failed > 0) {
-          parts.push(`Failed ${total.failed}`);
-        }
-
-        if (errors.length > 0) {
-          parts.push(
-            `${errors.length} source error${errors.length > 1 ? "s" : ""}`
-          );
-        }
-
-        return parts.join(" • ");
-      };
-
-      // Show appropriate toast based on results
       if (total.success > 0) {
-        if (total.failed === 0 && errors.length === 0) {
-          // Perfect success
-          toast.success(
-            `Perfect! Duplicated ${total.success} schedule${
-              total.success > 1 ? "s" : ""
-            } to ${selectedClass.code || "selected class"}${
-              total.skipped > 0 ? ` (${total.skipped} already existed)` : ""
-            }`
-          );
-        } else {
-          // Partial success
-          toast.success(getSuccessMessage());
-        }
+        if (total.failed === 0 && errors.length === 0) toast.success(`Duplicated ${total.success} schedule${total.success > 1 ? "s" : ""} to ${selectedClass.code || "selected class"}${total.skipped > 0 ? ` (${total.skipped} already existed)` : ""}`);
+        else toast.success([total.success > 0 && `Duplicated ${total.success}`, total.skipped > 0 && `Skipped ${total.skipped}`, total.failed > 0 && `Failed ${total.failed}`].filter(Boolean).join(" • "));
       } else {
-        // No successful duplications
-        toast.warning(
-          "No new schedules were created. All schedules may already exist or have failed."
-        );
+        toast.warning("No new schedules were created. All schedules may already exist or have failed.");
       }
 
-      // Log detailed results for debugging
-
-      // Call success callback with comprehensive data
-      if (onSuccess && results.length > 0) {
-        onSuccess({
-          ...results[0], // Original response structure
-          summary: total, // Add summary for better handling
-          errors: errors.length > 0 ? errors : undefined,
-        });
-      }
-
+      if (onSuccess && results.length > 0) onSuccess({ ...results[0], summary: total, errors: errors.length > 0 ? errors : undefined });
       onOpenChange(false);
       resetForm();
-    } catch (error) {
-      toast.error(
-        "An unexpected error occurred while duplicating schedules. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch { toast.error("An unexpected error occurred while duplicating schedules. Please try again."); }
+    finally { setIsSubmitting(false); }
   };
 
   const resetForm = () => {
@@ -249,101 +102,53 @@ export default function DuplicateScheduleModal({
     setSelectedClass(null);
   };
 
-  const handleDiscard = () => {
-    resetForm();
-    onOpenChange(false);
-  };
-
-  const handleYearChange = (year: number) => {
-    setSelectedYear(year);
-  };
+  const handleDiscard = () => { resetForm(); onOpenChange(false); };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="md:max-w-lg max-w-sm w-full p-6 rounded-lg shadow-lg">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle>Duplicate Schedule</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="w-full max-w-lg p-0 flex flex-col max-h-[90vh]">
+        <FormHeader
+          title="Duplicate Schedule"
+          description="Select the target class and semester to duplicate the schedule."
+          icon={<Copy className="h-5 w-5 text-primary" />}
+          iconBg="bg-primary/10 border-primary/20"
+        />
 
-        {/* Content */}
-        <div className="space-y-4">
-          {/* Academic Year Field */}
+        <FormBody>
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">
-              Academic Year <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <YearSelector value={selectedYear} onChange={handleYearChange} />
-            </div>
+            <label className="text-sm font-medium">Academic Year <span className="text-red-500">*</span></label>
+            <YearSelector value={selectedYear} onChange={setSelectedYear} />
           </div>
 
-          {/* Semester Field */}
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">
-              Semester <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Select
-                onValueChange={setSelectedSemester}
-                value={selectedSemester}
-                disabled={isSubmitting || isLoadingSemesters}
-              >
-                <SelectTrigger className="flex gap-2">
-                  <SelectValue
-                    placeholder={
-                      isLoadingSemesters
-                        ? "Loading semesters..."
-                        : "Select a semester"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {semesters.map((semester) => (
-                    <SelectItem
-                      key={semester.id}
-                      value={semester.id?.toString() ?? ""}
-                    >
-                      {getSemesterEnum(semester.id ?? 0).replace("_", " ")} -{" "}
-                      {semester.semesterType}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <label className="text-sm font-medium">Semester <span className="text-red-500">*</span></label>
+            <Select onValueChange={setSelectedSemester} value={selectedSemester} disabled={isSubmitting || isLoadingSemesters}>
+              <SelectTrigger>
+                <SelectValue placeholder={isLoadingSemesters ? "Loading semesters..." : "Select a semester"} />
+              </SelectTrigger>
+              <SelectContent>
+                {semesters.map((semester) => (
+                  <SelectItem key={semester.id} value={semester.id?.toString() ?? ""}>
+                    {getSemesterEnum(semester.id ?? 0).replace("_", " ")} - {semester.semesterType}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Class Field */}
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">
-              Class <span className="text-red-500">*</span>
-            </label>
-            <ComboboxSelectClass
-              disabled={isSubmitting}
-              dataSelect={selectedClass}
-              onChangeSelected={setSelectedClass}
-            />
+            <label className="text-sm font-medium">Class <span className="text-red-500">*</span></label>
+            <ComboboxSelectClass disabled={isSubmitting} dataSelect={selectedClass} onChangeSelected={setSelectedClass} />
           </div>
-        </div>
+        </FormBody>
 
-        <Separator className="bg-gray-300" />
-
-        {/* Footer */}
-        <DialogFooter className="gap-2">
-          <Button
-            variant="outline"
-            onClick={handleDiscard}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="bg-green-900 hover:bg-green-950 text-white"
-            onClick={handleSave}
-            disabled={isSubmitting}
-          >
+        <FormFooter>
+          <Button variant="outline" onClick={handleDiscard} disabled={isSubmitting}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSubmitting ? "Duplicating..." : "Duplicate Schedule"}
           </Button>
-        </DialogFooter>
+        </FormFooter>
       </DialogContent>
     </Dialog>
   );

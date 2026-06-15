@@ -202,18 +202,17 @@ const MySchedulePage = () => {
             </BreadcrumbList>
           </Breadcrumb>
 
-          <div className="flex items-center min-w-0 flex-1">
+          <div className="flex items-center min-w-0 flex-1 gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
-              asChild
-              className="rounded-full flex-shrink-0 hover:cursor-pointer"
+              className="rounded-full flex-shrink-0 h-9 w-9 hover:cursor-pointer"
             >
               <img
                 src={AppIcons.Back}
                 alt="back Icon"
-                className="h-4 w-4 mr-3 sm:mr-5 text-muted-foreground"
+                className="h-4 w-4 text-muted-foreground"
               />
             </Button>
             <h3 className="text-xl font-bold">Class Schedule List</h3>
@@ -229,7 +228,7 @@ const MySchedulePage = () => {
                 onChange={handleSearchChange}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <YearSelector value={selectedYear} onChange={setSelectedYear} />
               <Select
                 onValueChange={setSelectedSemester}

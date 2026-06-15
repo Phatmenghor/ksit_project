@@ -87,14 +87,13 @@ export default function TeacherProfessionalRank({ teacher }: TeacherProps) {
           <div className="space-y-7">
             {/* Table container with horizontal scroll */}
             <div
-              className="relative overflow-x-auto border border-gray-300 rounded-2xl overflow-hidden"
+              className="overflow-x-auto overflow-y-auto md:max-h-72 border border-gray-300 rounded-2xl"
               style={{
                 scrollbarWidth: "thin",
-                maxHeight: "300px",
                 scrollbarColor: "#000000 #d1d5db",
               }}
             >
-              <table className="w-full text-sm border-collapse">
+              <table className="min-w-max w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-black text-white text-left">
                     <th className="p-3 border-r border-gray-400 min-w-[200px] whitespace-nowrap">

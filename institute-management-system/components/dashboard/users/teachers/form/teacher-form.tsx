@@ -204,7 +204,7 @@ export default function TeacherForm({
 
         {isTeacher && (
           <Card>
-            <CardContent className="p-4 flex flex-1 flex-row gap-4">
+            <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <FormField
                   control={control}

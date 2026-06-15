@@ -18,10 +18,10 @@ export default function StudentStudyHistory({ student }: StudentProfileProps) {
             scrollbarColor: "#000000 #d1d5db",
           }}
         >
-          <table className="w-full text-sm border">
+          <table className="min-w-max w-full text-sm border">
             <thead>
               <tr className="bg-black text-white text-left">
-                <th className="p-2 border">កម្រិតថ្នាក់</th>
+                <th className="p-2 border whitespace-nowrap">កម្រិតថ្នាក់</th>
                 <th className="p-2 border">ឈ្មោះសាលារៀន</th>
                 <th className="p-2 border">ខេត្ត/រាជធានី</th>
                 <th className="p-2 border">ឆ្នាំសិក្សា</th>

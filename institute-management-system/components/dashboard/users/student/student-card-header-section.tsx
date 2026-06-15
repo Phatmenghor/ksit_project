@@ -10,13 +10,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowLeft, Ghost } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { AppIcons } from "@/constants/icons/icon";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BreadcrumbItemType {
   label: string;
@@ -35,6 +34,7 @@ interface StudentCardHeaderSectionProps {
   customAddNewButton?: React.ReactNode;
   buttonHref?: string;
   back?: boolean;
+  showBackButton?: boolean;
   openModal?: () => void;
   customSelect?: React.ReactNode;
   tabs?: React.ReactNode;
@@ -60,8 +60,6 @@ export const StudentCardHeaderSection: React.FC<
   tabs,
 }) => {
   const router = useRouter();
-
-  const isMobile = useIsMobile();
 
   return (
     <div>
@@ -95,60 +93,41 @@ export const StudentCardHeaderSection: React.FC<
           </Breadcrumb>
 
           {/* Title Section with Back Button */}
-          <div className="mb-3 flex flex-col md:flex-row md:items-center md:justify-start">
-            {back && !isMobile && (
+          <div className="mb-3 flex items-center gap-2">
+            {(back || showBackButton) && (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="rounded-full flex-shrink-0 hover:cursor-pointer"
-                asChild
+                className="rounded-full flex-shrink-0 h-9 w-9 hover:cursor-pointer"
                 onClick={() => router.back()}
               >
                 <img
                   src={AppIcons.Back}
                   alt="back Icon"
-                  className="h-4 w-4 mr-5 text-muted-foreground"
+                  className="h-4 w-4 text-muted-foreground"
                 />
               </Button>
             )}
 
             {title && (
-              <h3 className="lg:text-2xl text-lg font-bold text-gray-900">
+              <h3 className="lg:text-2xl text-lg font-bold text-gray-900 break-words min-w-0">
                 {title}
               </h3>
             )}
           </div>
 
           {/* Search and Actions Section */}
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* Search input */}
-            {onSearchChange && (
-              <div className="relative w-full md:w-[700px] group">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder={searchPlaceholder}
-                  className="pl-8 w-full"
-                  value={searchValue}
-                  onChange={onSearchChange}
-                />
-              </div>
-            )}
-
-            {/* Right side actions */}
-            <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Left side actions */}
+            <div className="flex flex-wrap items-center gap-3">
               {customSelect && <div>{customSelect}</div>}
 
               {customAddNewButton && <div>{customAddNewButton}</div>}
 
               {buttonText && buttonHref && (
                 <div>
-                  <Link
-                    href={{
-                      pathname: buttonHref,
-                    }}
-                  >
+                  <Link href={{ pathname: buttonHref }}>
                     <Button className="bg-teal-900 text-white hover:bg-teal-950 flex gap-1 h-10 hover:shadow-lg hover:shadow-green-900/25">
                       {buttonIcon && <span>{buttonIcon}</span>}
                       {buttonText}
@@ -173,6 +152,20 @@ export const StudentCardHeaderSection: React.FC<
                 </div>
               )}
             </div>
+
+            {/* Search input — right-aligned, max 200px */}
+            {onSearchChange && (
+              <div className="relative min-w-[140px] max-w-[200px] w-full sm:w-auto sm:ml-auto">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder={searchPlaceholder}
+                  className="pl-8 w-full"
+                  value={searchValue}
+                  onChange={onSearchChange}
+                />
+              </div>
+            )}
           </div>
         </CardContent>
 
