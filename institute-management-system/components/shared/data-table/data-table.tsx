@@ -106,8 +106,8 @@ export function DataTable<T = unknown>({
               [...Array(SKELETON_ROWS)].map((_, i) => (
                 <tr key={i}>
                   {columns.map((col) => (
-                    <td key={col.key} style={thStyle(col)} className="px-3 py-2.5 border-b border-border/50">
-                      <div className="h-3 bg-muted animate-pulse rounded" />
+                    <td key={col.key} style={thStyle(col)} className="px-3 py-3.5 border-b border-border/50">
+                      <div className="h-7 bg-muted animate-pulse rounded" />
                     </td>
                   ))}
                 </tr>

@@ -1,14 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -17,7 +9,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, Users } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
@@ -33,22 +25,19 @@ import {
   ClassModel,
 } from "@/model/master-data/class/all-class-model";
 import { toast } from "sonner";
-import { classTableHeader } from "@/constants/table/master-data";
-import PaginationPage from "@/components/shared/pagination-page";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import {
   ClassFormData,
   ClassFormModal,
 } from "@/components/dashboard/master-data/manage-class/class-form-modal";
 import { DegreeEnum } from "@/constants/constant";
-import Loading from "@/components/shared/loading";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSearchParams } from "next/navigation";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function ManageClassPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -59,37 +48,24 @@ export default function ManageClassPage() {
   const [allClassData, setAllClassData] = useState<AllClassModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMajor, setSelectedMajor] = useState<MajorModel | null>(null);
-  const [initialData, setInitialData] = useState<ClassFormData | undefined>(
-    undefined
-  );
+  const [initialData, setInitialData] = useState<ClassFormData | undefined>(undefined);
   const searchParams = useSearchParams();
 
   const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.MASTER_DATA.MANAGE_CLASS,
-      defaultPageSize: 10,
-    });
+    usePagination({ baseRoute: ROUTE.MASTER_DATA.MANAGE_CLASS, defaultPageSize: 10 });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
-  // Then add this effect for initial URL setup
   useEffect(() => {
     const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
+    if (!pageParam) updateUrlWithPage(1, true);
   }, [searchParams, updateUrlWithPage]);
 
   const loadClass = useCallback(
@@ -105,18 +81,15 @@ export default function ManageClassPage() {
           academyYear: selectedYear,
           ...param,
         });
-
         if (response) {
           setAllClassData(response);
-          // Handle case where current page exceeds total pages
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
-            return;
           }
         } else {
           toast.error("Failed to fetch class data");
         }
-      } catch (error) {
+      } catch {
         toast.error("An error occurred while loading class data");
       } finally {
         setIsLoading(false);
@@ -137,7 +110,7 @@ export default function ManageClassPage() {
 
   const handleOpenEditModal = (classData: ClassModel) => {
     setSelectedClass(classData);
-    const formData: ClassFormData = {
+    setInitialData({
       id: classData.id,
       academyYear: Number(classData.academyYear),
       code: classData.code,
@@ -146,39 +119,25 @@ export default function ManageClassPage() {
       yearLevel: classData.yearLevel,
       majorId: classData.major.id,
       selectedMajor: classData.major,
-    };
-    setInitialData(formData);
+    });
     setModalMode("edit");
     setIsModalOpen(true);
   };
 
   async function handleDeleteClass() {
     if (!selectedClass) return;
-
     setIsSubmitting(true);
     try {
       const originalData = allClassData;
-      setAllClassData((prevData) => {
-        if (!prevData) return null;
-        const updatedContent = prevData.content.filter(
-          (item) => item.id !== selectedClass.id
-        );
-        return {
-          ...prevData,
-          content: updatedContent,
-          totalElements: prevData.totalElements - 1,
-        };
-      });
-
+      setAllClassData((prev) =>
+        prev
+          ? { ...prev, content: prev.content.filter((c) => c.id !== selectedClass.id), totalElements: prev.totalElements - 1 }
+          : null
+      );
       const response = await deleteClassService(selectedClass.id);
-
       if (response) {
         toast.success(`Class ${selectedClass.code} deleted successfully`);
-        if (
-          allClassData &&
-          allClassData.content.length === 1 &&
-          currentPage > 1
-        ) {
+        if (allClassData && allClassData.content.length === 1 && currentPage > 1) {
           updateUrlWithPage(currentPage - 1);
         } else {
           await loadClass({});
@@ -187,7 +146,7 @@ export default function ManageClassPage() {
         setAllClassData(originalData);
         toast.error("Failed to delete class");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while deleting the class");
       loadClass({});
     } finally {
@@ -198,7 +157,6 @@ export default function ManageClassPage() {
 
   async function handleSubmit(formData: ClassFormData) {
     setIsSubmitting(true);
-
     try {
       const classData = {
         code: formData.code.trim(),
@@ -208,30 +166,15 @@ export default function ManageClassPage() {
         status: formData.status,
         yearLevel: formData.yearLevel,
       };
-
-      let response: ClassModel | null = null;
       if (modalMode === "add") {
         try {
-          response = await createClassService(classData);
+          const response = await createClassService(classData);
           if (response) {
-            setAllClassData((prevData) => {
-              if (!prevData) return null;
-              return {
-                ...prevData,
-                content: [response!, ...prevData.content],
-                totalElements: prevData.totalElements + 1,
-              };
-            });
+            setAllClassData((prev) =>
+              prev ? { ...prev, content: [response, ...prev.content], totalElements: prev.totalElements + 1 } : null
+            );
             toast.success(`Class ${response.code} added successfully`);
-            if (
-              allClassData &&
-              allClassData.content.length === 1 &&
-              currentPage > 1
-            ) {
-              updateUrlWithPage(currentPage - 1);
-            } else {
-              await loadClass({});
-            }
+            await loadClass({});
             setIsModalOpen(false);
           }
         } catch (error: any) {
@@ -239,19 +182,13 @@ export default function ManageClassPage() {
         }
       } else if (modalMode === "edit" && formData.id) {
         try {
-          response = await updateClassService(formData.id, classData);
+          const response = await updateClassService(formData.id, classData);
           if (response) {
-            setAllClassData((prevData) => {
-              if (!prevData) return null;
-              const updatedContent = prevData.content.map((cls) =>
-                cls.id === formData.id && response ? response : cls
-              );
-              return {
-                ...prevData,
-                content: updatedContent,
-              };
-            });
-
+            setAllClassData((prev) =>
+              prev
+                ? { ...prev, content: prev.content.map((c) => (c.id === formData.id ? response : c)) }
+                : null
+            );
             toast.success(`Class ${response.code} updated successfully`);
             setIsModalOpen(false);
           }
@@ -266,13 +203,43 @@ export default function ManageClassPage() {
     }
   }
 
-  const handleMajorChange = (major: MajorModel) => {
-    setSelectedMajor(major);
-  };
-
-  const handleYearChange = (year: number) => {
-    setSelectedYear(year);
-  };
+  const columns: TableColumn<ClassModel>[] = [
+    { key: "no", label: "#", width: "50px", render: (_, i) => getDisplayIndex(i) },
+    {
+      key: "code", label: "Class Code", width: "140px",
+      render: (cls) => (
+        <span className="rounded bg-gray-100 px-2 py-1 font-medium text-xs">{cls.code}</span>
+      ),
+    },
+    { key: "major", label: "Major", render: (cls) => cls.major.name },
+    { key: "degree", label: "Degree", render: (cls) => cls.degree },
+    { key: "yearLevel", label: "Year Level", render: (cls) => cls.yearLevel },
+    { key: "academyYear", label: "Academy Year", render: (cls) => cls.academyYear },
+    {
+      key: "actions", label: "", width: "90px",
+      render: (cls) => (
+        <div className="flex gap-1">
+          <Button
+            onClick={() => handleOpenEditModal(cls)}
+            variant="ghost" size="icon"
+            className="h-7 w-7 bg-gray-200 hover:bg-gray-300"
+            title="Edit"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            onClick={() => { setSelectedClass(cls); setIsDeleteDialogOpen(true); }}
+            variant="ghost" size="icon"
+            className="h-7 w-7 bg-red-500 text-white hover:bg-red-600"
+            disabled={isSubmitting}
+            title="Delete"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -295,7 +262,6 @@ export default function ManageClassPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Classes",
-          totalCount: allClassData?.totalElements,
           searchValue: searchQuery,
           searchPlaceholder: "Search class...",
           onSearchChange: handleSearchChange,
@@ -319,13 +285,7 @@ export default function ManageClassPage() {
                 </div>
               ),
             },
-            {
-              id: "year",
-              type: "year",
-              label: "Academy Year",
-              value: selectedYear,
-              onChange: handleYearChange,
-            },
+            { id: "year", type: "year", label: "Academy Year", value: selectedYear, onChange: setSelectedYear },
           ],
           onClearAll: () => {
             setSelectedMajor(null);
@@ -335,91 +295,19 @@ export default function ManageClassPage() {
         }}
         essentialFilterIds={["major", "year"]}
       />
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {classTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allClassData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={classTableHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No classes found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allClassData?.content.map((cls, index) => {
-                  return (
-                    <TableRow key={cls.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>
-                        <span className="rounded bg-gray-100 px-2 py-1 font-medium">
-                          {cls.code}
-                        </span>
-                      </TableCell>
-                      <TableCell>{cls.major.name}</TableCell>
-                      <TableCell>{cls.degree}</TableCell>
-                      <TableCell>{cls.yearLevel}</TableCell>
-                      <TableCell>{cls.academyYear}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() => handleOpenEditModal(cls)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                            title="Edit"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setSelectedClass(cls);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                            disabled={isSubmitting}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
 
-      {/* Pagination */}
-      {!isLoading && allClassData && allClassData.totalPages > 1 && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allClassData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <DataTable
+        data={allClassData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allClassData?.totalPages ?? 0}
+        totalElements={allClassData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No classes found"
+        getRowKey={(cls) => cls.id}
+      />
 
-      {/* Modals */}
       <ClassFormModal
         isOpen={isModalOpen}
         mode={modalMode}
