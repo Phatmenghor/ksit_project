@@ -123,10 +123,15 @@ function ScoreInput({
 }
 
 const gradeStyle: Record<string, string> = {
-  A: "bg-green-100 text-green-800 border border-green-200",
-  B: "bg-blue-100 text-blue-800 border border-blue-200",
-  C: "bg-yellow-100 text-yellow-800 border border-yellow-200",
-  D: "bg-orange-100 text-orange-800 border border-orange-200",
+  A:   "bg-green-100  text-green-800  border border-green-200",
+  "B+":"bg-teal-100   text-teal-800   border border-teal-200",
+  B:   "bg-blue-100   text-blue-800   border border-blue-200",
+  "C+":"bg-cyan-100   text-cyan-800   border border-cyan-200",
+  C:   "bg-yellow-100 text-yellow-800 border border-yellow-200",
+  D:   "bg-orange-100 text-orange-800 border border-orange-200",
+  E:   "bg-pink-100   text-pink-800   border border-pink-200",
+  F:   "bg-red-100    text-red-800    border border-red-200",
+  I:   "bg-gray-100   text-gray-600   border border-gray-300",
 };
 
 export default function StudentScoresTable({

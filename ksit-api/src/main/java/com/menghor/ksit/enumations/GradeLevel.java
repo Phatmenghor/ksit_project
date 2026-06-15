@@ -12,7 +12,8 @@ public enum GradeLevel {
     C("C", 50.0, 64.99, "Fair", "បង្គម", 2.0),
     D("D", 45.0, 49.99, "Poor", "ខ្សោយ", 1.5),
     E("E", 40.0, 44.99, "Very Poor", "ខ្សោយណាស់", 1.0),
-    F("F", 0.0, 39.99, "Failure", "ធ្លាក់", 0.0);
+    F("F", 0.01, 39.99, "Failure", "ធ្លាក់", 0.0),
+    I("I", 0.0, 0.0, "Incomplete", "មិនពេញលេញ", 0.0);
 
     private final String grade;
     private final double minScore;
@@ -34,12 +35,14 @@ public enum GradeLevel {
      * Get grade level from score using Cambodian grading system
      */
     public static GradeLevel fromScore(double score) {
+        if (score == 0.0) return I;
         for (GradeLevel gradeLevel : GradeLevel.values()) {
+            if (gradeLevel == I) continue;
             if (score >= gradeLevel.getMinScore() && score <= gradeLevel.getMaxScore()) {
                 return gradeLevel;
             }
         }
-        return F; // Default to F if no match found
+        return F;
     }
 
     /**
@@ -62,16 +65,12 @@ public enum GradeLevel {
      * Check if the grade is passing (not F)
      */
     public boolean isPassing() {
-        return this != F;
+        return this != F && this != I;
     }
 
-    /**
-     * Get percentage range as string
-     */
     public String getPercentageRange() {
-        if (this == F) {
-            return "< 40%";
-        }
+        if (this == I) return "0%";
+        if (this == F) return "0.01%-39.99%";
         return String.format("%.0f%%-%.0f%%", minScore, maxScore);
     }
 
@@ -110,6 +109,10 @@ public enum GradeLevel {
      */
     public static GradeLevel[] getPassingGrades() {
         return new GradeLevel[]{A, B_PLUS, B, C_PLUS, C, D, E};
+    }
+
+    public boolean isIncomplete() {
+        return this == I;
     }
 
     /**
