@@ -196,7 +196,7 @@ const ClassSchedulePage = () => {
   };
 
   const handleViewSchedule = (classData: ClassModel) => {
-    router.push(`/manage-schedule/all-schedule/${classData.id}`);
+    router.push(ROUTE.MANAGE_SCHEDULE.All_SCHEDULE_DETAIL(String(classData.id)));
   };
 
   const handleAddSchedule = (classData: ClassModel) => {

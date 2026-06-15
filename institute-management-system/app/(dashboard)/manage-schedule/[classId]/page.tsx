@@ -206,7 +206,7 @@ const AllSchedulePage = () => {
   };
 
   const handleEditClick = (scheduleId: number) => {
-    router.push(ROUTE.MANAGE_SCHEDULE.UPDATE_SCHEDULE + `${scheduleId}`);
+    router.push(`/manage-schedule/${scheduleId}/edit`);
   };
 
   const handleDelete = async () => {

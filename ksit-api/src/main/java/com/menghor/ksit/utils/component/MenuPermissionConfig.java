@@ -67,72 +67,75 @@ public class MenuPermissionConfig {
     private Map<String, Set<RoleEnum>> initializeMenuPermissions() {
         Map<String, Set<RoleEnum>> permissions = new HashMap<>();
 
-        permissions.put("DASHBOARD", Set.of(
+        permissions.put("dashboard", Set.of(
             RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
 
-        permissions.put("MASTER_DATA", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_CLASS", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_SEMESTER", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_MAJOR", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_DEPARTMENT", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_ROOM", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_COURSE", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_SUBJECT", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("master-data", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-class", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-semester", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-major", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-department", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-room", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-course", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-subject", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("USERS", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("ADMIN", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("STAFF_OFFICER", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("TEACHERS", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("users", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("admin", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("staff-officer", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("teachers", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("STUDENTS", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("ADD_MULTIPLE_USERS", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("ADD_SINGLE_USER", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("STUDENTS_LIST", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("students", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("add-multiple-users", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("add-single-user", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("students-list", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("ATTENDANCE", Set.of(
+        permissions.put("attendance", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("CLASS_SCHEDULE", Set.of(RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.DEVELOPER));
-        permissions.put("HISTORY_RECORDS", Set.of(
+        permissions.put("class-schedule", Set.of(RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.DEVELOPER));
+        permissions.put("history-records", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("STUDENT_RECORDS", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("student-records", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("SURVEY", Set.of(
+        permissions.put("survey", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("RESULT_LIST", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MANAGE_QA", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("SURVEY_STUDENT_RECORDS", Set.of(
+        permissions.put("result-list", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-qa", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("survey-student-records", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("SURVEY_STUDENT", Set.of(
+        permissions.put("survey-student", Set.of(
             RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
 
-        permissions.put("SCORE_SUBMITTED", Set.of(
+        permissions.put("scores-submitted", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("SUBMITTED_LIST", Set.of(
+        permissions.put("submitted-list", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("SCORE_SETTING", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("STUDENT_SCORE", Set.of(
+        permissions.put("score-setting", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("student-score", Set.of(
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
 
-        permissions.put("SCHEDULE", Set.of(
+        permissions.put("schedule", Set.of(
             RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
-        permissions.put("MANAGE_SCHEDULE", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("manage-schedule", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("REQUEST", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("request", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("PAYMENT", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
-        permissions.put("MY_PAYMENT", Set.of(RoleEnum.STUDENT));
+        permissions.put("payment", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("student-payment", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("my-payment", Set.of(RoleEnum.STUDENT));
 
-        permissions.put("ROLE_PERMISSION", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("my-class", Set.of(RoleEnum.STUDENT, RoleEnum.TEACHER));
+
+        permissions.put("role-permission", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
         return permissions;
     }

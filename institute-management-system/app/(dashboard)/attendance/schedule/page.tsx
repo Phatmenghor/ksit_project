@@ -115,7 +115,7 @@ const AttendanceScheduleCheckPage = () => {
 
   const handleCardClick = (scheduleId: number) => {
     // Navigate to the class detail page with the schedule ID
-    router.push(`${ROUTE.ATTENDANCE.ATTENDANCE_CHECK}/${scheduleId}`);
+    router.push(`${ROUTE.ATTENDANCE.ATTENDANCE_CHECK}/${scheduleId}/check`);
   };
 
   return (
