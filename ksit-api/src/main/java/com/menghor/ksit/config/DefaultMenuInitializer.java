@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,14 +31,15 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     private final MenuPermissionRepository menuPermissionRepository;
     private final UserRepository userRepository;
     private final MenuPermissionConfig menuPermissionConfig;
+    private final PlatformTransactionManager transactionManager;
 
     @Override
-    @Transactional
     public void run(String... args) {
         log.info("=== Menu initialization started ===");
-        removeObsoleteMenus();
-        seedMenus();
-        syncAllUserMenuPermissions();
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.execute(status -> { removeObsoleteMenus(); return null; });
+        tx.execute(status -> { seedMenus(); return null; });
+        syncAllUserMenuPermissions(tx);
         log.info("=== Menu initialization complete ===");
     }
 
@@ -197,7 +199,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
     // ─── User permission sync ─────────────────────────────────────────────────
 
-    private void syncAllUserMenuPermissions() {
+    private void syncAllUserMenuPermissions(TransactionTemplate tx) {
         log.info("Syncing user menu permissions...");
 
         List<UserEntity> allUsers = userRepository.findAll();
@@ -211,7 +213,10 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
         for (UserEntity user : allUsers) {
             try {
-                syncUserPermissions(user, activeMenus, activeMenuIds);
+                tx.execute(status -> {
+                    syncUserPermissions(user, activeMenus, activeMenuIds);
+                    return null;
+                });
                 processed++;
             } catch (Exception e) {
                 log.error("Error syncing permissions for user [{}]: {}", user.getUsername(), e.getMessage());
