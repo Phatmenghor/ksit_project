@@ -21,7 +21,9 @@ import { usePagination } from "@/hooks/use-pagination";
 import { getRoles } from "@/utils/local-storage/user-info/roles";
 import { getUserId } from "@/utils/local-storage/user-info/userId";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
+import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import {
@@ -49,6 +51,7 @@ export default function StudentsListPage() {
   const [selectedSchedule, setSelectedSchedule] = useState<
     ScheduleModel | undefined
   >(undefined);
+  const [selectedCourse, setSelectedCourse] = useState<CourseModel | undefined>(undefined);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -92,6 +95,7 @@ export default function StudentsListPage() {
           scheduleId: selectedSchedule?.id,
           pageSize: 30,
           classId: selectedClass?.id,
+          courseId: selectedCourse?.id,
         });
 
         if (response) {
@@ -113,6 +117,7 @@ export default function StudentsListPage() {
       selectedClass,
       selectAcademicYear,
       selectedSchedule,
+      selectedCourse,
       updateUrlWithPage,
     ]
   );
@@ -127,6 +132,7 @@ export default function StudentsListPage() {
     selectAcademicYear,
     selectedClass,
     selectedSchedule,
+    selectedCourse,
     loadStudents,
   ]);
 
@@ -255,6 +261,22 @@ export default function StudentsListPage() {
               ),
             },
             {
+              id: "course",
+              type: "custom",
+              label: "Course",
+              value: selectedCourse,
+              onChange: (v) => setSelectedCourse(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Course</label>
+                  <ComboboxSelectCourse
+                    dataSelect={value ?? null}
+                    onChangeSelected={(e) => onChange(e ?? undefined)}
+                  />
+                </div>
+              ),
+            },
+            {
               id: "year",
               type: "year",
               label: "Academic Year",
@@ -265,11 +287,12 @@ export default function StudentsListPage() {
           onClearAll: () => {
             setSelectedClass(undefined);
             setSelectedSchedule(undefined);
+            setSelectedCourse(undefined);
             setSelectAcademicYear(undefined);
             setSearchQuery("");
           },
         }}
-        essentialFilterIds={["class", "schedule", "year"]}
+        essentialFilterIds={["class", "schedule", "course", "year"]}
       />
 
       <DataTable

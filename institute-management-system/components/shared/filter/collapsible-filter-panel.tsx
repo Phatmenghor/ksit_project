@@ -195,25 +195,13 @@ export function CollapsibleFilterPanel({
   return (
     <Card className="border border-gray-100 shadow-sm">
       <CardContent className="py-3 px-4 space-y-3">
-        {/* Title row */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800">
-                {config.title}
-              </h1>
-              {typeof config.totalCount === "number" && (
-                <Badge variant="secondary" className="text-[11px] font-medium">
-                  {config.totalCount.toLocaleString()}
-                </Badge>
-              )}
-            </div>
-            {config.subtitle && (
-              <p className="text-xs text-muted-foreground mt-0.5">{config.subtitle}</p>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+        {/* Title row: title left, button right */}
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800 truncate">
+            {config.title}
+          </h1>
+          <div className="flex items-center gap-2 flex-shrink-0">
             {config.extraActions}
             {config.buttonText && (
               <Button
@@ -230,62 +218,57 @@ export function CollapsibleFilterPanel({
           </div>
         </div>
 
-        {/* Search + essential filters */}
+        {/* Search + essential filters: search grows, filters wrap right */}
         <div className="flex flex-wrap items-end gap-2">
-          <div className="relative w-full sm:w-64 flex-shrink-0">
+          <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="search"
               placeholder={config.searchPlaceholder}
-              className="pl-8 h-9 text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors"
+              className="pl-8 h-9 w-full text-sm focus-visible:ring-primary/30 focus-visible:border-primary hover:border-primary/50 transition-colors"
               value={config.searchValue}
               onChange={config.onSearchChange}
             />
           </div>
 
-          {essentialFilters.length > 0 && (
-            <div
-              className="grid gap-2 flex-1 min-w-0"
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", maxWidth: "420px" }}
-            >
-              {essentialFilters.map((filter) => renderFilter(filter))}
+          {essentialFilters.map((filter) => (
+            <div key={filter.id} className="w-[160px] flex-shrink-0">
+              {renderFilter(filter)}
             </div>
+          ))}
+
+          {anyFilterActive && config.onClearAll && (
+            <button
+              type="button"
+              onClick={config.onClearAll}
+              className="h-9 self-end text-xs font-medium text-primary hover:underline flex-shrink-0"
+            >
+              Clear all
+            </button>
           )}
         </div>
 
         {/* Advanced filters */}
         {advancedFilters.length > 0 && (
           <div className="border-t pt-3">
-            <div className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-foreground/70 hover:text-foreground transition-colors"
-              >
-                More Filters
-                {advancedActiveCount > 0 && (
-                  <Badge className="text-[10px] bg-primary/10 text-primary border border-primary/20 font-medium px-1.5">
-                    {advancedActiveCount} active
-                  </Badge>
-                )}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 transition-transform duration-200",
-                    showAdvanced && "rotate-180"
-                  )}
-                />
-              </button>
-
-              {anyFilterActive && config.onClearAll && (
-                <button
-                  type="button"
-                  onClick={config.onClearAll}
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Clear all
-                </button>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-foreground/70 hover:text-foreground transition-colors"
+            >
+              More Filters
+              {advancedActiveCount > 0 && (
+                <Badge className="text-[10px] bg-primary/10 text-primary border border-primary/20 font-medium px-1.5">
+                  {advancedActiveCount} active
+                </Badge>
               )}
-            </div>
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  showAdvanced && "rotate-180"
+                )}
+              />
+            </button>
 
             {showAdvanced && (
               <div className="mt-3 pt-3 border-t border-dashed">
