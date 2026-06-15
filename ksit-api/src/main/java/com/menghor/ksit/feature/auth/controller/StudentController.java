@@ -40,7 +40,7 @@ public class StudentController {
 
     @PostMapping("/register/batch")
     public ApiResponse<List<StudentResponseDto>> registerStudentBatch(@Valid @RequestBody StudentBatchCreateRequestDto requestDto) {
-        log.info("Batch register students request received. count={}", requestDto.getStudents().size());
+        log.info("Batch register students request received. quantity={}", requestDto.getQuantity());
         List<StudentResponseDto> registeredStudents = studentService.batchRegisterStudents(requestDto);
         log.info("Batch registration completed. registered={}", registeredStudents.size());
         return new ApiResponse<>("success",
