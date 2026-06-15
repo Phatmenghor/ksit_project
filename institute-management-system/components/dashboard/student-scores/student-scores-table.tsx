@@ -7,15 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { CheckCircle, Eye, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
 import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { useRouter } from "next/navigation";
@@ -272,48 +263,24 @@ export default function StudentScoresTable({
 
                     <td className="px-3 py-2.5 text-center">
                       {mode === "view" || isSubmitted ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() =>
-                                  router.push(ROUTE.USERS.VIEW_TEACHER(String(student.id)))
-                                }
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full bg-muted hover:bg-primary/10 hover:text-primary"
-                                disabled={isSubmitting}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>View detail</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : hasChange ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleRemoveFromUnsaved(student.id)}
-                                className="h-8 w-8 rounded-full text-amber-600 hover:text-amber-800 hover:bg-amber-100"
-                              >
-                                <RotateCcw className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Discard changes</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs bg-green-50 text-green-700 border border-green-200"
+                        <button
+                          onClick={() =>
+                            router.push(ROUTE.STUDENTS.VIEW(String(student.studentId)))
+                          }
+                          disabled={isSubmitting}
+                          className="text-sm text-primary underline underline-offset-2 disabled:opacity-50"
                         >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Saved
-                        </Badge>
+                          View
+                        </button>
+                      ) : hasChange ? (
+                        <button
+                          onClick={() => handleRemoveFromUnsaved(student.id)}
+                          className="text-sm text-muted-foreground underline underline-offset-2"
+                        >
+                          Discard
+                        </button>
+                      ) : (
+                        <span className="text-sm text-green-600">Saved</span>
                       )}
                     </td>
                   </tr>
