@@ -30,7 +30,7 @@ import {
   ClassFormData,
   ClassFormModal,
 } from "@/components/dashboard/master-data/manage-class/class-form-modal";
-import { DegreeEnum } from "@/constants/constant";
+import { DegreeEnum, Degrees } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
@@ -202,15 +202,22 @@ export default function ManageClassPage() {
 
   const columns: TableColumn<ClassModel>[] = [
     { key: "no", label: "#", width: "50px", render: (_, i) => getDisplayIndex(i) },
-    {
-      key: "code", label: "Class Code", width: "140px",
-      render: (cls) => (
-        <span className="rounded bg-gray-100 px-2 py-1 font-medium text-xs">{cls.code}</span>
-      ),
-    },
+    { key: "code", label: "Class Code", width: "140px", render: (cls) => cls.code },
     { key: "major", label: "Major", render: (cls) => cls.major.name },
-    { key: "degree", label: "Degree", render: (cls) => cls.degree },
-    { key: "yearLevel", label: "Year Level", render: (cls) => cls.yearLevel },
+    {
+      key: "degree", label: "Degree",
+      render: (cls) => Degrees.find((d) => d.value === cls.degree)?.label ?? cls.degree,
+    },
+    {
+      key: "yearLevel", label: "Year Level",
+      render: (cls) => {
+        const map: Record<string, string> = {
+          FIRST_YEAR: "Year 1", SECOND_YEAR: "Year 2",
+          THIRD_YEAR: "Year 3", FOURTH_YEAR: "Year 4",
+        };
+        return map[cls.yearLevel] ?? cls.yearLevel;
+      },
+    },
     { key: "academyYear", label: "Academy Year", render: (cls) => cls.academyYear },
     {
       key: "createdAt", label: "Created At",
