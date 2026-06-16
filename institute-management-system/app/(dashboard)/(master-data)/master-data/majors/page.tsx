@@ -240,9 +240,7 @@ export default function ManageMajorPage() {
     {
       key: "code",
       label: "Code",
-      render: (major) => (
-        <span className="rounded bg-gray-100 px-2 py-1">{major.code}</span>
-      ),
+      render: (major) => major.code,
     },
     {
       key: "name",

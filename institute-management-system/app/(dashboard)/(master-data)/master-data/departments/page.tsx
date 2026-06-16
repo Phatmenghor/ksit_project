@@ -253,9 +253,7 @@ export default function ManageDepartmentPage() {
     {
       key: "code",
       label: "Code",
-      render: (dept) => (
-        <span className="rounded bg-gray-100 px-2 py-1">{dept.code}</span>
-      ),
+      render: (dept) => dept.code,
     },
     {
       key: "name",
