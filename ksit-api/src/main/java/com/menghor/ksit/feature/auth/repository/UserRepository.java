@@ -67,7 +67,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
     /**
      * Find staff users with department by specification and pagination
      */
-    @EntityGraph(attributePaths = {"roles", "department"})
+    @EntityGraph(attributePaths = {"department"})
     Page<UserEntity> findAll(org.springframework.data.jpa.domain.Specification<UserEntity> spec, Pageable pageable);
 
     /**
