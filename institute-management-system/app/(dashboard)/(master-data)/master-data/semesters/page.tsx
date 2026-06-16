@@ -185,7 +185,7 @@ export default function ManageSemester() {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), "MMM dd, yyyy");
+      return format(parseISO(dateString), "MMMM dd, yyyy");
     } catch (error) {
       return dateString;
     }
@@ -246,7 +246,7 @@ export default function ManageSemester() {
     {
       key: "semester",
       label: "Semester",
-      render: (s) => s.semester,
+      render: (s) => s.semester === "SEMESTER_1" ? "Semester 1" : s.semester === "SEMESTER_2" ? "Semester 2" : s.semester,
     },
     {
       key: "startDate",
