@@ -30,14 +30,13 @@ import { MobileSidebar } from "./mobile-sidebar";
 import { RoleEnum } from "@/constants/constant";
 import Image from "next/image";
 import { AppIcons, AppResource } from "@/constants/icons/icon";
-import { getStaffByTokenService } from "@/service/user/user.service";
-import { StaffModel } from "@/model/user/staff/staff.respond.model";
+import { useCurrentUser } from "@/context/user-context";
 
 export function Header() {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [user, setUser] = useState<StaffModel | undefined>(undefined);
+  const { user } = useCurrentUser();
   const router = useRouter();
 
   const getProfileUrl = () => {
@@ -134,18 +133,6 @@ export function Header() {
     logoutUser();
     router.push(ROUTE.AUTH.LOGIN);
   };
-
-  const fetchUser = async () => {
-    try {
-      const response = await getStaffByTokenService();
-      setUser(response);
-    } catch (error) {
-    }
-  };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
 
   return (
     <>
