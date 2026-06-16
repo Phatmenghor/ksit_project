@@ -102,7 +102,7 @@ export default function ManageSemester() {
 
   useEffect(() => {
     loadSemester({});
-  }, [searchDebounce, currentPage, selectedYear]);
+  }, [loadSemester]);
 
   const handleOpenAddModal = () => {
     setModalMode("add");

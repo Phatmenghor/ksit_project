@@ -91,7 +91,7 @@ export default function DepartmentListPage() {
 
   useEffect(() => {
     loadDepartments({});
-  }, [debouncedSearchQuery, currentPage]);
+  }, [loadDepartments]);
 
   function onClickDepartmentCard(departmentId: number) {
     router.push(ROUTE.MANAGE_SCHEDULE.DEPARTMENT_CLASS + `/${departmentId}`);

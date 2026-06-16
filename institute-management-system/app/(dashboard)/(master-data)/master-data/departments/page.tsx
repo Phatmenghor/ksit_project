@@ -107,7 +107,7 @@ export default function ManageDepartmentPage() {
 
   useEffect(() => {
     loadDepartments({});
-  }, [searchDebounce, currentPage]);
+  }, [loadDepartments]);
 
   const handleOpenAddModal = () => {
     setModalMode("add");

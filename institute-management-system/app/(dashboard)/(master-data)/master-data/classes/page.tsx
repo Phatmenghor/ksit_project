@@ -97,7 +97,7 @@ export default function ManageClassPage() {
 
   useEffect(() => {
     loadClass();
-  }, [currentPage, debouncedSearchQuery, selectedYear, selectedMajor]);
+  }, [loadClass]);
 
   const handleOpenAddModal = () => {
     setModalMode("add");

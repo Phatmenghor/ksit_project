@@ -95,7 +95,7 @@ export default function ManageMajorPage() {
 
   useEffect(() => {
     loadMajors({});
-  }, [searchDebounce, currentPage]);
+  }, [loadMajors]);
 
   const handleOpenAddModal = () => {
     setModalMode("add");

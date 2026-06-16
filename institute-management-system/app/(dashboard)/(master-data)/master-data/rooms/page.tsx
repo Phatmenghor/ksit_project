@@ -96,7 +96,7 @@ export default function ManageRoomPage() {
 
   useEffect(() => {
     loadRooms({});
-  }, [searchDebounceQuery, currentPage]);
+  }, [loadRooms]);
 
   const handleOpenAddModal = () => {
     setModalMode("add");

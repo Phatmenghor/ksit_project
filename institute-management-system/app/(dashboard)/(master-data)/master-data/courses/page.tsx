@@ -95,7 +95,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     loadCourses({});
-  }, [searchDebounce, currentPage, selectedDepartment]);
+  }, [loadCourses]);
 
   async function handleDeleteClass() {
     if (!selectedCourse) return;

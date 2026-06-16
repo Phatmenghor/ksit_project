@@ -96,7 +96,7 @@ export default function ManageSubjectPage() {
 
   useEffect(() => {
     loadSubjects({});
-  }, [searchDebounce, currentPage]);
+  }, [loadSubjects]);
 
   const handleOpenAddModal = () => {
     setModalMode("add");
