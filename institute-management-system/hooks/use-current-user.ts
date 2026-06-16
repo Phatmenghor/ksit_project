@@ -8,10 +8,11 @@ import {
 } from "@/utils/stores/user-store";
 
 export function useCurrentUser() {
-  // Trigger a single shared fetch on first use — subsequent calls are no-ops
   useEffect(() => {
     loadUser();
   }, []);
 
-  return useSyncExternalStore(subscribeUser, getCurrentUser, () => undefined);
+  const user = useSyncExternalStore(subscribeUser, getCurrentUser, () => undefined);
+
+  return { user };
 }
