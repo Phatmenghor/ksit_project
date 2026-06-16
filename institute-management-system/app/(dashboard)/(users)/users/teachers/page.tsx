@@ -362,7 +362,6 @@ export default function TeachersListPage() {
         onDelete={handleDeleteTeacher}
         title="Disable Staff"
         description={`Are you sure you want to disable the staff: ${selectedTeacher?.username}?`}
-        itemName={selectedTeacher?.username}
         isSubmitting={isSubmitting}
       />
     </div>

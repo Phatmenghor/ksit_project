@@ -335,7 +335,6 @@ export default function StuffOfficerListPage() {
         onDelete={handleDeleteStaff}
         title="Disable Staff"
         description={`Are you sure you want to disable the staff: ${selectedStaff?.username}?`}
-        itemName={selectedStaff?.username}
         isSubmitting={isSubmitting}
       />
     </div>

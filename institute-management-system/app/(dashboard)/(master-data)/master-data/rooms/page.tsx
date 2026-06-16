@@ -32,8 +32,8 @@ import {
 } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 
@@ -50,8 +50,6 @@ export default function ManageRoomPage() {
     undefined
   );
 
-  const searchParams = useSearchParams();
-
   const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.MANAGE_ROOM,
@@ -66,13 +64,6 @@ export default function ManageRoomPage() {
       updateUrlWithPage(1);
     }
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadRooms = useCallback(
     async (param: AllRoomFilterModel) => {
@@ -252,6 +243,11 @@ export default function ManageRoomPage() {
       render: (r) => r?.name,
     },
     {
+      key: "createdAt",
+      label: "Created At",
+      render: (r) => DateTimeFormatter(r.createdAt),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (r) => (
@@ -344,7 +340,6 @@ export default function ManageRoomPage() {
         onDelete={handleDeleteRoom}
         title="Delete Room"
         description="Are you sure you want to delete the room:"
-        itemName={room?.name}
         isSubmitting={isSubmitting}
       />
     </div>

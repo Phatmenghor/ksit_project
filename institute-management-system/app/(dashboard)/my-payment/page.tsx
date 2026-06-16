@@ -415,7 +415,6 @@ export default function PaymentPage() {
         onDelete={handleDeletePayment}
         title="Delete payment"
         description="Are you sure you want to delete the payment : "
-        itemName={selectedPayment?.item}
         isSubmitting={isSubmitting}
       />
     </div>

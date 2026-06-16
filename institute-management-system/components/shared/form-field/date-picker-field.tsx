@@ -64,7 +64,7 @@ export function DatePickerField<T extends FieldValues = FieldValues>({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-[200]" align="start">
                 <Calendar
                   mode="single"
                   selected={isValidDate ? dateValue : undefined}

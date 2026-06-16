@@ -14,7 +14,7 @@ import { Constants } from "@/constants/text-string";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { DegreeEnum, Degrees, YearLevelEnum } from "@/constants/constant";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
-import { YearSelector } from "@/components/shared/year-selector";
+import { AcademyYearPicker } from "@/components/shared/academy-year-picker";
 import { FormHeader } from "@/components/shared/form-field/form-header";
 import { FormBody } from "@/components/shared/form-field/form-body";
 import { FormFooter } from "@/components/shared/form-field/form-footer";
@@ -149,7 +149,7 @@ export function ClassFormModal({ isOpen, onClose, onSubmit, initialData, mode, i
                 <FormItem>
                   <FormLabel>Academy Year <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <YearSelector value={field.value} onChange={(y) => form.setValue("academyYear", y, { shouldValidate: true, shouldDirty: true })} />
+                    <AcademyYearPicker value={field.value} onChange={(y) => form.setValue("academyYear", y, { shouldValidate: true, shouldDirty: true })} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

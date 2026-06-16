@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { format, parseISO } from "date-fns";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { SemesterFormModal } from "@/components/dashboard/master-data/manage-semester/semester-form-modal";
 import { toast } from "sonner";
 import {
@@ -37,7 +38,6 @@ import { Constants } from "@/constants/text-string";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { SemesterType } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
@@ -53,13 +53,9 @@ export default function ManageSemester() {
   const [semesters, setSemesters] = useState<SemesterModel | null>(null);
   const [allSemesterData, setAllSemesterData] =
     useState<AllSemesterModel | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const [selectedYear, setSelectedYear] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  const searchParams = useSearchParams();
 
   const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
@@ -76,20 +72,13 @@ export default function ManageSemester() {
     }
   };
 
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
-
   const loadSemester = useCallback(
     async (param: AllSemesterFilterModel) => {
       setIsLoading(true);
       try {
         const response = await getAllSemesterService({
           search: searchDebounce,
-          academyYear: selectedYear,
+          academyYear: selectedYear || undefined,
           status: Constants.ACTIVE,
           pageNo: currentPage,
           pageSize: 30,
@@ -301,6 +290,11 @@ export default function ManageSemester() {
       ),
     },
     {
+      key: "createdAt",
+      label: "Created At",
+      render: (s) => DateTimeFormatter(s.createdAt),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (s) => (
@@ -368,7 +362,7 @@ export default function ManageSemester() {
             },
           ],
           onClearAll: () => {
-            setSelectedYear(new Date().getFullYear());
+            setSelectedYear(0);
             setSearchQuery("");
           },
         }}
@@ -384,7 +378,7 @@ export default function ManageSemester() {
         totalElements={allSemesterData?.totalElements}
         onPageChange={handlePageChange}
         emptyMessage="No semesters found"
-        getRowKey={(s) => s.id}
+        getRowKey={(s) => s.id ?? 0}
       />
 
       <SemesterFormModal
@@ -402,7 +396,6 @@ export default function ManageSemester() {
         onDelete={handleDeleteSemester}
         title="Delete Semester"
         description="Are you sure you want to delete the semester:"
-        itemName={semesters?.semester}
         isSubmitting={isSubmitting}
       />
     </div>

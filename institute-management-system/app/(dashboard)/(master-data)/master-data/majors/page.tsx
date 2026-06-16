@@ -32,8 +32,8 @@ import {
 } from "@/components/dashboard/master-data/manage-major/major-form-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 
@@ -49,7 +49,6 @@ export default function ManageMajorPage() {
   const [initialData, setInitialData] = useState<MajorFormData | undefined>(
     undefined
   );
-  const searchParams = useSearchParams();
 
   const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
@@ -65,13 +64,6 @@ export default function ManageMajorPage() {
       updateUrlWithPage(1);
     }
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadMajors = useCallback(
     async (param: AllMajorFilterModel) => {
@@ -263,6 +255,11 @@ export default function ManageMajorPage() {
       render: (major) => major.department.name,
     },
     {
+      key: "createdAt",
+      label: "Created At",
+      render: (major) => DateTimeFormatter(major.createdAt),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (major) => (
@@ -354,7 +351,6 @@ export default function ManageMajorPage() {
         onDelete={handleDeleteMajor}
         title="Delete Major"
         description="Are you sure you want to delete the major:"
-        itemName={majors?.name}
         isSubmitting={isSubmitting}
       />
     </div>

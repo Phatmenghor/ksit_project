@@ -8,16 +8,18 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronUp, ChevronDown, Calendar, Filter } from "lucide-react";
+import { ChevronUp, ChevronDown, GraduationCap, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AppIcons } from "@/constants/icons/icon";
 
 interface YearSelectorProps {
   value: number;
   onChange: (year: number) => void;
-  minYear?: number; // Optional minimum year limit
-  maxYear?: number; // Optional maximum year limit
+  minYear?: number;
+  maxYear?: number;
   title?: string;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
 export function YearSelector({
@@ -25,240 +27,210 @@ export function YearSelector({
   onChange,
   minYear = 2020,
   maxYear = 2080,
-  title = "Academy year",
+  title = "Academy Year",
+  placeholder = "Select year",
+  className,
+  disabled = false,
 }: YearSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(
-    value === 0 ? "" : value.toString()
-  );
+  const [inputValue, setInputValue] = useState(value === 0 ? "" : value.toString());
   const [visibleYears, setVisibleYears] = useState<number[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Initialize visible years around the current value
   useEffect(() => {
     setInputValue(value === 0 ? "" : value.toString());
-    const currentYear = value !== 0 ? value : new Date().getFullYear();
-    generateVisibleYears(currentYear);
+    const centerYear = value !== 0 ? value : new Date().getFullYear();
+    generateVisibleYears(centerYear);
   }, [value]);
 
-  // Generate 20 years centered around the specified center year
   const generateVisibleYears = (centerYear: number) => {
-    const years = [];
     const start = Math.max(minYear, centerYear - 10);
     const end = Math.min(maxYear, centerYear + 10);
-
-    for (let year = start; year <= end; year++) {
-      years.push(year);
-    }
+    const years: number[] = [];
+    for (let y = start; y <= end; y++) years.push(y);
     setVisibleYears(years);
   };
 
-  // Load more years when scrolling
   const handleScroll = () => {
     if (!scrollRef.current) return;
-
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
-    const isNearTop = scrollTop <= 50;
 
-    if (isNearBottom) {
-      // Add more years at the end
-      const lastYear = visibleYears[visibleYears.length - 1];
-      if (lastYear < maxYear) {
-        const additionalYears = Array.from(
-          { length: 5 },
-          (_, i) => lastYear + i + 1
-        ).filter((year) => year <= maxYear);
-
-        setVisibleYears([...visibleYears, ...additionalYears]);
+    if (scrollTop + clientHeight >= scrollHeight - 50) {
+      const last = visibleYears[visibleYears.length - 1];
+      if (last < maxYear) {
+        const more = Array.from({ length: 5 }, (_, i) => last + i + 1).filter((y) => y <= maxYear);
+        setVisibleYears((prev) => [...prev, ...more]);
       }
     }
 
-    if (isNearTop) {
-      // Add more years at the beginning
-      const firstYear = visibleYears[0];
-      if (firstYear > minYear) {
-        const additionalYears = Array.from(
-          { length: 5 },
-          (_, i) => firstYear - 5 + i
-        ).filter((year) => year >= minYear);
-
-        setVisibleYears([...additionalYears, ...visibleYears]);
-
-        // Maintain scroll position when adding items at the top
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop += 150;
-        }
+    if (scrollTop <= 50) {
+      const first = visibleYears[0];
+      if (first > minYear) {
+        const more = Array.from({ length: 5 }, (_, i) => first - 5 + i).filter((y) => y >= minYear);
+        setVisibleYears((prev) => [...more, ...prev]);
+        if (scrollRef.current) scrollRef.current.scrollTop += 150;
       }
     }
   };
 
-  // Handle mouse wheel scrolling
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const target = e.currentTarget;
-    target.scrollTop += e.deltaY;
-
-    // Trigger scroll handling for infinite scroll
-    handleScroll();
-  };
-
-  // Handle direct input of a year
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (/^\d*$/.test(newValue)) {
-      // Allow only digits
-      setInputValue(newValue);
-    }
+    if (/^\d*$/.test(e.target.value)) setInputValue(e.target.value);
   };
 
   const handleInputBlur = () => {
-    // If input is empty, keep the current value (including 0 for "no selection")
     if (inputValue.trim() === "") {
       setInputValue(value === 0 ? "" : value.toString());
       return;
     }
-
-    let yearValue = parseInt(inputValue, 10);
-
-    if (isNaN(yearValue)) {
-      // Reset to current value if invalid input
+    let y = parseInt(inputValue, 10);
+    if (isNaN(y)) {
       setInputValue(value === 0 ? "" : value.toString());
       return;
     }
-
-    // Only apply min/max constraints if a valid year was entered
-    if (yearValue < minYear || yearValue > maxYear) {
-      yearValue = Math.max(minYear, Math.min(maxYear, yearValue));
-    }
-
-    setInputValue(yearValue.toString());
-    onChange(yearValue);
-    generateVisibleYears(yearValue);
+    y = Math.max(minYear, Math.min(maxYear, y));
+    setInputValue(y.toString());
+    onChange(y);
+    generateVisibleYears(y);
   };
 
-  // Handle direct selection of a year
   const selectYear = (year: number) => {
     onChange(year);
     setInputValue(year.toString());
     setIsOpen(false);
   };
 
-  // Increment/decrement year buttons
   const incrementYear = () => {
-    if (value < maxYear) {
-      const newYear = value + 1;
-      onChange(newYear);
-      setInputValue(newYear.toString());
-    }
+    if (value < maxYear) { const n = value + 1; onChange(n); setInputValue(n.toString()); }
   };
 
   const decrementYear = () => {
-    if (value > minYear) {
-      const newYear = value - 1;
-      onChange(newYear);
-      setInputValue(newYear.toString());
-    }
+    if (value > minYear) { const n = value - 1; onChange(n); setInputValue(n.toString()); }
+  };
+
+  const clearYear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onChange(0);
+    setInputValue("");
   };
 
   return (
-    <div className="flex items-center w-full">
-      <div className="flex-1">
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={isOpen}
-              className="w-full h-10 justify-between px-4 text-sm"
-            >
-              <div className="flex items-center space-x-2">
-                <img
-                  src={AppIcons.Filter}
-                  alt="Filter Icon"
-                  className="h-4 w-4 mr-2 opacity-70"
-                />
-                {value === 0 ? (
-                  title
-                ) : (
-                  <>
-                    {title}:
-                    <span className="underline underline-offset-1">
-                      {value}
-                    </span>
-                  </>
-                )}
-              </div>
-              <Calendar className="ml-3 h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-
-          <PopoverContent
-            className="w-[var(--radix-popover-trigger-width)] p-0"
-            align="start"
-          >
-            <div className="flex items-center px-2 py-2 gap-1 border-b">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={decrementYear}
-                disabled={value <= minYear}
-              >
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
-
-              <Input
-                value={inputValue}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleInputBlur();
-                    setIsOpen(false);
-                  }
-                }}
-                className="h-7 flex-1 text-center text-sm"
-              />
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={incrementYear}
-                disabled={value >= maxYear}
-              >
-                <ChevronUp className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={isOpen}
+          disabled={disabled}
+          className={cn(
+            "w-full justify-start text-left font-normal h-9 px-3 transition-all duration-200 border-input",
+            value === 0 && "text-muted-foreground",
+            "hover:bg-primary/10 hover:border-primary hover:text-primary",
+            isOpen && "bg-primary/10 border-primary text-primary",
+            disabled && "opacity-50 cursor-not-allowed",
+            className
+          )}
+        >
+          <GraduationCap className="mr-2 h-4 w-4 shrink-0 opacity-60" />
+          <span className="flex-1 truncate text-sm">
+            {value === 0 ? placeholder : `${title}: ${value}`}
+          </span>
+          {value !== 0 && !disabled && (
             <div
-              ref={scrollRef}
-              onScroll={handleScroll}
-              onWheel={handleWheel}
-              className="max-h-52 overflow-y-auto"
+              className="ml-1 h-4 w-4 flex items-center justify-center rounded hover:bg-destructive/10 hover:text-destructive cursor-pointer transition-colors"
+              onClick={clearYear}
+              role="button"
+              tabIndex={0}
+              aria-label="Clear year"
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") clearYear(e as any); }}
             >
-              <div className="grid grid-cols-3 gap-1 p-2">
-                {visibleYears.map((year) => (
-                  <Button
-                    key={year}
-                    variant="ghost"
-                    className={cn(
-                      "h-8 text-sm px-1",
-                      year === value
-                        ? "bg-[#14532D] text-white hover:bg-[#14532D]/90"
-                        : "hover:bg-gray-100"
-                    )}
-                    onClick={() => selectYear(year)}
-                  >
-                    {year}
-                  </Button>
-                ))}
-              </div>
+              <X className="h-3 w-3" />
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </div>
+          )}
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 shadow-lg z-[200]" align="start">
+        {/* Header — input + stepper */}
+        <div className="flex items-center gap-1 px-2 py-2 border-b bg-muted/30">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
+            onClick={decrementYear}
+            disabled={value <= minYear}
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </Button>
+
+          <Input
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleInputBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { handleInputBlur(); setIsOpen(false); }
+            }}
+            className="h-7 flex-1 text-center text-sm focus-visible:ring-primary/30 focus-visible:border-primary"
+            placeholder="Year"
+          />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
+            onClick={incrementYear}
+            disabled={value >= maxYear}
+          >
+            <ChevronUp className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+
+        {/* Year grid */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="max-h-52 overflow-y-auto"
+        >
+          <div className="grid grid-cols-3 gap-1 p-2">
+            {visibleYears.map((year) => (
+              <Button
+                key={year}
+                variant="ghost"
+                size="sm"
+                onClick={() => selectYear(year)}
+                className={cn(
+                  "h-8 text-xs font-medium transition-all",
+                  year === value
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                    : "hover:bg-primary/10 hover:text-primary"
+                )}
+              >
+                {year}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer — current year shortcut */}
+        <div className="p-2 border-t bg-muted/30 flex gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => selectYear(new Date().getFullYear())}
+            className="flex-1 h-7 text-xs hover:bg-primary/10 hover:border-primary hover:text-primary transition-colors"
+          >
+            This Year
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(false)}
+            className="flex-1 h-7 text-xs hover:bg-muted"
+          >
+            Close
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

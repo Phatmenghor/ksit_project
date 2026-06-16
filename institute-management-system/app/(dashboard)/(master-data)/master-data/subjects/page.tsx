@@ -30,8 +30,8 @@ import {
 } from "@/service/master-data/subject.service";
 import { SubjectModal } from "@/components/dashboard/master-data/manage-subject/subject-form-model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 
@@ -49,7 +49,6 @@ export default function ManageSubjectPage() {
   const [initialData, setInitialData] = useState<SubjectFormData | undefined>(
     undefined
   );
-  const searchParams = useSearchParams();
 
   const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
@@ -65,13 +64,6 @@ export default function ManageSubjectPage() {
       updateUrlWithPage(1);
     }
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadSubjects = useCallback(
     async (param: AllSubjectFilterModel) => {
@@ -249,6 +241,11 @@ export default function ManageSubjectPage() {
       render: (s) => s.name,
     },
     {
+      key: "createdAt",
+      label: "Created At",
+      render: (s) => DateTimeFormatter(s.createdAt),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (s) => (
@@ -341,7 +338,6 @@ export default function ManageSubjectPage() {
         onDelete={handleDeleteSubject}
         title="Delete Subject"
         description="Are you sure you want to delete the subject:"
-        itemName={subject?.name}
         isSubmitting={isSubmitting}
       />
     </div>

@@ -23,7 +23,8 @@ import {
 } from "@/service/master-data/course.service";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { ComboboxSelectDepartment } from "@/components/shared/ComboBox/combobox-department";
 import { DepartmentModel } from "@/model/master-data/department/all-department-model";
@@ -47,8 +48,6 @@ export default function CoursesPage() {
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentModel | null>(null);
 
-  const searchParams = useSearchParams();
-
   const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.COURSES.INDEX,
@@ -63,13 +62,6 @@ export default function CoursesPage() {
       updateUrlWithPage(1);
     }
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadCourses = useCallback(
     async (param: AllCourseFilterModel) => {
@@ -196,6 +188,11 @@ export default function CoursesPage() {
           : course?.user?.username || "---",
     },
     {
+      key: "createdAt",
+      label: "Created At",
+      render: (course) => DateTimeFormatter(course.createdAt),
+    },
+    {
       key: "actions",
       label: "Actions",
       render: (course) => (
@@ -310,7 +307,6 @@ export default function CoursesPage() {
         onDelete={handleDeleteClass}
         title="Delete Course"
         description="Are you sure you want to delete the course:"
-        itemName={selectedCourse?.nameEn || "Unknown Course"}
         isSubmitting={isSubmitting}
       />
     </div>

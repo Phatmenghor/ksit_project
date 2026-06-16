@@ -8,7 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { XCircle } from "lucide-react";
+import { XCircle, X, Loader2 } from "lucide-react";
 import { FormHeader } from "@/components/shared/form-field/form-header";
 import { FormBody } from "@/components/shared/form-field/form-body";
 import { FormFooter } from "@/components/shared/form-field/form-footer";
@@ -72,8 +72,12 @@ export function ConfirmRejectModal({ open, onOpenChange, onConfirm }: ConfirmRej
               )} />
             </FormBody>
             <FormFooter>
-              <Button type="button" variant="outline" onClick={handleDiscard} disabled={isSubmitting}>Discard</Button>
-              <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white" disabled={isSubmitting}>
+              <Button type="button" variant="outline" size="sm" onClick={handleDiscard} disabled={isSubmitting} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+                <X className="h-3.5 w-3.5" />
+                Discard
+              </Button>
+              <Button type="submit" size="sm" className="h-9 px-4 gap-1.5 bg-red-600 hover:bg-red-700 text-white" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
                 {isSubmitting ? "Submitting..." : "Reject"}
               </Button>
             </FormFooter>

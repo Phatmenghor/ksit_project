@@ -545,7 +545,6 @@ export default function StudentsListPage() {
         onDelete={handleDeleteStudent}
         title="Delete Student"
         description={`Are you sure you want to delete the student: ${selectedStudent?.username}?`}
-        itemName={selectedStudent?.username}
         isSubmitting={isSubmitting}
       />
     </div>

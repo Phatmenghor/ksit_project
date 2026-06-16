@@ -8,7 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, X, Loader2 } from "lucide-react";
 import { FormHeader } from "@/components/shared/form-field/form-header";
 import { FormBody } from "@/components/shared/form-field/form-body";
 import { FormFooter } from "@/components/shared/form-field/form-footer";
@@ -73,8 +73,12 @@ export function ConfirmReturnModal({ open, onOpenChange, onConfirm }: ConfirmRet
               )} />
             </FormBody>
             <FormFooter>
-              <Button type="button" variant="outline" onClick={handleDiscard} disabled={isSubmitting}>Discard</Button>
-              <Button type="submit" className="bg-orange-500 hover:bg-orange-600 text-white" disabled={isSubmitting}>
+              <Button type="button" variant="outline" size="sm" onClick={handleDiscard} disabled={isSubmitting} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+                <X className="h-3.5 w-3.5" />
+                Discard
+              </Button>
+              <Button type="submit" size="sm" className="h-9 px-4 gap-1.5 bg-orange-500 hover:bg-orange-600 text-white" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                 {isSubmitting ? "Returning..." : "Return"}
               </Button>
             </FormFooter>

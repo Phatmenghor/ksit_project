@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X, Check } from "lucide-react";
 import { FormHeader } from "./form-field/form-header";
 import { FormBody } from "./form-field/form-body";
 import { FormFooter } from "./form-field/form-footer";
@@ -46,13 +46,12 @@ export function ConfirmDialog({
           <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
         </FormBody>
         <FormFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+            <X className="h-3.5 w-3.5" />
             {cancelText}
           </Button>
-          <Button
-            className={cfg.btn}
-            onClick={() => { onConfirm(); onOpenChange(false); }}
-          >
+          <Button size="sm" className={`h-9 px-4 gap-1.5 ${cfg.btn}`} onClick={() => { onConfirm(); onOpenChange(false); }}>
+            <Check className="h-3.5 w-3.5" />
             {confirmText}
           </Button>
         </FormFooter>

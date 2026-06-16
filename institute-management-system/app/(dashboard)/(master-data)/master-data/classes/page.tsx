@@ -12,13 +12,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
-import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
 import {
   createClassService,
   deleteClassService,
   getAllClassService,
   updateClassService,
 } from "@/service/master-data/class.service";
+import { AllClassFilterModel } from "@/model/master-data/class/type-class-model";
 import { Constants } from "@/constants/text-string";
 import {
   AllClassModel,
@@ -33,11 +33,11 @@ import {
 import { DegreeEnum } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
-import { useSearchParams } from "next/navigation";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { AcademyYearPicker } from "@/components/shared/academy-year-picker";
 
 export default function ManageClassPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -48,10 +48,9 @@ export default function ManageClassPage() {
   const [allClassData, setAllClassData] = useState<AllClassModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState<number>(0);
   const [selectedMajor, setSelectedMajor] = useState<MajorModel | null>(null);
   const [initialData, setInitialData] = useState<ClassFormData | undefined>(undefined);
-  const searchParams = useSearchParams();
 
   const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
     usePagination({ baseRoute: ROUTE.MASTER_DATA.MANAGE_CLASS, defaultPageSize: 10 });
@@ -63,13 +62,8 @@ export default function ManageClassPage() {
     if (currentPage !== 1) updateUrlWithPage(1);
   };
 
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) updateUrlWithPage(1, true);
-  }, [searchParams, updateUrlWithPage]);
-
   const loadClass = useCallback(
-    async (param: AllMajorFilterModel = {}) => {
+    async (param: AllClassFilterModel = {}) => {
       setIsLoading(true);
       try {
         const response = await getAllClassService({
@@ -78,10 +72,12 @@ export default function ManageClassPage() {
           majorId: selectedMajor?.id,
           pageNo: currentPage,
           pageSize: 30,
-          academyYear: selectedYear,
+          academyYear: selectedYear || undefined,
           ...param,
         });
+        console.log("[Classes] API response:", response);
         if (response) {
+          console.log("[Classes] content length:", response?.content?.length, "totalElements:", response?.totalElements);
           setAllClassData(response);
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
@@ -285,11 +281,27 @@ export default function ManageClassPage() {
                 </div>
               ),
             },
-            { id: "year", type: "year", label: "Academy Year", value: selectedYear, onChange: setSelectedYear },
+            {
+              id: "year",
+              type: "custom",
+              label: "Academy Year",
+              value: selectedYear,
+              onChange: (v) => setSelectedYear(v as number),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Academy Year</label>
+                  <AcademyYearPicker
+                    value={value as number ?? 0}
+                    onChange={(y) => onChange(y)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ),
+            },
           ],
           onClearAll: () => {
             setSelectedMajor(null);
-            setSelectedYear(new Date().getFullYear());
+            setSelectedYear(0);
             setSearchQuery("");
           },
         }}
@@ -323,7 +335,6 @@ export default function ManageClassPage() {
         onDelete={handleDeleteClass}
         title="Delete Class"
         description={`Are you sure you want to delete the class: ${selectedClass?.code}?`}
-        itemName={selectedClass?.code}
         isSubmitting={isSubmitting}
       />
     </div>

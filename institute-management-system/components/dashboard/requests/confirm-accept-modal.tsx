@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, X } from "lucide-react";
 import { FormHeader } from "@/components/shared/form-field/form-header";
 import { FormBody } from "@/components/shared/form-field/form-body";
 import { FormFooter } from "@/components/shared/form-field/form-footer";
@@ -29,8 +29,14 @@ export function ConfirmAcceptModal({ open, onOpenChange, onConfirm }: ConfirmAcc
           </p>
         </FormBody>
         <FormFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Discard</Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => { onConfirm(); onOpenChange(false); }}>Accept</Button>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+            <X className="h-3.5 w-3.5" />
+            Discard
+          </Button>
+          <Button size="sm" className="h-9 px-4 gap-1.5 bg-green-600 hover:bg-green-700 text-white" onClick={() => { onConfirm(); onOpenChange(false); }}>
+            <CheckCircle className="h-3.5 w-3.5" />
+            Accept
+          </Button>
         </FormFooter>
       </DialogContent>
     </Dialog>

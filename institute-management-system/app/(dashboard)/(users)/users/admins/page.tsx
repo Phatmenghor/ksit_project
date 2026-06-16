@@ -406,7 +406,6 @@ export default function AdminsListPage() {
         onDelete={handleDeleteAdmin}
         title="Delete Admin"
         description={`Are you sure you want to delete the admin: ${selectedAdmin?.username}?`}
-        itemName={selectedAdmin?.username}
         isSubmitting={isSubmitting}
       />
     </div>

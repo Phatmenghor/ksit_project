@@ -63,7 +63,7 @@ export function SelectField<T extends FieldValues = FieldValues>({
                   />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[200]">
                 <div className="max-h-60 overflow-y-auto">
                   {options.map((option) => (
                     <button

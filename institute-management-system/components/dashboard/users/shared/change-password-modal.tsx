@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { KeyRound, CheckCircle2 } from "lucide-react";
+import { KeyRound, CheckCircle2, X, Loader2 } from "lucide-react";
 import { AdminChangePasswordService } from "@/service/auth/auth.service";
 import { FormHeader } from "@/components/shared/form-field/form-header";
 import { FormBody } from "@/components/shared/form-field/form-body";
@@ -57,7 +57,8 @@ export default function ResetPasswordModal({
               </p>
             </FormBody>
             <FormFooter>
-              <Button type="button" onClick={handleClose} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button type="button" size="sm" onClick={handleClose} className="h-9 px-6 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
+                <CheckCircle2 className="h-3.5 w-3.5" />
                 Okay
               </Button>
             </FormFooter>
@@ -81,15 +82,12 @@ export default function ResetPasswordModal({
               </div>
             </FormBody>
             <FormFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+              <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+                <X className="h-3.5 w-3.5" />
                 Discard
               </Button>
-              <Button
-                type="button"
-                onClick={onReset}
-                disabled={isSubmitting}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white"
-              >
+              <Button type="button" size="sm" onClick={onReset} disabled={isSubmitting} className="h-9 px-4 gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-white">
+                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
                 {isSubmitting ? "Resetting..." : "Reset Password"}
               </Button>
             </FormFooter>

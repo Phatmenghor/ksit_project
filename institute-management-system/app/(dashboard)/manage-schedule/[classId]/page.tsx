@@ -484,7 +484,6 @@ const AllSchedulePage = () => {
               </>
             )
           }
-          itemName={selectedSchedule?.classes.code}
           isSubmitting={isSubmitting}
         />
 

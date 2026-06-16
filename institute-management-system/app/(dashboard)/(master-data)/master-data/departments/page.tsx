@@ -45,7 +45,6 @@ import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmatio
 import { baseAPI } from "@/constants/api";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
-import { useSearchParams } from "next/navigation";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 
@@ -62,7 +61,6 @@ export default function ManageDepartmentPage() {
   const [initialData, setInitialData] = useState<
     DepartmentFormData | undefined
   >(undefined);
-  const searchParams = useSearchParams();
 
   const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
@@ -78,13 +76,6 @@ export default function ManageDepartmentPage() {
       updateUrlWithPage(1);
     }
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadDepartments = useCallback(
     async (param: AllDepartmentFilterModel) => {
@@ -401,7 +392,6 @@ export default function ManageDepartmentPage() {
         onDelete={handleDeleteDepartment}
         title="Delete Department"
         description="Are you sure you want to delete the department:"
-        itemName={department?.name}
         isSubmitting={isSubmitting}
       />
     </div>

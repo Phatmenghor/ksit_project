@@ -12,7 +12,7 @@ import { duplicateScheduleService } from "@/service/schedule/schedule.service";
 import { DuplicateScheduleResponse } from "@/model/attendance/schedule/schedule-model";
 import { SemesterModel } from "@/model/master-data/semester/semester-model";
 import { getAllSemesterService } from "@/service/master-data/semester.service";
-import { Copy, Loader2 } from "lucide-react";
+import { Copy, Loader2, X } from "lucide-react";
 import { FormHeader } from "@/components/shared/form-field/form-header";
 import { FormBody } from "@/components/shared/form-field/form-body";
 import { FormFooter } from "@/components/shared/form-field/form-footer";
@@ -143,9 +143,12 @@ export default function DuplicateScheduleModal({ isOpen, onOpenChange, sources, 
         </FormBody>
 
         <FormFooter>
-          <Button variant="outline" onClick={handleDiscard} disabled={isSubmitting}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button variant="outline" size="sm" onClick={handleDiscard} disabled={isSubmitting} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+            <X className="h-3.5 w-3.5" />
+            Cancel
+          </Button>
+          <Button size="sm" onClick={handleSave} disabled={isSubmitting} className="h-9 px-4 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
+            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
             {isSubmitting ? "Duplicating..." : "Duplicate Schedule"}
           </Button>
         </FormFooter>

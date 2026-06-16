@@ -149,8 +149,10 @@ public class ClassServiceImpl implements ClassService {
 
     @Override
     public CustomPaginationResponseDto<ClassResponseDto> getAllClasses(ClassFilterDto filterDto) {
+        log.info("getAllClasses | filter: search='{}', academyYear={}, status={}, majorId={}, page={}, size={}",
+                filterDto.getSearch(), filterDto.getAcademyYear(), filterDto.getStatus(),
+                filterDto.getMajorId(), filterDto.getPageNo(), filterDto.getPageSize());
 
-        // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),
                 filterDto.getPageSize(),
@@ -158,7 +160,6 @@ public class ClassServiceImpl implements ClassService {
                 "DESC"
         );
 
-        // Create specification from filter criteria
         Specification<ClassEntity> spec = ClassSpecification.combine(
                 filterDto.getSearch(),
                 filterDto.getAcademyYear(),
@@ -166,21 +167,23 @@ public class ClassServiceImpl implements ClassService {
                 filterDto.getMajorId()
         );
 
-        // Execute query with specification and pagination
         Page<ClassEntity> classPage = classRepository.findAll(spec, pageable);
+        log.info("getAllClasses | result: totalElements={}, totalPages={}, currentPage={}",
+                classPage.getTotalElements(), classPage.getTotalPages(), classPage.getNumber() + 1);
 
-        // Map to response DTO
         CustomPaginationResponseDto<ClassResponseDto> response = classMapper.toClassAllResponseDto(classPage);
-
         return response;
     }
 
     @Override
     public CustomPaginationResponseDto<ClassResponseDto> getMyClasses(ClassFilterDto filterDto) {
-
         UserEntity currentUser = securityUtils.getCurrentUser();
+        log.info("getMyClasses | user='{}', roles={} | filter: search='{}', academyYear={}, status={}, majorId={}, page={}, size={}",
+                currentUser != null ? currentUser.getUsername() : "null",
+                currentUser != null ? currentUser.getRoles().stream().map(r -> r.getName().name()).toList() : "[]",
+                filterDto.getSearch(), filterDto.getAcademyYear(), filterDto.getStatus(),
+                filterDto.getMajorId(), filterDto.getPageNo(), filterDto.getPageSize());
 
-        // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),
                 filterDto.getPageSize(),
@@ -188,7 +191,6 @@ public class ClassServiceImpl implements ClassService {
                 "DESC"
         );
 
-        // Use the enhanced specification with role-based filtering
         Specification<ClassEntity> spec = ClassSpecification.combineWithUserRole(
                 filterDto.getSearch(),
                 filterDto.getAcademyYear(),
@@ -197,12 +199,11 @@ public class ClassServiceImpl implements ClassService {
                 currentUser
         );
 
-        // Execute query with specification and pagination
         Page<ClassEntity> classPage = classRepository.findAll(spec, pageable);
+        log.info("getMyClasses | result: totalElements={}, totalPages={}, currentPage={}",
+                classPage.getTotalElements(), classPage.getTotalPages(), classPage.getNumber() + 1);
 
-        // Map to response DTO
         CustomPaginationResponseDto<ClassResponseDto> response = classMapper.toClassAllResponseDto(classPage);
-
         return response;
     }
 

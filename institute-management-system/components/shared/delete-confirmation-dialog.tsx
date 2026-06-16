@@ -13,7 +13,6 @@ interface DeleteConfirmationDialogProps {
   onDelete: () => Promise<void>;
   title: string;
   description: React.ReactNode;
-  itemName?: string;
   isSubmitting: boolean;
 }
 
@@ -23,7 +22,6 @@ export function DeleteConfirmationDialog({
   onDelete,
   title,
   description,
-  itemName,
   isSubmitting,
 }: DeleteConfirmationDialogProps) {
   return (
@@ -41,7 +39,6 @@ export function DeleteConfirmationDialog({
             <p className="text-sm text-red-800 font-medium">Are you sure you want to delete?</p>
             <p className="text-sm text-red-700">
               {description}
-              {itemName && <strong className="ml-1">{itemName}</strong>}
             </p>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -50,26 +47,17 @@ export function DeleteConfirmationDialog({
         </FormBody>
 
         <FormFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" size="sm" onClick={onClose} disabled={isSubmitting} className="h-9 px-4 text-muted-foreground hover:text-foreground border-border/60">
             Cancel
           </Button>
           <Button
-            variant="destructive"
+            size="sm"
             onClick={onDelete}
             disabled={isSubmitting}
-            className="bg-red-500 hover:bg-red-600"
+            className="h-9 px-4 bg-red-500 hover:bg-red-600 text-white"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Deleting...
-              </>
-            ) : (
-              <>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </>
-            )}
+            {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+            {isSubmitting ? "Deleting..." : "Delete"}
           </Button>
         </FormFooter>
       </DialogContent>

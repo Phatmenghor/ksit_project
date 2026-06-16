@@ -29,7 +29,8 @@ export function RequestCompletedModal({ open, onOpenChange, onConfirm }: Request
           </p>
         </FormBody>
         <FormFooter>
-          <Button className="bg-green-600 hover:bg-green-700 text-white px-8" onClick={() => { onConfirm(); onOpenChange(false); }}>
+          <Button size="sm" className="h-9 px-6 gap-1.5 bg-green-600 hover:bg-green-700 text-white" onClick={() => { onConfirm(); onOpenChange(false); }}>
+            <CheckCircle className="h-3.5 w-3.5" />
             Okay
           </Button>
         </FormFooter>

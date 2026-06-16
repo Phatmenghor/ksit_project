@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, ChevronDown, Search, CalendarIcon, X, SlidersHorizontal } from "lucide-react";
+import { Plus, Search, CalendarIcon, X } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FilterConfig, FilterPanelConfig } from "./filter-types";
@@ -104,7 +103,7 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 z-[200]" align="start">
               <Calendar
                 mode="single"
                 selected={isValidDate ? dateVal : undefined}
@@ -163,25 +162,12 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
 
 interface CollapsibleFilterPanelProps {
   config: FilterPanelConfig;
-  essentialFilterIds?: string[];
+  essentialFilterIds?: string[];  // kept for backwards-compat, no longer used
 }
 
 export function CollapsibleFilterPanel({
   config,
-  essentialFilterIds = [],
 }: CollapsibleFilterPanelProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
-  const allEssential = config.filters.filter((f) => essentialFilterIds.includes(f.id));
-  // Show max 2 essential filters inline; overflow goes into "More Filters"
-  const inlineFilters = allEssential.slice(0, 2);
-  const overflowFilters = allEssential.slice(2);
-  const advancedFilters = [
-    ...overflowFilters,
-    ...config.filters.filter((f) => !essentialFilterIds.includes(f.id)),
-  ];
-
-  const advancedActiveCount = advancedFilters.filter(isFilterActive).length;
   const anyFilterActive = config.filters.some(isFilterActive);
 
   return (
@@ -210,12 +196,11 @@ export function CollapsibleFilterPanel({
           </div>
         </div>
 
-        {/* Row 2: CSS Grid — search fixed left, filters pinned right */}
-        <div className="flex flex-col gap-2 sm:grid sm:items-end sm:gap-2"
-          style={{ gridTemplateColumns: "320px 1fr" }}>
+        {/* Filters row: search left, filters right, wrap one-by-one when no space */}
+        <div className="flex flex-wrap items-end gap-2">
 
-          {/* Col 1: Search — grid locks it to 220px, can never expand */}
-          <div className="relative">
+          {/* Search: pinned left via mr-auto, won't shrink below min-width */}
+          <div className="relative shrink-0 min-w-[300px] w-[300px] mr-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               type="search"
@@ -226,68 +211,30 @@ export function CollapsibleFilterPanel({
             />
           </div>
 
-          {/* Col 2: Filters + clear — fill remaining space, align right */}
-          {(inlineFilters.length > 0 || (anyFilterActive && config.onClearAll)) ? (
-            <div className="flex flex-wrap sm:flex-nowrap sm:justify-end items-end gap-2">
-              {inlineFilters.map((filter) => (
-                <div key={filter.id} className="w-full sm:w-[200px] shrink-0">
-                  {renderFilter(filter)}
-                </div>
-              ))}
-              {anyFilterActive && config.onClearAll && (
-                <button
-                  type="button"
-                  onClick={config.onClearAll}
-                  title="Clear all filters"
-                  className={cn(
-                    "h-9 w-9 shrink-0 self-end flex items-center justify-center rounded-md border",
-                    "border-red-200 bg-red-50 text-red-400",
-                    "hover:bg-red-100 hover:border-red-400 hover:text-red-600",
-                    "transition-colors"
-                  )}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+          {/* Each filter: grows to fill row, wraps when below min-width */}
+          {config.filters.map((filter) => (
+            <div key={filter.id} className="flex-1 min-w-[150px] max-w-[200px]">
+              {renderFilter(filter)}
             </div>
-          ) : <div />}
-        </div>
+          ))}
 
-        {/* Row 3: More / advanced filters (collapsible) */}
-        {advancedFilters.length > 0 && (
-          <div className="border-t pt-3">
+          {/* Clear — sticks to end of whichever row it lands on */}
+          {anyFilterActive && config.onClearAll && (
             <button
               type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-foreground/60 hover:text-foreground transition-colors"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              More Filters
-              {advancedActiveCount > 0 && (
-                <Badge className="text-[10px] bg-primary/10 text-primary border border-primary/20 font-medium px-1.5 py-0">
-                  {advancedActiveCount} active
-                </Badge>
+              onClick={config.onClearAll}
+              title="Clear all filters"
+              className={cn(
+                "h-9 w-9 shrink-0 self-end flex items-center justify-center rounded-md border",
+                "border-red-200 bg-red-50 text-red-400",
+                "hover:bg-red-100 hover:border-red-400 hover:text-red-600",
+                "transition-colors"
               )}
-              <ChevronDown
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-200",
-                  showAdvanced && "rotate-180"
-                )}
-              />
+            >
+              <X className="h-4 w-4" />
             </button>
-
-            {showAdvanced && (
-              <div className="mt-3 pt-3 border-t border-dashed">
-                <div
-                  className="grid gap-3 w-full"
-                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
-                >
-                  {advancedFilters.map((filter) => renderFilter(filter))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
