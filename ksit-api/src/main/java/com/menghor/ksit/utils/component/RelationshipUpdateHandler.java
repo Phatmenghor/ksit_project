@@ -79,12 +79,6 @@ public class RelationshipUpdateHandler {
         final Map<Long, D> validRequestedDtos = new HashMap<>();
         final List<D> itemsToCreate = new ArrayList<>();
         
-        // Log all requested IDs for debugging
-        List<Long> allRequestedIds = updateDtos.stream()
-                .map(getDtoId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        
         for (D dto : updateDtos) {
             Long dtoId = getDtoId.apply(dto);
             
@@ -106,52 +100,33 @@ public class RelationshipUpdateHandler {
         idsToDelete.removeAll(validRequestedIds);
         
         
-        // Step 1: Delete items not in request (MOST IMPORTANT FIX)
+        // Step 1: Delete items not in request
         if (!idsToDelete.isEmpty()) {
             final List<T> entitiesToDelete = idsToDelete.stream()
                     .map(existingEntityMap::get)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
-            
-            
-            // CRITICAL FIX: Delete one by one with immediate flush to ensure deletion
-            for (T entityToDelete : entitiesToDelete) {
-                Long deleteId = getEntityId(entityToDelete);
-                repository.delete(entityToDelete);
-                repository.flush(); // Immediate flush for each deletion
-            }
-            
-            // Clear entity manager to ensure deletions are committed
+            repository.deleteAll(entitiesToDelete);
+            repository.flush();
             entityManager.clear();
-            
-            // Verify deletion by reloading
-            List<T> remainingItems = loadExistingItemsFromDatabase(parent.getId(), relationshipName);
-            Set<Long> remainingIds = remainingItems.stream()
-                    .map(this::getEntityId)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
         }
-        
+
         // Step 2: Update existing items
         int updatedCount = 0;
         for (Map.Entry<Long, D> entry : validRequestedDtos.entrySet()) {
             Long id = entry.getKey();
             D dto = entry.getValue();
-            
-            // Reload the entity to ensure we have the latest state
-            Optional<T> reloadedEntityOpt = repository.findById(id);
-            if (reloadedEntityOpt.isPresent()) {
-                T existingEntity = reloadedEntityOpt.get();
+            T existingEntity = existingEntityMap.get(id);
+            if (existingEntity != null) {
                 updateEntity.accept(dto, existingEntity);
                 repository.save(existingEntity);
                 updatedCount++;
             } else {
-                log.warn("Entity with ID {} not found for update, will create new instead", id);
                 itemsToCreate.add(dto);
             }
         }
         repository.flush();
-        
+
         // Step 3: Create new items
         final List<T> newEntities = new ArrayList<>();
         for (D dto : itemsToCreate) {
@@ -160,22 +135,7 @@ public class RelationshipUpdateHandler {
             newEntities.add(savedEntity);
         }
         repository.flush();
-        
-        // Final verification
-        entityManager.clear(); // Clear to ensure fresh data
-        List<T> finalItems = loadExistingItemsFromDatabase(parent.getId(), relationshipName);
-        Set<Long> finalIds = finalItems.stream()
-                .map(this::getEntityId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        
-        
-        // Verify the result matches expectations
-        Set<Long> expectedFinalIds = new HashSet<>(validRequestedIds);
-        if (!finalIds.equals(expectedFinalIds)) {
-            log.error("MISMATCH: Expected IDs {} but found {}", expectedFinalIds, finalIds);
-        } else {
-        }
+        entityManager.clear();
     }
 
     /**
