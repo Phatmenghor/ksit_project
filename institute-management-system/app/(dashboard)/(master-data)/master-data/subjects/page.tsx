@@ -211,8 +211,6 @@ export default function ManageSubjectPage() {
           currentPage > 1
         ) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadSubjects({});
         }
       } else {
         toast.error("Failed to delete subject");

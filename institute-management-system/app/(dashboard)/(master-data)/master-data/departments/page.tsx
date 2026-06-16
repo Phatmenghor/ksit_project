@@ -226,8 +226,6 @@ export default function ManageDepartmentPage() {
           currentPage > 1
         ) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadDepartments({});
         }
       } else {
         toast.error("Failed to delete department");

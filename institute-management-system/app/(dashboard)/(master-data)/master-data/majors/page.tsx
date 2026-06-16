@@ -213,8 +213,6 @@ export default function ManageMajorPage() {
           currentPage > 1
         ) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadMajors({});
         }
       } else {
         toast.error("Failed to delete major");

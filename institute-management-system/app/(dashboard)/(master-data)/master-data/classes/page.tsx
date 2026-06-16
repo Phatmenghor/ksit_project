@@ -134,8 +134,6 @@ export default function ManageClassPage() {
         toast.success(`Class ${selectedClass.code} deleted successfully`);
         if (allClassData && allClassData.content.length === 1 && currentPage > 1) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadClass({});
         }
       } else {
         setAllClassData(originalData);
@@ -169,7 +167,6 @@ export default function ManageClassPage() {
               prev ? { ...prev, content: [response, ...prev.content], totalElements: prev.totalElements + 1 } : null
             );
             toast.success(`Class ${response.code} added successfully`);
-            await loadClass({});
             setIsModalOpen(false);
           }
         } catch (error: any) {

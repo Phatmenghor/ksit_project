@@ -213,8 +213,6 @@ export default function ManageRoomPage() {
           currentPage > 1
         ) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadRooms({});
         }
       } else {
         toast.error("Failed to delete Room");

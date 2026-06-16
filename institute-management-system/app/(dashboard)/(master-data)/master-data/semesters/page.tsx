@@ -219,8 +219,6 @@ export default function ManageSemester() {
           currentPage > 1
         ) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadSemester({});
         }
       } else {
         toast.error("Failed to delete semester");

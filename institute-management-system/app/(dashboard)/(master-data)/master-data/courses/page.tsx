@@ -124,8 +124,6 @@ export default function CoursesPage() {
           currentPage > 1
         ) {
           updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadCourses({});
         }
       } else {
         setAllCourseData(originalData);
