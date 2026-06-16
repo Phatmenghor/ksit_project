@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface UsePaginationOptions {
@@ -51,13 +51,6 @@ export function usePagination({
     [searchParams, router, baseRoute]
   );
 
-  // Initialize URL with pageNo=1 if no page parameter exists
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   // Page change handler with validation - now only takes newPage
   const handlePageChange = useCallback(

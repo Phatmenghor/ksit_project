@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { DetialCourseModel } from "@/model/master-data/course/type-course-model";
@@ -17,17 +17,14 @@ export default function CourseDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const courseId = params?.id ? Number(params.id) : null;
 
-  const fetchCourseData = useCallback(async () => {
+  useEffect(() => {
     if (!courseId) return;
-    try {
-      setIsLoading(true);
-      const data = await DetailCourseService(courseId);
-      if (data) setCourseData(data);
-    } catch {}
-    finally { setIsLoading(false); }
+    setIsLoading(true);
+    DetailCourseService(courseId)
+      .then((data) => { if (data) setCourseData(data); })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, [courseId]);
-
-  useEffect(() => { fetchCourseData(); }, [fetchCourseData]);
 
   if (isLoading) {
     return (

@@ -157,9 +157,7 @@ export default function CoursesPage() {
     {
       key: "code",
       label: "Code",
-      render: (course) => (
-        <span className="rounded bg-gray-100 px-2 py-1">{course?.code || "---"}</span>
-      ),
+      render: (course) => course?.code || "—",
     },
     {
       key: "nameKH",
