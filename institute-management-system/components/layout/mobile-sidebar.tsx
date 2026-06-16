@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
-import { useMenu } from "@/context/menu-context";
+import { useMenu } from "@/hooks/use-menu";
 
 interface MobileSidebarProps {
   isOpen: boolean;

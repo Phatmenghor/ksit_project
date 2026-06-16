@@ -1,12 +1,3 @@
-"use client";
-
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
 import { getAccessibleMenuService } from "@/service/menu/menu.service";
 import {
   AllMenuModel,
@@ -65,14 +56,13 @@ function getIconFromCode(code: string, title: string): string {
 }
 
 function transformMenuToRoutes(menuData: AllMenuModel[]): SidebarRoute[] {
-  const routes: SidebarRoute[] = menuData
+  const routes = menuData
     .filter((menu) => menu.canView)
     .map((menu) => {
       const route: SidebarRoute = {
         title: menu.title,
         image: getIconFromCode(menu.code, menu.title),
       };
-
       if (menu.children && menu.children.length > 0) {
         route.section = menu.code;
         route.subroutes = menu.children
@@ -85,7 +75,6 @@ function transformMenuToRoutes(menuData: AllMenuModel[]): SidebarRoute[] {
       } else {
         route.href = menu.route || "#";
       }
-
       return route;
     });
 
@@ -96,33 +85,36 @@ function transformMenuToRoutes(menuData: AllMenuModel[]): SidebarRoute[] {
   });
 }
 
-interface MenuContextType {
-  transformedRoutes: SidebarRoute[];
+// Module-level singleton — shared across all components, no provider needed
+let routes: SidebarRoute[] = [];
+let fetchStarted = false;
+const listeners = new Set<() => void>();
+
+function notify() {
+  listeners.forEach((l) => l());
 }
 
-const MenuContext = createContext<MenuContextType>({ transformedRoutes: [] });
-
-export function MenuProvider({ children }: { children: ReactNode }) {
-  const [transformedRoutes, setTransformedRoutes] = useState<SidebarRoute[]>(
-    []
-  );
-
-  useEffect(() => {
-    getAccessibleMenuService()
-      .then((response) => {
-        const menuData = Array.isArray(response) ? response : response.data;
-        setTransformedRoutes(transformMenuToRoutes(menuData));
-      })
-      .catch(() => {});
-  }, []);
-
-  return (
-    <MenuContext.Provider value={{ transformedRoutes }}>
-      {children}
-    </MenuContext.Provider>
-  );
+export function subscribeMenu(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
-export function useMenu() {
-  return useContext(MenuContext);
+export function getMenuRoutes(): SidebarRoute[] {
+  return routes;
+}
+
+export function loadMenu(): void {
+  if (fetchStarted) return;
+  fetchStarted = true;
+  getAccessibleMenuService()
+    .then((response) => {
+      const menuData = Array.isArray(response) ? response : response.data;
+      routes = transformMenuToRoutes(menuData);
+      notify();
+    })
+    .catch(() => {
+      fetchStarted = false; // allow retry on error
+    });
 }

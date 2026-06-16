@@ -30,7 +30,7 @@ import { MobileSidebar } from "./mobile-sidebar";
 import { RoleEnum } from "@/constants/constant";
 import Image from "next/image";
 import { AppIcons, AppResource } from "@/constants/icons/icon";
-import { useCurrentUser } from "@/context/user-context";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 export function Header() {
   const isMobile = useIsMobile();
