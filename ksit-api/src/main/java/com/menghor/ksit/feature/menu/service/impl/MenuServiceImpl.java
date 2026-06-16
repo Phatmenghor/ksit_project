@@ -19,6 +19,8 @@ import com.menghor.ksit.utils.component.MenuPermissionConfig;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -251,22 +253,34 @@ public class MenuServiceImpl implements MenuService {
     }
 
     private void assignNewMenuToAllUsers(MenuItemEntity newMenu) {
-        List<UserEntity> allUsers = userRepository.findAll();
+        int pageSize = 500;
+        int pageNo = 0;
         List<MenuPermissionEntity> permissions = new ArrayList<>();
 
-        for (UserEntity user : allUsers) {
-            Set<RoleEnum> roles = user.getRoles().stream()
-                    .map(Role::getName)
-                    .collect(Collectors.toSet());
-            MenuPermissionEntity perm = new MenuPermissionEntity();
-            perm.setUser(user);
-            perm.setMenuItem(newMenu);
-            perm.setCanView(menuPermissionConfig.hasAnyRoleAccess(newMenu.getCode(), roles));
-            perm.setDisplayOrder(newMenu.getDisplayOrder());
-            perm.setStatus(Status.ACTIVE);
-            permissions.add(perm);
+        Page<UserEntity> page;
+        do {
+            page = userRepository.findAll(PageRequest.of(pageNo++, pageSize));
+            for (UserEntity user : page.getContent()) {
+                Set<RoleEnum> roles = user.getRoles().stream()
+                        .map(Role::getName)
+                        .collect(Collectors.toSet());
+                MenuPermissionEntity perm = new MenuPermissionEntity();
+                perm.setUser(user);
+                perm.setMenuItem(newMenu);
+                perm.setCanView(menuPermissionConfig.hasAnyRoleAccess(newMenu.getCode(), roles));
+                perm.setDisplayOrder(newMenu.getDisplayOrder());
+                perm.setStatus(Status.ACTIVE);
+                permissions.add(perm);
+            }
+            if (permissions.size() >= 500) {
+                menuPermissionRepository.saveAll(permissions);
+                permissions.clear();
+            }
+        } while (!page.isLast());
+
+        if (!permissions.isEmpty()) {
+            menuPermissionRepository.saveAll(permissions);
         }
-        menuPermissionRepository.saveAll(permissions);
     }
 
     private void softDeleteMenuPermissions(Long menuId) {

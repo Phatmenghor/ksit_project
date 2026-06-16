@@ -3,6 +3,7 @@ package com.menghor.ksit.feature.master.model;
 import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -31,6 +32,7 @@ public class MajorEntity extends BaseEntity {
     private DepartmentEntity department;
 
     @OneToMany(mappedBy = "major", cascade = CascadeType.ALL)
+    @BatchSize(size = 25)
     private List<ClassEntity> classes;
 
 }

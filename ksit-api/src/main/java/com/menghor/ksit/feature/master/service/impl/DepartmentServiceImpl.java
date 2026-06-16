@@ -185,13 +185,6 @@ public class DepartmentServiceImpl implements DepartmentService {
         // Execute query with specification and pagination
         Page<DepartmentEntity> departmentPage = departmentRepository.findAll(spec, pageable);
 
-        // Apply status correction for any null statuses
-        departmentPage.getContent().forEach(dept -> {
-            if (dept.getStatus() == null) {
-                dept.setStatus(Status.ACTIVE);
-                departmentRepository.save(dept);
-            }
-        });
 
         // Map to response DTO
         CustomPaginationResponseDto<DepartmentResponseDto> response = departmentMapper.toDepartmentAllResponseDto(departmentPage);

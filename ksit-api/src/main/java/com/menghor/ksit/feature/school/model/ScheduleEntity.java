@@ -10,6 +10,7 @@ import com.menghor.ksit.feature.master.model.SemesterEntity;
 import com.menghor.ksit.feature.survey.model.SurveyEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -69,5 +70,6 @@ public class ScheduleEntity extends BaseEntity {
 
     // Add bidirectional relationship with surveys
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<SurveyEntity> surveys = new ArrayList<>();
 }

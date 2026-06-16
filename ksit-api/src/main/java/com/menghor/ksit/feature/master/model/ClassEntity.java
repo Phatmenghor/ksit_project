@@ -7,6 +7,7 @@ import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,8 +48,10 @@ public class ClassEntity extends BaseEntity {
 
     // Students enrolled in this class
     @OneToMany(mappedBy = "classes", cascade = CascadeType.ALL)
+    @BatchSize(size = 25)
     private List<UserEntity> students = new ArrayList<>();
 
     @OneToMany(mappedBy = "classes", cascade = CascadeType.ALL)
+    @BatchSize(size = 25)
     private List<ScheduleEntity> schedule = new ArrayList<>();
 }

@@ -226,62 +226,77 @@ public class UserEntity extends BaseEntity {
 
     // ឋានៈវិជ្ជាជីវៈគ្រូបង្រៀន
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeachersProfessionalRankEntity> teachersProfessionalRank = new ArrayList<>();
 
     // ប្រវត្តិការងារបន្តបន្ទាប់
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherExperienceEntity> teacherExperience = new ArrayList<>();
 
     // ការសរសើរ/ ស្តីបន្ទោស
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherPraiseOrCriticismEntity> teacherPraiseOrCriticism = new ArrayList<>();
 
     // កម្រិតវប្បធម៌
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherEducationEntity> teacherEducation = new ArrayList<>();
 
     // វគ្គគរុកោសល្យ
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherVocationalEntity> teacherVocational = new ArrayList<>();
 
     // វគ្គខ្លីៗ
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherShortCourseEntity> teacherShortCourse = new ArrayList<>();
 
     // ភាសាបរទេស
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherLanguageEntity> teacherLanguage = new ArrayList<>();
 
     // ស្ថានភាពគ្រួសារ
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<TeacherFamilyEntity> teacherFamily = new ArrayList<>();
 
     // ប្រវត្តិការសិក្សា
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<StudentStudiesHistoryEntity> studentStudiesHistory = new ArrayList<>();
 
     // ព័ត៌មានគ្រួសារ
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<StudentParentEntity> studentParent = new ArrayList<>();
 
     // សមាជិកគ្រួសារ
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<StudentSiblingEntity> studentSibling = new ArrayList<>();
 
     // course : teacher name
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<CourseEntity> courses = new ArrayList<>();
 
     // schedule : teacher
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<ScheduleEntity> schedule = new ArrayList<>();
 
     // payment
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 25)
     private List<PaymentEntity> payment = new ArrayList<>();
 
     // payment student
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     private List<PaymentEntity> payments;
 
     /**

@@ -4,6 +4,7 @@ import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.feature.school.model.CourseEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,5 +26,6 @@ public class SubjectEntity extends BaseEntity {
     private Status status;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @BatchSize(size = 25)
     private List<CourseEntity> courses;
 }

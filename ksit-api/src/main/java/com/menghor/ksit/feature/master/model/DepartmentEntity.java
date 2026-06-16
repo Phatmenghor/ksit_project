@@ -6,6 +6,7 @@
     import com.menghor.ksit.feature.school.model.ScheduleEntity;
     import com.menghor.ksit.utils.database.BaseEntity;
     import jakarta.persistence.*;
+    import org.hibernate.annotations.BatchSize;
     import lombok.Getter;
     import lombok.Setter;
 
@@ -34,12 +35,15 @@
         private Status status;
 
         @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+        @BatchSize(size = 25)
         private List<MajorEntity> majors;
 
         // Students enrolled in this class
         @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+        @BatchSize(size = 25)
         private List<UserEntity> students = new ArrayList<>();
 
         @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+        @BatchSize(size = 25)
         private List<CourseEntity> courses = new ArrayList<>();
     }

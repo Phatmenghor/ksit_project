@@ -95,11 +95,7 @@ public class AttendanceScoreServiceImpl implements AttendanceScoreService {
     }
 
     private List<AttendanceScoreDto> calculateClassScores(Long classId, Long scheduleId) {
-        // Get all students in the class
-        List<UserEntity> allUsers = userRepository.findAll();
-        List<UserEntity> students = allUsers.stream()
-                .filter(u -> u.getClasses() != null && u.getClasses().getId().equals(classId))
-                .toList();
+        List<UserEntity> students = userRepository.findByClassesId(classId);
 
         return students.stream()
                 .map(student -> calculateSingleStudentScore(student.getId(), scheduleId, null, null))

@@ -4,6 +4,7 @@ import com.menghor.ksit.enumations.RequestStatus;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -41,5 +42,6 @@ public class RequestEntity extends BaseEntity {
     
     // Request history/audit trail
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     private List<RequestHistoryEntity> history = new ArrayList<>();
 }

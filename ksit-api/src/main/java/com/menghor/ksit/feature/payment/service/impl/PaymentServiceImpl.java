@@ -77,12 +77,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         Page<PaymentEntity> paymentPage = paymentRepository.findAll(spec, pageable);
 
-        paymentPage.getContent().forEach(payment -> {
-            if (payment.getStatus() == null) {
-                payment.setStatus(Status.ACTIVE);
-                paymentRepository.save(payment);
-            }
-        });
 
         return paymentMapper.toPaymentAllResponseDto(paymentPage);
     }

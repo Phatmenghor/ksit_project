@@ -5,6 +5,7 @@ import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,5 +38,6 @@ public class SemesterEntity extends BaseEntity {
     private SemesterEnum semester;
 
     @OneToMany(mappedBy = "semester", cascade = CascadeType.ALL)
+    @BatchSize(size = 25)
     private List<ScheduleEntity> schedules = new ArrayList<>();
 }

@@ -6,6 +6,7 @@ import com.menghor.ksit.feature.master.model.DepartmentEntity;
 import com.menghor.ksit.feature.master.model.SubjectEntity;
 import com.menghor.ksit.utils.database.BaseEntity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -58,5 +59,6 @@ public class CourseEntity extends BaseEntity {
     private UserEntity user;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @BatchSize(size = 25)
     private List<ScheduleEntity> schedules = new ArrayList<>();
 }
