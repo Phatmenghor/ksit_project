@@ -39,8 +39,7 @@ public class ImageServiceImpl implements ImageService {
     @Override
     @Transactional
     public ImageResponse getImageById(UUID id) {
-        log.debug("Fetching image id={}", id);
-        ImageEntity image = imageRepository.findById(id)
+ImageEntity image = imageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Image not found with id: " + id));
         return imageMapper.toResponse(image);
     }

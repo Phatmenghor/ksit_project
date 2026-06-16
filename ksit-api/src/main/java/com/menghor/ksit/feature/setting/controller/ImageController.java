@@ -40,8 +40,7 @@ public class ImageController {
 
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> getImageData(@PathVariable UUID id) {
-        log.debug("Get image id={} request received", id);
-        ImageResponse imageResponse = imageService.getImageById(id);
+ImageResponse imageResponse = imageService.getImageById(id);
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf(imageResponse.getType()))
                 .body(imageResponse.getData());
