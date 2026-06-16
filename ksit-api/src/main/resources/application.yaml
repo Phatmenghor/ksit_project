@@ -18,10 +18,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc:
-          batch_size: 20
+          batch_size: 50
           time_zone: Asia/Phnom_Penh
         order_inserts: true
         order_updates: true
+        batch_versioned_data: true
 
   jackson:
     time-zone: Asia/Phnom_Penh

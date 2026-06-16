@@ -83,11 +83,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         schedule.setRoom(room);
         schedule.setSemester(semester);
 
-        // Set default status if not provided
-        if (schedule.getStatus() == null) {
-            schedule.setStatus(Status.ACTIVE);
-        }
-
         ScheduleEntity savedSchedule = scheduleRepository.save(schedule);
 
         return scheduleMapper.toResponseDto(savedSchedule);

@@ -57,12 +57,6 @@ public class ClassServiceImpl implements ClassService {
 
         // Proceed with class creation
         ClassEntity classEntity = classMapper.toEntity(classRequestDto);
-
-        // Ensure status is set if it wasn't specified
-        if (classEntity.getStatus() == null) {
-            classEntity.setStatus(Status.ACTIVE);
-        }
-
         MajorEntity major = findMajorById(classRequestDto.getMajorId());
         classEntity.setMajor(major);
 

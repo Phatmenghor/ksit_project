@@ -60,11 +60,6 @@ public class MajorServiceImpl implements MajorService {
         // Proceed with major creation
         MajorEntity majorEntity = majorMapper.toEntity(majorRequestDto);
 
-        // Ensure status is set if it wasn't specified
-        if (majorEntity.getStatus() == null) {
-            majorEntity.setStatus(Status.ACTIVE);
-        }
-
         // Find and set the department
         if (majorRequestDto.getDepartmentId() != null) {
             DepartmentEntity department = findDepartmentById(majorRequestDto.getDepartmentId());
@@ -170,14 +165,6 @@ public class MajorServiceImpl implements MajorService {
 
         // Execute query with specification and pagination
         Page<MajorEntity> majorPage = majorRepository.findAll(spec, pageable);
-
-        // Apply status correction for any null statuses
-        majorPage.getContent().forEach(major -> {
-            if (major.getStatus() == null) {
-                major.setStatus(Status.ACTIVE);
-                majorRepository.save(major);
-            }
-        });
 
         // Map to response DTO
         CustomPaginationResponseDto<MajorResponseDto> response = majorMapper.toMajorAllResponseDto(majorPage);

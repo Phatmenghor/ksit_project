@@ -52,12 +52,6 @@ public class RoomServiceImpl implements RoomService {
 
         // Proceed with room creation
         RoomEntity room = roomMapper.toEntity(roomRequest);
-
-        // Ensure status is set if it wasn't specified
-        if (room.getStatus() == null) {
-            room.setStatus(Status.ACTIVE);
-        }
-
         RoomEntity savedRoom = roomRepository.save(room);
 
         return roomMapper.toResponseDto(savedRoom);
@@ -150,14 +144,6 @@ public class RoomServiceImpl implements RoomService {
 
         // Execute query with specification and pagination
         Page<RoomEntity> roomPage = roomRepository.findAll(spec, pageable);
-
-        // Apply status correction for any null statuses
-        roomPage.getContent().forEach(room -> {
-            if (room.getStatus() == null) {
-                room.setStatus(Status.ACTIVE);
-                roomRepository.save(room);
-            }
-        });
 
         // Map to response DTO
         CustomPaginationResponseDto<RoomResponseDto> response = roomMapper.toRoomAllResponseDto(roomPage);

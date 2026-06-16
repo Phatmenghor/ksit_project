@@ -1,8 +1,6 @@
-// Fixed SurveyProgressServiceImpl.java with fallback methods
 package com.menghor.ksit.feature.survey.service.impl;
 
 import com.menghor.ksit.enumations.RoleEnum;
-import com.menghor.ksit.enumations.StatusSurvey;
 import com.menghor.ksit.enumations.SurveyStatus;
 import com.menghor.ksit.exceptoins.error.NotFoundException;
 import com.menghor.ksit.feature.auth.models.UserEntity;
@@ -86,47 +84,16 @@ public class SurveyProgressServiceImpl implements SurveyProgressService {
     }
 
     /**
-     * Get survey responses for this schedule with fallback methods
+     * Get survey responses for this schedule
      */
     private Map<Long, SurveyResponseEntity> getSurveyResponsesForSchedule(Long scheduleId) {
-        try {
-            // Try the optimized method first
-            List<SurveyResponseEntity> responses = surveyResponseRepository.findCompletedResponsesByScheduleId(scheduleId);
-            return responses.stream()
-                    .collect(Collectors.toMap(
-                            response -> response.getUser().getId(),
-                            response -> response,
-                            (existing, replacement) -> existing
-                    ));
-        } catch (Exception e) {
-            log.warn("Optimized query failed, using fallback method: {}", e.getMessage());
-
-            // Fallback method - get all responses and filter in service layer
-            try {
-                List<SurveyResponseEntity> allResponses = surveyResponseRepository.findByScheduleId(scheduleId);
-                return allResponses.stream()
-                        .filter(response -> response.getIsCompleted() != null && response.getIsCompleted())
-                        .filter(response -> response.getStatus() == StatusSurvey.ACTIVE)
-                        .collect(Collectors.toMap(
-                                response -> response.getUser().getId(),
-                                response -> response,
-                                (existing, replacement) -> existing
-                        ));
-            } catch (Exception e2) {
-                log.error("Both query methods failed, using manual approach: {}", e2.getMessage());
-
-                // Final fallback - manual filtering
-                return surveyResponseRepository.findAll().stream()
-                        .filter(response -> response.getSchedule().getId().equals(scheduleId))
-                        .filter(response -> response.getIsCompleted() != null && response.getIsCompleted())
-                        .filter(response -> response.getStatus() == StatusSurvey.ACTIVE)
-                        .collect(Collectors.toMap(
-                                response -> response.getUser().getId(),
-                                response -> response,
-                                (existing, replacement) -> existing
-                        ));
-            }
-        }
+        List<SurveyResponseEntity> responses = surveyResponseRepository.findCompletedResponsesByScheduleId(scheduleId);
+        return responses.stream()
+                .collect(Collectors.toMap(
+                        response -> response.getUser().getId(),
+                        response -> response,
+                        (existing, replacement) -> existing
+                ));
     }
 
     /**

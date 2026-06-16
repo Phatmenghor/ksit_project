@@ -208,9 +208,6 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         // Process all attendance records
         List<AttendanceEntity> attendances = attendanceRepository.findByAttendanceSessionId(sessionId);
         for (AttendanceEntity attendance : attendances) {
-            if (attendance.getStatus() == null) {
-                attendance.setStatus(AttendanceStatus.ABSENT);
-            }
             attendance.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         }
 

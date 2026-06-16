@@ -42,12 +42,6 @@ public class SemesterServiceImpl implements SemesterService {
         validateSemesterCreation(semesterRequestDto);
 
         SemesterEntity semester = semesterMapper.toEntity(semesterRequestDto);
-
-        // Set default status if not provided
-        if (semester.getStatus() == null) {
-            semester.setStatus(Status.ACTIVE);
-        }
-
         SemesterEntity savedSemester = semesterRepository.save(semester);
 
         return semesterMapper.toResponseDto(savedSemester);
@@ -112,14 +106,6 @@ public class SemesterServiceImpl implements SemesterService {
 
         // Execute query with specification and pagination
         Page<SemesterEntity> semesterPage = semesterRepository.findAll(spec, pageable);
-
-        // Apply status correction for any null statuses
-        semesterPage.getContent().forEach(semester -> {
-            if (semester.getStatus() == null) {
-                semester.setStatus(Status.ACTIVE);
-                semesterRepository.save(semester);
-            }
-        });
 
         // Map to response DTO
         CustomPaginationResponseDto<SemesterResponseDto> response = semesterMapper.toSemesterAllResponseDto(semesterPage);

@@ -64,12 +64,6 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         // Proceed with department creation
         DepartmentEntity department = departmentMapper.toEntity(departmentRequestDto);
-
-        // Ensure status is set if it wasn't specified
-        if (department.getStatus() == null) {
-            department.setStatus(Status.ACTIVE);
-        }
-
         DepartmentEntity savedDepartment = departmentRepository.save(department);
 
         return departmentMapper.toResponseDto(savedDepartment);

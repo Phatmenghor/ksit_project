@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -192,10 +194,6 @@ public class DefaultMenuInitializer implements CommandLineRunner {
     private void syncAllUserMenuPermissions(TransactionTemplate tx) {
         log.info("Syncing user menu permissions...");
 
-        List<Long> userIds = userRepository.findAll().stream()
-                .map(UserEntity::getId)
-                .collect(Collectors.toList());
-
         List<MenuItemEntity> activeMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
         Set<Long> activeMenuIds = activeMenus.stream()
                 .map(MenuItemEntity::getId)
@@ -203,20 +201,29 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
         int processed = 0;
         int errors = 0;
+        int pageNo = 0;
+        Page<UserEntity> page;
 
-        for (Long userId : userIds) {
-            try {
-                tx.execute(status -> {
-                    UserEntity user = userRepository.findById(userId).orElseThrow();
-                    syncUserPermissions(user, activeMenus, activeMenuIds);
-                    return null;
-                });
-                processed++;
-            } catch (Exception e) {
-                log.error("Error syncing permissions for user id={}: {}", userId, e.getMessage());
-                errors++;
+        do {
+            page = userRepository.findAll(PageRequest.of(pageNo++, 200));
+            List<Long> userIds = page.getContent().stream()
+                    .map(UserEntity::getId)
+                    .collect(Collectors.toList());
+
+            for (Long userId : userIds) {
+                try {
+                    tx.execute(status -> {
+                        UserEntity user = userRepository.findById(userId).orElseThrow();
+                        syncUserPermissions(user, activeMenus, activeMenuIds);
+                        return null;
+                    });
+                    processed++;
+                } catch (Exception e) {
+                    log.error("Error syncing permissions for user id={}: {}", userId, e.getMessage());
+                    errors++;
+                }
             }
-        }
+        } while (!page.isLast());
 
         log.info("User permissions sync complete — processed: {}, errors: {}", processed, errors);
     }

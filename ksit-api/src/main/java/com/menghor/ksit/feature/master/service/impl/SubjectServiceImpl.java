@@ -51,12 +51,6 @@ public class SubjectServiceImpl implements SubjectService {
 
         // Proceed with subject creation
         SubjectEntity subject = subjectMapper.toEntity(subjectRequest);
-
-        // Ensure status is set if it wasn't specified
-        if (subject.getStatus() == null) {
-            subject.setStatus(Status.ACTIVE);
-        }
-
         SubjectEntity savedSubject = subjectRepository.save(subject);
 
         return subjectMapper.toResponseDto(savedSubject);
@@ -149,14 +143,6 @@ public class SubjectServiceImpl implements SubjectService {
 
         // Execute query with specification and pagination
         Page<SubjectEntity> subjectPage = subjectRepository.findAll(spec, pageable);
-
-        // Apply status correction for any null statuses
-        subjectPage.getContent().forEach(subject -> {
-            if (subject.getStatus() == null) {
-                subject.setStatus(Status.ACTIVE);
-                subjectRepository.save(subject);
-            }
-        });
 
         // Map to response DTO
         CustomPaginationResponseDto<SubjectResponseDto> response = subjectMapper.toSubjectAllResponseDto(subjectPage);
