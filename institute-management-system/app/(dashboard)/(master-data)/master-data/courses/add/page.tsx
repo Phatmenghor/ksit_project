@@ -462,15 +462,23 @@ export default function AddCoursePage() {
                 )}
               />
 
-              <div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isUploading || isSubmitting}
+                  onClick={() => router.back()}
+                >
+                  Cancel
+                </Button>
                 <Button
                   type="submit"
                   disabled={isUploading || isSubmitting}
-                  className="bg-teal-900 text-white hover:bg-teal-950"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {isUploading || isSubmitting ? (
                     <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                       Saving...
                     </>
                   ) : (
