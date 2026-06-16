@@ -191,51 +191,108 @@ export default function AddCoursePage() {
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-4"
             >
-              <FormField
-                control={form.control}
-                name="subjectCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Course code <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Course code..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="subjectCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Course code <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Course code..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="subjectNameKh"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Course name (KH)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Course name (KH)..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="subjectNameKh"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Course name (KH)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Course name (KH)..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="subjectNameEn"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Course name (EN) <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Course name (EN)..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="subjectNameEn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Course name (EN) <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Course name (EN)..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="departmentId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Department <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <ComboboxSelectDepartment
+                          dataSelect={selectedDepartment}
+                          onChangeSelected={handleDepartmentChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subjectTypeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Subject type <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <ComboboxSelectSubject
+                          dataSelect={selectedSubjectType}
+                          onChangeSelected={handleSubjectTypeChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="instructorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instructor</FormLabel>
+                      <FormControl>
+                        <ComboboxSelectInstructor
+                          dataSelect={selectedInstructor}
+                          onChangeSelected={handleInstructorChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <FormField
@@ -248,7 +305,6 @@ export default function AddCoursePage() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
                           placeholder="Credit..."
                           {...field}
                           onChange={(e) => {
@@ -272,7 +328,6 @@ export default function AddCoursePage() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
                           placeholder="Theory..."
                           {...field}
                           onChange={(e) => {
@@ -296,7 +351,6 @@ export default function AddCoursePage() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
                           placeholder="Execute..."
                           {...field}
                           onChange={(e) => {
@@ -320,7 +374,6 @@ export default function AddCoursePage() {
                       </FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
                           placeholder="Apply..."
                           {...field}
                           onChange={(e) => {
@@ -337,61 +390,6 @@ export default function AddCoursePage() {
 
               <FormField
                 control={form.control}
-                name="departmentId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Department <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <ComboboxSelectDepartment
-                        dataSelect={selectedDepartment}
-                        onChangeSelected={handleDepartmentChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="subjectTypeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Subject type <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <ComboboxSelectSubject
-                        dataSelect={selectedSubjectType}
-                        onChangeSelected={handleSubjectTypeChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="instructorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instructor</FormLabel>
-                    <FormControl>
-                      <ComboboxSelectInstructor
-                        dataSelect={selectedInstructor}
-                        onChangeSelected={handleInstructorChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="totalHours"
                 render={({ field }) => (
                   <FormItem>
@@ -400,7 +398,6 @@ export default function AddCoursePage() {
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
                         placeholder="Total hours..."
                         readOnly
                         {...field}
