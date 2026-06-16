@@ -35,8 +35,7 @@ export function DeleteConfirmationDialog({
         />
 
         <FormBody>
-          <div className="rounded-lg border border-red-100 bg-red-50 p-3 space-y-1">
-            <p className="text-sm text-red-800 font-medium">Are you sure you want to delete?</p>
+          <div className="rounded-lg border border-red-100 bg-red-50 p-3">
             <p className="text-sm text-red-700">
               {description}
             </p>
