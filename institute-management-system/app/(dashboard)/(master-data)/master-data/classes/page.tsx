@@ -37,6 +37,7 @@ import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { AcademyYearPicker } from "@/components/shared/academy-year-picker";
 
 export default function ManageClassPage() {
@@ -211,6 +212,10 @@ export default function ManageClassPage() {
     { key: "degree", label: "Degree", render: (cls) => cls.degree },
     { key: "yearLevel", label: "Year Level", render: (cls) => cls.yearLevel },
     { key: "academyYear", label: "Academy Year", render: (cls) => cls.academyYear },
+    {
+      key: "createdAt", label: "Created At",
+      render: (cls) => DateTimeFormatter(cls.createdAt),
+    },
     {
       key: "actions", label: "", width: "90px",
       render: (cls) => (
