@@ -76,9 +76,7 @@ export default function ManageClassPage() {
           academyYear: selectedYear || undefined,
           ...param,
         });
-        console.log("[Classes] API response:", response);
         if (response) {
-          console.log("[Classes] content length:", response?.content?.length, "totalElements:", response?.totalElements);
           setAllClassData(response);
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);

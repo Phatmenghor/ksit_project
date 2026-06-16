@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
+
   // ⚡ CRITICAL: Reduces Docker image from 1GB to 150MB
   output: "standalone",
 
