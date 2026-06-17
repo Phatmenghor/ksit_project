@@ -1,6 +1,13 @@
 "use client";
 
-import { Clock, MapPin, Users } from "lucide-react";
+import { Clock, Eye, MapPin, Users } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatDate } from "@/utils/date/date";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Breadcrumb,
@@ -141,7 +148,34 @@ export default function StudentListPage() {
     {
       key: "dateOfBirth",
       label: "Date Of Birth",
-      render: (student) => student.dateOfBirth || "---",
+      render: (student) =>
+        student.dateOfBirth ? formatDate(student.dateOfBirth) : "---",
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      width: "80px",
+      render: (student) => (
+        <div className="flex justify-start space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() =>
+                    router.push(ROUTE.STUDENTS.VIEW(String(student.id)))
+                  }
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Student Detail</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
     },
   ];
 
