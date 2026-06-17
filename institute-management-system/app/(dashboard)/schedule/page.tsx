@@ -32,6 +32,14 @@ import { AllScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { YearSelector } from "@/components/shared/year-selector";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ScheduleAllPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -182,32 +190,64 @@ const ScheduleAllPage = () => {
           filters: [
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
               value: selectedYear,
-              onChange: handleYearChange,
+              onChange: (v) => handleYearChange(v ?? new Date().getFullYear()),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Academic Year</label>
+                  <YearSelector value={value} onChange={onChange} className="h-9" />
+                </div>
+              ),
             },
             {
               id: "day",
-              type: "select",
+              type: "custom",
               label: "Day",
               value: selectedDay.value,
-              onChange: handleDayChange,
-              options: DAYS_OF_WEEK.map((day) => ({
-                value: day.value,
-                label: day.label,
-              })),
+              onChange: (v) => handleDayChange(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Day</label>
+                  <Select onValueChange={onChange} value={value}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select a day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS_OF_WEEK.map((day) => (
+                        <SelectItem key={day.value} value={day.value}>
+                          {day.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ),
             },
             {
               id: "semester",
-              type: "select",
+              type: "custom",
               label: "Semester",
               value: selectedSemester,
-              onChange: handleSemesterChange,
-              options: SemesterFilter.map((semester) => ({
-                value: semester.value,
-                label: semester.label,
-              })),
+              onChange: (v) => handleSemesterChange(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Semester</label>
+                  <Select onValueChange={onChange} value={value}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select a semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SemesterFilter.map((semester) => (
+                        <SelectItem key={semester.value} value={semester.value}>
+                          {semester.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ),
             },
             {
               id: "course",
@@ -221,6 +261,7 @@ const ScheduleAllPage = () => {
                   <ComboboxSelectCourse
                     dataSelect={value}
                     onChangeSelected={onChange}
+                    className="h-9"
                   />
                 </div>
               ),

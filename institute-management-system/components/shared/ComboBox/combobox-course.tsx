@@ -11,6 +11,7 @@ interface ComboboxSelectCourseProps {
   disabled?: boolean;
   label?: string;
   placeholder?: string;
+  className?: string;
 }
 
 export function ComboboxSelectCourse({
@@ -19,6 +20,7 @@ export function ComboboxSelectCourse({
   disabled = false,
   label,
   placeholder = "Select a course...",
+  className,
 }: ComboboxSelectCourseProps) {
   const controller = useInfiniteComboboxData<CourseModel>({
     fetcher: ({ search, pageNo, pageSize }) =>
@@ -38,6 +40,7 @@ export function ComboboxSelectCourse({
       searchPlaceholder="Search course..."
       emptyMessage="No course found."
       disabled={disabled}
+      className={className}
     />
   );
 }

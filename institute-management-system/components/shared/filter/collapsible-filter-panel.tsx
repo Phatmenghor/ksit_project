@@ -174,12 +174,27 @@ export function CollapsibleFilterPanel({
     <Card className="border border-gray-100 shadow-sm">
       <CardContent className="py-3 px-4 space-y-3">
 
-        {/* Row 1: Title left | Actions + Add button right */}
+        {/* Row 1: Title left | Clear + Actions + Add button right */}
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800 truncate min-w-0">
             {config.title}
           </h1>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {anyFilterActive && config.onClearAll && (
+              <button
+                type="button"
+                onClick={config.onClearAll}
+                title="Clear all filters"
+                className={cn(
+                  "h-9 w-9 shrink-0 flex items-center justify-center rounded-md border",
+                  "border-red-200 bg-red-50 text-red-400",
+                  "hover:bg-red-100 hover:border-red-400 hover:text-red-600",
+                  "transition-colors"
+                )}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             {config.extraActions}
             {config.buttonText && (
               <Button
@@ -217,23 +232,6 @@ export function CollapsibleFilterPanel({
               {renderFilter(filter)}
             </div>
           ))}
-
-          {/* Clear — sticks to end of whichever row it lands on */}
-          {anyFilterActive && config.onClearAll && (
-            <button
-              type="button"
-              onClick={config.onClearAll}
-              title="Clear all filters"
-              className={cn(
-                "h-9 w-9 shrink-0 self-end flex items-center justify-center rounded-md border",
-                "border-red-200 bg-red-50 text-red-400",
-                "hover:bg-red-100 hover:border-red-400 hover:text-red-600",
-                "transition-colors"
-              )}
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </CardContent>
     </Card>
