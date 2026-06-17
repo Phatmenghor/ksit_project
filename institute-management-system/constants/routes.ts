@@ -27,6 +27,7 @@ export const ROUTE = {
       INDEX: "/users/admins",
       ADMIN_VIEW: (id: string) => `/users/admins/${id}`,
       EDIT_ADMIN: (id: string) => `/users/admins/${id}/edit`,
+      ADD_ADMIN: "/users/admins/add",
     },
     ADMIN_PROFILE: "/profile/admin",
     EDIT_STAFF: (id: string) => `/users/staff/${id}/edit`,

@@ -16,24 +16,15 @@ import { toast } from "sonner";
 import { RoleEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import {
-  addStaffService,
   deletedStaffService,
   getAllStaffService,
-  updateStaffService,
 } from "@/service/user/user.service";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import AdminModalForm from "@/components/dashboard/users/admin/admin-modal";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { AddStaffModel } from "@/model/user/staff/staff.request.model";
-import { AdminFormData } from "@/model/user/staff/staff.schema";
 import {
   AllStaffModel,
   StaffModel,
 } from "@/model/user/staff/staff.respond.model";
-import {
-  cleanField,
-  cleanRequiredFieldAdvance,
-} from "@/utils/map-helper/student";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import {
   Tooltip,
@@ -46,12 +37,12 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function AdminsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<AllStaffModel | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
     useState(false);
@@ -121,39 +112,6 @@ export default function AdminsListPage() {
     loadData();
   }, [currentPage]);
 
-  const handleOpenAddModal = () => {
-    setIsModalOpen(true);
-  };
-
-  async function handleSubmit(formData: AdminFormData) {
-    setIsSubmitting(true);
-    try {
-      const addPayload: AddStaffModel = {
-        username: cleanRequiredFieldAdvance(formData.username, "username"),
-        email: cleanRequiredFieldAdvance(formData.email, "email"),
-        khmerFirstName: cleanField(formData.first_name),
-        khmerLastName: cleanField(formData.last_name),
-        englishFirstName: cleanField(formData.first_name),
-        englishLastName: cleanField(formData.last_name),
-        status: cleanRequiredFieldAdvance(formData.status, "status"),
-        roles: formData.roles ?? undefined,
-        password: cleanRequiredFieldAdvance(formData.password, "password"),
-      };
-
-      const response = await addStaffService(addPayload);
-      if (response) {
-        // Refresh data instead of manual state update for consistency
-        await loadData();
-        toast.success(`Admin ${response.username} added successfully`);
-        setIsModalOpen(false);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
   async function handleDeleteAdmin() {
     if (!selectedAdmin) return;
 
@@ -189,6 +147,36 @@ export default function AdminsListPage() {
       label: "#",
       width: "50px",
       render: (_, i) => getDisplayIndex(i),
+    },
+    {
+      key: "profile",
+      label: "Profile",
+      width: "70px",
+      render: (item) => {
+        const url = item.profileUrl
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${item.profileUrl}`
+          : undefined;
+        const initials =
+          [item.englishFirstName, item.englishLastName]
+            .filter(Boolean)
+            .map((n) => n![0])
+            .join("")
+            .toUpperCase() ||
+          item.username?.charAt(0).toUpperCase() ||
+          "U";
+        return (
+          <Avatar className="h-8 w-8">
+            <AvatarImage
+              src={url}
+              alt={item.username}
+              className="object-cover"
+            />
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        );
+      },
     },
     {
       key: "username",
@@ -327,7 +315,7 @@ export default function AdminsListPage() {
           searchPlaceholder: "Search...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
-          onButtonClick: handleOpenAddModal,
+          onButtonClick: () => router.push(ROUTE.USERS.ADMIN.ADD_ADMIN),
           filters: [],
           onClearAll: () => {
             setSearchQuery("");
@@ -346,14 +334,6 @@ export default function AdminsListPage() {
         onPageChange={handlePageChange}
         emptyMessage="No admin found"
         getRowKey={(admin) => admin.id}
-      />
-
-      <AdminModalForm
-        isOpen={isModalOpen}
-        mode="add"
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
       />
 
       <ResetPasswordModal
