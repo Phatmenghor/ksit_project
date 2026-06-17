@@ -17,14 +17,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { YearSelector } from "@/components/shared/year-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const WEEKDAY_VALUES = [
   "SUNDAY",
@@ -141,40 +133,22 @@ const AttendanceScheduleCheckPage = () => {
           filters: [
             {
               id: "year",
-              type: "custom",
+              type: "year",
               label: "Academic Year",
               value: selectedYear,
-              onChange: (v) => handleYearChange(v ?? new Date().getFullYear()),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Academic Year</label>
-                  <YearSelector value={value} onChange={onChange} className="h-9" />
-                </div>
-              ),
+              onChange: handleYearChange,
             },
             {
               id: "day",
-              type: "custom",
+              type: "select",
               label: "Day",
+              placeholder: "Select a day",
               value: selectedDay.value,
               onChange: (v) => handleDayChange(v),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Day</label>
-                  <Select onValueChange={onChange} value={value}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select a day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS_OF_WEEK.map((day) => (
-                        <SelectItem key={day.value} value={day.value}>
-                          {day.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ),
+              options: DAYS_OF_WEEK.map((day) => ({
+                value: day.value,
+                label: day.label,
+              })),
             },
           ],
           onClearAll: () => {

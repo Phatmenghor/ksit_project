@@ -20,7 +20,6 @@ import { useDebounce } from "@/utils/debounce/debounce";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
-import { YearSelector } from "@/components/shared/year-selector";
 import DuplicateScheduleModal from "@/components/dashboard/manage-schedule/duplicate-schedule-modal";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
@@ -251,16 +250,10 @@ const AllSchedulePage = () => {
           filters: [
             {
               id: "year",
-              type: "custom",
+              type: "year",
               label: "Academic Year",
               value: selectedYear,
-              onChange: (v) => handleYearChange(v ?? new Date().getFullYear()),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Academic Year</label>
-                  <YearSelector value={value} onChange={onChange} className="h-9" />
-                </div>
-              ),
+              onChange: handleYearChange,
             },
             {
               id: "day",

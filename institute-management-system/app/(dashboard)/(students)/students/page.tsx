@@ -39,7 +39,6 @@ import {
 } from "@/model/user/student/student.request.model";
 import Loading from "@/components/shared/loading";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import { YearSelector } from "@/components/shared/year-selector";
 import { usePagination } from "@/hooks/use-pagination";
 import { Constants } from "@/constants/text-string";
 import ExcelJS from "exceljs";
@@ -514,16 +513,10 @@ export default function StudentsListPage() {
           filters: [
             {
               id: "year",
-              type: "custom",
+              type: "year",
               label: "Academic Year",
               value: selectAcademicYear ?? 0,
-              onChange: (v) => handleYearChange(v ?? 0),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Academic Year</label>
-                  <YearSelector value={value} onChange={onChange} className="h-9" />
-                </div>
-              ),
+              onChange: handleYearChange,
             },
             {
               id: "class",

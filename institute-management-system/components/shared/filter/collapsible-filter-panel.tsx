@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { YearSelector } from "@/components/shared/year-selector";
 import { Plus, Search, CalendarIcon, X, ArrowLeft } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -24,21 +32,22 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
       return (
         <div key={filter.id} className="flex flex-col gap-1">
           <label className="text-xs font-medium text-foreground/70">{filter.label}</label>
-          <select
-            value={filter.value?.toString() ?? ""}
-            onChange={(e) => filter.onChange(e.target.value || undefined)}
+          <Select
+            value={filter.value !== undefined && filter.value !== null ? String(filter.value) : ""}
+            onValueChange={(v) => filter.onChange(v)}
             disabled={filter.disabled}
-            className={cn(
-              "h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm",
-              "transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary hover:border-primary/50",
-              filter.disabled && "opacity-50 cursor-not-allowed"
-            )}
           >
-            <option value="">{filter.placeholder ?? "All"}</option>
-            {filter.options.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder={filter.placeholder ?? "All"} />
+            </SelectTrigger>
+            <SelectContent>
+              {filter.options.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       );
 
@@ -120,24 +129,19 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
       const currentYear = new Date().getFullYear();
       const minYear = filter.minYear ?? currentYear - 10;
       const maxYear = filter.maxYear ?? currentYear + 5;
-      const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => minYear + i);
       return (
         <div key={filter.id} className="flex flex-col gap-1">
           <label className="text-xs font-medium text-foreground/70">{filter.label}</label>
-          <select
+          <YearSelector
             value={filter.value}
-            onChange={(e) => filter.onChange(parseInt(e.target.value))}
+            onChange={filter.onChange}
+            minYear={minYear}
+            maxYear={maxYear}
+            title={filter.label}
+            placeholder={filter.placeholder ?? "Select year"}
             disabled={filter.disabled}
-            className={cn(
-              "h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm",
-              "transition-colors focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary hover:border-primary/50",
-              filter.disabled && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            {years.map((year) => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
+            className="h-9"
+          />
         </div>
       );
     }

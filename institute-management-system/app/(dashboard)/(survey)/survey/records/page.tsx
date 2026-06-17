@@ -20,14 +20,6 @@ import { DataTablePagination } from "@/components/shared/data-table/data-table-p
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
-import { YearSelector } from "@/components/shared/year-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
@@ -185,64 +177,34 @@ const ScheduleAllPage = () => {
           filters: [
             {
               id: "year",
-              type: "custom",
+              type: "year",
               label: "Academic Year",
               value: selectedYear,
-              onChange: (v) => handleYearChange(v ?? new Date().getFullYear()),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Academic Year</label>
-                  <YearSelector value={value} onChange={onChange} className="h-9" />
-                </div>
-              ),
+              onChange: handleYearChange,
             },
             {
               id: "day",
-              type: "custom",
+              type: "select",
               label: "Day",
+              placeholder: "Select a day",
               value: selectedDay.value,
               onChange: (v) => handleDayChange(v),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Day</label>
-                  <Select onValueChange={onChange} value={value}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select a day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS_OF_WEEK.map((day) => (
-                        <SelectItem key={day.value} value={day.value}>
-                          {day.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ),
+              options: DAYS_OF_WEEK.map((day) => ({
+                value: day.value,
+                label: day.label,
+              })),
             },
             {
               id: "semester",
-              type: "custom",
+              type: "select",
               label: "Semester",
+              placeholder: "Select a semester",
               value: selectedSemester,
               onChange: (v) => handleSemesterChange(v),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Semester</label>
-                  <Select onValueChange={onChange} value={value}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select a semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SemesterFilter.map((semester) => (
-                        <SelectItem key={semester.value} value={semester.value}>
-                          {semester.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ),
+              options: SemesterFilter.map((semester) => ({
+                value: semester.value,
+                label: semester.label,
+              })),
             },
             {
               id: "course",
