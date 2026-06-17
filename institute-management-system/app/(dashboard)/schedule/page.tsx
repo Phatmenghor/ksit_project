@@ -41,12 +41,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const getCurrentDay = (): DayType => {
+  const dayName = new Date()
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toUpperCase();
+  return DAYS_OF_WEEK.find((d) => d.value === dayName) ?? DAYS_OF_WEEK[0];
+};
+
 const ScheduleAllPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedDay, setSelectedDay] = useState<DayType>({
-    label: "All",
-    value: "ALL",
-  });
+  const [selectedDay, setSelectedDay] = useState<DayType>(getCurrentDay());
   const [scheduleData, setScheduleData] = useState<AllScheduleModel | null>(
     null
   );
@@ -269,7 +273,7 @@ const ScheduleAllPage = () => {
           ],
           onClearAll: () => {
             setSelectedYear(new Date().getFullYear());
-            setSelectedDay(DAYS_OF_WEEK[0]);
+            setSelectedDay(getCurrentDay());
             setSelectedSemester("ALL");
             setSelectCourse(null);
             setSearchQuery("");
