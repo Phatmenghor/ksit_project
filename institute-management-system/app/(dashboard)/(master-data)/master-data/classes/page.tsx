@@ -1,17 +1,10 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import {
   createClassService,
   deleteClassService,
@@ -248,17 +241,7 @@ export default function ManageClassPage() {
     <div className="space-y-4">
       <Card className="border-0 shadow-none bg-transparent p-0">
         <CardContent className="p-0 space-y-2">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Manage Class</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <PageBreadcrumb items={[{ label: "Manage Class" }]} />
         </CardContent>
       </Card>
 

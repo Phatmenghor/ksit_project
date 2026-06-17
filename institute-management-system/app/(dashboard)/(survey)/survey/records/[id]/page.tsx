@@ -31,14 +31,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AppIcons } from "@/constants/icons/icon";
@@ -363,19 +356,7 @@ export default function AllStudentResultPage() {
         <Card className="w-full">
           <CardContent className="py-6 space-y-3 w-full">
             {/* Breadcrumb Section */}
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Survey Student Result</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <PageBreadcrumb items={[{ label: "Survey Student Result" }]} />
 
             <div className="flex items-center min-w-0 flex-1">
               <Button

@@ -2,14 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import Loading from "@/components/shared/loading";
 import PaginationPage from "@/components/shared/pagination-page";
 import DepartmentCard from "@/components/dashboard/schedule/department/department-card";
@@ -129,17 +122,7 @@ export default function ManageClassPage() {
       <Card>
         <CardContent className="p-6 space-y-4">
           <div className="space-y-2">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Overview</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <PageBreadcrumb items={[{ label: "Overview" }]} />
 
             <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
           </div>

@@ -17,14 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import {
   Select,
   SelectContent,
@@ -515,42 +508,13 @@ export default function AddSchedule() {
         <CardContent className="p-4 sm:p-6 space-y-4">
           {/* Mobile-optimized Breadcrumb */}
           <div className="overflow-x-auto">
-            <Breadcrumb>
-              <BreadcrumbList className="flex-nowrap">
-                <BreadcrumbItem className="whitespace-nowrap">
-                  <BreadcrumbLink
-                    href={ROUTE.DASHBOARD}
-                    className="text-xs sm:text-sm"
-                  >
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem className="whitespace-nowrap">
-                  <BreadcrumbLink
-                    href={ROUTE.SCHEDULE.DEPARTMENT}
-                    className="text-xs sm:text-sm"
-                  >
-                    Department List
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem className="whitespace-nowrap">
-                  <BreadcrumbLink
-                    href={ROUTE.DASHBOARD}
-                    className="text-xs sm:text-sm"
-                  >
-                    Class List
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem className="whitespace-nowrap">
-                  <BreadcrumbPage className="text-xs sm:text-sm">
-                    Add Schedule
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <PageBreadcrumb
+              items={[
+                { label: "Department List", href: ROUTE.SCHEDULE.DEPARTMENT },
+                { label: "Class List", href: ROUTE.DASHBOARD },
+                { label: "Add Schedule" },
+              ]}
+            />
           </div>
 
           {/* Mobile-optimized Header */}

@@ -1,24 +1,9 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  BookOpen,
-  Users,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
@@ -35,8 +20,17 @@ import { ClassCard } from "@/components/dashboard/schedule/class/class-card";
 import Loading from "@/components/shared/loading";
 import { AppIcons } from "@/constants/icons/icon";
 import { useDebounce } from "@/utils/debounce/debounce";
-import PaginationPage from "@/components/shared/pagination-page";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
   <div className="text-center py-12 space-y-4">
@@ -56,7 +50,6 @@ const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
 
 const ClassSchedulePage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [allMajorData, setAllMajorData] = useState<AllMajorModel | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<number | null>(null);
   const [allClassData, setAllClassData] = useState<AllClassModel | null>(null);
@@ -69,11 +62,10 @@ const ClassSchedulePage = () => {
 
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.MANAGE_SCHEDULE.CLASS(String(depId)),
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.MANAGE_SCHEDULE.CLASS(String(depId)),
+    defaultPageSize: 10,
+  });
 
   const searchDebounce = useDebounce(searchQuery, 500);
 
@@ -84,7 +76,6 @@ const ClassSchedulePage = () => {
     }
   };
 
-  // Effect for initial URL setup
   useEffect(() => {
     const pageParam = searchParams.get("pageNo");
     if (!pageParam) {
@@ -107,7 +98,6 @@ const ClassSchedulePage = () => {
 
         if (response) {
           setAllMajorData(response);
-          // Only set selected major if we don't have one or if the current one is not in the new results
           if (!selectedMajor && response.content.length > 0) {
             setSelectedMajor(response.content[0].id);
           } else if (selectedMajor && response.content.length === 0) {
@@ -127,7 +117,6 @@ const ClassSchedulePage = () => {
     [depId, hasLoadedOnce, selectedMajor]
   );
 
-  // Load classes when search query or selected major changes
   const loadClasses = useCallback(
     async (majorId: number, search?: string, page?: number) => {
       if (!majorId) return;
@@ -144,7 +133,6 @@ const ClassSchedulePage = () => {
 
         setAllClassData(responseListClass);
 
-        // Handle case where current page exceeds total pages
         if (
           responseListClass &&
           responseListClass.totalPages > 0 &&
@@ -162,37 +150,21 @@ const ClassSchedulePage = () => {
     [currentPage, updateUrlWithPage]
   );
 
-  // Load majors initially
   useEffect(() => {
     loadMajors({});
   }, [loadMajors]);
 
-  // Load classes when selectedMajor, searchDebounce, or currentPage changes
   useEffect(() => {
     if (selectedMajor) {
       loadClasses(selectedMajor, searchDebounce, currentPage);
     }
   }, [selectedMajor, searchDebounce, currentPage, loadClasses]);
 
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  };
-
-  const handleMajorSelect = async (majorId: number) => {
-    setSelectedMajor(majorId);
-    // Reset to page 1 when changing major
+  const handleMajorSelect = (majorId: string) => {
+    setSelectedMajor(Number(majorId));
     if (currentPage !== 1) {
       updateUrlWithPage(1);
     }
-    // Classes will be loaded by the useEffect that watches selectedMajor
   };
 
   const handleViewSchedule = (classData: ClassModel) => {
@@ -203,7 +175,6 @@ const ClassSchedulePage = () => {
     router.push(`/manage-schedule/create-schedule/${classData.id}`);
   };
 
-  // Show single loading screen during initial load
   if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -212,35 +183,16 @@ const ClassSchedulePage = () => {
     );
   }
 
-  // Check if we should show empty majors state
-  const shouldShowEmptyMajors =
-    hasLoadedOnce &&
-    allMajorData &&
-    (!allMajorData.content || allMajorData.content.length === 0);
-
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.SCHEDULE.DEPARTMENT}>
-                  Department List
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Class List</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <PageBreadcrumb
+            items={[
+              { label: "Department List", href: ROUTE.SCHEDULE.DEPARTMENT },
+              { label: "Class List" },
+            ]}
+          />
 
           <div className="flex items-center">
             <Button
@@ -261,108 +213,88 @@ const ClassSchedulePage = () => {
               {allMajorData?.content?.[0]?.department?.name || "No Department"}
             </h3>
           </div>
-
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search classes..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Majors Selection */}
-      {allMajorData?.content && allMajorData.content.length > 0 ? (
-        <div className="relative flex items-center my-6">
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-0 z-10 rounded-full"
-            onClick={scrollLeft}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+      <CollapsibleFilterPanel
+        config={{
+          title: "Class List",
+          totalCount: allClassData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search classes...",
+          onSearchChange: handleSearchChange,
+          filters:
+            allMajorData?.content && allMajorData.content.length > 0
+              ? [
+                  {
+                    id: "major",
+                    type: "custom",
+                    label: "Major",
+                    value: selectedMajor ? String(selectedMajor) : "",
+                    onChange: (v) => handleMajorSelect(String(v)),
+                    render: ({ value, onChange }) => (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-medium text-foreground/80">
+                          Major
+                        </label>
+                        <Select onValueChange={onChange} value={value}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select a major" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allMajorData.content.map((major) => (
+                              <SelectItem key={major.id} value={String(major.id)}>
+                                {major.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ),
+                  },
+                ]
+              : [],
+        }}
+      />
 
-          <div
-            ref={scrollContainerRef}
-            className="flex overflow-x-auto scrollbar-hide gap-2 px-16 scroll-smooth"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {allMajorData.content.map((major) => (
-              <Button
-                key={major.id}
-                variant={selectedMajor === major.id ? "default" : "outline"}
-                className="whitespace-nowrap"
-                onClick={() => handleMajorSelect(major.id)}
-              >
-                {major.name}
-              </Button>
-            ))}
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-0 z-10 rounded-full"
-            onClick={scrollRight}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : null}
-
-      {/* Display Classes */}
       {selectedMajor && (
-        <Card className="mt-6">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="mb-6">
-                <p className="text-muted-foreground font-bold">
-                  Total Class: {allClassData?.totalElements || 0}
-                </p>
-              </div>
-
-              {isLoadingClasses ? (
-                <div className="flex justify-center py-8">
-                  <Loading />
-                </div>
-              ) : allClassData?.content && allClassData.content.length > 0 ? (
-                <div className="space-y-4">
-                  {allClassData.content.map((classItem: ClassModel) => (
-                    <ClassCard
-                      IsAdd={true}
-                      key={classItem.id}
-                      classData={classItem}
-                      onViewSchedule={() => handleViewSchedule(classItem)}
-                      onAddSchedule={() => handleAddSchedule(classItem)}
-                    />
-                  ))}
-                  {allClassData && (
-                    <div className="mt-4 flex justify-end animate-in fade-in slide-in-from-bottom-2 duration-500 delay-700">
-                      <PaginationPage
-                        currentPage={currentPage}
-                        totalPages={allClassData.totalPages}
-                        onPageChange={handlePageChange}
-                        className="transition-all duration-300"
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <EmptyClassesState
-                  majorName={
-                    allMajorData?.content?.find((m) => m.id === selectedMajor)
-                      ?.name
-                  }
-                />
-              )}
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="mb-6">
+              <p className="text-muted-foreground font-bold">
+                Total Class: {allClassData?.totalElements || 0}
+              </p>
             </div>
+
+            {isLoadingClasses ? (
+              <div className="flex justify-center py-8">
+                <Loading />
+              </div>
+            ) : allClassData?.content && allClassData.content.length > 0 ? (
+              <div className="space-y-4">
+                {allClassData.content.map((classItem: ClassModel) => (
+                  <ClassCard
+                    IsAdd={true}
+                    key={classItem.id}
+                    classData={classItem}
+                    onViewSchedule={() => handleViewSchedule(classItem)}
+                    onAddSchedule={() => handleAddSchedule(classItem)}
+                  />
+                ))}
+                <DataTablePagination
+                  currentPage={currentPage}
+                  totalPages={allClassData.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            ) : (
+              <EmptyClassesState
+                majorName={
+                  allMajorData?.content?.find((m) => m.id === selectedMajor)
+                    ?.name
+                }
+              />
+            )}
           </CardContent>
         </Card>
       )}

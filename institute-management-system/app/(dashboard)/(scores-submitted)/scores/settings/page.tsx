@@ -12,13 +12,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { Input } from "@/components/ui/input";
 import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
@@ -219,19 +213,7 @@ export default function ScoreSettingPage() {
       <div className="space-y-4">
         <Card>
           <CardContent className="flex flex-col items-start justify-start p-6 space-y-4">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink>Score Setting</BreadcrumbLink>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <PageBreadcrumb items={[{ label: "Score Setting" }]} />
 
             <h1 className="text-2xl font-bold text-gray-900">Score Setting</h1>
 

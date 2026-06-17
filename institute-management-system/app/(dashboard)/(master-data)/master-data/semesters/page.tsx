@@ -10,15 +10,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { format, parseISO } from "date-fns";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { SemesterFormModal } from "@/components/dashboard/master-data/manage-semester/semester-form-modal";
@@ -327,17 +320,7 @@ export default function ManageSemester() {
     <div className="space-y-4">
       <Card className="border-0 shadow-none bg-transparent p-0">
         <CardContent className="p-0 space-y-2">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Manage Semester</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <PageBreadcrumb items={[{ label: "Manage Semester" }]} />
         </CardContent>
       </Card>
 

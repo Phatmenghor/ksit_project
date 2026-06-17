@@ -1,35 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Clock,
-  Users,
-  MapPin,
-  Edit,
-  Pen,
-  Copy,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DAYS_OF_WEEK,
-  DayType,
-  SemesterFilter,
-  StatusEnum,
-} from "@/constants/constant";
+import { DAYS_OF_WEEK, DayType, SemesterFilter, StatusEnum } from "@/constants/constant";
 import Loading from "@/components/shared/loading";
 import { toast } from "sonner";
 import {
@@ -41,8 +17,6 @@ import {
   ScheduleModel,
 } from "@/model/attendance/schedule/schedule-model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { Separator } from "@/components/ui/separator";
-import PaginationPage from "@/components/shared/pagination-page";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
@@ -59,14 +33,15 @@ import DuplicateScheduleModal from "@/components/dashboard/manage-schedule/dupli
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+
+const ALL_DAY: DayType = { label: "All", value: "ALL" };
 
 const AllSchedulePage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [selectedDay, setSelectedDay] = useState<DayType>({
-    label: "All",
-    value: "ALL",
-  });
+  const [selectedDay, setSelectedDay] = useState<DayType>(ALL_DAY);
   const [scheduleData, setScheduleData] = useState<AllScheduleModel | null>(
     null
   );
@@ -79,7 +54,6 @@ const AllSchedulePage = () => {
     useState(false);
   const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
 
-  // Fix hydration issue: Use stable default and update on client mount
   const [selectedYear, setSelectedYear] = useState<number>(2024);
   const [isHydrated, setIsHydrated] = useState(false);
   const [classId, setClassId] = useState<number | null>(null);
@@ -89,12 +63,9 @@ const AllSchedulePage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Handle hydration and initial setup
   useEffect(() => {
-    // Set current year after hydration
     setSelectedYear(new Date().getFullYear());
 
-    // Set classId after hydration
     if (params?.classId) {
       setClassId(Number(params.classId));
     }
@@ -102,11 +73,10 @@ const AllSchedulePage = () => {
     setIsHydrated(true);
   }, [params?.classId]);
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.MANAGE_SCHEDULE.All_SCHEDULE_DETAIL(String(classId)),
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.MANAGE_SCHEDULE.All_SCHEDULE_DETAIL(String(classId)),
+    defaultPageSize: 10,
+  });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +86,6 @@ const AllSchedulePage = () => {
     }
   };
 
-  // Handle initial URL setup after hydration
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -136,7 +105,6 @@ const AllSchedulePage = () => {
 
       setIsLoading(true);
       try {
-        // Create base filters object
         const baseFilters = {
           classId: classId,
           search: debouncedSearchQuery,
@@ -153,7 +121,6 @@ const AllSchedulePage = () => {
         const response = await getAllScheduleService(baseFilters);
 
         setScheduleData(response);
-        // Handle case where current page exceeds total pages
         if (response.totalPages > 0 && currentPage > response.totalPages) {
           updateUrlWithPage(response.totalPages);
           return;
@@ -188,20 +155,21 @@ const AllSchedulePage = () => {
     fetchSchedule,
   ]);
 
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  };
-
-  const handleDaySelect = (day: DayType) => {
+  const handleDaySelect = (value: string | number | null | undefined) => {
+    const day = DAYS_OF_WEEK.find((d) => d.value === value) ?? ALL_DAY;
     setSelectedDay(day);
+    updateUrlWithPage(1);
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+    updateUrlWithPage(1);
+  };
+
+  const handleSemesterChange = (
+    semester: string | number | null | undefined
+  ) => {
+    setSelectedSemester(semester ? String(semester) : "ALL");
     updateUrlWithPage(1);
   };
 
@@ -254,39 +222,21 @@ const AllSchedulePage = () => {
     router.push(ROUTE.STUDENT_LIST(String(scheduleId)));
   };
 
-  // Don't render until hydrated to avoid mismatches
   if (!isHydrated) {
     return <Loading />;
   }
 
   return (
-    <div>
-      <Card>
-        <CardContent className="p-3 sm:p-6 space-y-3 sm:space-y-4">
-          {/* Breadcrumb - Hide on very small screens */}
-          <div className="hidden sm:block">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink href={ROUTE.MANAGE_SCHEDULE.DEPARTMENT}>
-                    Department List
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Class</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <PageBreadcrumb
+            items={[
+              { label: "Department List", href: ROUTE.MANAGE_SCHEDULE.DEPARTMENT },
+              { label: "Class" },
+            ]}
+          />
 
-          {/* Header with back button and title */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="ghost"
@@ -304,37 +254,74 @@ const AllSchedulePage = () => {
               Class Schedule List
             </h3>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Search and filters section */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
-            {/* Search input - full width on mobile, limited on desktop */}
-            <div className="relative w-full sm:max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search class..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-
-            {/* Filters and actions */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:items-center">
-              {/* Year and Semester selectors */}
-              <div className="flex gap-2">
-                <div className="flex-1 sm:flex-none">
-                  <YearSelector
-                    value={selectedYear}
-                    onChange={setSelectedYear}
-                  />
+      <CollapsibleFilterPanel
+        config={{
+          title: selectedDay.label,
+          totalCount: scheduleData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search class...",
+          onSearchChange: handleSearchChange,
+          extraActions: (
+            <Button
+              onClick={() => setIsDuplicateScheduleModalOpen(true)}
+              className="bg-teal-900 hover:bg-teal-950 h-9"
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Duplicate
+            </Button>
+          ),
+          filters: [
+            {
+              id: "year",
+              type: "custom",
+              label: "Academic Year",
+              value: selectedYear,
+              onChange: (v) => handleYearChange(v ?? new Date().getFullYear()),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Academic Year</label>
+                  <YearSelector value={value} onChange={onChange} className="h-9" />
                 </div>
-                <div className="flex-1 sm:flex-none">
-                  <Select
-                    onValueChange={setSelectedSemester}
-                    value={selectedSemester}
-                  >
-                    <SelectTrigger className="w-full sm:w-auto">
+              ),
+            },
+            {
+              id: "day",
+              type: "custom",
+              label: "Day",
+              value: selectedDay.value,
+              onChange: (v) => handleDaySelect(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Day</label>
+                  <Select onValueChange={onChange} value={value}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select a day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[ALL_DAY, ...DAYS_OF_WEEK].map((day) => (
+                        <SelectItem key={day.value} value={day.value}>
+                          {day.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ),
+            },
+            {
+              id: "semester",
+              type: "custom",
+              label: "Semester",
+              value: selectedSemester,
+              onChange: (v) => handleSemesterChange(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Semester</label>
+                  <Select onValueChange={onChange} value={value}>
+                    <SelectTrigger className="h-9">
                       <SelectValue placeholder="Select semester" />
                     </SelectTrigger>
                     <SelectContent>
@@ -346,158 +333,108 @@ const AllSchedulePage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              ),
+            },
+          ],
+        }}
+      />
 
-              {/* Duplicate button */}
-              <Button
-                onClick={() => setIsDuplicateScheduleModalOpen(true)}
-                className="bg-teal-900 hover:bg-teal-950 w-full sm:w-auto"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                <span className="sm:inline">Duplicate</span>
-              </Button>
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground">
+              Total Schedule: {scheduleData?.totalElements || 0}
+            </p>
+          </div>
+
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <div>
+              {scheduleData && scheduleData.totalElements > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {scheduleData.content.map((schedule) => (
+                    <ScheduleCard
+                      key={schedule.id}
+                      schedule={schedule}
+                      onClick={handleCardClick}
+                      showEditButton={true}
+                      showDeleteButton={true}
+                      onDeleteClick={() => handleDeleteClick(schedule)}
+                      onEditClick={(scheduleId) => {
+                        handleEditClick(scheduleId);
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No classes scheduled for {selectedDay?.label || "this day"}.
+                </div>
+              )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
 
-      <div className="relative flex items-center my-6 ">
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-0 z-10 rounded-full"
-          onClick={scrollLeft}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        <div
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto scrollbar-hide gap-2 px-16 scroll-smooth"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {DAYS_OF_WEEK.map((day) => (
-            <Button
-              key={day.value}
-              variant={selectedDay?.value === day.value ? "default" : "outline"}
-              className="whitespace-nowrap"
-              onClick={() => handleDaySelect(day)}
-            >
-              {day.label}
-            </Button>
-          ))}
-        </div>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute right-0 z-10 rounded-full"
-          onClick={scrollRight}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="bg-white rounded-lg p-6 shadow-sm border">
-        <div className="mb-4">
-          <h2 className="text-lg font-bold">
-            {selectedDay ? `${selectedDay.label}` : ""}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Total Schedule: {scheduleData?.totalElements || 0}
-          </p>
-        </div>
-
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <div>
-            {scheduleData && scheduleData.totalElements > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {scheduleData.content.map((schedule) => (
-                  <ScheduleCard
-                    key={schedule.id}
-                    schedule={schedule}
-                    onClick={handleCardClick}
-                    showEditButton={true}
-                    showDeleteButton={true}
-                    onDeleteClick={() => handleDeleteClick(schedule)}
-                    onEditClick={(scheduleId) => {
-                      handleEditClick(scheduleId);
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No classes scheduled for {selectedDay?.label || "this day"}.
-              </div>
-            )}
-          </div>
-        )}
-
-        <DuplicateScheduleModal
-          sources={
-            scheduleData?.content
-              ? Array.from(
-                  new Set(
-                    scheduleData.content.map(
-                      (s) => `${s.classes.id}-${s.semester.id}`
+          <DuplicateScheduleModal
+            sources={
+              scheduleData?.content
+                ? Array.from(
+                    new Set(
+                      scheduleData.content.map(
+                        (s) => `${s.classes.id}-${s.semester.id}`
+                      )
                     )
-                  )
-                ).map((key) => {
-                  const [sourceClassId, sourceSemesterId] = key
-                    .split("-")
-                    .map((v) => parseInt(v));
-                  return { sourceClassId, sourceSemesterId };
-                })
-              : []
-          }
-          isOpen={isDuplicateScheduleModalOpen}
-          onOpenChange={() => setIsDuplicateScheduleModalOpen(false)}
-        />
-        <DeleteConfirmationDialog
-          isOpen={isDeleteDialogOpen}
-          onClose={() => {
-            setSelectedSchedule(null);
-            setIsDeleteDialogOpen(false);
-          }}
-          onDelete={handleDelete}
-          title="Delete Schedule"
-          description={
-            selectedSchedule && (
-              <>
-                Are you sure you want to delete this schedule?
-                <br />
-                <br />
-                <strong>Class:</strong> {selectedSchedule.classes.code} <br />
-                <strong>Course:</strong> {selectedSchedule.course.nameEn} <br />
-                <strong>Teacher:</strong>{" "}
-                {selectedSchedule.teacher.englishFirstName}{" "}
-                {selectedSchedule.teacher.englishLastName} <br />
-                <strong>Day:</strong> {selectedSchedule.day} <br />
-                <strong>Time:</strong> {selectedSchedule.startTime} -{" "}
-                {selectedSchedule.endTime} <br />
-                <strong>Room:</strong> {selectedSchedule.room.name} <br />
-                <strong>Semester:</strong> {selectedSchedule.semester.semester}{" "}
-                ({selectedSchedule.semester.academyYear})
-              </>
-            )
-          }
-          isSubmitting={isSubmitting}
-        />
+                  ).map((key) => {
+                    const [sourceClassId, sourceSemesterId] = key
+                      .split("-")
+                      .map((v) => parseInt(v));
+                    return { sourceClassId, sourceSemesterId };
+                  })
+                : []
+            }
+            isOpen={isDuplicateScheduleModalOpen}
+            onOpenChange={() => setIsDuplicateScheduleModalOpen(false)}
+          />
+          <DeleteConfirmationDialog
+            isOpen={isDeleteDialogOpen}
+            onClose={() => {
+              setSelectedSchedule(null);
+              setIsDeleteDialogOpen(false);
+            }}
+            onDelete={handleDelete}
+            title="Delete Schedule"
+            description={
+              selectedSchedule && (
+                <>
+                  Are you sure you want to delete this schedule?
+                  <br />
+                  <br />
+                  <strong>Class:</strong> {selectedSchedule.classes.code} <br />
+                  <strong>Course:</strong> {selectedSchedule.course.nameEn} <br />
+                  <strong>Teacher:</strong>{" "}
+                  {selectedSchedule.teacher.englishFirstName}{" "}
+                  {selectedSchedule.teacher.englishLastName} <br />
+                  <strong>Day:</strong> {selectedSchedule.day} <br />
+                  <strong>Time:</strong> {selectedSchedule.startTime} -{" "}
+                  {selectedSchedule.endTime} <br />
+                  <strong>Room:</strong> {selectedSchedule.room.name} <br />
+                  <strong>Semester:</strong> {selectedSchedule.semester.semester}{" "}
+                  ({selectedSchedule.semester.academyYear})
+                </>
+              )
+            }
+            isSubmitting={isSubmitting}
+          />
 
-        {/* Pagination - FIXED to use handlePageChange */}
-        {!isLoading && scheduleData && (
-          <div className="mt-8 flex justify-end">
-            <PaginationPage
+          {!isLoading && scheduleData && (
+            <DataTablePagination
               currentPage={currentPage}
               totalPages={scheduleData.totalPages}
               onPageChange={handlePageChange}
             />
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
