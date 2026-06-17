@@ -24,10 +24,7 @@ import {
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import AdminModalForm from "@/components/dashboard/users/admin/admin-modal";
 import { useDebounce } from "@/utils/debounce/debounce";
-import {
-  AddStaffModel,
-  EditStaffModel,
-} from "@/model/user/staff/staff.request.model";
+import { AddStaffModel } from "@/model/user/staff/staff.request.model";
 import { AdminFormData } from "@/model/user/staff/staff.schema";
 import {
   AllStaffModel,
@@ -54,12 +51,8 @@ export default function AdminsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<AllStaffModel | null>(null);
-  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [initialData, setInitialData] = useState<AdminFormData | undefined>(
-    undefined
-  );
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,28 +122,13 @@ export default function AdminsListPage() {
   }, [currentPage]);
 
   const handleOpenAddModal = () => {
-    setModalMode("add");
-    setInitialData(undefined);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (adminData: StaffModel) => {
-    setSelectedAdmin(adminData);
-    setInitialData({
-      ...adminData,
-      roles: adminData.roles ?? [RoleEnum.ADMIN],
-      first_name: adminData.khmerFirstName || "",
-      last_name: adminData.khmerLastName || "",
-      confirmPassword: "",
-    });
-    setModalMode("edit");
     setIsModalOpen(true);
   };
 
   async function handleSubmit(formData: AdminFormData) {
     setIsSubmitting(true);
     try {
-      const basePayload = {
+      const addPayload: AddStaffModel = {
         username: cleanRequiredFieldAdvance(formData.username, "username"),
         email: cleanRequiredFieldAdvance(formData.email, "email"),
         khmerFirstName: cleanField(formData.first_name),
@@ -158,37 +136,16 @@ export default function AdminsListPage() {
         englishFirstName: cleanField(formData.first_name),
         englishLastName: cleanField(formData.last_name),
         status: cleanRequiredFieldAdvance(formData.status, "status"),
-        roles: formData.roles,
+        roles: formData.roles ?? undefined,
+        password: cleanRequiredFieldAdvance(formData.password, "password"),
       };
 
-      if (modalMode === "add") {
-        const addPayload: AddStaffModel = {
-          ...basePayload,
-          roles: formData.roles ?? undefined,
-          password: cleanRequiredFieldAdvance(formData.password, "password"),
-        };
-
-        const response = await addStaffService(addPayload);
-        if (response) {
-          // Refresh data instead of manual state update for consistency
-          await loadData();
-          toast.success(`Admin ${response.username} added successfully`);
-          setIsModalOpen(false);
-        }
-      } else if (modalMode === "edit" && formData.id) {
-        const updatePayload: EditStaffModel = {
-          ...basePayload,
-          status: formData.status ?? undefined,
-          roles: formData.roles ?? undefined,
-        };
-
-        const response = await updateStaffService(formData.id, updatePayload);
-        if (response) {
-          // Refresh data instead of manual state update for consistency
-          await loadData();
-          toast.success(`Admin ${response.username} updated successfully`);
-          setIsModalOpen(false);
-        }
+      const response = await addStaffService(addPayload);
+      if (response) {
+        // Refresh data instead of manual state update for consistency
+        await loadData();
+        toast.success(`Admin ${response.username} added successfully`);
+        setIsModalOpen(false);
       }
     } catch (error: any) {
       toast.error(error.message || "An unexpected error occurred");
@@ -285,7 +242,11 @@ export default function AdminsListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => handleOpenEditModal(admin)}
+                  onClick={() =>
+                    router.push(
+                      ROUTE.USERS.ADMIN.EDIT_ADMIN(String(admin.id))
+                    )
+                  }
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
@@ -389,10 +350,9 @@ export default function AdminsListPage() {
 
       <AdminModalForm
         isOpen={isModalOpen}
-        mode={modalMode}
+        mode="add"
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        initialData={initialData}
         isSubmitting={isSubmitting}
       />
 

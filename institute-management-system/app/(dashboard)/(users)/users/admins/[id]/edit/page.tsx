@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
-  getStaffByTokenService,
+  getStaffByIdService,
   updateStaffService,
 } from "@/service/user/user.service";
 import TeacherForm from "@/components/dashboard/users/teachers/form/teacher-form";
@@ -13,19 +13,19 @@ import { EditStaffFormData } from "@/model/user/staff/staff.schema";
 import { EditStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
 
-export default function EditAdminProfilePage() {
+export default function EditAdminPage() {
   const [loading, setLoading] = useState(false);
+
   const [initialValues, setInitialValues] = useState<EditStaffFormData>();
-  const [staffId, setStaffId] = useState<number | null>(null);
 
   const router = useRouter();
+  const params = useParams();
+  const adminId = params?.id as string;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await getStaffByTokenService();
-
-        setStaffId(response.id);
+        const response = await getStaffByIdService(adminId);
 
         const payload: EditStaffFormData = {
           email: response?.email ?? "",
@@ -96,19 +96,14 @@ export default function EditAdminProfilePage() {
 
         setInitialValues(payload);
       } catch (error) {
-        toast.error("Failed to load profile data");
+        toast.error("Failed to load admin data");
       }
     };
 
     fetchData();
-  }, []);
+  }, [adminId]);
 
   const onSubmit = async (data: EditStaffFormData) => {
-    if (staffId == null) {
-      toast.error("ID is missing");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -248,17 +243,16 @@ export default function EditAdminProfilePage() {
           })
         ),
       };
-
-      const response = await updateStaffService(staffId, payload);
+      const response = await updateStaffService(Number(adminId), payload);
 
       if (response) {
-        toast.success("Profile updated successfully");
-        router.push(ROUTE.PROFILE.ADMIN);
+        toast.success("Admin information updated successfully");
+        router.push(ROUTE.USERS.ADMIN.INDEX);
       } else {
-        toast.error("Failed to update profile");
+        toast.error("Failed to update information for Admin");
       }
     } catch (error) {
-      toast.error("Failed to update profile");
+      toast.error("Failed to update information for Admin");
     } finally {
       setLoading(false);
     }
@@ -267,13 +261,13 @@ export default function EditAdminProfilePage() {
   return (
     <TeacherForm
       mode="Edit"
-      title="Edit Profile"
+      title="Edit Admin"
       onSubmit={onSubmit}
       initialValues={initialValues}
       loading={loading}
-      back={ROUTE.PROFILE.ADMIN}
-      parentLabel="Profile"
-      onDiscard={() => router.push(ROUTE.PROFILE.ADMIN)}
+      back={ROUTE.USERS.ADMIN.INDEX}
+      parentLabel="Admin"
+      onDiscard={() => router.push(ROUTE.USERS.ADMIN.INDEX)}
     />
   );
 }
