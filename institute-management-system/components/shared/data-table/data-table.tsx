@@ -1,8 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DataTablePagination } from "./data-table-pagination";
 
 export interface TableColumn<T = unknown> {
   key: string;
@@ -36,24 +36,6 @@ interface DataTableProps<T = unknown> {
 }
 
 const SKELETON_ROWS = 8;
-
-function getPaginationItems(currentPage: number, totalPages: number): (number | "ellipsis")[] {
-  const items: (number | "ellipsis")[] = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) items.push(i);
-  } else {
-    items.push(1);
-    let start = Math.max(2, currentPage - 2);
-    let end = Math.min(totalPages - 1, currentPage + 2);
-    if (currentPage <= 3) { start = 2; end = 5; }
-    if (currentPage >= totalPages - 3) { start = totalPages - 4; end = totalPages - 1; }
-    if (start > 2) items.push("ellipsis");
-    for (let i = start; i <= end; i++) items.push(i);
-    if (end < totalPages - 1) items.push("ellipsis");
-    items.push(totalPages);
-  }
-  return items;
-}
 
 export function DataTable<T = unknown>({
   data,
@@ -153,70 +135,27 @@ export function DataTable<T = unknown>({
 
       {showPagination && totalPages > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1 pt-4 pb-1">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            {totalPages > 1 && (
-              <span>
-                Page <span className="font-medium text-foreground">{currentPage}</span> of <span className="font-medium text-foreground">{totalPages}</span>
-              </span>
-            )}
-            {showPageSizeSelector && onPageSizeChange && (
-              <div className="flex items-center gap-1.5">
-                <span>Rows per page:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                  className="h-8 rounded-md border border-input px-2 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary transition-colors"
-                >
-                  {pageSizeOptions.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="h-8 px-2.5 flex items-center gap-1 rounded-md border text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed border-border bg-background hover:bg-primary/10 hover:border-primary hover:text-primary"
+          {showPageSizeSelector && onPageSizeChange && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>Rows per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                className="h-8 rounded-md border border-input px-2 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary transition-colors"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Prev</span>
-              </button>
-
-              <div className="flex items-center gap-0.5">
-                {getPaginationItems(currentPage, totalPages).map((item, i) =>
-                  item === "ellipsis" ? (
-                    <span key={`e-${i}`} className="px-1.5 text-xs text-muted-foreground">…</span>
-                  ) : (
-                    <button
-                      key={item}
-                      onClick={() => onPageChange(item)}
-                      className={cn(
-                        "h-8 min-w-[32px] px-2 rounded-md text-xs font-medium transition-all border",
-                        currentPage === item
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : "bg-background border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
-                      )}
-                    >
-                      {item}
-                    </button>
-                  )
-                )}
-              </div>
-
-              <button
-                onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="h-8 px-2.5 flex items-center gap-1 rounded-md border text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed border-border bg-background hover:bg-primary/10 hover:border-primary hover:text-primary"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
+                {pageSizeOptions.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
             </div>
           )}
+
+          <DataTablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            className="px-0 pt-0 pb-0 flex-1"
+          />
         </div>
       )}
     </div>

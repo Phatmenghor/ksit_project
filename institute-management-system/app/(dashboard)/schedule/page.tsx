@@ -22,7 +22,7 @@ import Loading from "@/components/shared/loading";
 import { toast } from "sonner";
 import { getAllMyScheduleService } from "@/service/schedule/schedule.service";
 import { useDebounce } from "@/utils/debounce/debounce";
-import PaginationPage from "@/components/shared/pagination-page";
+import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
@@ -324,15 +324,12 @@ const ScheduleAllPage = () => {
 
           {/* Pagination */}
           {!isLoading && scheduleData && scheduleData.totalPages > 1 && (
-            <div className="mt-8 flex justify-end">
-              <div>
-                <PaginationPage
-                  currentPage={currentPage}
-                  totalPages={scheduleData.totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            </div>
+            <DataTablePagination
+              currentPage={currentPage}
+              totalPages={scheduleData.totalPages}
+              onPageChange={handlePageChange}
+              className="mt-4"
+            />
           )}
         </CardContent>
       </Card>
