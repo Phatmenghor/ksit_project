@@ -29,6 +29,16 @@ interface ScheduleCardProps {
   onDeleteClick?: () => void;
 }
 
+function formatTime12h(time?: string): string {
+  if (!time) return "—";
+  const [hourStr, minuteStr] = time.split(":");
+  const hour = parseInt(hourStr, 10);
+  if (Number.isNaN(hour)) return time;
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minuteStr ?? "00"} ${period}`;
+}
+
 const ScheduleCard: React.FC<ScheduleCardProps> = ({
   schedule,
   onClick,
@@ -91,7 +101,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 
   return (
     <Card
-      className={`group h-full flex flex-col border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 ${
+      className={`group h-full flex flex-col border-2 border-primary/30 bg-white shadow-sm hover:shadow-md hover:border-primary/60 transition-all duration-200 ${
         onClick ? "cursor-pointer" : ""
       } ${className}`}
       onClick={handleCardClick}
@@ -143,7 +153,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
         <div className="flex items-center gap-1.5">
           <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
           <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
-            {schedule.startTime} – {schedule.endTime}
+            {formatTime12h(schedule.startTime)} – {formatTime12h(schedule.endTime)}
           </span>
         </div>
         <div className="flex items-center gap-1.5 min-w-0">
@@ -158,6 +168,8 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
             {schedule.room.name || "—"}
           </span>
         </div>
+
+        <div className="border-t border-gray-100" />
 
         {/* Group 5: Credits / Total hours (always rendered for consistent height) */}
         <div className="flex items-center gap-3 text-xs text-gray-500">
