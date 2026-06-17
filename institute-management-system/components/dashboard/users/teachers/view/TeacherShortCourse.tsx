@@ -13,37 +13,37 @@ export default function TeacherShortCourseSection({ teacher }: TeacherProps) {
     {
       key: "skill",
       header: "ផ្នែក",
-      render: (teacher: any) => `${teacher.skill ?? "---"}`,
+      render: (teacher: any) => teacher.skill || "N/A",
     },
     {
       key: "skillName",
       header: "ឈ្មោះជំនាញ",
-      render: (teacher: any) => `${teacher.skillName ?? "---"}`,
+      render: (teacher: any) => teacher.skillName || "N/A",
     },
     {
       key: "startDate",
       header: "ថ្ងៃចាប់ផ្តើម",
-      render: (teacher: any) => `${teacher.startDate ?? "---"}`,
+      render: (teacher: any) => teacher.startDate || "N/A",
     },
     {
       key: "endDate",
       header: "ថ្ងៃបញ្ចប់",
-      render: (teacher: any) => `${teacher.endDate ?? "---"}`,
+      render: (teacher: any) => teacher.endDate || "N/A",
     },
     {
       key: "duration",
       header: "រយៈពេល",
-      render: (teacher: any) => `${teacher.duration ?? "---"}`,
+      render: (teacher: any) => teacher.duration || "N/A",
     },
     {
       key: "preparedBy",
       header: "រៀបចំដោយ",
-      render: (teacher: any) => `${teacher.preparedBy ?? "---"}`,
+      render: (teacher: any) => teacher.preparedBy || "N/A",
     },
     {
       key: "supportBy",
       header: "គាំទ្រដោយ",
-      render: (teacher: any) => `${teacher.supportBy ?? "---"}`,
+      render: (teacher: any) => teacher.supportBy || "N/A",
     },
   ];
 

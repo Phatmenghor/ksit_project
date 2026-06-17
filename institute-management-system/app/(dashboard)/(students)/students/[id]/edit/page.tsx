@@ -14,7 +14,7 @@ import {
   StudentFormSchema,
 } from "@/model/user/student/student.schema";
 import { EditStudentModel } from "@/model/user/student/student.request.model";
-import { cleanField } from "@/utils/map-helper/student";
+import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
 export default function EditSingleStudentPage() {
   const [loading, setLoading] = useState(false);
   const [initialValues, setInitialValues] = useState<EditStudentFormData>();

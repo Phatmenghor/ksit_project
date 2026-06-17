@@ -13,22 +13,22 @@ export default function TeacherLanguageSection({ teacher }: TeacherProps) {
     {
       key: "language",
       header: "ភាសា",
-      render: (teacher: any) => `${teacher.language ?? "---"}`,
+      render: (teacher: any) => teacher.language || "N/A",
     },
     {
       key: "reading",
       header: "ការអាន",
-      render: (teacher: any) => `${teacher.reading ?? "---"}`,
+      render: (teacher: any) => teacher.reading || "N/A",
     },
     {
       key: "writing",
       header: "ការសរសេរ",
-      render: (teacher: any) => `${teacher.writing ?? "---"}`,
+      render: (teacher: any) => teacher.writing || "N/A",
     },
     {
       key: "speaking",
       header: "ការសន្ទនា",
-      render: (teacher: any) => `${teacher.speaking ?? "---"}`,
+      render: (teacher: any) => teacher.speaking || "N/A",
     },
   ];
 

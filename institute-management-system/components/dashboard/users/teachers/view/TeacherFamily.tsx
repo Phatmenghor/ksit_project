@@ -5,82 +5,46 @@ import React from "react";
 import InfoGrid from "../../shared/user-personal-history";
 import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
 import { TeacherFamily } from "@/model/user/staff/staff.request.model";
-import { formatValue } from "@/utils/map-helper/student";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TeacherProps {
   teacher: TeacherFamily[] | null;
   familyStatus: StaffRespondModel | null;
 }
 
-export default function TeacherFamilySection({
-  teacher,
-  familyStatus,
-}: TeacherProps) {
-  const isMobile = useIsMobile();
+export default function TeacherFamilySection({ teacher, familyStatus }: TeacherProps) {
   const infoItems = [
-    {
-      label: "ស្ថានភាពគ្រួស",
-      value: formatValue(familyStatus?.maritalStatus),
-    },
-    {
-      label: "ត្រូវជា",
-      value: formatValue(familyStatus?.mustBe),
-    },
-    {
-      label: "មុខរបរសហព័ទ្ធ",
-      value: formatValue(familyStatus?.affiliatedProfession),
-    },
-    {
-      label: "ឈ្មោះសហព័ទ្ធ",
-      value: formatValue(familyStatus?.federationName),
-    },
-    {
-      label: "អង្គភាពសហព័ទ្ធ",
-      value: formatValue(familyStatus?.affiliatedOrganization),
-    },
-    {
-      label: "ថ្ងៃខែឆ្នាំកំណើតសហព័ទ្ធ",
-      value: formatValue(familyStatus?.federationEstablishmentDate),
-    },
-    {
-      label: "ប្រាក់ខែប្រពន្ធ",
-      value: formatValue(familyStatus?.wivesSalary),
-    },
-    {
-      label: "លេខទូរស័ព្ទផ្ទាល់ខ្លួន",
-      value: formatValue(familyStatus?.phoneNumber),
-    },
-    {
-      label: "អ៊ីមែល",
-      value: formatValue(familyStatus?.email),
-    },
-    {
-      label: "អាសយដ្ឋានបច្ចុប្បន្ន",
-      value: formatValue(familyStatus?.currentAddress),
-    },
+    { label: "ស្ថានភាពគ្រួស", value: familyStatus?.maritalStatus },
+    { label: "ត្រូវជា", value: familyStatus?.mustBe },
+    { label: "មុខរបរសហព័ទ្ធ", value: familyStatus?.affiliatedProfession },
+    { label: "ឈ្មោះសហព័ទ្ធ", value: familyStatus?.federationName },
+    { label: "អង្គភាពសហព័ទ្ធ", value: familyStatus?.affiliatedOrganization },
+    { label: "ថ្ងៃខែឆ្នាំកំណើតសហព័ទ្ធ", value: familyStatus?.federationEstablishmentDate },
+    { label: "ប្រាក់ខែប្រពន្ធ", value: familyStatus?.wivesSalary },
+    { label: "លេខទូរស័ព្ទផ្ទាល់ខ្លួន", value: familyStatus?.phoneNumber },
+    { label: "អ៊ីមែល", value: familyStatus?.email },
+    { label: "អាសយដ្ឋានបច្ចុប្បន្ន", value: familyStatus?.currentAddress },
   ];
 
   const columns: Column<TeacherFamily>[] = [
     {
       key: "nameChild",
       header: "ឈ្មោះកូន",
-      render: (teacher: any) => `${teacher.nameChild ?? "---"}`,
+      render: (row: any) => row.nameChild || "N/A",
     },
     {
       key: "gender",
       header: "ភេទ",
-      render: (teacher: any) => `${teacher.gender ?? "---"}`,
+      render: (row: any) => row.gender || "N/A",
     },
     {
       key: "dateOfBirth",
       header: "ថ្ងៃខែឆ្នាំកំណើត",
-      render: (teacher: any) => `${teacher.dateOfBirth ?? "---"}`,
+      render: (row: any) => row.dateOfBirth || "N/A",
     },
     {
       key: "working",
       header: "មុខរបរ",
-      render: (teacher: any) => `${teacher.working ?? "---"}`,
+      render: (row: any) => row.working || "N/A",
     },
   ];
 
@@ -89,10 +53,7 @@ export default function TeacherFamilySection({
       <CardContent className="p-4 space-y-5">
         <h3>ស្ថានភាពគ្រួសារ</h3>
         <Separator />
-
-        <div>
-          <InfoGrid data={infoItems} columns={isMobile ? 1 : 2} />
-        </div>
+        <InfoGrid data={infoItems} />
         <CustomTable columns={columns} data={teacher ?? []} />
       </CardContent>
     </Card>

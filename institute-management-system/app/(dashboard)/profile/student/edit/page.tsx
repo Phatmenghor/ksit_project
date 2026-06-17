@@ -11,7 +11,7 @@ import {
   StudentFormSchema,
 } from "@/model/user/student/student.schema";
 import { EditStudentModel } from "@/model/user/student/student.request.model";
-import { cleanField } from "@/utils/map-helper/student";
+import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
 import { getStudentByTokenService } from "@/service/user/user.service";
 
 export default function EditStudentProfilePage() {

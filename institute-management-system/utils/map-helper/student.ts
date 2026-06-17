@@ -24,3 +24,9 @@ export function cleanField(value?: string | null): string | undefined {
 export function formatValue(value: any) {
   return value === null || value === undefined || value === "" ? "---" : value;
 }
+
+export function filterEmptyRows<T extends Record<string, any>>(rows: T[]): T[] {
+  return rows.filter((row) =>
+    Object.values(row).some((v) => v != null && String(v).trim() !== "")
+  );
+}

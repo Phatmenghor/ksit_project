@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { ROUTE } from "@/constants/routes";
 import { AddStaffFormData } from "@/model/user/staff/staff.schema";
 import { AddStaffModel } from "@/model/user/staff/staff.request.model";
-import { cleanField, cleanRequiredField } from "@/utils/map-helper/student";
+import { cleanField, cleanRequiredField, filterEmptyRows } from "@/utils/map-helper/student";
 
 export default function AddTeacherPage() {
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ export default function AddTeacherPage() {
         ),
         wivesSalary: cleanField(data.wivesSalary),
 
-        teachersProfessionalRank: (data.teachersProfessionalRank ?? []).map(
+        teachersProfessionalRank: filterEmptyRows(data.teachersProfessionalRank ?? []).map(
           (rank) => ({
             typeOfProfessionalRank: cleanField(rank.typeOfProfessionalRank),
             description: cleanField(rank.description),
@@ -90,14 +90,14 @@ export default function AddTeacherPage() {
           })
         ),
 
-        teacherExperience: (data.teacherExperience ?? []).map((exp) => ({
+        teacherExperience: filterEmptyRows(data.teacherExperience ?? []).map((exp) => ({
           continuousEmployment: cleanField(exp.continuousEmployment),
           workPlace: cleanField(exp.workPlace),
           startDate: cleanField(exp.startDate),
           endDate: cleanField(exp.endDate),
         })),
 
-        teacherPraiseOrCriticism: (data.teacherPraiseOrCriticism ?? []).map(
+        teacherPraiseOrCriticism: filterEmptyRows(data.teacherPraiseOrCriticism ?? []).map(
           (item) => ({
             typePraiseOrCriticism: cleanField(item.typePraiseOrCriticism),
             giveBy: cleanField(item.giveBy),
@@ -105,14 +105,14 @@ export default function AddTeacherPage() {
           })
         ),
 
-        teacherEducation: (data.teacherEducation ?? []).map((edu) => ({
+        teacherEducation: filterEmptyRows(data.teacherEducation ?? []).map((edu) => ({
           culturalLevel: cleanField(edu.culturalLevel),
           skillName: cleanField(edu.skillName),
           country: cleanField(edu.country),
           dateAccepted: cleanField(edu.dateAccepted),
         })),
 
-        teacherVocational: (data.teacherVocational ?? []).map((voc) => ({
+        teacherVocational: filterEmptyRows(data.teacherVocational ?? []).map((voc) => ({
           culturalLevel: cleanField(voc.culturalLevel),
           skillOne: cleanField(voc.skillOne),
           skillTwo: cleanField(voc.skillTwo),
@@ -120,7 +120,7 @@ export default function AddTeacherPage() {
           dateAccepted: cleanField(voc.dateAccepted),
         })),
 
-        teacherShortCourse: (data.teacherShortCourse ?? []).map((course) => ({
+        teacherShortCourse: filterEmptyRows(data.teacherShortCourse ?? []).map((course) => ({
           skill: cleanField(course.skill),
           skillName: cleanField(course.skillName),
           startDate: cleanField(course.startDate),
@@ -130,14 +130,14 @@ export default function AddTeacherPage() {
           supportBy: cleanField(course.supportBy),
         })),
 
-        teacherLanguage: (data.teacherLanguage ?? []).map((lang) => ({
+        teacherLanguage: filterEmptyRows(data.teacherLanguage ?? []).map((lang) => ({
           language: cleanField(lang.language),
           reading: cleanField(lang.reading),
           writing: cleanField(lang.writing),
           speaking: cleanField(lang.speaking),
         })),
 
-        teacherFamily: (data.teacherFamily ?? []).map((fam) => ({
+        teacherFamily: filterEmptyRows(data.teacherFamily ?? []).map((fam) => ({
           nameChild: cleanField(fam.nameChild),
           gender: cleanField(fam.gender),
           dateOfBirth: cleanField(fam.dateOfBirth),

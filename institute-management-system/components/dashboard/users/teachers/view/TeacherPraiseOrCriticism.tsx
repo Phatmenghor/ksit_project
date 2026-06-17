@@ -15,17 +15,17 @@ export default function TeacherPraiseOrCriticismSection({
     {
       key: "typePraiseOrCriticism",
       header: "ប្រភេទ",
-      render: (teacher: any) => `${teacher.typePraiseOrCriticism ?? "---"}`,
+      render: (teacher: any) => teacher.typePraiseOrCriticism || "N/A",
     },
     {
       key: "giveBy",
       header: "ផ្តល់ដោយ",
-      render: (teacher: any) => `${teacher.giveBy ?? "---"}`,
+      render: (teacher: any) => teacher.giveBy || "N/A",
     },
     {
       key: "dateAccepted",
       header: "កាលបរិច្ឆេទទទួល",
-      render: (teacher: any) => `${teacher.dateAccepted ?? "---"}`,
+      render: (teacher: any) => teacher.dateAccepted || "N/A",
     },
   ];
 

@@ -13,22 +13,22 @@ export default function TeacherExperienceSection({ teacher }: TeacherProps) {
     {
       key: "continuousEmployment",
       header: "Continuous Employment",
-      render: (teacher: any) => `${teacher.continuousEmployment ?? "---"}`,
+      render: (teacher: any) => teacher.continuousEmployment || "N/A",
     },
     {
       key: "workPlace",
       header: "Workplace",
-      render: (teacher: any) => `${teacher.workPlace ?? "---"}`,
+      render: (teacher: any) => teacher.workPlace || "N/A",
     },
     {
       key: "startDate",
       header: "Start Date",
-      render: (teacher: any) => `${teacher.startDate ?? "---"}`,
+      render: (teacher: any) => teacher.startDate || "N/A",
     },
     {
       key: "endDate",
       header: "End Date",
-      render: (teacher: any) => `${teacher.endDate ?? "---"}`,
+      render: (teacher: any) => teacher.endDate || "N/A",
     },
   ];
 

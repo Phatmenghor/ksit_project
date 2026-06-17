@@ -13,27 +13,27 @@ export default function TeacherVocationalSection({ teacher }: TeacherProps) {
     {
       key: "culturalLevel",
       header: "កម្រិតវិជ្ជាជីវៈ",
-      render: (teacher: any) => `${teacher.culturalLevel ?? "---"}`,
+      render: (teacher: any) => teacher.culturalLevel || "N/A",
     },
     {
       key: "skillOne",
       header: "ឧកទេសទី១",
-      render: (teacher: any) => `${teacher.skillOne ?? "---"}`,
+      render: (teacher: any) => teacher.skillOne || "N/A",
     },
     {
       key: "skillTwo",
       header: "ឧកទេសទី២",
-      render: (teacher: any) => `${teacher.skillTwo ?? "---"}`,
+      render: (teacher: any) => teacher.skillTwo || "N/A",
     },
     {
       key: "trainingSystem",
       header: "ប្រព័ន្ធបណ្តុះបពណ្តាល",
-      render: (teacher: any) => `${teacher.trainingSystem ?? "---"}`,
+      render: (teacher: any) => teacher.trainingSystem || "N/A",
     },
     {
       key: "dateAccepted",
       header: "ថ្ងៃខែបានទទួល",
-      render: (teacher: any) => `${teacher.dateAccepted ?? "---"}`,
+      render: (teacher: any) => teacher.dateAccepted || "N/A",
     },
   ];
 

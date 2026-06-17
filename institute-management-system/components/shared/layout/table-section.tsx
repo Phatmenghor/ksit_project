@@ -59,14 +59,12 @@ export function CustomTable<T>({
             </TableRow>
           ) : data.length === 0 ? (
             <TableRow className="border-t border-gray-300 bg-white">
-              {columns.map((_, colIndex) => (
-                <TableCell
-                  key={colIndex}
-                  className="text-center text-muted-foreground p-3 border-r border-gray-300 whitespace-nowrap last:border-r-0"
-                >
-                  ---
-                </TableCell>
-              ))}
+              <TableCell
+                colSpan={columns.length}
+                className="text-center text-muted-foreground italic p-4"
+              >
+                No data
+              </TableCell>
             </TableRow>
           ) : (
             data.map((item, index) => (

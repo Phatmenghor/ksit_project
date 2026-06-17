@@ -13,22 +13,22 @@ export default function TeacherEducationSection({ teacher }: TeacherProps) {
     {
       key: "culturalLevel",
       header: "កម្រិតវប្បធម៌​",
-      render: (teacher: any) => `${teacher.culturalLevel ?? "---"}`,
+      render: (teacher: any) => teacher.culturalLevel || "N/A",
     },
     {
       key: "skillName",
       header: "កម្រិតវប្បធម៌​",
-      render: (teacher: any) => `${teacher.skillName ?? "---"}`,
+      render: (teacher: any) => teacher.skillName || "N/A",
     },
     {
       key: "dateAccepted",
       header: "កាលបរិច្ឆេទទទួល",
-      render: (teacher: any) => `${teacher.dateAccepted ?? "---"}`,
+      render: (teacher: any) => teacher.dateAccepted || "N/A",
     },
     {
       key: "country",
       header: "ប្រទេស",
-      render: (teacher: any) => `${teacher.country ?? "---"}`,
+      render: (teacher: any) => teacher.country || "N/A",
     },
   ];
 
