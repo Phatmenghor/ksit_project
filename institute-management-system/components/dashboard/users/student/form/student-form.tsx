@@ -2,7 +2,6 @@
 
 import { FormProvider, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Save } from "lucide-react";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
@@ -167,39 +166,33 @@ export default function StudentForm({
           <div className="w-full mx-auto space-y-5">
             <StudentFormDetail />
 
-            <Card>
-              <CardContent>
-                <div className="flex justify-end pt-5 gap-3">
-                  <div className="flex items-end justify-end gap-3">
-                    <Button
-                      type="button"
-                      disabled={loading || isSubmitting}
-                      variant="outline"
-                      onClick={handleClosePage}
-                    >
-                      Discard
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="bg-emerald-800 hover:bg-emerald-900"
-                      disabled={!canSubmitForm()}
-                    >
-                      {loading || isSubmitting ? (
-                        <>
-                          <Loading />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Save
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex justify-end gap-3 border-t pt-4">
+              <Button
+                type="button"
+                disabled={loading || isSubmitting}
+                variant="outline"
+                onClick={handleClosePage}
+              >
+                Discard
+              </Button>
+              <Button
+                type="submit"
+                className="bg-emerald-800 hover:bg-emerald-900"
+                disabled={!canSubmitForm()}
+              >
+                {loading || isSubmitting ? (
+                  <>
+                    <Loading />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </FormProvider>
