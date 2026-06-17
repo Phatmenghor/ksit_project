@@ -309,6 +309,8 @@ const ScheduleAllPage = () => {
                       key={schedule.id}
                       schedule={schedule}
                       onClick={handleCardClick}
+                      showViewButton
+                      onViewClick={handleCardClick}
                     />
                   ))}
                 </div>
