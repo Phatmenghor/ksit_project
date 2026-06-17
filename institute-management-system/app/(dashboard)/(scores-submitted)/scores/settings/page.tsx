@@ -63,13 +63,6 @@ const ConfigureScoreSchema = z
 
 type ScoreFormData = z.infer<typeof ConfigureScoreSchema>;
 
-function clampPercentage(rawValue: string): number | null {
-  if (rawValue === "") return 0;
-  const value = Number(rawValue);
-  if (Number.isNaN(value) || value < 0 || value > 100) return null;
-  return value;
-}
-
 export default function ScoreSettingPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +79,7 @@ export default function ScoreSettingPage() {
     handleSubmit,
     reset,
     watch,
-    formState: { errors, isValid },
+    formState: { errors },
     setValue,
   } = useForm<ScoreFormData>({
     resolver: zodResolver(ConfigureScoreSchema),
@@ -96,7 +89,7 @@ export default function ScoreSettingPage() {
       midtermPercentage: 0,
       finalPercentage: 0,
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onSubmit",
   });
 
   // Watch all form values to calculate total
@@ -204,8 +197,6 @@ export default function ScoreSettingPage() {
     }
   };
 
-  const isFormValid = isValid && totalPercentage <= 100;
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -221,14 +212,6 @@ export default function ScoreSettingPage() {
         <Card className="border-0 shadow-none bg-transparent p-0">
           <CardContent className="p-0 space-y-2">
             <PageBreadcrumb items={[{ label: "Score Setting" }]} />
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-100 shadow-sm">
-          <CardContent className="py-3 px-4">
-            <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800">
-              Score Setting
-            </h1>
           </CardContent>
         </Card>
 
@@ -307,10 +290,13 @@ export default function ScoreSettingPage() {
                                   ? "border-red-500"
                                   : ""
                               }`}
-                              onChange={(e) => {
-                                const value = clampPercentage(e.target.value);
-                                if (value !== null) field.onChange(value);
-                              }}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? 0
+                                    : Number(e.target.value)
+                                )
+                              }
                               min={0}
                               max={100}
                               placeholder="0"
@@ -345,10 +331,13 @@ export default function ScoreSettingPage() {
                                   ? "border-red-500"
                                   : ""
                               }`}
-                              onChange={(e) => {
-                                const value = clampPercentage(e.target.value);
-                                if (value !== null) field.onChange(value);
-                              }}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? 0
+                                    : Number(e.target.value)
+                                )
+                              }
                               min={0}
                               max={100}
                               placeholder="0"
@@ -381,10 +370,13 @@ export default function ScoreSettingPage() {
                               className={`h-8 px-2 text-sm ${
                                 errors.midtermPercentage ? "border-red-500" : ""
                               }`}
-                              onChange={(e) => {
-                                const value = clampPercentage(e.target.value);
-                                if (value !== null) field.onChange(value);
-                              }}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? 0
+                                    : Number(e.target.value)
+                                )
+                              }
                               min={0}
                               max={100}
                               placeholder="0"
@@ -417,10 +409,13 @@ export default function ScoreSettingPage() {
                               className={`h-8 px-2 text-sm ${
                                 errors.finalPercentage ? "border-red-500" : ""
                               }`}
-                              onChange={(e) => {
-                                const value = clampPercentage(e.target.value);
-                                if (value !== null) field.onChange(value);
-                              }}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === ""
+                                    ? 0
+                                    : Number(e.target.value)
+                                )
+                              }
                               min={0}
                               max={100}
                               placeholder="0"
@@ -485,7 +480,7 @@ export default function ScoreSettingPage() {
               <Button
                 type="submit"
                 className="px-6 bg-yellow-500 hover:bg-yellow-600 text-white disabled:opacity-50"
-                disabled={!isFormValid || isSaving}
+                disabled={isSaving}
               >
                 {isSaving ? (
                   <>
