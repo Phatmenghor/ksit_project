@@ -29,16 +29,6 @@ interface ScheduleCardProps {
   onDeleteClick?: () => void;
 }
 
-const DAY_BORDER_COLOR: Record<string, string> = {
-  MONDAY: "border-l-blue-500",
-  TUESDAY: "border-l-amber-500",
-  WEDNESDAY: "border-l-emerald-500",
-  THURSDAY: "border-l-purple-500",
-  FRIDAY: "border-l-rose-500",
-  SATURDAY: "border-l-cyan-500",
-  SUNDAY: "border-l-orange-500",
-};
-
 const ScheduleCard: React.FC<ScheduleCardProps> = ({
   schedule,
   onClick,
@@ -99,11 +89,9 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
     (showDeleteButton && onDeleteClick) ||
     (showEditButton && onEditClick);
 
-  const dayBorderColor = DAY_BORDER_COLOR[schedule.day] ?? "border-l-primary";
-
   return (
     <Card
-      className={`group h-full flex flex-col border-l-4 ${dayBorderColor} border-y border-r border-y-gray-100 border-r-gray-100 bg-white shadow-sm hover:shadow-md transition-all duration-200 ${
+      className={`group h-full flex flex-col border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 ${
         onClick ? "cursor-pointer" : ""
       } ${className}`}
       onClick={handleCardClick}
@@ -111,8 +99,8 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
       <CardContent className="p-3 sm:p-4 flex flex-col gap-2.5 h-full">
         {/* Group 1: Course identity */}
         <div className="flex items-center gap-1.5 min-w-0">
-          <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
-          <span className="text-sm font-bold text-primary flex-shrink-0">
+          <BookOpen className="h-4 w-4 text-gray-500 flex-shrink-0" />
+          <span className="text-sm font-semibold text-gray-800 flex-shrink-0">
             {schedule.course.code}
           </span>
           <span className="text-gray-300 flex-shrink-0">|</span>
@@ -121,12 +109,10 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
           </span>
         </div>
 
-        {/* Group 2: Semester / Day badges */}
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 whitespace-nowrap">
-            {formatEnumLabel(schedule.semester.semester)}
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap">
+        {/* Group 2: Semester / Day */}
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          <span>{formatEnumLabel(schedule.semester.semester)}</span>
+          <span className="flex items-center gap-1">
             <CalendarDays className="h-3 w-3" />
             {formatEnumLabel(schedule.day)}
           </span>
@@ -136,17 +122,17 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
         <div className="flex items-center gap-1.5 min-w-0">
           <GraduationCap className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
           <span className="text-xs text-gray-500 flex-shrink-0">Class:</span>
-          <span className="text-xs font-semibold text-primary flex-shrink-0">
+          <span className="text-xs font-medium text-gray-700 flex-shrink-0">
             {schedule.classes.code}
           </span>
           <span className="text-gray-300 flex-shrink-0">•</span>
           <span className="text-xs text-gray-600 truncate min-w-0 flex-1">
             {schedule.classes.major.name}
           </span>
-          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 whitespace-nowrap flex-shrink-0">
+          <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
             {formatEnumLabel(schedule.classes.yearLevel)}
           </span>
-          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap flex-shrink-0">
+          <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
             {schedule.semester.academyYear}
           </span>
         </div>
@@ -155,8 +141,8 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 
         {/* Group 4: Time / Teacher / Room */}
         <div className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-          <span className="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+          <Clock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+          <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
             {schedule.startTime} – {schedule.endTime}
           </span>
         </div>
@@ -174,16 +160,16 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
         </div>
 
         {/* Group 5: Credits / Total hours (always rendered for consistent height) */}
-        <div className="flex items-center gap-3 text-xs text-gray-400">
-          <span className="flex items-center gap-1">
-            <span className="font-medium text-gray-500">Credits:</span>
-            <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded font-semibold">
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          <span>
+            <span className="text-gray-500">Credits:</span>{" "}
+            <span className="font-medium text-gray-700">
               {schedule.course.credit ?? "—"}
             </span>
           </span>
-          <span className="flex items-center gap-1">
-            <span className="font-medium text-gray-500">Total Hours:</span>
-            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded font-semibold">
+          <span>
+            <span className="text-gray-500">Total Hours:</span>{" "}
+            <span className="font-medium text-gray-700">
               {schedule.course.totalHour ? `${schedule.course.totalHour}h` : "—"}
             </span>
           </span>
