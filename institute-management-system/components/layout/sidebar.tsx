@@ -90,37 +90,39 @@ export function Sidebar() {
 
               {/* Subroutes */}
               {!isCollapsed && isOpen && (
-                <div className="relative ml-5 mt-0.5 mb-1 space-y-0.5">
-                  {/* Vertical connector line */}
-                  <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="relative mt-1 mb-2 ml-9">
+                  {/* Vertical tree line */}
+                  <div className="absolute left-0 top-0 bottom-2 w-px bg-gray-300" />
 
-                  {route.subroutes.map((subroute) => {
-                    const isSubActive = pathname === subroute.href;
-                    return (
-                      <div key={subroute.title} className="relative pl-5">
-                        {/* Horizontal connector tick */}
-                        <div className="absolute left-2 top-1/2 w-3 h-px bg-gray-200" />
+                  <div className="space-y-0.5">
+                    {route.subroutes.map((subroute) => {
+                      const isSubActive = pathname === subroute.href;
+                      return (
+                        <div key={subroute.title} className="relative pl-5">
+                          {/* Horizontal connector tick */}
+                          <div className="absolute left-0 top-1/2 w-4 h-px bg-gray-300 -translate-y-1/2" />
 
-                        {/* Left active bar for subroute */}
-                        {isSubActive && (
-                          <span className="absolute left-4 top-1 bottom-1 w-[3px] bg-primary rounded-r-full z-10" />
-                        )}
-
-                        <Button
-                          variant="ghost"
-                          asChild
-                          className={cn(
-                            "w-full justify-start text-gray-600 hover:bg-primary/10 hover:text-primary rounded-lg h-9 text-sm px-3",
-                            isSubActive && "bg-primary/10 text-primary font-medium"
+                          {/* Left active bar */}
+                          {isSubActive && (
+                            <span className="absolute left-[18px] top-1.5 bottom-1.5 w-0.5 bg-primary rounded-r-full z-10" />
                           )}
-                        >
-                          <Link href={subroute.href}>
-                            {subroute.title}
-                          </Link>
-                        </Button>
-                      </div>
-                    );
-                  })}
+
+                          <Button
+                            variant="ghost"
+                            asChild
+                            className={cn(
+                              "w-full justify-start text-gray-500 hover:bg-primary/10 hover:text-primary rounded-md h-9 text-sm px-3",
+                              isSubActive && "bg-primary/10 text-primary font-medium"
+                            )}
+                          >
+                            <Link href={subroute.href}>
+                              {subroute.title}
+                            </Link>
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

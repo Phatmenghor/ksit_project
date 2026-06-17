@@ -95,6 +95,18 @@ export function Header() {
     return `${name.substring(0, maxLength)}...`;
   };
 
+  const getRoleDisplay = () => {
+    const roleGroup = getRoleCheck();
+    switch (roleGroup) {
+      case RoleEnum.ADMIN: return { label: "Admin", color: "text-red-300" };
+      case RoleEnum.DEVELOPER: return { label: "Developer", color: "text-purple-300" };
+      case RoleEnum.TEACHER: return { label: "Teacher", color: "text-blue-300" };
+      case RoleEnum.STAFF: return { label: "Staff", color: "text-emerald-300" };
+      case RoleEnum.STUDENT: return { label: "Student", color: "text-yellow-300" };
+      default: return { label: "User", color: "text-gray-300" };
+    }
+  };
+
   // Function to get role badge color
   // const getRoleBadgeColor = () => {
   //   const roleGroup = getRoleCheck();
@@ -197,15 +209,42 @@ export function Header() {
                   >
                     {getTruncatedName(getDisplayName())}
                   </span>
+                  <span className={`text-xs font-normal leading-tight ${getRoleDisplay().color}`}>
+                    {getRoleDisplay().label}
+                  </span>
                 </div>
               </div>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-56 mt-2">
               {/* User info in dropdown */}
-              <div className="px-3 py-2 border-b">
-                <div className="text-sm text-muted-foreground truncate">
-                  {getDisplayName()}
+              <div className="px-3 py-3 border-b">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 border border-border">
+                    <AvatarImage
+                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
+                      alt="User"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                      {getAvatarFallback()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold truncate">{getDisplayName()}</span>
+                    <span className={`text-xs font-medium ${
+                      getRoleCheck() === RoleEnum.ADMIN ? "text-red-500" :
+                      getRoleCheck() === RoleEnum.DEVELOPER ? "text-purple-500" :
+                      getRoleCheck() === RoleEnum.TEACHER ? "text-blue-500" :
+                      getRoleCheck() === RoleEnum.STAFF ? "text-emerald-600" :
+                      "text-yellow-600"
+                    }`}>
+                      {getRoleDisplay().label}
+                    </span>
+                    {user?.department?.name && (
+                      <span className="text-xs text-muted-foreground truncate">{user.department.name}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
