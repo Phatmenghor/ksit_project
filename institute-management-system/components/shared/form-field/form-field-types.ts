@@ -2,7 +2,7 @@ import { Control, FieldError, FieldValues, Path } from "react-hook-form";
 
 export interface BaseFormFieldProps<T extends FieldValues = FieldValues> {
   name: Path<T>;
-  label: string;
+  label?: string;
   control: Control<T>;
   error?: FieldError;
   disabled?: boolean;
@@ -31,5 +31,5 @@ export interface SelectFormFieldProps<T extends FieldValues = FieldValues> exten
 }
 
 export interface DatePickerFormFieldProps<T extends FieldValues = FieldValues> extends BaseFormFieldProps<T> {
-  mode?: "date" | "datetime";
+  mode?: "date" | "datetime" | "academyYear";
 }

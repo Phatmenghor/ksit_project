@@ -25,9 +25,11 @@ export function SelectField<T extends FieldValues = FieldValues>({
 
   return (
     <div className={cn("flex flex-col gap-1 w-full", className)}>
-      <Label htmlFor={name} className="text-sm font-medium text-foreground">
-        {label} {required && <span className="text-red-500 ml-0.5">*</span>}
-      </Label>
+      {label && (
+        <Label htmlFor={name} className="text-sm font-medium text-foreground">
+          {label} {required && <span className="text-red-500 ml-0.5">*</span>}
+        </Label>
+      )}
       <Controller
         control={control}
         name={name}

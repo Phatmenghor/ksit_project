@@ -21,10 +21,12 @@ export function DateTimePickerField<T extends FieldValues = FieldValues>({
 }: DatePickerFormFieldProps<T> & { inputClassName?: string }) {
   return (
     <div className={cn("flex flex-col gap-1 w-full", className)}>
-      <Label htmlFor={name} className="text-xs font-semibold text-foreground">
-        {label}
-        {required && <span className="text-destructive ml-1">*</span>}
-      </Label>
+      {label && (
+        <Label htmlFor={name} className="text-sm font-medium text-foreground">
+          {label}
+          {required && <span className="text-destructive ml-1">*</span>}
+        </Label>
+      )}
       <Controller
         control={control}
         name={name as Path<T>}

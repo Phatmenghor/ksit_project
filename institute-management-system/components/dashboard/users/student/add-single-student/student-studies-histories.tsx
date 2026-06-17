@@ -2,10 +2,10 @@
 
 import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
-
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { educationLevels } from "@/constants/constant";
+import { CustomDateTimePicker } from "@/components/shared/common/custom-date-picker";
 
 export const StudentStudiesHistorySection = () => {
   const { control, setValue, watch } = useFormContext();
@@ -71,30 +71,30 @@ export const StudentStudiesHistorySection = () => {
                       )}
                     />
 
-                    {/* From Year (Date Input) */}
+                    {/* From Year */}
                     <Controller
                       name={`studentStudiesHistory.${index}.fromYear`}
                       control={control}
                       render={({ field }) => (
-                        <Input
-                          type="date"
-                          className="text-sm"
+                        <CustomDateTimePicker
                           value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value)}
+                          onChange={field.onChange}
+                          mode="date"
+                          placeholder="ពីឆ្នាំ..."
                         />
                       )}
                     />
 
-                    {/* End Year (Date Input) */}
+                    {/* End Year */}
                     <Controller
                       name={`studentStudiesHistory.${index}.endYear`}
                       control={control}
                       render={({ field }) => (
-                        <Input
-                          type="date"
-                          className="text-sm"
+                        <CustomDateTimePicker
                           value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value)}
+                          onChange={field.onChange}
+                          mode="date"
+                          placeholder="ដល់ឆ្នាំ..."
                         />
                       )}
                     />

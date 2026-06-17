@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useFormContext, useFieldArray, Controller } from "react-hook-form";
 import React, { useEffect, useRef } from "react";
+import { CustomDateTimePicker } from "@/components/shared/common/custom-date-picker";
 
 type FieldType = "text" | "date" | "select";
 
@@ -115,13 +116,12 @@ export default function DynamicInputGrid({
 
                     if (field.type === "date") {
                       return (
-                        <Input
-                          type="date"
-                          disabled={isSubmitting}
-                          placeholder={field.placeholder}
-                          className="bg-gray-100"
-                          {...controllerField}
+                        <CustomDateTimePicker
                           value={safeValue}
+                          onChange={controllerField.onChange}
+                          disabled={isSubmitting}
+                          mode="date"
+                          placeholder={field.placeholder}
                         />
                       );
                     }

@@ -2,16 +2,17 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { User, X } from "lucide-react";
+import { Camera, Trash2, Upload, UserCircle2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { baseAPI } from "@/constants/api";
 import { Input } from "@/components/ui/input";
-import { UploadImage } from "@/model/setting/image-model";
 import { uploadImageService } from "@/service/setting/image.service";
+import { UploadImage } from "@/model/setting/image-model";
+import { cn } from "@/lib/utils";
 
 export default function StudentProfileUploadCard() {
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { setValue, watch } = useFormContext();
@@ -19,131 +20,175 @@ export default function StudentProfileUploadCard() {
 
   useEffect(() => {
     if (profileUrl) {
-      setLogoPreview(profileUrl);
+      setPreview(profileUrl);
+      setImageError(false);
     }
   }, [profileUrl]);
 
   useEffect(() => {
     return () => {
-      if (logoPreview?.startsWith("blob:")) {
-        URL.revokeObjectURL(logoPreview);
-      }
+      if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     };
-  }, [logoPreview]);
+  }, [preview]);
+
+  const getImageSrc = () => {
+    if (!preview) return "";
+    return preview.startsWith("http") || preview.startsWith("blob:")
+      ? preview
+      : (process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE ?? "") + preview;
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file");
+      return;
+    }
+
     setIsUploading(true);
+    setImageError(false);
+    const blobUrl = URL.createObjectURL(file);
+    setPreview(blobUrl);
 
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        const base64Data = base64String.split(",")[1];
-
-        const payload: UploadImage = {
-          base64: base64Data,
-          type: file.type,
-        };
-
-        const response = await uploadImageService(payload);
-        if (response?.imageUrl) {
-          setValue("profileUrl", response.imageUrl, { shouldValidate: true });
-          setLogoPreview(response.imageUrl);
+        const base64Data = (reader.result as string).split(",")[1];
+        const payload: UploadImage = { base64: base64Data, type: file.type };
+        try {
+          const response = await uploadImageService(payload);
+          if (response?.imageUrl) {
+            URL.revokeObjectURL(blobUrl);
+            setValue("profileUrl", response.imageUrl, { shouldValidate: true });
+            setPreview(response.imageUrl);
+          }
+        } catch {
+          URL.revokeObjectURL(blobUrl);
+          setPreview(null);
+          setImageError(true);
         }
       };
       reader.readAsDataURL(file);
-    } catch (error) {
+    } catch {
+      setImageError(true);
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const handleRemoveLogo = () => {
-    setLogoPreview(null);
+  const handleRemove = () => {
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    setPreview(null);
+    setImageError(false);
     setValue("profileUrl", "", { shouldDirty: true });
   };
 
-  const getImageSource = () => {
-    if (!logoPreview) {
-      return baseAPI.NO_IMAGE;
-    }
-    return logoPreview.startsWith("http") || logoPreview.startsWith("blob:")
-      ? logoPreview
-      : process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE + logoPreview;
-  };
-
   return (
-    <Card>
-      <CardContent className="p-6 space-y-3 flex flex-col items-center">
-        <div className="relative w-24 h-24">
-          <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-100 overflow-hidden relative">
-            {logoPreview ? (
-              <img
-                src={getImageSource()}
-                alt="Profile"
-                className="w-full h-full object-cover rounded-full"
-                draggable={false}
-              />
-            ) : (
-              <User className="w-10 h-10 text-gray-300" />
+    <Card className="shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          {/* Avatar circle */}
+          <div className="relative flex-shrink-0">
+            <div
+              className={cn(
+                "w-28 h-28 rounded-full border-4 border-white shadow-md overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center cursor-pointer group transition-all duration-200",
+                !preview && "hover:from-primary/5 hover:to-primary/10"
+              )}
+              onClick={() => !preview && fileInputRef.current?.click()}
+            >
+              {preview && !imageError ? (
+                <img
+                  src={getImageSrc()}
+                  alt="Profile"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  draggable={false}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <UserCircle2 className="w-14 h-14 text-slate-300" />
+              )}
+
+              {!preview && (
+                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <Upload className="w-6 h-6 text-primary" />
+                </div>
+              )}
+
+              {isUploading && (
+                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/50">
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+
+            {preview && !isUploading && (
+              <div className="absolute -bottom-1 -right-1 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-primary rounded-full p-1.5 border-2 border-white shadow hover:bg-primary/90 transition-colors"
+                  title="Change photo"
+                >
+                  <Camera className="w-3.5 h-3.5 text-white" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemove}
+                  className="bg-destructive rounded-full p-1.5 border-2 border-white shadow hover:bg-destructive/90 transition-colors"
+                  title="Remove photo"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-white" />
+                </button>
+              </div>
             )}
+
+            {!preview && !isUploading && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 border-2 border-white shadow hover:bg-primary/90 transition-colors"
+                title="Upload photo"
+              >
+                <Upload className="w-3.5 h-3.5 text-white" />
+              </button>
+            )}
+
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={isUploading}
+            />
           </div>
 
-          {/* Conditional button - X for remove or + for upload */}
-          {logoPreview ? (
-            // Remove (X) button when image exists
-            <button
-              type="button"
-              onClick={handleRemoveLogo}
-              className="absolute -bottom-1 -right-1 bg-red-500 rounded-full p-1 border-2 border-white hover:bg-red-600 transition-colors duration-200 shadow-md z-10"
-              disabled={isUploading}
-              title="Remove profile image"
-            >
-              <X className="w-4 h-4 text-white" />
-            </button>
-          ) : (
-            // Upload (+) button when no image
-            <label
-              htmlFor="profile-upload"
-              className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1 border-2 border-white cursor-pointer hover:bg-blue-600 transition-colors duration-200 shadow-md z-10"
-              onClick={(e) => e.stopPropagation()}
-              title="Upload profile image"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </label>
-          )}
-
-          {/* Hidden file input field */}
-          <Input
-            id="profile-upload"
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={isUploading}
-          />
+          {/* Info text */}
+          <div className="text-center sm:text-left space-y-1">
+            <p className="text-sm font-semibold text-foreground">
+              {preview ? "Profile Photo" : "Upload Profile Photo"}
+            </p>
+            {imageError && <p className="text-xs text-destructive">Failed to load image</p>}
+            {isUploading && <p className="text-xs text-primary">Uploading...</p>}
+            {!preview && !isUploading && (
+              <p className="text-xs text-muted-foreground">
+                JPG, PNG or WebP · Max 5 MB
+              </p>
+            )}
+            {preview && !isUploading && (
+              <p className="text-xs text-muted-foreground">
+                Click camera to change · trash to remove
+              </p>
+            )}
+          </div>
         </div>
-
-        <p className="text-sm font-medium">
-          {logoPreview ? "Profile Image" : "Add Profile"}
-        </p>
       </CardContent>
     </Card>
   );
