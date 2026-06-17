@@ -83,9 +83,9 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
 
   return (
     <Card className="border shadow-md rounded-2xl">
-      <CardContent className="flex flex-col items-center justify-center py-8 px-6">
+      <CardContent className="flex flex-col items-center justify-center py-5 px-6">
         <div className="relative">
-          <Avatar className="h-28 w-28 ring-4 ring-blue-50 shadow-md">
+          <Avatar className="h-20 w-20 ring-4 ring-blue-50 shadow-md">
             <AvatarImage src={profileUrl || "/assets/profile.png"} alt={param?.username || "User"} />
             <AvatarFallback suppressHydrationWarning>
               {getInitials(param?.username)}
@@ -93,13 +93,13 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
           </Avatar>
         </div>
 
-        <div className="mt-4 text-center space-y-1.5">
-          <h3 className="font-semibold text-xl text-gray-800">{param?.username || "Unknown User"}</h3>
-          <p className="text-sm text-gray-500">Student Profile Overview</p>
+        <div className="mt-3 text-center space-y-1">
+          <h3 className="font-semibold text-lg text-gray-800">{param?.username || "Unknown User"}</h3>
+          <p className="text-xs text-gray-500">Student Profile Overview</p>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center justify-center mt-2">
-          <Badge className="px-3 py-1 rounded-full shadow-sm bg-blue-50 text-blue-800 border border-blue-200">
+          <Badge className="px-3 py-1 rounded-full shadow-sm bg-blue-50 hover:bg-blue-50 text-blue-800 border border-blue-200">
             ID: {param?.identifyNumber ?? "N/A"}
           </Badge>
           <Badge className={`px-3 py-1 rounded-full shadow-sm ${getBadgeClasses(statusInfo.variant)}`}>
@@ -107,7 +107,7 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
           </Badge>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-3">
           <Button
             disabled={!canExportAcademic || isExporting}
             onClick={() => exportAcademicTranscript()}

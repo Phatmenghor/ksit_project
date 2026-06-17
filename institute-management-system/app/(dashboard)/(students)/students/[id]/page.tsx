@@ -28,7 +28,7 @@ const tabs = [
 
 export default function StudentViewPage() {
   const [activeTab, setActiveTab] = useState("information");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(
     null
   );
@@ -63,6 +63,22 @@ export default function StudentViewPage() {
   useEffect(() => {
     loadInfo();
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!studentDetail) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground">Student not found.</p>
+      </div>
+    );
+  }
 
   return (
     <Tabs
