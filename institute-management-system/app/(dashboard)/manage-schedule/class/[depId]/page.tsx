@@ -210,7 +210,10 @@ const ClassSchedulePage = () => {
             </Button>
 
             <h3 className="text-xl font-bold">
-              {allMajorData?.content?.[0]?.department?.name || "No Department"}
+              Class List
+              {allMajorData?.content?.[0]?.department?.name
+                ? ` (${allMajorData.content[0].department.name})`
+                : ""}
             </h3>
           </div>
         </CardContent>
