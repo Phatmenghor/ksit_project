@@ -39,6 +39,8 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export default function StuffOfficerListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -161,6 +163,24 @@ export default function StuffOfficerListPage() {
       render: (_, i) => getDisplayIndex(i),
     },
     {
+      key: "profile",
+      label: "",
+      width: "50px",
+      render: (item) => {
+        const url = item.profileUrl
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${item.profileUrl}`
+          : undefined;
+        const initials = [item.englishFirstName, item.englishLastName]
+          .filter(Boolean).map(n => n![0]).join("").toUpperCase() || item.username?.charAt(0).toUpperCase() || "U";
+        return (
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={url} alt={item.username} className="object-cover" />
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
+          </Avatar>
+        );
+      },
+    },
+    {
       key: "username",
       label: "Username",
       render: (staff) => staff.username.trim() || "---",
@@ -183,6 +203,15 @@ export default function StuffOfficerListPage() {
       key: "gender",
       label: "Gender",
       render: (staff) => staff.gender || "---",
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (staff) => (
+        <Badge variant="outline" className={staff.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
+          {staff.status || "N/A"}
+        </Badge>
+      ),
     },
     {
       key: "createdAt",

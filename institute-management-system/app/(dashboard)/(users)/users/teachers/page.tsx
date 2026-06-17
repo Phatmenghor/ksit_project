@@ -37,6 +37,8 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 export default function TeachersListPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -166,6 +168,24 @@ export default function TeachersListPage() {
       render: (_, i) => getDisplayIndex(i),
     },
     {
+      key: "profile",
+      label: "",
+      width: "50px",
+      render: (item) => {
+        const url = item.profileUrl
+          ? `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${item.profileUrl}`
+          : undefined;
+        const initials = [item.englishFirstName, item.englishLastName]
+          .filter(Boolean).map(n => n![0]).join("").toUpperCase() || item.username?.charAt(0).toUpperCase() || "U";
+        return (
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={url} alt={item.username} className="object-cover" />
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
+          </Avatar>
+        );
+      },
+    },
+    {
       key: "username",
       label: "Username",
       render: (teacher) => teacher.username.trim() || "---",
@@ -208,6 +228,15 @@ export default function TeachersListPage() {
       key: "department",
       label: "Department",
       render: (teacher) => teacher.department?.name?.trim() || "---",
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (teacher) => (
+        <Badge variant="outline" className={teacher.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
+          {teacher.status || "N/A"}
+        </Badge>
+      ),
     },
     {
       key: "createdAt",
