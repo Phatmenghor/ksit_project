@@ -63,6 +63,13 @@ const ConfigureScoreSchema = z
 
 type ScoreFormData = z.infer<typeof ConfigureScoreSchema>;
 
+function clampPercentage(rawValue: string): number | null {
+  if (rawValue === "") return 0;
+  const value = Number(rawValue);
+  if (Number.isNaN(value) || value < 0 || value > 100) return null;
+  return value;
+}
+
 export default function ScoreSettingPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -211,12 +218,22 @@ export default function ScoreSettingPage() {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-4">
+        <Card className="border-0 shadow-none bg-transparent p-0">
+          <CardContent className="p-0 space-y-2">
+            <PageBreadcrumb items={[{ label: "Score Setting" }]} />
+          </CardContent>
+        </Card>
+
+        <Card className="border border-gray-100 shadow-sm">
+          <CardContent className="py-3 px-4">
+            <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800">
+              Score Setting
+            </h1>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardContent className="flex flex-col items-start justify-start p-6 space-y-4">
-            <PageBreadcrumb items={[{ label: "Score Setting" }]} />
-
-            <h1 className="text-2xl font-bold text-gray-900">Score Setting</h1>
-
             <div className="flex items-start gap-3 rounded-lg p-4 bg-yellow-50 border border-yellow-200">
               <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-gray-700">
@@ -291,13 +308,8 @@ export default function ScoreSettingPage() {
                                   : ""
                               }`}
                               onChange={(e) => {
-                                const value =
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value);
-                                if (value >= 0 && value <= 100) {
-                                  field.onChange(value);
-                                }
+                                const value = clampPercentage(e.target.value);
+                                if (value !== null) field.onChange(value);
                               }}
                               min={0}
                               max={100}
@@ -334,13 +346,8 @@ export default function ScoreSettingPage() {
                                   : ""
                               }`}
                               onChange={(e) => {
-                                const value =
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value);
-                                if (value >= 0 && value <= 100) {
-                                  field.onChange(value);
-                                }
+                                const value = clampPercentage(e.target.value);
+                                if (value !== null) field.onChange(value);
                               }}
                               min={0}
                               max={100}
@@ -375,13 +382,8 @@ export default function ScoreSettingPage() {
                                 errors.midtermPercentage ? "border-red-500" : ""
                               }`}
                               onChange={(e) => {
-                                const value =
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value);
-                                if (value >= 0 && value <= 100) {
-                                  field.onChange(value);
-                                }
+                                const value = clampPercentage(e.target.value);
+                                if (value !== null) field.onChange(value);
                               }}
                               min={0}
                               max={100}
@@ -416,13 +418,8 @@ export default function ScoreSettingPage() {
                                 errors.finalPercentage ? "border-red-500" : ""
                               }`}
                               onChange={(e) => {
-                                const value =
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value);
-                                if (value >= 0 && value <= 100) {
-                                  field.onChange(value);
-                                }
+                                const value = clampPercentage(e.target.value);
+                                if (value !== null) field.onChange(value);
                               }}
                               min={0}
                               max={100}
