@@ -6,11 +6,13 @@ import { ChevronRight } from "lucide-react";
 
 function DepartmentCard({
   name,
+  code,
   imageUrl,
   imageName,
   onClick,
 }: {
   name: string;
+  code?: string;
   imageUrl: string;
   imageName: string;
   onClick?: () => void;
@@ -23,8 +25,8 @@ function DepartmentCard({
       <div className="flex items-center gap-4">
         <DepartmentIcon imageUrl={imageUrl} imageName={imageName} />
         <div>
-          <p className="text-sm text-muted-foreground">Dep.</p>
           <p className="font-medium">{name}</p>
+          {code && <p className="text-sm text-muted-foreground">{code}</p>}
         </div>
       </div>
       <Button

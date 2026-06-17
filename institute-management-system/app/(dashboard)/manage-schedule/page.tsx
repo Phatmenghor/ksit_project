@@ -126,6 +126,7 @@ export default function DepartmentListPage() {
                     key={department.id}
                     onClick={() => onClickDepartmentCard(department.id)}
                     name={department.name}
+                    code={department.code}
                     imageUrl={department.urlLogo}
                     imageName={department.name}
                   />
