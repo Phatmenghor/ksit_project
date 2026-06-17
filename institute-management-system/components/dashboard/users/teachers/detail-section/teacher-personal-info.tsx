@@ -58,6 +58,8 @@ export default function PersonalHistoryForm() {
 
         <TextField name="staffId" label="អត្តលេខមន្ត្រី" control={control} placeholder="អត្តលេខមន្ត្រី..." disabled={isSubmitting} />
 
+        <TextField name="decreeFinal" label="ប្រកាស" control={control} placeholder="ប្រកាស..." disabled={isSubmitting} />
+
         {/* Province / District / Commune / Village — spans full row */}
         <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-2">
           <TextField name="village" label="ភូមិ" control={control} placeholder="ភូមិ..." disabled={isSubmitting} />
@@ -72,7 +74,6 @@ export default function PersonalHistoryForm() {
         <TextField name="currentPosition" label="មុខតំណែង" control={control} placeholder="មុខតំណែង..." disabled={isSubmitting} />
       </div>
 
-      <TextField name="decreeFinal" label="ប្រកាស" control={control} placeholder="ប្រកាស..." disabled={isSubmitting} />
     </CollapsibleCard>
   );
 }
