@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   Download,
   Eye,
+  Loader2,
   Pencil,
   RotateCcw,
   Tally1,
@@ -53,6 +54,7 @@ import { format } from "date-fns";
 import { StudentListExcelTableHeader } from "@/constants/excel/student-header";
 import { AppIcons } from "@/constants/icons/icon";
 import { formatDate } from "@/utils/date/date";
+import { formatEnumLabel } from "@/utils/general/format-enum-label";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
@@ -62,6 +64,7 @@ export default function StudentsListPage() {
   // Core state
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectAcademicYear, setSelectAcademicYear] = useState<
     number | undefined
@@ -230,16 +233,13 @@ export default function StudentsListPage() {
 
   // Export to Excel
   const exportToExcel = async (): Promise<void> => {
-    setIsSubmitting(true);
+    setIsExporting(true);
 
     try {
-      setIsLoading(true);
-
       const studentData = allStudentData?.content?.length;
 
       if ((studentData || 0) === 0) {
         toast.warning("No data available to export.");
-        setIsSubmitting(false);
         return;
       }
 
@@ -248,7 +248,6 @@ export default function StudentsListPage() {
         toast.info(
           `Only ${Constants.EXCEL_LIMIT} items were exported. Too many records. Please filter the data.`
         );
-        setIsSubmitting(false);
         return;
       }
 
@@ -265,30 +264,36 @@ export default function StudentsListPage() {
 
       // Header table excel
       const columns: string[] = StudentListExcelTableHeader;
+      const PRIMARY_COLOR = "FF024D3E";
+      const PRIMARY_COLOR_DARK = "FF013328";
 
       // Add title row at Row 1
       worksheet.mergeCells(1, 1, 1, columns.length);
       const titleCell = worksheet.getCell("A1");
       titleCell.value = "List Student Data";
       titleCell.font = { size: 16, bold: true, color: { argb: "FFFFFFFF" } };
-      titleCell.alignment = { vertical: "middle", horizontal: "center" };
+      titleCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
       titleCell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF1F4E78" },
+        fgColor: { argb: PRIMARY_COLOR_DARK },
       };
+      worksheet.getRow(1).height = 26;
 
       // Add header row at Row 3
       const headerRow = worksheet.getRow(3);
+      const columnWidths = [
+        5, 15, 25, 20, 30, 30, 12, 18, 15, 15, 30, 16, 22,
+      ];
       columns.forEach((text: string, idx: number) => {
         const cell = headerRow.getCell(idx + 1);
         cell.value = text;
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FF007ACC" },
+          fgColor: { argb: PRIMARY_COLOR },
         };
         cell.border = {
           top: { style: "thin" },
@@ -297,33 +302,38 @@ export default function StudentsListPage() {
           right: { style: "thin" },
         };
 
-        const columnWidths = [5, 15, 25, 27, 20, 15, 15, 30, 40];
         worksheet.getColumn(idx + 1).width = columnWidths[idx];
       });
+      headerRow.height = 22;
 
       allStudentsRes?.forEach((item: StudentModel, i: number) => {
+        const khmerFullName =
+          `${item.khmerFirstName || ""} ${item.khmerLastName || ""}`.trim() ||
+          "---";
+        const englishFullName =
+          `${item.englishFirstName || ""} ${item.englishLastName || ""}`.trim() ||
+          "---";
+
         const row = worksheet.addRow([
           i + 1,
           item.username || "---",
           item.email || "---",
-          item.status || "---",
           item.identifyNumber || "---",
-          item.khmerFirstName || "---",
-          item.khmerLastName || "---",
-          item.englishFirstName || "---",
-          item.englishLastName || "---",
-          item.gender || "---",
-          item.studentStatus || "---",
-          item.dateOfBirth || "---",
+          khmerFullName,
+          englishFullName,
+          formatEnumLabel(item.gender),
+          formatEnumLabel(item.studentStatus),
+          item.dateOfBirth ? formatDate(item.dateOfBirth) : "---",
           item.phoneNumber || "---",
-          `${(item || item)?.studentClass?.code} - ${
-            (item || item)?.studentClass?.major?.name
+          `${item?.studentClass?.code || ""} - ${
+            item?.studentClass?.major?.name || ""
           }` || "---",
-          formatDate(item.createdAt) || "---",
+          formatEnumLabel(item.status),
+          item.createdAt ? formatDate(item.createdAt) : "---",
         ]);
 
         row.eachCell((cell) => {
-          cell.alignment = { vertical: "middle", horizontal: "center" };
+          cell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
           cell.border = {
             top: { style: "thin" },
             bottom: { style: "thin" },
@@ -353,8 +363,7 @@ export default function StudentsListPage() {
     } catch (error: unknown) {
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
-      setIsSubmitting(false);
-      setIsLoading(false);
+      setIsExporting(false);
     }
   };
 
@@ -387,12 +396,13 @@ export default function StudentsListPage() {
     {
       key: "gender",
       label: "Gender",
-      render: (student) => student.gender || "---",
+      render: (student) => formatEnumLabel(student.gender),
     },
     {
       key: "dateOfBirth",
       label: "Date Of Birth",
-      render: (student) => student.dateOfBirth || "---",
+      render: (student) =>
+        student.dateOfBirth ? formatDate(student.dateOfBirth) : "---",
     },
     {
       key: "classCode",
@@ -572,10 +582,10 @@ export default function StudentsListPage() {
               variant="outline"
               size="sm"
               className="h-8 px-2 border-gray-200 py-5"
-              disabled={isLoading}
+              disabled={isExporting}
             >
-              {isLoading ? (
-                <Loading />
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
                   <img

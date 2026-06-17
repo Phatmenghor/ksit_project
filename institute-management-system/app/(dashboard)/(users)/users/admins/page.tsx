@@ -38,6 +38,8 @@ import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { formatEnumLabel } from "@/utils/general/format-enum-label";
 
 export default function AdminsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,6 +196,20 @@ export default function AdminsListPage() {
       render: (admin) =>
         `${admin.khmerFirstName || ""} ${admin.khmerLastName || ""}`.trim() ||
         "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (admin) => formatEnumLabel(admin.gender),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (admin) => (
+        <Badge variant="outline" className={admin.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
+          {formatEnumLabel(admin.status)}
+        </Badge>
+      ),
     },
     {
       key: "createdAt",

@@ -39,6 +39,8 @@ import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { formatEnumLabel } from "@/utils/general/format-enum-label";
+import { formatDate } from "@/utils/date/date";
 
 export default function TeachersListPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -212,12 +214,13 @@ export default function TeachersListPage() {
     {
       key: "gender",
       label: "Gender",
-      render: (teacher) => teacher.gender || "---",
+      render: (teacher) => formatEnumLabel(teacher.gender),
     },
     {
       key: "dateOfBirth",
       label: "Date of Birth",
-      render: (teacher) => teacher.dateOfBirth || "---",
+      render: (teacher) =>
+        teacher.dateOfBirth ? formatDate(teacher.dateOfBirth) : "---",
     },
     {
       key: "phoneNumber",
@@ -234,7 +237,7 @@ export default function TeachersListPage() {
       label: "Status",
       render: (teacher) => (
         <Badge variant="outline" className={teacher.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
-          {teacher.status || "N/A"}
+          {formatEnumLabel(teacher.status)}
         </Badge>
       ),
     },

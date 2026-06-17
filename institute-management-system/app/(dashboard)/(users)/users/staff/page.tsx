@@ -41,6 +41,7 @@ import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { formatEnumLabel } from "@/utils/general/format-enum-label";
 
 export default function StuffOfficerListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -202,14 +203,14 @@ export default function StuffOfficerListPage() {
     {
       key: "gender",
       label: "Gender",
-      render: (staff) => staff.gender || "---",
+      render: (staff) => formatEnumLabel(staff.gender),
     },
     {
       key: "status",
       label: "Status",
       render: (staff) => (
         <Badge variant="outline" className={staff.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
-          {staff.status || "N/A"}
+          {formatEnumLabel(staff.status)}
         </Badge>
       ),
     },
