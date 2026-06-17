@@ -41,11 +41,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const WEEKDAY_VALUES = [
+  "SUNDAY",
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+];
+
 const getCurrentDay = (): DayType => {
-  const dayName = new Date()
-    .toLocaleDateString("en-US", { weekday: "long" })
-    .toUpperCase();
-  return DAYS_OF_WEEK.find((d) => d.value === dayName) ?? DAYS_OF_WEEK[0];
+  const dayValue = WEEKDAY_VALUES[new Date().getDay()];
+  return DAYS_OF_WEEK.find((d) => d.value === dayValue) ?? DAYS_OF_WEEK[0];
 };
 
 const ScheduleAllPage = () => {
