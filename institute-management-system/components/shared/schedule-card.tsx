@@ -9,7 +9,6 @@ import {
   CheckCircle,
   Pen,
   Trash,
-  Eye,
   GraduationCap,
   CalendarDays,
 } from "lucide-react";
@@ -24,8 +23,6 @@ interface ScheduleCardProps {
   className?: string;
   showSurvey?: boolean;
   onSurveyClick?: (scheduleId: number) => void;
-  showViewButton?: boolean;
-  onViewClick?: (scheduleId: number) => void;
   showEditButton?: boolean;
   showDeleteButton?: boolean;
   onEditClick?: (scheduleId: number) => void;
@@ -48,8 +45,6 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   className = "",
   showSurvey = false,
   onSurveyClick,
-  showViewButton = false,
-  onViewClick,
   showEditButton = false,
   onEditClick,
   showDeleteButton = false,
@@ -101,7 +96,6 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
   const surveyConfig = getSurveyButtonConfig();
   const hasActions =
     (showSurvey && schedule.surveyStatus !== "NONE" && surveyConfig) ||
-    (showViewButton && onViewClick) ||
     (showDeleteButton && onDeleteClick) ||
     (showEditButton && onEditClick);
 
@@ -211,20 +205,6 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
               >
                 {surveyConfig.icon}
                 {surveyConfig.text}
-              </Button>
-            )}
-
-            {showViewButton && onViewClick && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 w-7 p-0 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all duration-150"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewClick(schedule.id);
-                }}
-              >
-                <Eye className="h-3 w-3" />
               </Button>
             )}
 
