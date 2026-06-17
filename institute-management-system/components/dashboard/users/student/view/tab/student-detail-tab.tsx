@@ -3,7 +3,6 @@ import StudentPersonalInfo from "../section/student-personal-info";
 import StudentStudyHistory from "../section/student-studies-histories";
 import StudentFamily from "../section/student-family";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
-import StudentSiblingTable from "../section/student-sibling";
 
 export default function StudentDetailsTabs({
   studentDetail,
@@ -15,7 +14,6 @@ export default function StudentDetailsTabs({
       <StudentPersonalInfo student={studentDetail} />
       <StudentStudyHistory student={studentDetail} />
       <StudentFamily student={studentDetail} />
-      <StudentSiblingTable student={studentDetail} key={studentDetail?.id} />
     </div>
   );
 }
