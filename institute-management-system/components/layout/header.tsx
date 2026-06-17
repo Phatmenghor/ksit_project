@@ -215,11 +215,9 @@ export function Header() {
                   >
                     {getTruncatedName(getDisplayName())}
                   </span>
-                  {roleDisplay && (
-                    <span className={`text-xs font-normal leading-tight ${roleDisplay.color}`}>
-                      {roleDisplay.label}
-                    </span>
-                  )}
+                  <span suppressHydrationWarning className={`text-xs font-normal leading-tight ${roleDisplay?.color ?? ""}`}>
+                    {roleDisplay?.label ?? ""}
+                  </span>
                 </div>
               </div>
             </DropdownMenuTrigger>
