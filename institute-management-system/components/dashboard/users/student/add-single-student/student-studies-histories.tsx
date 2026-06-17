@@ -1,14 +1,18 @@
 "use client";
 
-import { useFormContext, Controller } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { educationLevels } from "@/constants/constant";
-import { CustomDateTimePicker } from "@/components/shared/common/custom-date-picker";
+import { TextField } from "@/components/shared/form-field/text-field";
+import { DateTimePickerField } from "@/components/shared/form-field/date-time-picker-field";
 
 export const StudentStudiesHistorySection = () => {
-  const { control, setValue, watch } = useFormContext();
+  const {
+    control,
+    setValue,
+    formState: { isSubmitting },
+  } = useFormContext();
 
   useEffect(() => {
     educationLevels.forEach((level, index) => {
@@ -21,108 +25,62 @@ export const StudentStudiesHistorySection = () => {
 
   return (
     <Card className="mt-4">
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="pt-6 space-y-6">
         <h3 className="text-lg font-semibold">ប្រវត្តិការសិក្សា</h3>
 
-        <div
-          className="overflow-x-auto w-full rounded-lg border"
-          style={{ scrollbarWidth: "thin", scrollbarColor: "#000000 #d1d5db" }}
-        >
-          <div className="min-w-[800px] p-3">
-              <div className="grid grid-cols-7 gap-2 font-semibold text-sm mb-4">
-                <span>កម្រិតថ្នាក់</span>
-                <span>ឈ្មោះសាលារៀន</span>
-                <span>ខេត្ត/រាជធានី</span>
-                <span>ពីឆ្នាំណា</span>
-                <span>ដល់ឆ្នាំណា</span>
-                <span>សញ្ញាបត្រទទួលបាន</span>
-                <span>ពិន្ទុសរុប</span>
-              </div>
+        {educationLevels.map((level, index) => (
+          <div key={level.value} className="rounded-lg border p-4 space-y-4">
+            <div className="text-sm font-semibold border-b pb-2">
+              {level.label}
+            </div>
 
-              {educationLevels.map((level, index) => {
-                const fromYear = watch(
-                  `studentStudiesHistory.${index}.fromYear`
-                );
-                const endYear = watch(`studentStudiesHistory.${index}.endYear`);
-
-                return (
-                  <div
-                    key={level.value}
-                    className="grid grid-cols-7 gap-4 items-center mb-4"
-                  >
-                    {/* Level (static) */}
-                    <div className="text-sm font-semibold">{level.label}</div>
-
-                    {/* School Name */}
-                    <Controller
-                      name={`studentStudiesHistory.${index}.schoolName`}
-                      control={control}
-                      render={({ field }) => (
-                        <Input placeholder="សាលា" {...field} />
-                      )}
-                    />
-
-                    {/* Location */}
-                    <Controller
-                      name={`studentStudiesHistory.${index}.location`}
-                      control={control}
-                      render={({ field }) => (
-                        <Input placeholder="ទីតាំង" {...field} />
-                      )}
-                    />
-
-                    {/* From Year */}
-                    <Controller
-                      name={`studentStudiesHistory.${index}.fromYear`}
-                      control={control}
-                      render={({ field }) => (
-                        <CustomDateTimePicker
-                          value={field.value || ""}
-                          onChange={field.onChange}
-                          mode="date"
-                          placeholder="ពីឆ្នាំ..."
-                        />
-                      )}
-                    />
-
-                    {/* End Year */}
-                    <Controller
-                      name={`studentStudiesHistory.${index}.endYear`}
-                      control={control}
-                      render={({ field }) => (
-                        <CustomDateTimePicker
-                          value={field.value || ""}
-                          onChange={field.onChange}
-                          mode="date"
-                          placeholder="ដល់ឆ្នាំ..."
-                        />
-                      )}
-                    />
-
-                    {/* Obtained Certificate */}
-                    <Controller
-                      name={`studentStudiesHistory.${index}.obtainedCertificate`}
-                      control={control}
-                      render={({ field }) => (
-                        <Input placeholder="សញ្ញាបត្រ" {...field} />
-                      )}
-                    />
-
-                    {/* Overall Grade */}
-                    <Controller
-                      name={`studentStudiesHistory.${index}.overallGrade`}
-                      control={control}
-                      render={({ field }) => (
-                        <Input placeholder="ពិន្ទុសរុប" {...field} />
-                      )}
-                    />
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <TextField
+                name={`studentStudiesHistory.${index}.schoolName`}
+                label="ឈ្មោះសាលារៀន"
+                control={control}
+                placeholder="ឈ្មោះសាលារៀន..."
+                disabled={isSubmitting}
+              />
+              <TextField
+                name={`studentStudiesHistory.${index}.location`}
+                label="ខេត្ត/រាជធានី"
+                control={control}
+                placeholder="ខេត្ត/រាជធានី..."
+                disabled={isSubmitting}
+              />
+              <TextField
+                name={`studentStudiesHistory.${index}.obtainedCertificate`}
+                label="សញ្ញាបត្រទទួលបាន"
+                control={control}
+                placeholder="សញ្ញាបត្រ..."
+                disabled={isSubmitting}
+              />
+              <DateTimePickerField
+                name={`studentStudiesHistory.${index}.fromYear`}
+                label="ពីឆ្នាំណា"
+                control={control}
+                disabled={isSubmitting}
+                placeholder="ពីឆ្នាំ..."
+              />
+              <DateTimePickerField
+                name={`studentStudiesHistory.${index}.endYear`}
+                label="ដល់ឆ្នាំណា"
+                control={control}
+                disabled={isSubmitting}
+                placeholder="ដល់ឆ្នាំ..."
+              />
+              <TextField
+                name={`studentStudiesHistory.${index}.overallGrade`}
+                label="ពិន្ទុសរុប"
+                control={control}
+                placeholder="ពិន្ទុសរុប..."
+                disabled={isSubmitting}
+              />
             </div>
           </div>
+        ))}
       </CardContent>
     </Card>
-
   );
 };

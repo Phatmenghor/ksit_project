@@ -53,7 +53,7 @@ export function AsyncCombobox<T>({
   };
 
   const isSelected = (item: T) =>
-    isItemSelected ? isItemSelected(item, value) : value !== null && getId(item) === getId(value!);
+    isItemSelected ? isItemSelected(item, value) : value != null && getId(item) === getId(value);
 
   return (
     <div className="flex flex-col gap-1 w-full">

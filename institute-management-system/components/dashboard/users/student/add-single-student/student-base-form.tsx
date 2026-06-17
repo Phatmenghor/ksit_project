@@ -59,6 +59,10 @@ export function StudentBasicForm() {
                       disabled={isSubmitting}
                       className="bg-gray-100"
                       required
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
                     />
                     {errors.username &&
                       typeof errors.username === "object" &&
@@ -92,6 +96,7 @@ export function StudentBasicForm() {
                       className="bg-gray-100"
                       placeholder="Password..."
                       required
+                      autoComplete="new-password"
                     />
                     {typeof errors.password?.message === "string" && (
                       <p className="text-red-600 text-sm mt-1">
