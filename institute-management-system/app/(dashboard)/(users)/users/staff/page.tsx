@@ -164,8 +164,8 @@ export default function StuffOfficerListPage() {
     },
     {
       key: "profile",
-      label: "",
-      width: "50px",
+      label: "Profile",
+      width: "70px",
       render: (item) => {
         const url = item.profileUrl
           ? `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${item.profileUrl}`
