@@ -15,8 +15,6 @@ import {
 } from "@/model/user/student/student.schema";
 import { EditStudentModel } from "@/model/user/student/student.request.model";
 import { cleanField } from "@/utils/map-helper/student";
-import Loading from "@/components/shared/loading";
-
 export default function EditSingleStudentPage() {
   const [loading, setLoading] = useState(false);
   const [initialValues, setInitialValues] = useState<EditStudentFormData>();
@@ -164,6 +162,7 @@ export default function EditSingleStudentPage() {
       const response = await editStudentService(Number(studentId), payload);
       if (response) {
         toast.success("Student updated successfully");
+        router.push(ROUTE.STUDENTS.VIEW(studentId));
       } else {
         toast.error("Failed to update student");
       }
@@ -174,10 +173,6 @@ export default function EditSingleStudentPage() {
     }
   };
 
-  if (!initialValues && loading) {
-    return <Loading />;
-  }
-
   return (
     <StudentForm
       initialValues={initialValues}
@@ -185,10 +180,9 @@ export default function EditSingleStudentPage() {
       title="Edit Student"
       onSubmit={onSubmit}
       loading={loading}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      back={ROUTE.STUDENTS.LIST}
+      parentLabel="Students"
+      onDiscard={() => router.push(ROUTE.STUDENTS.LIST)}
     />
   );
 }

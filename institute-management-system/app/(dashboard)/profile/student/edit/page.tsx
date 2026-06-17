@@ -122,6 +122,7 @@ export default function EditStudentProfilePage() {
       const response = await editStudentService(studentId, payload);
       if (response) {
         toast.success("Profile updated successfully");
+        router.push(ROUTE.PROFILE.STUDENT);
       } else {
         toast.error("Failed to update profile");
       }
@@ -132,21 +133,16 @@ export default function EditStudentProfilePage() {
     }
   };
 
-  if (!initialValues) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <StudentForm
       initialValues={initialValues}
       mode="Edit"
-      title="Edit your profile"
+      title="Edit My Profile"
       onSubmit={onSubmit}
       loading={loading}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      back={ROUTE.PROFILE.STUDENT}
+      parentLabel="My Profile"
+      onDiscard={() => router.push(ROUTE.PROFILE.STUDENT)}
     />
   );
 }

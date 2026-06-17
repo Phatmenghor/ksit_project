@@ -34,6 +34,7 @@ type Props = {
   onDiscard?: () => void;
   showBackButton?: boolean;
   back?: string;
+  parentLabel?: string;
 };
 
 export default function StudentForm({
@@ -46,6 +47,7 @@ export default function StudentForm({
   showBackButton = true,
   onDiscard,
   back,
+  parentLabel,
 }: Props) {
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
@@ -162,25 +164,21 @@ export default function StudentForm({
           className="space-y-4"
           noValidate
         >
-          {fromSidebar ? (
-            <CardHeaderSection
-              back={showBackButton}
-              title={title}
-              breadcrumbs={[
-                { label: "Dashboard", href: ROUTE.DASHBOARD },
-                { label: "Add single student", href: "" },
-              ]}
-            />
-          ) : (
-            <CardHeaderSection
-              back={showBackButton}
-              title={title}
-              breadcrumbs={[
-                { label: "Dashboard", href: ROUTE.DASHBOARD },
-                { label: "Add New student", href: "" },
-              ]}
-            />
-          )}
+          <CardHeaderSection
+            back={showBackButton}
+            title={title}
+            backHref={back}
+            breadcrumbs={[
+              { label: "Dashboard", href: ROUTE.DASHBOARD },
+              ...(parentLabel
+                ? [{ label: parentLabel, href: back || "" }]
+                : []),
+              {
+                label: mode === "Add" ? "Add new" : "Edit",
+                href: "",
+              },
+            ]}
+          />
 
           {mode === "Add" && <StudentBasicForm />}
 

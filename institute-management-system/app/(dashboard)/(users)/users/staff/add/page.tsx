@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { addStaffService } from "@/service/user/user.service";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
 import { toast } from "sonner";
@@ -9,7 +9,6 @@ import { ROUTE } from "@/constants/routes";
 import { AddStaffFormData } from "@/model/user/staff/staff.schema";
 import { AddStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField } from "@/utils/map-helper/student";
-import Loading from "@/components/shared/loading";
 
 export default function AddStaffOfficerPage() {
   const [loading, setLoading] = useState(false);

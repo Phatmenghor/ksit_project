@@ -247,11 +247,13 @@ export default function EditTeacherProfilePage() {
 
       if (response) {
         toast.success("Profile updated successfully");
+        router.push(ROUTE.PROFILE.TEACHER);
       } else {
         toast.error("Failed to update profile");
       }
     } catch (error) {
       toast.error("Failed to update profile");
+    } finally {
       setLoading(false);
     }
   };
@@ -259,14 +261,14 @@ export default function EditTeacherProfilePage() {
   return (
     <TeacherForm
       mode="Edit"
-      title="Edit your profile"
+      title="Edit My Profile"
       onSubmit={onSubmit}
       initialValues={initialValues}
       loading={loading}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      isTeacher={true}
+      back={ROUTE.PROFILE.TEACHER}
+      parentLabel="My Profile"
+      onDiscard={() => router.push(ROUTE.PROFILE.TEACHER)}
     />
   );
 }
