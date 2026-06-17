@@ -38,6 +38,7 @@ import {
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 
 export default function StuffOfficerListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,6 +183,11 @@ export default function StuffOfficerListPage() {
       key: "gender",
       label: "Gender",
       render: (staff) => staff.gender || "---",
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (staff) => DateTimeFormatter(staff.createdAt),
     },
     {
       key: "actions",

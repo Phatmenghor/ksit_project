@@ -36,6 +36,7 @@ import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmatio
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 
 export default function TeachersListPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -207,6 +208,11 @@ export default function TeachersListPage() {
       key: "department",
       label: "Department",
       render: (teacher) => teacher.department?.name?.trim() || "---",
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (teacher) => DateTimeFormatter(teacher.createdAt),
     },
     {
       key: "actions",

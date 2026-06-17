@@ -48,6 +48,7 @@ import ResetPasswordModal from "@/components/dashboard/users/shared/change-passw
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 
 export default function AdminsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -248,6 +249,11 @@ export default function AdminsListPage() {
       render: (admin) =>
         `${admin.khmerFirstName || ""} ${admin.khmerLastName || ""}`.trim() ||
         "---",
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (admin) => DateTimeFormatter(admin.createdAt),
     },
     {
       key: "actions",
