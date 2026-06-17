@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Search, CalendarIcon, X } from "lucide-react";
+import { Plus, Search, CalendarIcon, X, ArrowLeft } from "lucide-react";
 import { format, parseISO, isValid } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FilterConfig, FilterPanelConfig } from "./filter-types";
@@ -176,9 +176,21 @@ export function CollapsibleFilterPanel({
 
         {/* Row 1: Title left | Clear + Actions + Add button right */}
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800 truncate min-w-0">
-            {config.title}
-          </h1>
+          <div className="flex items-center gap-2 min-w-0">
+            {config.onBack && (
+              <button
+                type="button"
+                onClick={config.onBack}
+                title="Back"
+                className="h-8 w-8 shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
+            <h1 className="text-sm sm:text-base font-semibold tracking-tight text-gray-800 truncate min-w-0">
+              {config.title}
+            </h1>
+          </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {anyFilterActive && config.onClearAll && (
               <button

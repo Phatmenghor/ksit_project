@@ -4,7 +4,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
 import { Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
 import { getAllMajorService } from "@/service/master-data/major.service";
@@ -20,19 +19,11 @@ import {
 import { getAllClassService } from "@/service/master-data/class.service";
 import { ClassCard } from "@/components/dashboard/schedule/class/class-card";
 import Loading from "@/components/shared/loading";
-import { AppIcons } from "@/constants/icons/icon";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
   <div className="text-center py-12 space-y-4">
@@ -205,32 +196,13 @@ const ClassSchedulePage = () => {
               { label: "Class List" },
             ]}
           />
-
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              onClick={() => router.back()}
-              className="rounded-full flex-shrink-0 hover:cursor-pointer"
-            >
-              <img
-                src={AppIcons.Back}
-                alt="back Icon"
-                className="h-4 w-4 mr-5 text-muted-foreground"
-              />
-            </Button>
-
-            <h3 className="text-xl font-bold">
-              Class List{department?.name ? ` (${department.name})` : ""}
-            </h3>
-          </div>
         </CardContent>
       </Card>
 
       <CollapsibleFilterPanel
         config={{
-          title: "Class List",
+          title: `Class List${department?.name ? ` (${department.name})` : ""}`,
+          onBack: () => router.back(),
           totalCount: allClassData?.totalElements,
           searchValue: searchQuery,
           searchPlaceholder: "Search classes...",
@@ -240,29 +212,15 @@ const ClassSchedulePage = () => {
               ? [
                   {
                     id: "major",
-                    type: "custom",
+                    type: "select",
                     label: "Major",
+                    placeholder: "Select a major",
                     value: selectedMajor ? String(selectedMajor) : "",
-                    onChange: (v) => handleMajorSelect(String(v)),
-                    render: ({ value, onChange }) => (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-foreground/80">
-                          Major
-                        </label>
-                        <Select onValueChange={onChange} value={value}>
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Select a major" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {allMajorData.content.map((major) => (
-                              <SelectItem key={major.id} value={String(major.id)}>
-                                {major.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ),
+                    onChange: (v) => v && handleMajorSelect(String(v)),
+                    options: allMajorData.content.map((major) => ({
+                      value: String(major.id),
+                      label: major.name,
+                    })),
                   },
                 ]
               : [],

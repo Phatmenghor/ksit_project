@@ -21,14 +21,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
 import { YearSelector } from "@/components/shared/year-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AppIcons } from "@/constants/icons/icon";
 import DuplicateScheduleModal from "@/components/dashboard/manage-schedule/duplicate-schedule-modal";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
@@ -236,30 +228,13 @@ const AllSchedulePage = () => {
               { label: "Class" },
             ]}
           />
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              className="rounded-full flex-shrink-0 hover:cursor-pointer"
-            >
-              <img
-                src={AppIcons.Back}
-                alt="back Icon"
-                className="h-4 w-4 text-muted-foreground"
-              />
-            </Button>
-            <h3 className="text-lg sm:text-xl font-bold truncate">
-              Class Schedule List
-            </h3>
-          </div>
         </CardContent>
       </Card>
 
       <CollapsibleFilterPanel
         config={{
-          title: selectedDay.label,
+          title: "Class Schedule List",
+          onBack: () => router.back(),
           totalCount: scheduleData?.totalElements,
           searchValue: searchQuery,
           searchPlaceholder: "Search class...",
@@ -289,51 +264,27 @@ const AllSchedulePage = () => {
             },
             {
               id: "day",
-              type: "custom",
+              type: "select",
               label: "Day",
+              placeholder: "Select a day",
               value: selectedDay.value,
               onChange: (v) => handleDaySelect(v),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Day</label>
-                  <Select onValueChange={onChange} value={value}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select a day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS_OF_WEEK.map((day) => (
-                        <SelectItem key={day.value} value={day.value}>
-                          {day.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ),
+              options: DAYS_OF_WEEK.map((day) => ({
+                value: day.value,
+                label: day.label,
+              })),
             },
             {
               id: "semester",
-              type: "custom",
+              type: "select",
               label: "Semester",
+              placeholder: "Select semester",
               value: selectedSemester,
               onChange: (v) => handleSemesterChange(v),
-              render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Semester</label>
-                  <Select onValueChange={onChange} value={value}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SemesterFilter.map((semester) => (
-                        <SelectItem key={semester.value} value={semester.value}>
-                          {semester.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ),
+              options: SemesterFilter.map((semester) => ({
+                value: semester.value,
+                label: semester.label,
+              })),
             },
           ],
         }}

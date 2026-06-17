@@ -78,6 +78,7 @@ export interface FilterPanelConfig {
   title: string;
   totalCount?: number;
   subtitle?: string;
+  onBack?: () => void;
   searchValue: string;
   searchPlaceholder: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
