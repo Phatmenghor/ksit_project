@@ -1,27 +1,9 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Clock,
-  Users,
-  MapPin,
-  FileText,
-  CheckCircle,
-  ArrowRight,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DAYS_OF_WEEK,
@@ -33,7 +15,6 @@ import Loading from "@/components/shared/loading";
 import { toast } from "sonner";
 import { getAllMyScheduleService } from "@/service/schedule/schedule.service";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { Separator } from "@/components/ui/separator";
 import PaginationPage from "@/components/shared/pagination-page";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -52,10 +33,10 @@ import ScheduleCard from "@/components/shared/schedule-card";
 import { AllScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
+import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 
 const ScheduleAllPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedDay, setSelectedDay] = useState<DayType>({
     label: "All",
     value: "ALL",
@@ -73,11 +54,10 @@ const ScheduleAllPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.SCHEDULE.ROOT,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.SCHEDULE.ROOT,
+    defaultPageSize: 10,
+  });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
@@ -113,7 +93,6 @@ const ScheduleAllPage = () => {
             selectedDay?.value !== "ALL" ? selectedDay?.value : undefined,
           ...filters,
         };
-
 
         const response = await getAllMyScheduleService(baseFilters);
 
@@ -161,19 +140,8 @@ const ScheduleAllPage = () => {
     updateUrlWithPage(1);
   };
 
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  };
-
-  const handleDaySelect = (day: DayType) => {
+  const handleDayChange = (value: string) => {
+    const day = DAYS_OF_WEEK.find((d) => d.value === value) ?? DAYS_OF_WEEK[0];
     setSelectedDay(day);
     updateUrlWithPage(1);
   };
@@ -188,169 +156,122 @@ const ScheduleAllPage = () => {
   };
 
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.SCHEDULE.ROOT}>
-                  Schedule
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+    <div className="space-y-4">
+      <CardHeaderSection
+        title="All Schedule"
+        breadcrumbs={[
+          { label: "Dashboard", href: ROUTE.DASHBOARD },
+          { label: "Schedule", href: ROUTE.SCHEDULE.ROOT },
+        ]}
+        searchPlaceholder="Search room, instructor..."
+        searchValue={searchQuery}
+        onSearchChange={handleSearchChange}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <YearSelector
+            value={selectedYear}
+            onChange={handleYearChange}
+            className="w-full sm:w-auto"
+          />
 
-          <h3 className="text-xl font-bold">All Schedule</h3>
+          <Select onValueChange={handleDayChange} value={selectedDay.value}>
+            <SelectTrigger className="w-full sm:w-[160px] gap-2">
+              <SelectValue placeholder="Select a day" />
+            </SelectTrigger>
+            <SelectContent>
+              {DAYS_OF_WEEK.map((day) => (
+                <SelectItem key={day.value} value={day.value}>
+                  {day.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search room, instructor..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
+          <Select
+            onValueChange={handleSemesterChange}
+            value={selectedSemester}
+          >
+            <SelectTrigger className="w-full sm:w-[180px] gap-2">
+              <img
+                src={AppIcons.Filter}
+                alt="Time Icon"
+                className="h-4 w-4 text-muted-foreground"
               />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <YearSelector value={selectedYear} onChange={handleYearChange} />
+              <SelectValue placeholder="Select a semester" />
+            </SelectTrigger>
+            <SelectContent>
+              {SemesterFilter.map((semester) => (
+                <SelectItem key={semester.value} value={semester.value}>
+                  {semester.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-              <Select
-                onValueChange={handleSemesterChange}
-                value={selectedSemester}
-              >
-                <SelectTrigger className="flex gap-2">
-                  <img
-                    src={AppIcons.Filter}
-                    alt="Time Icon"
-                    className="h-4 w-4 text-muted-foreground"
-                  />
-                  <SelectValue
-                    className="underline underline-offset-1"
-                    placeholder="Select a semester"
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {SemesterFilter.map((semester) => (
-                    <SelectItem key={semester.value} value={semester.value}>
-                      {semester.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <ComboboxSelectCourse
-                dataSelect={selectedCourse}
-                onChangeSelected={handleCourseChange}
-              />
-            </div>
+          <div className="w-full sm:w-[220px]">
+            <ComboboxSelectCourse
+              dataSelect={selectedCourse}
+              onChangeSelected={handleCourseChange}
+            />
           </div>
+        </div>
+      </CardHeaderSection>
+
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+            <h2 className="text-lg font-bold">{selectedDay.label}</h2>
+            <p className="text-sm text-muted-foreground">
+              Total Schedule: {scheduleData?.totalElements || 0}
+            </p>
+          </div>
+
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <div>
+              {scheduleData && scheduleData.totalElements > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {scheduleData.content.map((schedule) => (
+                    <ScheduleCard
+                      key={schedule.id}
+                      schedule={schedule}
+                      onClick={handleCardClick}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="mb-4">
+                    <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
+                      <Clock className="h-8 w-8 text-amber-500" />
+                    </div>
+                  </div>
+                  <p className="text-lg font-medium">
+                    No classes scheduled for {selectedDay?.label}
+                  </p>
+                  <p className="text-sm mt-2 opacity-60">
+                    Try selecting a different day or check back later
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!isLoading && scheduleData && scheduleData.totalPages > 1 && (
+            <div className="mt-8 flex justify-end">
+              <div>
+                <PaginationPage
+                  currentPage={currentPage}
+                  totalPages={scheduleData.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      <div className="relative flex items-center my-6">
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-0 z-10 rounded-full"
-          onClick={scrollLeft}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <div
-          ref={scrollContainerRef}
-          className="flex overflow-x-auto scrollbar-hide gap-2 px-16 scroll-smooth"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {DAYS_OF_WEEK.map((day, index) => (
-            <Button
-              key={day.label}
-              variant={selectedDay?.value === day.value ? "default" : "outline"}
-              className={`whitespace-nowrap transition-colors duration-200 ${
-                selectedDay?.value === day.value
-                  ? "bg-amber-500 hover:bg-amber-600 text-white"
-                  : "hover:bg-amber-100"
-              }`}
-              onClick={() => handleDaySelect(day)}
-            >
-              {day.label}
-            </Button>
-          ))}
-        </div>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute right-0 z-10 rounded-full"
-          onClick={scrollRight}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="bg-white rounded-lg p-6 shadow-sm border">
-        <div className="mb-4">
-          <h2 className="text-lg font-bold">
-            {selectedDay ? `${selectedDay.label}` : ""}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Total Schedule: {scheduleData?.totalElements || 0}
-          </p>
-        </div>
-
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <div>
-            {scheduleData && scheduleData.totalElements > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {scheduleData.content.map((schedule) => (
-                  <ScheduleCard
-                    key={schedule.id}
-                    schedule={schedule}
-                    onClick={handleCardClick}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="mb-4">
-                  <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-                    <Clock className="h-8 w-8 text-amber-500" />
-                  </div>
-                </div>
-                <p className="text-lg font-medium">
-                  No classes scheduled for {selectedDay?.label}
-                </p>
-                <p className="text-sm mt-2 opacity-60">
-                  Try selecting a different day or check back later
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {!isLoading && scheduleData && scheduleData.totalPages > 1 && (
-          <div className="mt-8 flex justify-end">
-            <div>
-              <PaginationPage
-                currentPage={currentPage}
-                totalPages={scheduleData.totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

@@ -92,16 +92,13 @@ const ScheduleCard: React.FC<ScheduleCardProps> = ({
 
   return (
     <Card
-      className={`group overflow-hidden border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 ${
+      className={`group border-l-4 border-y border-r border-y-gray-100 border-r-gray-100 border-l-primary bg-white shadow-sm hover:shadow-md hover:border-l-primary/80 transition-all duration-200 ${
         onClick ? "cursor-pointer" : ""
       } ${className}`}
       onClick={handleCardClick}
     >
       <CardContent className="p-0">
         <div className="flex">
-          {/* Primary accent bar */}
-          <div className="w-1 sm:w-1.5 bg-primary flex-shrink-0 rounded-l-lg" />
-
           <div className="flex-1 p-3 sm:p-4 min-w-0">
             {/* ── Row 1: Course ── */}
             <div className="flex items-start justify-between gap-2">
