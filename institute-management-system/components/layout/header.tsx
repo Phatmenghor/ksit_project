@@ -36,6 +36,7 @@ export function Header() {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [roleDisplay, setRoleDisplay] = useState<{ label: string; color: string } | null>(null);
   const { user } = useCurrentUser();
   const router = useRouter();
 
@@ -95,7 +96,7 @@ export function Header() {
     return `${name.substring(0, maxLength)}...`;
   };
 
-  const getRoleDisplay = () => {
+  const computeRoleDisplay = (): { label: string; color: string } => {
     const roleGroup = getRoleCheck();
     switch (roleGroup) {
       case RoleEnum.ADMIN: return { label: "Admin", color: "text-red-300" };
@@ -127,6 +128,10 @@ export function Header() {
   // };
 
   const profileUrl = getProfileUrl();
+
+  useEffect(() => {
+    setRoleDisplay(computeRoleDisplay());
+  }, []);
 
   useEffect(() => {
     if (!isMobile) {
@@ -209,9 +214,11 @@ export function Header() {
                   >
                     {getTruncatedName(getDisplayName())}
                   </span>
-                  <span className={`text-xs font-normal leading-tight ${getRoleDisplay().color}`}>
-                    {getRoleDisplay().label}
-                  </span>
+                  {roleDisplay && (
+                    <span className={`text-xs font-normal leading-tight ${roleDisplay.color}`}>
+                      {roleDisplay.label}
+                    </span>
+                  )}
                 </div>
               </div>
             </DropdownMenuTrigger>
@@ -232,15 +239,17 @@ export function Header() {
                   </Avatar>
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-semibold truncate">{getDisplayName()}</span>
-                    <span className={`text-xs font-medium ${
-                      getRoleCheck() === RoleEnum.ADMIN ? "text-red-500" :
-                      getRoleCheck() === RoleEnum.DEVELOPER ? "text-purple-500" :
-                      getRoleCheck() === RoleEnum.TEACHER ? "text-blue-500" :
-                      getRoleCheck() === RoleEnum.STAFF ? "text-emerald-600" :
-                      "text-yellow-600"
-                    }`}>
-                      {getRoleDisplay().label}
-                    </span>
+                    {roleDisplay && (
+                      <span className={`text-xs font-medium ${
+                        roleDisplay.label === "Admin" ? "text-red-500" :
+                        roleDisplay.label === "Developer" ? "text-purple-500" :
+                        roleDisplay.label === "Teacher" ? "text-blue-500" :
+                        roleDisplay.label === "Staff" ? "text-emerald-600" :
+                        "text-yellow-600"
+                      }`}>
+                        {roleDisplay.label}
+                      </span>
+                    )}
                     {user?.department?.name && (
                       <span className="text-xs text-muted-foreground truncate">{user.department.name}</span>
                     )}

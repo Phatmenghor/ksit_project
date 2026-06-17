@@ -90,7 +90,7 @@ export function Sidebar() {
 
               {/* Subroutes */}
               {!isCollapsed && isOpen && (
-                <div className="relative mt-1 mb-2 ml-9">
+                <div className="relative mt-1 mb-2 ml-6">
                   {/* Vertical tree line */}
                   <div className="absolute left-0 top-0 bottom-2 w-px bg-gray-300" />
 
