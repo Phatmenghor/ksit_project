@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
 import { getAllMajorService } from "@/service/master-data/major.service";
+import { getDepartmentByIdService } from "@/service/master-data/department.service";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 import { AllMajorModel } from "@/model/master-data/major/all-major-model";
+import { DepartmentModel } from "@/model/master-data/department/all-department-model";
 import {
   AllClassModel,
   ClassModel,
@@ -51,6 +53,7 @@ const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
 const ClassSchedulePage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allMajorData, setAllMajorData] = useState<AllMajorModel | null>(null);
+  const [department, setDepartment] = useState<DepartmentModel | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<number | null>(null);
   const [allClassData, setAllClassData] = useState<AllClassModel | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
@@ -151,6 +154,15 @@ const ClassSchedulePage = () => {
   );
 
   useEffect(() => {
+    if (!depId) return;
+    getDepartmentByIdService(depId).then((response) => {
+      if (response) {
+        setDepartment(response);
+      }
+    });
+  }, [depId]);
+
+  useEffect(() => {
     loadMajors({});
   }, [loadMajors]);
 
@@ -210,10 +222,7 @@ const ClassSchedulePage = () => {
             </Button>
 
             <h3 className="text-xl font-bold">
-              Class List
-              {allMajorData?.content?.[0]?.department?.name
-                ? ` (${allMajorData.content[0].department.name})`
-                : ""}
+              Class List{department?.name ? ` (${department.name})` : ""}
             </h3>
           </div>
         </CardContent>
