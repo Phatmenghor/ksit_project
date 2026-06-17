@@ -53,10 +53,10 @@ const ConfigureScoreSchema = z
         data.assignmentPercentage +
         data.midtermPercentage +
         data.finalPercentage;
-      return total <= 100;
+      return total === 100;
     },
     {
-      message: "Total percentage cannot exceed 100%",
+      message: "Total percentage must equal 100%",
       path: ["totalPercentage"],
     }
   );
@@ -220,8 +220,8 @@ export default function ScoreSettingPage() {
             <div className="flex items-start gap-3 rounded-lg p-4 bg-yellow-50 border border-yellow-200">
               <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-gray-700">
-                <strong>Note:</strong> The total score setting cannot exceed
-                100%. Make sure all components add up to a maximum of 100%.
+                <strong>Note:</strong> The total score setting must equal
+                exactly 100%. Make sure all components add up to 100%.
               </p>
             </div>
 
@@ -284,21 +284,17 @@ export default function ScoreSettingPage() {
                           {isEditing ? (
                             <Input
                               {...field}
-                              type="number"
+                              type="text"
+                              inputMode="numeric"
                               className={`h-8 px-2 text-sm ${
                                 errors.attendancePercentage
                                   ? "border-red-500"
                                   : ""
                               }`}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value)
-                                )
-                              }
-                              min={0}
-                              max={100}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "");
+                                field.onChange(digits === "" ? 0 : Number(digits));
+                              }}
                               placeholder="0"
                             />
                           ) : (
@@ -325,21 +321,17 @@ export default function ScoreSettingPage() {
                           {isEditing ? (
                             <Input
                               {...field}
-                              type="number"
+                              type="text"
+                              inputMode="numeric"
                               className={`h-8 px-2 text-sm ${
                                 errors.assignmentPercentage
                                   ? "border-red-500"
                                   : ""
                               }`}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value)
-                                )
-                              }
-                              min={0}
-                              max={100}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "");
+                                field.onChange(digits === "" ? 0 : Number(digits));
+                              }}
                               placeholder="0"
                             />
                           ) : (
@@ -366,19 +358,15 @@ export default function ScoreSettingPage() {
                           {isEditing ? (
                             <Input
                               {...field}
-                              type="number"
+                              type="text"
+                              inputMode="numeric"
                               className={`h-8 px-2 text-sm ${
                                 errors.midtermPercentage ? "border-red-500" : ""
                               }`}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value)
-                                )
-                              }
-                              min={0}
-                              max={100}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "");
+                                field.onChange(digits === "" ? 0 : Number(digits));
+                              }}
                               placeholder="0"
                             />
                           ) : (
@@ -405,19 +393,15 @@ export default function ScoreSettingPage() {
                           {isEditing ? (
                             <Input
                               {...field}
-                              type="number"
+                              type="text"
+                              inputMode="numeric"
                               className={`h-8 px-2 text-sm ${
                                 errors.finalPercentage ? "border-red-500" : ""
                               }`}
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value)
-                                )
-                              }
-                              min={0}
-                              max={100}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "");
+                                field.onChange(digits === "" ? 0 : Number(digits));
+                              }}
                               placeholder="0"
                             />
                           ) : (
@@ -450,13 +434,13 @@ export default function ScoreSettingPage() {
         </div>
 
         {/* Validation Error Summary */}
-        {isEditing && errors.root && (
+        {isEditing && (errors as Record<string, { message?: string }>).totalPercentage && (
           <Card className="border-red-200 bg-red-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertTriangle className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  {errors.root.message}
+                  {(errors as Record<string, { message?: string }>).totalPercentage?.message}
                 </span>
               </div>
             </CardContent>
@@ -479,7 +463,8 @@ export default function ScoreSettingPage() {
               </Button>
               <Button
                 type="submit"
-                className="px-6 bg-yellow-500 hover:bg-yellow-600 text-white disabled:opacity-50"
+                variant="default"
+                className="px-6"
                 disabled={isSaving}
               >
                 {isSaving ? (
