@@ -61,9 +61,7 @@ export default function DynamicInputGrid({
   }, [getValues, append, fields, namePrefix, defaultRows]);
 
   const handleRemoveRow = (index: number) => {
-    if (arrayFields.length > 1) {
-      remove(index);
-    }
+    remove(index);
   };
 
   const minTableWidth = `${fields.length * 180 + 60}px`;
@@ -171,7 +169,7 @@ export default function DynamicInputGrid({
               variant="outline"
               size="sm"
               onClick={() => handleRemoveRow(rowIndex)}
-              disabled={isSubmitting || arrayFields.length === 1}
+              disabled={isSubmitting}
               className="p-2 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             >
               <Trash2 className="h-4 w-4" />
