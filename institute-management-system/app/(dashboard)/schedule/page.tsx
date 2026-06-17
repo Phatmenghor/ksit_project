@@ -1,10 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
 import { Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   DAYS_OF_WEEK,
   DayType,
@@ -19,21 +26,12 @@ import PaginationPage from "@/components/shared/pagination-page";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
-import { YearSelector } from "@/components/shared/year-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { AppIcons } from "@/constants/icons/icon";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { AllScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
 
 const ScheduleAllPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -135,13 +133,14 @@ const ScheduleAllPage = () => {
     updateUrlWithPage(1);
   };
 
-  const handleSemesterChange = (semester: string) => {
-    setSelectedSemester(semester);
+  const handleSemesterChange = (semester: string | number | null | undefined) => {
+    setSelectedSemester(semester ? String(semester) : "ALL");
     updateUrlWithPage(1);
   };
 
-  const handleDayChange = (value: string) => {
-    const day = DAYS_OF_WEEK.find((d) => d.value === value) ?? DAYS_OF_WEEK[0];
+  const handleDayChange = (value: string | number | null | undefined) => {
+    const day =
+      DAYS_OF_WEEK.find((d) => d.value === value) ?? DAYS_OF_WEEK[0];
     setSelectedDay(day);
     updateUrlWithPage(1);
   };
@@ -157,65 +156,85 @@ const ScheduleAllPage = () => {
 
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        title="All Schedule"
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Schedule", href: ROUTE.SCHEDULE.ROOT },
-        ]}
-        searchPlaceholder="Search room, instructor..."
-        searchValue={searchQuery}
-        onSearchChange={handleSearchChange}
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <YearSelector
-            value={selectedYear}
-            onChange={handleYearChange}
-            className="w-full sm:w-auto"
-          />
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Schedule</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
 
-          <Select onValueChange={handleDayChange} value={selectedDay.value}>
-            <SelectTrigger className="w-full sm:w-[160px] gap-2">
-              <SelectValue placeholder="Select a day" />
-            </SelectTrigger>
-            <SelectContent>
-              {DAYS_OF_WEEK.map((day) => (
-                <SelectItem key={day.value} value={day.value}>
-                  {day.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            onValueChange={handleSemesterChange}
-            value={selectedSemester}
-          >
-            <SelectTrigger className="w-full sm:w-[180px] gap-2">
-              <img
-                src={AppIcons.Filter}
-                alt="Time Icon"
-                className="h-4 w-4 text-muted-foreground"
-              />
-              <SelectValue placeholder="Select a semester" />
-            </SelectTrigger>
-            <SelectContent>
-              {SemesterFilter.map((semester) => (
-                <SelectItem key={semester.value} value={semester.value}>
-                  {semester.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="w-full sm:w-[220px]">
-            <ComboboxSelectCourse
-              dataSelect={selectedCourse}
-              onChangeSelected={handleCourseChange}
-            />
-          </div>
-        </div>
-      </CardHeaderSection>
+      <CollapsibleFilterPanel
+        config={{
+          title: "All Schedule",
+          totalCount: scheduleData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search room, instructor...",
+          onSearchChange: handleSearchChange,
+          filters: [
+            {
+              id: "year",
+              type: "year",
+              label: "Academic Year",
+              value: selectedYear,
+              onChange: handleYearChange,
+            },
+            {
+              id: "day",
+              type: "select",
+              label: "Day",
+              value: selectedDay.value,
+              onChange: handleDayChange,
+              options: DAYS_OF_WEEK.map((day) => ({
+                value: day.value,
+                label: day.label,
+              })),
+            },
+            {
+              id: "semester",
+              type: "select",
+              label: "Semester",
+              value: selectedSemester,
+              onChange: handleSemesterChange,
+              options: SemesterFilter.map((semester) => ({
+                value: semester.value,
+                label: semester.label,
+              })),
+            },
+            {
+              id: "course",
+              type: "custom",
+              label: "Course",
+              value: selectedCourse ?? null,
+              onChange: (v) => handleCourseChange(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Course</label>
+                  <ComboboxSelectCourse
+                    dataSelect={value}
+                    onChangeSelected={onChange}
+                  />
+                </div>
+              ),
+            },
+          ],
+          onClearAll: () => {
+            setSelectedYear(new Date().getFullYear());
+            setSelectedDay(DAYS_OF_WEEK[0]);
+            setSelectedSemester("ALL");
+            setSelectCourse(null);
+            setSearchQuery("");
+          },
+        }}
+      />
 
       <Card>
         <CardContent className="p-4 sm:p-6">
@@ -277,3 +296,4 @@ const ScheduleAllPage = () => {
 };
 
 export default ScheduleAllPage;
+
