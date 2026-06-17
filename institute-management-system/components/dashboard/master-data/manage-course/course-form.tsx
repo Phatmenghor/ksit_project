@@ -155,9 +155,8 @@ export function CourseForm({ courseId }: CourseFormProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="h-14 rounded-lg bg-muted animate-pulse" />
-        <div className="h-[600px] rounded-lg bg-muted animate-pulse" />
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }

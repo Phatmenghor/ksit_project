@@ -5,6 +5,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tint sidebar PNG icons to primary color (#024D3E) when active */
+.icon-active {
+  filter: brightness(0) saturate(100%) invert(20%) sepia(72%) saturate(626%) hue-rotate(133deg) brightness(95%) contrast(106%);
+}
+
 .grid-header {
   display: grid;
   gap: 1rem; /* same as gap-4 */
