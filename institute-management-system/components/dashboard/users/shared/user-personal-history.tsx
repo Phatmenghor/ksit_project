@@ -17,8 +17,8 @@ export default function InfoGrid({ data, columns = 2 }: InfoGridProps) {
     <div className={`grid ${gridColsClass} gap-x-4 gap-y-3 text-sm`}>
       {data.map((item, index) => (
         <Fragment key={index}>
-          <div className="text-muted-foreground">{item.label}</div>
-          <div>{item.value || ""}</div>
+          <div className="text-muted-foreground text-xs">{item.label}</div>
+          <div className="font-medium text-foreground">{item.value != null && item.value !== "" ? item.value : <span className="text-muted-foreground italic">N/A</span>}</div>
         </Fragment>
       ))}
     </div>

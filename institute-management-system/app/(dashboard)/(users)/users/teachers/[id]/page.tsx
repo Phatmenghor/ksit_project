@@ -18,7 +18,7 @@ import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
 import { getStaffByIdService } from "@/service/user/user.service";
 
 export default function TeacherViewPage() {
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [teacher, setteacher] = React.useState<StaffRespondModel | null>(null);
   const params = useParams();
   const teacherId = params.id as string;
@@ -41,6 +41,22 @@ export default function TeacherViewPage() {
   useEffect(() => {
     loadTeacher();
   }, [teacherId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!teacher) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground">Teacher not found.</p>
+      </div>
+    );
+  }
 
   return (
     <div>

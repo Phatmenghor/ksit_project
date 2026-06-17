@@ -18,7 +18,7 @@ import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
 import { getStaffByIdService } from "@/service/user/user.service";
 
 export default function StaffViewPage() {
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [staff, setStaff] = React.useState<StaffRespondModel | null>(null);
   const params = useParams();
   const staffId = params.id as string;
@@ -42,6 +42,22 @@ export default function StaffViewPage() {
     loadStaff();
   }, [staffId]);
 
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!staff) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground">Staff not found.</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Header with TabsList injected via prop */}
@@ -50,6 +66,7 @@ export default function StaffViewPage() {
         back
         breadcrumbs={[
           { label: "Dashboard", href: ROUTE.DASHBOARD },
+          { label: "Staff", href: ROUTE.USERS.STUFF_OFFICER },
           { label: "View Staff", href: ROUTE.USERS.VIEW_STAFF(staffId) },
         ]}
       />
