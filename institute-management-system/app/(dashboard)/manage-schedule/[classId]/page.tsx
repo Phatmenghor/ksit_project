@@ -301,7 +301,7 @@ const AllSchedulePage = () => {
                       <SelectValue placeholder="Select a day" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[ALL_DAY, ...DAYS_OF_WEEK].map((day) => (
+                      {DAYS_OF_WEEK.map((day) => (
                         <SelectItem key={day.value} value={day.value}>
                           {day.label}
                         </SelectItem>
