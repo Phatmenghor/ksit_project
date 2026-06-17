@@ -93,7 +93,10 @@ export function CustomDateTimePicker({
   // ── Date/datetime helpers ─────────────────────────────────────────────────
 
   const formatDisplay = (date: Date) => {
-    const dateStr = date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    const day = date.getDate();
+    const month = date.toLocaleDateString("en-US", { month: "long" });
+    const year = date.getFullYear();
+    const dateStr = `${day} ${month}, ${year}`;
     if (mode === "datetime") {
       const h = date.getHours(), m = date.getMinutes();
       const period = h >= 12 ? "PM" : "AM";
