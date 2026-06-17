@@ -62,7 +62,7 @@ export const ROUTE = {
   STUDENT_LIST: (id: string) => `/students/class/${id}`,
 
   MANAGE_SCHEDULE: {
-    DEPARTMENT: "/manage-schedule/department",
+    DEPARTMENT: "/manage-schedule",
     DEPARTMENT_CLASS: "/manage-schedule/class",
     UPDATE_SCHEDULE: "/manage-schedule/",
     ROOT: "/schedule",
@@ -71,7 +71,7 @@ export const ROUTE = {
   },
 
   SCHEDULE: {
-    DEPARTMENT: "/manage-schedule/department",
+    DEPARTMENT: "/manage-schedule",
     ROOT: "/schedule",
   },
 
