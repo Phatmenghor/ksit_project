@@ -40,6 +40,7 @@ type Props = {
   title: string;
   isTeacher?: boolean;
   back: string | undefined;
+  parentLabel?: string;
   onDiscard?: () => void;
 };
 
@@ -52,6 +53,7 @@ export default function TeacherForm({
   isTeacher = false,
   onDiscard,
   back,
+  parentLabel = "Teachers",
 }: Props) {
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [isFormValid, setIsFormValid] = useState(false);
@@ -189,11 +191,12 @@ export default function TeacherForm({
         <CardHeaderSection
           back
           title={title}
-          backHref={ROUTE.USERS.TEACHERS}
+          backHref={back || ROUTE.USERS.TEACHERS}
           breadcrumbs={[
             { label: "Dashboard", href: ROUTE.DASHBOARD },
+            { label: parentLabel, href: back || ROUTE.USERS.TEACHERS },
             {
-              label: mode === "Add" ? "Add new" : "Edit teacher",
+              label: mode === "Add" ? "Add new" : `Edit ${parentLabel === "Teachers" ? "teacher" : "staff"}`,
               href: "",
             },
           ]}

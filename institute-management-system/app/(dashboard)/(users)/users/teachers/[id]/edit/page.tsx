@@ -258,11 +258,13 @@ export default function EditTeacherPage() {
 
       if (response) {
         toast.success("Teacher updated successfully");
+        router.push(ROUTE.USERS.TEACHERS);
       } else {
         toast.error("Failed to update teacher");
       }
     } catch (error) {
       toast.error("Failed to update teacher");
+    } finally {
       setLoading(false);
     }
   };
@@ -275,10 +277,9 @@ export default function EditTeacherPage() {
       initialValues={initialValues}
       loading={loading}
       isTeacher={true}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      back={ROUTE.USERS.TEACHERS}
+      parentLabel="Teachers"
+      onDiscard={() => router.push(ROUTE.USERS.TEACHERS)}
     />
   );
 }

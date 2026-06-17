@@ -236,11 +236,13 @@ export default function EditStaffOfficerPage() {
 
       if (response) {
         toast.success("Staff information updated successfully");
+        router.push(ROUTE.USERS.STUFF_OFFICER);
       } else {
         toast.error("Failed to update information for Staff");
       }
     } catch (error) {
       toast.error("Failed to update information for Staff");
+    } finally {
       setLoading(false);
     }
   };
@@ -252,10 +254,9 @@ export default function EditStaffOfficerPage() {
       onSubmit={onSubmit}
       initialValues={initialValues}
       loading={loading}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      back={ROUTE.USERS.STUFF_OFFICER}
+      parentLabel="Staff"
+      onDiscard={() => router.push(ROUTE.USERS.STUFF_OFFICER)}
     />
   );
 }

@@ -151,7 +151,7 @@ export default function AddTeacherPage() {
       const response = await addStaffService(payload);
       if (response) {
         toast.success("Teacher created successfully");
-        router.back();
+        router.push(ROUTE.USERS.TEACHERS);
       } else {
         toast.error("Failed to create teacher");
       }
@@ -169,10 +169,10 @@ export default function AddTeacherPage() {
       title="Add Teacher"
       onSubmit={onSubmit}
       loading={loading}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      isTeacher={true}
+      back={ROUTE.USERS.TEACHERS}
+      parentLabel="Teachers"
+      onDiscard={() => router.push(ROUTE.USERS.TEACHERS)}
     />
   );
 }

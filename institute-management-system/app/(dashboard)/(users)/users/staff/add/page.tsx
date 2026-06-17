@@ -153,7 +153,7 @@ export default function AddStaffOfficerPage() {
       const response = await addStaffService(payload);
       if (response) {
         toast.success("Staff created successfully");
-        router.back();
+        router.push(ROUTE.USERS.STUFF_OFFICER);
       } else {
         toast.error("Failed to create staff");
       }
@@ -170,10 +170,9 @@ export default function AddStaffOfficerPage() {
       title="Add Staff"
       onSubmit={onSubmit}
       loading={loading}
-      back={ROUTE.DASHBOARD}
-      onDiscard={() => {
-        router.back();
-      }}
+      back={ROUTE.USERS.STUFF_OFFICER}
+      parentLabel="Staff"
+      onDiscard={() => router.push(ROUTE.USERS.STUFF_OFFICER)}
     />
   );
 }

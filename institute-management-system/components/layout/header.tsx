@@ -207,8 +207,9 @@ export function Header() {
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="hidden md:flex flex-col items-start">
+                <div className="hidden md:flex flex-col items-start" suppressHydrationWarning>
                   <span
+                    suppressHydrationWarning
                     className="text-white text-sm font-medium leading-tight max-w-[150px] truncate"
                     title={getDisplayName()}
                   >
