@@ -23,16 +23,16 @@ export function ComboboxSelectClass({
   const controller = useInfiniteComboboxData<ClassModel>({
     fetcher: ({ search, pageNo, pageSize }) =>
       getAllClassService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE }),
-    getId: (item) => item.id,
+    getId: (item) => item?.id,
   });
 
   return (
     <AsyncCombobox
-      value={dataSelect}
+      value={dataSelect ?? null}
       onChange={(item) => item && onChangeSelected(item)}
       controller={controller}
-      getId={(item) => item.id}
-      getLabel={(item) => `${item.code} - ${item.major.name}`}
+      getId={(item) => item?.id}
+      getLabel={(item) => (item ? `${item.code} - ${item.major?.name ?? ""}` : "")}
       label={label}
       placeholder={placeholder}
       searchPlaceholder="Search class..."

@@ -38,7 +38,8 @@ export function AsyncCombobox<T>({
   className,
 }: AsyncComboboxProps<T>) {
   const [open, setOpen] = useState(false);
-  const { data, loading, lastPage, searchTerm, setSearchTerm, sentinelRef } = controller;
+  const { data: rawData, loading, lastPage, searchTerm, setSearchTerm, sentinelRef } = controller;
+  const data = rawData.filter((item) => item != null);
 
   const selectedLabel = value ? getLabel(value) : placeholder;
 
