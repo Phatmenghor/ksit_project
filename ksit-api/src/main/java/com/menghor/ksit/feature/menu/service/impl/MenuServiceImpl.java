@@ -39,6 +39,7 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public List<UserMenuResponseDto> getAllMenusWithPermissions(Long userId) {
+        log.info("Fetching all menus with permissions for userId={}", userId);
         UserEntity user = getUserById(userId);
         List<MenuItemEntity> allMenus = menuItemRepository.findByStatusOrderByDisplayOrderAscIdAsc(Status.ACTIVE);
         Map<Long, MenuPermissionEntity> userPermissions = getUserCustomPermissions(userId);
@@ -80,6 +81,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public List<UserMenuResponseDto> updateUserMenuPermissions(Long userId, UserMenuUpdateDto updateDto) {
+        log.info("Updating menu permissions for userId={}, count={}", userId, updateDto.getMenuPermissions().size());
         UserEntity user = getUserById(userId);
 
         for (MenuPermissionUpdateDto permDto : updateDto.getMenuPermissions()) {
@@ -109,6 +111,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public List<UserMenuResponseDto> resetUserMenusToDefault(Long userId) {
+        log.info("Resetting menu permissions to default for userId={}", userId);
         UserEntity user = getUserById(userId);
 
         List<MenuPermissionEntity> userPermissions = menuPermissionRepository
@@ -125,6 +128,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public void initializeMenuPermissionsForNewUser(Long userId) {
+        log.info("Initializing menu permissions for new userId={}", userId);
         UserEntity user = getUserById(userId);
 
         List<MenuPermissionEntity> existing = menuPermissionRepository
@@ -137,6 +141,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public List<UserMenuResponseDto> refreshUserMenuPermissionsAfterRoleChange(Long userId) {
+        log.info("Refreshing menu permissions after role change for userId={}", userId);
         UserEntity user = getUserById(userId);
 
         List<MenuPermissionEntity> existing = menuPermissionRepository
@@ -153,7 +158,9 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public MenuItemResponseDto createMenuItem(MenuCreateDto createDto) {
+        log.info("Creating menu item with code={}", createDto.getCode());
         if (menuItemRepository.existsByCodeAndStatus(createDto.getCode(), Status.ACTIVE)) {
+            log.warn("Duplicate menu code={} already exists", createDto.getCode());
             throw new RuntimeException("Menu code '" + createDto.getCode() + "' already exists");
         }
 
@@ -179,6 +186,7 @@ public class MenuServiceImpl implements MenuService {
         }
 
         MenuItemEntity saved = menuItemRepository.save(menuItem);
+        log.info("Menu item created successfully. id={}, code={}", saved.getId(), saved.getCode());
         assignNewMenuToAllUsers(saved);
         return menuMapper.toMenuItemResponse(saved);
     }
@@ -186,6 +194,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     @Transactional
     public MenuItemResponseDto updateMenuItem(Long menuId, MenuUpdateDto updateDto) {
+        log.info("Updating menu item id={}", menuId);
         MenuItemEntity menuItem = getMenuItemById(menuId);
 
         if (updateDto.getTitle() != null) menuItem.setTitle(updateDto.getTitle());
@@ -195,12 +204,15 @@ public class MenuServiceImpl implements MenuService {
         if (updateDto.getDisplayOrder() != null) menuItem.setDisplayOrder(updateDto.getDisplayOrder());
         if (updateDto.getParentId() != null) menuItem.setParent(getMenuItemById(updateDto.getParentId()));
 
-        return menuMapper.toMenuItemResponse(menuItemRepository.save(menuItem));
+        MenuItemResponseDto result = menuMapper.toMenuItemResponse(menuItemRepository.save(menuItem));
+        log.info("Menu item id={} updated successfully", menuId);
+        return result;
     }
 
     @Override
     @Transactional
     public MenuItemResponseDto deleteMenuItem(Long menuId) {
+        log.info("Deleting menu item id={}", menuId);
         MenuItemEntity menuItem = getMenuItemById(menuId);
         menuItem.setStatus(Status.DELETED);
 
@@ -214,6 +226,7 @@ public class MenuServiceImpl implements MenuService {
         softDeleteMenuPermissions(menuId);
         children.forEach(c -> softDeleteMenuPermissions(c.getId()));
 
+        log.info("Menu item id={} deleted successfully", menuId);
         return menuMapper.toMenuItemResponse(menuItem);
     }
 

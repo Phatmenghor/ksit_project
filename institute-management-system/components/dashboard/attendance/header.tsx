@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { AppIcons } from "@/constants/icons/icon";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { formatTime12h } from "@/utils/map-helper/schedule";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -128,7 +129,7 @@ export default function AttendanceHeader({ title, schedule }: Props) {
                   className="h-4 w-4 flex-shrink-0"
                 />
               }
-              text={`${schedule?.startTime} - ${schedule?.endTime}`}
+              text={`${formatTime12h(schedule?.startTime)} - ${formatTime12h(schedule?.endTime)}`}
             />
             <InfoItem
               icon={

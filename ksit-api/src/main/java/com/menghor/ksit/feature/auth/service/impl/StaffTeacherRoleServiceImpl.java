@@ -32,6 +32,7 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
 
     @Override
     public List<UserRoleResponseDto> getUserStaffTeacherRoles(Long userId) {
+        log.info("Fetching staff/teacher roles for userId={}", userId);
 
         UserEntity user = getUserById(userId);
         
@@ -60,6 +61,7 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
     @Override
     @Transactional
     public List<UserRoleResponseDto> updateUserStaffTeacherRoles(Long userId, UserRoleUpdateRequestDto updateDto) {
+        log.info("Updating staff/teacher roles for userId={}, roles={}", userId, updateDto.getRoles());
 
         UserEntity user = getUserById(userId);
 
@@ -69,6 +71,7 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
                 .collect(Collectors.toList());
 
         if (!invalidRoles.isEmpty()) {
+            log.warn("Invalid roles provided for userId={}: {}", userId, invalidRoles);
             throw new BadRequestException("Only STAFF and TEACHER roles allowed. Invalid: " + invalidRoles);
         }
 
@@ -91,6 +94,7 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
         
         user.setRoles(finalRoles);
         userRepository.save(user);
+        log.info("Roles updated successfully for userId={}. newRoles={}", userId, updateDto.getRoles());
 
         // Refresh menu permissions
         try {
@@ -118,6 +122,9 @@ public class StaffTeacherRoleServiceImpl implements StaffTeacherRoleService {
 
     private UserEntity getUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> {
+                    log.error("User not found with ID: {}", userId);
+                    return new NotFoundException("User not found with ID: " + userId);
+                });
     }
 }

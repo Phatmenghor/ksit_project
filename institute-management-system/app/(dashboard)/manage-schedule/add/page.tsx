@@ -1,52 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import Loading from "@/components/shared/loading";
 import ScheduleForm, {
   ScheduleFormValues,
 } from "@/components/dashboard/manage-schedule/schedule-form";
 import { createScheduleService } from "@/service/schedule/schedule.service";
-import { getClassByIdService } from "@/service/master-data/class.service";
-import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 
 export default function AddSchedulePage() {
-  const params = useParams();
   const router = useRouter();
-  const classId = Number(params.classId);
-
-  const [lockedClass, setLockedClass] = useState<ClassModel | null>(null);
-  const [isLoadingClass, setIsLoadingClass] = useState(true);
   const [formKey, setFormKey] = useState(0);
-
-  useEffect(() => {
-    if (!classId) {
-      setIsLoadingClass(false);
-      return;
-    }
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const result = await getClassByIdService(classId);
-        if (!cancelled) setLockedClass(result ?? null);
-      } catch {
-        // non-fatal: form still works, class just won't be pre-selected
-      } finally {
-        if (!cancelled) setIsLoadingClass(false);
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [classId]);
 
   const handleSubmit = async (values: ScheduleFormValues) => {
     await createScheduleService({
@@ -62,15 +30,7 @@ export default function AddSchedulePage() {
       yearLevel: values.yearLevel,
     });
     toast.success("Schedule created successfully");
-    // Remount form to reset all state while keeping the locked class
     setFormKey((k) => k + 1);
-  };
-
-  if (isLoadingClass) return <Loading />;
-
-  const defaultValues: Partial<ScheduleFormValues> = {
-    classId: lockedClass?.id ?? 0,
-    academyYear: new Date().getFullYear(),
   };
 
   return (
@@ -87,9 +47,7 @@ export default function AddSchedulePage() {
       <ScheduleForm
         key={formKey}
         mode="create"
-        defaultValues={defaultValues}
-        defaultSelections={{ classData: lockedClass }}
-        lockedClassData={lockedClass}
+        defaultValues={{ academyYear: new Date().getFullYear() }}
         onSubmit={handleSubmit}
         onCancel={() => router.back()}
       />

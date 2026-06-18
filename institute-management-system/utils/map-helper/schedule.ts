@@ -1,6 +1,34 @@
 import { DAYS_OF_WEEK } from "@/constants/constant";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 
+const SEMESTER_LABELS: Record<string, string> = {
+  SEMESTER_1: "Semester 1",
+  SEMESTER_2: "Semester 2",
+  All_SEMESTER: "All Semesters",
+};
+
+export function formatTime12h(time?: string | null): string {
+  if (!time) return "—";
+  const [hourStr, minuteStr] = time.split(":");
+  const hour = parseInt(hourStr, 10);
+  if (Number.isNaN(hour)) return time;
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minuteStr ?? "00"} ${period}`;
+}
+
+export function formatSemester(value: string | undefined | null): string {
+  if (!value) return "---";
+  return SEMESTER_LABELS[value] ?? value;
+}
+
+export function formatAcademyYear(value: string | number | undefined | null): string {
+  if (!value || value === "---") return "---";
+  const year = Number(value);
+  if (isNaN(year)) return String(value);
+  return `${year}-${year + 1}`;
+}
+
 type WeeklySchedule = {
   day: string;
   classes: {
@@ -93,7 +121,7 @@ export function convertToWeeklySchedule(scheduleData: ScheduleModel[]): {
         : "---",
 
       instructor: instructorName,
-      datetime: `${schedule.startTime || "---"} - ${schedule.endTime || "---"}`,
+      datetime: `${formatTime12h(schedule.startTime)} - ${formatTime12h(schedule.endTime)}`,
       room: schedule.room?.name || "---",
     };
 

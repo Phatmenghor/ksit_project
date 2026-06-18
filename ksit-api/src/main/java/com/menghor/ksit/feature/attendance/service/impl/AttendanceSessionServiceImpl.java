@@ -47,14 +47,19 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
     @Override
     public AttendanceSessionDto findById(Long id) {
+        log.info("Fetching attendance session id={}", id);
         AttendanceSessionEntity session = sessionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Attendance session not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.error("Attendance session not found with id={}", id);
+                    return new EntityNotFoundException("Attendance session not found with id: " + id);
+                });
         return attendanceMapper.toDto(session);
     }
 
     @Override
     @Transactional
     public AttendanceSessionDto generateAttendanceSession(AttendanceSessionRequest request) {
+        log.info("Generating attendance session for scheduleId={}", request.getScheduleId());
 
         // Get current authenticated user
         UserEntity currentUser = securityUtils.getCurrentUser();
@@ -87,6 +92,8 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
         // If a draft session exists for today, return it (don't create a new one)
         if (draftSession.isPresent()) {
+            log.info("Returning existing draft attendance session id={} for scheduleId={}",
+                    draftSession.get().getId(), request.getScheduleId());
             // Sorting will be handled by the mapper
             return attendanceMapper.toDto(draftSession.get());
         }
@@ -129,6 +136,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         AttendanceSessionEntity refreshedSession = sessionRepository.findById(savedSession.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Session not found after creation"));
 
+        log.info("Attendance session created successfully. id={}, studentCount={}", savedSession.getId(), students.size());
         // The sorting will be handled automatically in the mapper
         return attendanceMapper.toDto(refreshedSession);
     }
@@ -146,11 +154,16 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
     @Override
     @Transactional
     public QrResponse regenerateQrCode(Long sessionId) {
+        log.info("Regenerating QR code for sessionId={}", sessionId);
         AttendanceSessionEntity session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new EntityNotFoundException("Attendance session not found with id: " + sessionId));
+                .orElseThrow(() -> {
+                    log.error("Attendance session not found with id={}", sessionId);
+                    return new EntityNotFoundException("Attendance session not found with id: " + sessionId);
+                });
 
         // Only allow regeneration if session is in DRAFT status
         if (session.getFinalizationStatus() != AttendanceFinalizationStatus.DRAFT) {
+            log.warn("Cannot regenerate QR code for finalized sessionId={}", sessionId);
             throw new IllegalStateException("Cannot regenerate QR code for finalized session");
         }
 
@@ -160,7 +173,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         session.setQrExpiryTime(now.plusMinutes(15));
 
         session = sessionRepository.save(session);
-
+        log.info("QR code regenerated successfully for sessionId={}", sessionId);
         return QrResponse.builder()
                 .qrCode(session.getQrCode())
                 .expiryTime(session.getQrExpiryTime().toString())
@@ -170,35 +183,48 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
     @Override
     @Transactional
     public AttendanceSessionDto markAttendanceByQr(QrAttendanceRequest request) {
+        log.info("Marking attendance by QR for studentId={}", request.getStudentId());
         // Find session by QR code
         AttendanceSessionEntity session = sessionRepository.findByQrCode(request.getQrCode())
-                .orElseThrow(() -> new EntityNotFoundException("Invalid or expired QR code"));
+                .orElseThrow(() -> {
+                    log.warn("Invalid or expired QR code used by studentId={}", request.getStudentId());
+                    return new EntityNotFoundException("Invalid or expired QR code");
+                });
 
         // Check if QR code has expired
         if (LocalDateTime.now().isAfter(session.getQrExpiryTime())) {
+            log.warn("Expired QR code used by studentId={} for sessionId={}", request.getStudentId(), session.getId());
             throw new IllegalStateException("QR code has expired");
         }
 
         // Find student's attendance record
         AttendanceEntity attendance = attendanceRepository
                 .findByAttendanceSessionIdAndStudentId(session.getId(), request.getStudentId())
-                .orElseThrow(() -> new EntityNotFoundException("Student not found in this attendance session"));
+                .orElseThrow(() -> {
+                    log.warn("Student id={} not found in attendance session id={}", request.getStudentId(), session.getId());
+                    return new EntityNotFoundException("Student not found in this attendance session");
+                });
 
         // Mark as present
         attendance.setStatus(AttendanceStatus.PRESENT);
         attendance.setRecordedTime(LocalDateTime.now());
         attendanceRepository.save(attendance);
-
+        log.info("Attendance marked PRESENT for studentId={} in sessionId={}", request.getStudentId(), session.getId());
         return attendanceMapper.toDto(session);
     }
 
     @Override
     @Transactional
     public AttendanceSessionDto finalizeAttendanceSession(Long sessionId) {
+        log.info("Finalizing attendance session id={}", sessionId);
         AttendanceSessionEntity session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new EntityNotFoundException("Attendance session not found with id: " + sessionId));
+                .orElseThrow(() -> {
+                    log.error("Attendance session not found with id={}", sessionId);
+                    return new EntityNotFoundException("Attendance session not found with id: " + sessionId);
+                });
 
         if (session.getFinalizationStatus() == AttendanceFinalizationStatus.FINAL) {
+            log.info("Attendance session id={} is already finalized", sessionId);
             return attendanceMapper.toDto(session);
         }
 
@@ -214,7 +240,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         // Save both the attendances and session
         attendanceRepository.saveAll(attendances);
         session = sessionRepository.save(session);
-
+        log.info("Attendance session id={} finalized successfully. recordsProcessed={}", sessionId, attendances.size());
         return attendanceMapper.toDto(session);
     }
 }

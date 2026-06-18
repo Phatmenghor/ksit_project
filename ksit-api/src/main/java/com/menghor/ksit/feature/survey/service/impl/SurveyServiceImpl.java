@@ -54,6 +54,7 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Override
     public SurveyResponseDto getMainSurvey() {
+        log.info("Fetching main survey");
         SurveyEntity mainSurvey = getMainSurveyEntity();
         return surveyMapper.toResponseDto(mainSurvey);
     }
@@ -61,6 +62,7 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     @Transactional
     public SurveyResponseDto updateMainSurvey(SurveyUpdateDto updateDto) {
+        log.info("Updating main survey");
 
         SurveyEntity mainSurvey = getMainSurveyEntity();
 
@@ -73,12 +75,14 @@ public class SurveyServiceImpl implements SurveyService {
 
         SurveyEntity savedSurvey = surveyRepository.save(mainSurvey);
 
+        log.info("Main survey id={} updated successfully", savedSurvey.getId());
         return surveyMapper.toResponseDto(savedSurvey);
     }
 
     @Override
     @Transactional
     public SurveyResponseDto deleteSurveySectionAndGetUpdatedSurvey(Long sectionId) {
+        log.info("Deleting survey section id={}", sectionId);
 
         // Perform the deletion using existing method
         deleteSurveySection(sectionId);
@@ -92,6 +96,7 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     @Transactional
     public SurveyResponseDto deleteSurveyQuestionAndGetUpdatedSurvey(Long questionId) {
+        log.info("Deleting survey question id={}", questionId);
 
         // Perform the deletion using existing method
         deleteSurveyQuestion(questionId);
@@ -106,10 +111,14 @@ public class SurveyServiceImpl implements SurveyService {
     private void deleteSurveySection(Long sectionId) {
 
         SurveySectionEntity section = surveySectionRepository.findById(sectionId)
-                .orElseThrow(() -> new NotFoundException("Survey section not found with ID: " + sectionId));
+                .orElseThrow(() -> {
+                    log.error("Survey section not found with ID: {}", sectionId);
+                    return new NotFoundException("Survey section not found with ID: " + sectionId);
+                });
 
         // Check if section is already deleted
         if (section.getStatus() == StatusSurvey.DELETED) {
+            log.warn("Survey section id={} is already deleted", sectionId);
             throw new BadRequestException("Section is already deleted");
         }
 
@@ -131,16 +140,21 @@ public class SurveyServiceImpl implements SurveyService {
         }
 
         surveySectionRepository.save(section);
+        log.info("Survey section id={} deleted successfully", sectionId);
     }
 
     @Transactional
     private void deleteSurveyQuestion(Long questionId) {
 
         SurveyQuestionEntity question = surveyQuestionRepository.findById(questionId)
-                .orElseThrow(() -> new NotFoundException("Survey question not found with ID: " + questionId));
+                .orElseThrow(() -> {
+                    log.error("Survey question not found with ID: {}", questionId);
+                    return new NotFoundException("Survey question not found with ID: " + questionId);
+                });
 
         // Check if question is already deleted
         if (question.getStatus() == StatusSurvey.DELETED) {
+            log.warn("Survey question id={} is already deleted", questionId);
             throw new BadRequestException("Question is already deleted");
         }
 
@@ -152,7 +166,7 @@ public class SurveyServiceImpl implements SurveyService {
         // Set question status to DELETED
         question.setStatus(StatusSurvey.DELETED);
         surveyQuestionRepository.save(question);
-
+        log.info("Survey question id={} deleted successfully", questionId);
     }
 
     @Transactional
@@ -294,12 +308,14 @@ public class SurveyServiceImpl implements SurveyService {
     public StudentSurveyResponseDto submitSurveyResponseForSchedule(Long scheduleId, SurveyResponseSubmitDto submitDto) {
 
         UserEntity currentUser = securityUtils.getCurrentUser();
+        log.info("Submitting survey response for userId={}, scheduleId={}", currentUser.getId(), scheduleId);
         SurveyEntity mainSurvey = getMainSurveyEntity();
 
         Optional<SurveyResponseEntity> existingResponse = surveyResponseRepository
                 .findByUserIdAndScheduleId(currentUser.getId(), scheduleId);
 
         if (existingResponse.isPresent()) {
+            log.warn("User id={} has already submitted a survey for scheduleId={}", currentUser.getId(), scheduleId);
             throw new BadRequestException("You have already submitted a survey response for this schedule");
         }
 
@@ -325,6 +341,8 @@ public class SurveyServiceImpl implements SurveyService {
             processAnswers(savedResponse, submitDto);
         }
 
+        log.info("Survey response submitted successfully. responseId={}, userId={}, scheduleId={}",
+                savedResponse.getId(), currentUser.getId(), scheduleId);
         return responseMapper.toStudentResponseDto(savedResponse);
     }
 
@@ -359,11 +377,13 @@ public class SurveyServiceImpl implements SurveyService {
     @Override
     public StudentSurveyResponseDto getMyResponseForSchedule(Long scheduleId) {
         UserEntity currentUser = securityUtils.getCurrentUser();
+        log.info("Fetching survey response for userId={}, scheduleId={}", currentUser.getId(), scheduleId);
 
         Optional<SurveyResponseEntity> responseOpt = surveyResponseRepository
                 .findByUserIdAndScheduleId(currentUser.getId(), scheduleId);
 
         if (responseOpt.isEmpty()) {
+            log.warn("No survey response found for userId={}, scheduleId={}", currentUser.getId(), scheduleId);
             throw new NotFoundException("You have not responded to the survey for this schedule yet");
         }
 
@@ -372,8 +392,12 @@ public class SurveyServiceImpl implements SurveyService {
 
     @Override
     public SurveyResponseDetailDto getStudentResponseDetail(Long responseId) {
+        log.info("Fetching survey response detail id={}", responseId);
         SurveyResponseEntity response = surveyResponseRepository.findById(responseId)
-                .orElseThrow(() -> new NotFoundException("Survey response not found with ID: " + responseId));
+                .orElseThrow(() -> {
+                    log.error("Survey response not found with ID: {}", responseId);
+                    return new NotFoundException("Survey response not found with ID: " + responseId);
+                });
 
         return responseMapper.toDetailDto(response);
     }
@@ -387,6 +411,7 @@ public class SurveyServiceImpl implements SurveyService {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void initializeSurveyOnStartup() {
+        log.info("Initializing survey on startup");
         try {
             // Use specification to find active survey
             Specification<SurveyEntity> spec = SurveySpecification.isActive();
@@ -395,6 +420,9 @@ public class SurveyServiceImpl implements SurveyService {
             if (existingSurvey.isEmpty()) {
                 SurveyEntity defaultSurvey = createDefaultSurvey();
                 surveyRepository.save(defaultSurvey);
+                log.info("Default survey initialized successfully");
+            } else {
+                log.info("Survey already exists. Skipping initialization");
             }
         } catch (Exception e) {
             log.error("Error during survey initialization: {}", e.getMessage());

@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { useRouter } from "next/navigation";
+import { formatTime12h } from "@/utils/map-helper/schedule";
 import { AppIcons } from "@/constants/icons/icon";
 
 interface AttendanceCheckProps {
@@ -168,7 +169,7 @@ export default function AttendanceCheckHeader({
                 <div className="flex items-center gap-1 hover:scale-105 transition-transform duration-200">
                   <Clock className="h-4 w-4" />
                   <span>
-                    {scheduleDetail?.startTime} - {scheduleDetail?.endTime}
+                    {formatTime12h(scheduleDetail?.startTime)} - {formatTime12h(scheduleDetail?.endTime)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 hover:scale-105 transition-transform duration-200">

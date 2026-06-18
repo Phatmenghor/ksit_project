@@ -22,8 +22,11 @@ import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { formatSemester } from "@/utils/map-helper/schedule";
 
 type SubmissionItem = SubmissionScoreModel;
+
+const VALID_TABS = tabs.map((t) => t.value);
 
 export default function ScoreSubmittedPage() {
   const [activeTab, setActiveTab] = useState("all");
@@ -33,9 +36,9 @@ export default function ScoreSubmittedPage() {
   }>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectAcademicYear, setSelectAcademicYear] = useState<
-    number | undefined
-  >();
+  const [selectAcademicYear, setSelectAcademicYear] = useState<number>(
+    new Date().getFullYear()
+  );
   const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
   const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(
     undefined
@@ -63,12 +66,18 @@ export default function ScoreSubmittedPage() {
     }
   };
 
+  // Sync tab + pageNo from URL on mount / back-navigation
   useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && VALID_TABS.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
     const pageParam = searchParams.get("pageNo");
     if (!pageParam) {
       updateUrlWithPage(1, true);
     }
-  }, [searchParams, updateUrlWithPage]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getCurrentTabStatus = useCallback(() => {
     const currentTab = tabs.find((tab) => tab.value === activeTab);
@@ -88,7 +97,7 @@ export default function ScoreSubmittedPage() {
           pageNo: currentPage,
           classId: selectedClass?.id,
           scheduleId: selectedSchedule?.id,
-          academicYear: selectAcademicYear,
+          academicYear: selectAcademicYear || undefined,
           semester: selectedSemester === "ALL" ? undefined : selectedSemester,
           pageSize: 30,
         });
@@ -135,12 +144,13 @@ export default function ScoreSubmittedPage() {
     selectedSemester,
   ]);
 
-  useEffect(() => {
-    updateUrlWithPage(1);
-  }, [activeTab]);
-
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    // Write tab + reset page into URL
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    params.set("pageNo", "1");
+    router.replace(`${ROUTE.SCORES.SUBMITTED}?${params.toString()}`);
   };
 
   useEffect(() => {
@@ -185,7 +195,7 @@ export default function ScoreSubmittedPage() {
     {
       key: "semester",
       label: "Semester",
-      render: (s) => s.semester,
+      render: (s) => formatSemester(s.semester),
     },
     {
       key: "classCode",
@@ -242,6 +252,21 @@ export default function ScoreSubmittedPage() {
           onSearchChange: handleSearchChange,
           filters: [
             {
+              id: "year",
+              type: "year",
+              label: "Academy Year",
+              value: selectAcademicYear,
+              onChange: handleYearChange,
+            },
+            {
+              id: "semester",
+              type: "select",
+              label: "Semester",
+              value: selectedSemester,
+              onChange: handleSemesterChange,
+              options: SemesterFilter.map((s) => ({ label: s.label, value: s.value })),
+            },
+            {
               id: "class",
               type: "custom",
               label: "Class",
@@ -249,7 +274,7 @@ export default function ScoreSubmittedPage() {
               onChange: (v) => setSelectedClass(v),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Class</label>
+                  <label className="text-xs font-medium text-foreground/70">Class</label>
                   <ComboboxSelectClass
                     dataSelect={value ?? null}
                     onChangeSelected={(e) => onChange(e ?? undefined)}
@@ -266,7 +291,7 @@ export default function ScoreSubmittedPage() {
               onChange: (v) => setSelectedSchedule(v),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Schedule</label>
+                  <label className="text-xs font-medium text-foreground/70">Schedule</label>
                   <ComboboxSelectSchedule
                     dataSelect={value ?? null}
                     onChangeSelected={(e) => onChange(e ?? undefined)}
@@ -275,31 +300,15 @@ export default function ScoreSubmittedPage() {
                 </div>
               ),
             },
-            {
-              id: "year",
-              type: "year",
-              label: "Academic Year",
-              value: selectAcademicYear ?? new Date().getFullYear(),
-              onChange: handleYearChange,
-            },
-            {
-              id: "semester",
-              type: "select",
-              label: "Semester",
-              value: selectedSemester,
-              onChange: handleSemesterChange,
-              options: SemesterFilter.map((s) => ({ label: s.label, value: s.value })),
-            },
           ],
           onClearAll: () => {
             setSelectedClass(undefined);
             setSelectedSchedule(undefined);
-            setSelectAcademicYear(undefined);
+            setSelectAcademicYear(new Date().getFullYear());
             setSelectedSemester("ALL");
             setSearchQuery("");
           },
         }}
-        essentialFilterIds={["class", "schedule", "year", "semester"]}
       />
 
       <div className="container mx-auto mt-3">

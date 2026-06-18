@@ -75,6 +75,7 @@ const nextConfig = {
 
   // ⚡ Headers
   async headers() {
+    const isDev = process.env.NODE_ENV === "development";
     return [
       {
         source: "/:path*",
@@ -89,15 +90,22 @@ const nextConfig = {
           },
         ],
       },
-      {
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
+      // Only cache static assets in production. In dev, chunks have no content
+      // hash in their filenames, so immutable caching prevents HMR full-reloads
+      // from picking up updated modules (browser serves stale files from disk).
+      ...(isDev
+        ? []
+        : [
+            {
+              source: "/_next/static/:path*",
+              headers: [
+                {
+                  key: "Cache-Control",
+                  value: "public, max-age=31536000, immutable",
+                },
+              ],
+            },
+          ]),
     ];
   },
 };

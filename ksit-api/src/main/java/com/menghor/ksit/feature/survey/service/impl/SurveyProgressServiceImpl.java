@@ -34,10 +34,14 @@ public class SurveyProgressServiceImpl implements SurveyProgressService {
 
     @Override
     public ScheduleStudentsProgressDto getScheduleStudentsProgress(Long scheduleId) {
+        log.info("Fetching survey progress for scheduleId={}", scheduleId);
 
         // Get schedule with necessary information
         ScheduleEntity schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new NotFoundException("Schedule not found with ID: " + scheduleId));
+                .orElseThrow(() -> {
+                    log.error("Schedule not found with ID: {}", scheduleId);
+                    return new NotFoundException("Schedule not found with ID: " + scheduleId);
+                });
 
         // Get all students in the class for this schedule
         List<UserEntity> studentsInClass = getStudentsInClass(schedule.getClasses().getId());
@@ -70,6 +74,8 @@ public class SurveyProgressServiceImpl implements SurveyProgressService {
         // Calculate and set statistics
         calculateAndSetStatistics(progressDto, studentDtos);
 
+        log.info("Survey progress fetched for scheduleId={}. total={}, completed={}, pending={}",
+                scheduleId, progressDto.getTotalStudents(), progressDto.getCompletedSurveys(), progressDto.getPendingSurveys());
         return progressDto;
     }
 

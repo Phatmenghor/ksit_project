@@ -55,6 +55,7 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     @Override
     @Transactional
     public ScoreSessionResponseDto initializeScoreSession(ScoreSessionRequestDto requestDto) {
+        log.info("Initializing score session for scheduleId={}", requestDto.getScheduleId());
 
         // Check if ANY score session exists for this schedule (regardless of status)
         Specification<ScoreSessionEntity> existingSessionSpec = ScoreSessionSpecification
@@ -103,6 +104,7 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     }
 
     private ScoreSessionResponseDto createNewSession(ScoreSessionRequestDto requestDto) {
+        log.info("Creating new score session for scheduleId={}", requestDto.getScheduleId());
 
         ScheduleEntity schedule = findScheduleById(requestDto.getScheduleId());
         UserEntity currentUser = securityUtils.getCurrentUser();
@@ -115,35 +117,42 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
 
         studentScoreRepository.saveAll(studentScores);
         savedSession.setStudentScores(studentScores);
-
+        log.info("Score session created successfully. id={}, studentCount={}", savedSession.getId(), students.size());
         return scoreSessionMapper.toDto(savedSession);
     }
 
     @Override
     public ScoreSessionResponseDto getScoreSessionById(Long id) {
-
+        log.info("Fetching score session id={}", id);
         ScoreSessionEntity scoreSession = scoreSessionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Score session not found with ID: " + id));
-
+                .orElseThrow(() -> {
+                    log.error("Score session not found with ID: {}", id);
+                    return new NotFoundException("Score session not found with ID: " + id);
+                });
         return scoreSessionMapper.toDto(scoreSession);
     }
 
     @Override
     @Transactional
     public ScoreSessionResponseDto updateScoreSession(ScoreSessionUpdateDto updateDto) {
+        log.info("Updating score session id={}, status={}", updateDto.getId(), updateDto.getStatus());
 
         ScoreSessionEntity scoreSession = scoreSessionRepository.findById(updateDto.getId())
-                .orElseThrow(() -> new NotFoundException("Score session not found with ID: " + updateDto.getId()));
+                .orElseThrow(() -> {
+                    log.error("Score session not found with ID: {}", updateDto.getId());
+                    return new NotFoundException("Score session not found with ID: " + updateDto.getId());
+                });
 
         updateScoreSessionFields(scoreSession, updateDto);
 
         ScoreSessionEntity updatedSession = scoreSessionRepository.save(scoreSession);
-
+        log.info("Score session id={} updated successfully", updatedSession.getId());
         return scoreSessionMapper.toDto(updatedSession);
     }
 
     @Override
     public CustomPaginationResponseDto<ScoreSessionResponseDto> getAllScoreSessions(ScoreSessionFilterDto filterDto) {
+        log.info("Fetching all score sessions, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         Pageable pageable = PaginationUtils.createPageable(
                 filterDto.getPageNo(),

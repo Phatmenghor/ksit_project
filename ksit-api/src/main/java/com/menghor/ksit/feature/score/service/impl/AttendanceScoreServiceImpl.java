@@ -34,7 +34,10 @@ public class AttendanceScoreServiceImpl implements AttendanceScoreService {
 
     @Override
     public List<AttendanceScoreDto> calculateForClass(Long classId, Long scheduleId) {
-        return calculateClassScores(classId, scheduleId);
+        log.info("Calculating attendance scores for classId={}, scheduleId={}", classId, scheduleId);
+        List<AttendanceScoreDto> result = calculateClassScores(classId, scheduleId);
+        log.info("Attendance scores calculated for classId={}, scheduleId={}. studentCount={}", classId, scheduleId, result.size());
+        return result;
     }
 
     private AttendanceScoreDto calculateSingleStudentScore(Long studentId, Long scheduleId,

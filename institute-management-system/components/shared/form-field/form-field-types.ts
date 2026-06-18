@@ -14,7 +14,7 @@ export interface BaseFormFieldProps<T extends FieldValues = FieldValues> {
 }
 
 export interface TextFormFieldProps<T extends FieldValues = FieldValues> extends BaseFormFieldProps<T> {
-  type?: "text" | "email" | "tel" | "password" | "number" | "url";
+  type?: "text" | "email" | "tel" | "password" | "number" | "url" | "time";
   valueAsNumber?: boolean;
   min?: number;
   max?: number;
@@ -31,5 +31,5 @@ export interface SelectFormFieldProps<T extends FieldValues = FieldValues> exten
 }
 
 export interface DatePickerFormFieldProps<T extends FieldValues = FieldValues> extends BaseFormFieldProps<T> {
-  mode?: "date" | "datetime" | "academyYear";
+  mode?: "date" | "datetime" | "academyYear" | "time";
 }

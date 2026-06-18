@@ -36,6 +36,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @Transactional
     public DepartmentResponseDto createDepartment(DepartmentRequestDto departmentRequestDto) {
+        log.info("Creating department with code={}, name={}", departmentRequestDto.getCode(), departmentRequestDto.getName());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = departmentRequestDto.getStatus() != null ?
@@ -48,6 +49,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                     departmentRequestDto.getCode(), Status.ACTIVE);
 
             if (activeDeptWithSameCodeExists) {
+                log.warn("Duplicate department code={} already exists", departmentRequestDto.getCode());
                 throw new DuplicateNameException("Department with code '" +
                         departmentRequestDto.getCode() + "' already exists");
             }
@@ -57,6 +59,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                     departmentRequestDto.getName(), Status.ACTIVE);
 
             if (activeDeptWithSameNameExists) {
+                log.warn("Duplicate department name={} already exists", departmentRequestDto.getName());
                 throw new DuplicateNameException("Department with name '" +
                         departmentRequestDto.getName() + "' already exists");
             }
@@ -65,21 +68,21 @@ public class DepartmentServiceImpl implements DepartmentService {
         // Proceed with department creation
         DepartmentEntity department = departmentMapper.toEntity(departmentRequestDto);
         DepartmentEntity savedDepartment = departmentRepository.save(department);
-
+        log.info("Department created successfully. id={}, code={}", savedDepartment.getId(), savedDepartment.getCode());
         return departmentMapper.toResponseDto(savedDepartment);
     }
 
     @Override
     public DepartmentResponseDto getDepartmentById(Long id) {
-
+        log.info("Fetching department id={}", id);
         DepartmentEntity department = findDepartmentById(id);
-
         return departmentMapper.toResponseDto(department);
     }
 
     @Override
     @Transactional
     public DepartmentResponseDto updateDepartmentById(DepartmentUpdateDto departmentRequestDto, Long id) {
+        log.info("Updating department id={}", id);
 
         // Find the existing entity
         DepartmentEntity existingDepartment = findDepartmentById(id);
@@ -144,23 +147,27 @@ public class DepartmentServiceImpl implements DepartmentService {
         // Save the updated entity
         DepartmentEntity updatedDepartment = departmentRepository.save(existingDepartment);
 
+        log.info("Department id={} updated successfully", id);
         return departmentMapper.toResponseDto(updatedDepartment);
     }
 
     @Override
     @Transactional
     public DepartmentResponseDto deleteDepartmentById(Long id) {
+        log.info("Deleting department id={}", id);
 
         DepartmentEntity department = findDepartmentById(id);
         department.setStatus(Status.DELETED);
 
         department = departmentRepository.save(department);
 
+        log.info("Department id={} deleted successfully", department.getId());
         return departmentMapper.toResponseDto(department);
     }
 
     @Override
     public CustomPaginationResponseDto<DepartmentResponseDto> getAllDepartments(DepartmentFilter filterDto) {
+        log.info("Fetching all departments, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -190,6 +197,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public CustomPaginationResponseDto<DepartmentResponseDto> getMyDepartments(DepartmentFilter filterDto) {
 
         UserEntity currentUser = securityUtils.getCurrentUser();
+        log.info("Fetching departments for userId={}, page={}, size={}", currentUser.getId(), filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(

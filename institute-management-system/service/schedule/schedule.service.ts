@@ -1,9 +1,11 @@
-import { UpdateSemesterModel } from "@/model/master-data/semester/type-semester-model";
 import {
   DuplicateFilterModel,
   ScheduleFilterModel,
 } from "@/model/attendance/schedule/schedule-filter";
-import { CreateScheduleModel } from "@/model/schedules/type-schedule-model";
+import {
+  CreateScheduleModel,
+  UpdateScheduleModel,
+} from "@/model/schedules/type-schedule-model";
 import { axiosClientWithAuth } from "@/utils/axios";
 
 export async function getAllScheduleService(data: ScheduleFilterModel) {
@@ -75,7 +77,7 @@ export async function createScheduleService(data: CreateScheduleModel) {
 
 export async function updateScheduleService(
   scheduleId: number,
-  data: UpdateSemesterModel
+  data: UpdateScheduleModel
 ) {
   try {
     const response = await axiosClientWithAuth.post(
@@ -91,27 +93,8 @@ export async function updateScheduleService(
     throw error;
   }
 }
-
-export async function DetailScheduleService(scheduleId: number) {
-  try {
-    const response = await axiosClientWithAuth.get(
-      `/v1/schedules/${scheduleId}`
-    );
-    return response.data.data;
-  } catch (error: any) {
-    return null;
-  }
-}
-export async function getScheduleByIdService(scheduleId: number) {
-  try {
-    const response = await axiosClientWithAuth.get(
-      `/v1/schedules/${scheduleId}`
-    );
-    return response.data.data;
-  } catch (error: any) {
-    return null;
-  }
-}
+/** @deprecated Use getDetailScheduleService instead */
+export const getScheduleByIdService = getDetailScheduleService;
 
 export async function deleteScheduleService(scheduleId: number) {
   try {

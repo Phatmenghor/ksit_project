@@ -40,6 +40,7 @@ public class MajorServiceImpl implements MajorService {
     @Override
     @Transactional
     public MajorResponseDto createMajor(MajorRequestDto majorRequestDto) {
+        log.info("Creating major with code={}, departmentId={}", majorRequestDto.getCode(), majorRequestDto.getDepartmentId());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = majorRequestDto.getStatus() != null ?
@@ -52,6 +53,7 @@ public class MajorServiceImpl implements MajorService {
                     majorRequestDto.getCode(), Status.ACTIVE);
 
             if (activeMajorExists) {
+                log.warn("Duplicate major code={} already exists", majorRequestDto.getCode());
                 throw new DuplicateNameException("Major with code '" +
                         majorRequestDto.getCode() + "' already exists");
             }
@@ -67,21 +69,21 @@ public class MajorServiceImpl implements MajorService {
         }
 
         MajorEntity savedMajor = majorRepository.save(majorEntity);
-
+        log.info("Major created successfully. id={}, code={}", savedMajor.getId(), savedMajor.getCode());
         return majorMapper.toResponseDto(savedMajor);
     }
 
     @Override
     public MajorResponseDto getMajorById(Long id) {
-
+        log.info("Fetching major id={}", id);
         MajorEntity majorEntity = findMajorById(id);
-
         return majorMapper.toResponseDto(majorEntity);
     }
 
     @Override
     @Transactional
     public MajorResponseDto updateMajorById(Long id, MajorUpdateDto majorUpdateDto) {
+        log.info("Updating major id={}", id);
 
         // Find the existing entity
         MajorEntity existingMajor = findMajorById(id);
@@ -99,6 +101,7 @@ public class MajorServiceImpl implements MajorService {
                     majorUpdateDto.getCode(), Status.ACTIVE);
 
             if (activeMajorExists) {
+                log.warn("Duplicate major code={} on update for id={}", majorUpdateDto.getCode(), id);
                 throw new DuplicateNameException("Major with code '" +
                         majorUpdateDto.getCode() + "' already exists");
             }
@@ -113,6 +116,7 @@ public class MajorServiceImpl implements MajorService {
                     existingMajor.getCode(), Status.ACTIVE, id);
 
             if (activeMajorWithSameCodeExists) {
+                log.warn("Duplicate major code={} when reactivating id={}", existingMajor.getCode(), id);
                 throw new DuplicateNameException("Major with code '" +
                         existingMajor.getCode() + "' already exists");
             }
@@ -129,24 +133,25 @@ public class MajorServiceImpl implements MajorService {
 
         // Save the updated entity
         MajorEntity updatedMajor = majorRepository.save(existingMajor);
-
+        log.info("Major id={} updated successfully", updatedMajor.getId());
         return majorMapper.toResponseDto(updatedMajor);
     }
 
     @Override
     @Transactional
     public MajorResponseDto deleteMajorById(Long id) {
-
+        log.info("Deleting major id={}", id);
         MajorEntity majorEntity = findMajorById(id);
         majorEntity.setStatus(Status.DELETED);
 
         majorEntity = majorRepository.save(majorEntity);
-
+        log.info("Major id={} deleted successfully", id);
         return majorMapper.toResponseDto(majorEntity);
     }
 
     @Override
     public CustomPaginationResponseDto<MajorResponseDto> getAllMajors(MajorFilterDto filterDto) {
+        log.info("Fetching all majors, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -168,7 +173,7 @@ public class MajorServiceImpl implements MajorService {
 
         // Map to response DTO
         CustomPaginationResponseDto<MajorResponseDto> response = majorMapper.toMajorAllResponseDto(majorPage);
-
+        log.info("Fetched {} majors", majorPage.getTotalElements());
         return response;
     }
 

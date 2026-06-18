@@ -7,6 +7,7 @@ import { saveAs } from "file-saver";
 import ExcelJS from "exceljs";
 import { StudentScoreModel } from "@/model/score/student-score/student-score.response";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { formatTime12h } from "@/utils/map-helper/schedule";
 
 // NEW FUNCTION - Add this to your existing excel.ts
 export const exportApprovedStudentsToExcelWithSchedule = async (
@@ -106,7 +107,7 @@ export const exportApprovedStudentsToExcelWithSchedule = async (
 
   // Schedule Information Table
   addTableInfoRow("Day", schedule.day);
-  addTableInfoRow("Time", `${schedule.startTime} - ${schedule.endTime}`);
+  addTableInfoRow("Time", `${formatTime12h(schedule.startTime)} - ${formatTime12h(schedule.endTime)}`);
   addTableInfoRow("Room", schedule.room.name);
   addTableInfoRow("Status", schedule.status);
 

@@ -27,8 +27,12 @@ public class StudentScoreServiceImpl implements StudentScoreService {
 
     @Override
     public StudentScoreResponseDto getStudentScoreById(Long id) {
+        log.info("Fetching student score id={}", id);
         StudentScoreEntity studentScore = studentScoreRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Student score not found with ID: " + id));
+                .orElseThrow(() -> {
+                    log.error("Student score not found with ID: {}", id);
+                    return new NotFoundException("Student score not found with ID: " + id);
+                });
         return studentScoreMapper.toDto(studentScore);
     }
 

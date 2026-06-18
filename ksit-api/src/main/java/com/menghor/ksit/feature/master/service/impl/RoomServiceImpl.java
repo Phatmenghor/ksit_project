@@ -33,6 +33,7 @@ public class RoomServiceImpl implements RoomService {
     @Override
     @Transactional
     public RoomResponseDto createRoom(RoomRequestDto roomRequest) {
+        log.info("Creating room with name={}", roomRequest.getName());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = roomRequest.getStatus() != null ?
@@ -45,6 +46,7 @@ public class RoomServiceImpl implements RoomService {
                     roomRequest.getName(), Status.ACTIVE);
 
             if (activeRoomExists) {
+                log.warn("Duplicate room name={} already exists", roomRequest.getName());
                 throw new DuplicateNameException("Room with name '" +
                         roomRequest.getName() + "' already exists");
             }
@@ -53,21 +55,21 @@ public class RoomServiceImpl implements RoomService {
         // Proceed with room creation
         RoomEntity room = roomMapper.toEntity(roomRequest);
         RoomEntity savedRoom = roomRepository.save(room);
-
+        log.info("Room created successfully. id={}, name={}", savedRoom.getId(), savedRoom.getName());
         return roomMapper.toResponseDto(savedRoom);
     }
 
     @Override
     public RoomResponseDto getRoomById(Long id) {
-
+        log.info("Fetching room id={}", id);
         RoomEntity room = findRoomById(id);
-
         return roomMapper.toResponseDto(room);
     }
 
     @Override
     @Transactional
     public RoomResponseDto updateRoomById(RoomUpdateDto roomRequest, Long id) {
+        log.info("Updating room id={}", id);
 
         // Find the existing entity
         RoomEntity existingRoom = findRoomById(id);
@@ -85,6 +87,7 @@ public class RoomServiceImpl implements RoomService {
                     roomRequest.getName(), Status.ACTIVE);
 
             if (activeRoomExists) {
+                log.warn("Duplicate room name={} on update for id={}", roomRequest.getName(), id);
                 throw new DuplicateNameException("Room with name '" +
                         roomRequest.getName() + "' already exists");
             }
@@ -99,6 +102,7 @@ public class RoomServiceImpl implements RoomService {
                     existingRoom.getName(), Status.ACTIVE, id);
 
             if (activeRoomWithSameNameExists) {
+                log.warn("Duplicate room name={} when reactivating id={}", existingRoom.getName(), id);
                 throw new DuplicateNameException("Room with name '" +
                         existingRoom.getName() + "' already exists");
             }
@@ -109,24 +113,25 @@ public class RoomServiceImpl implements RoomService {
 
         // Save the updated entity
         RoomEntity updatedRoom = roomRepository.save(existingRoom);
-
+        log.info("Room id={} updated successfully", id);
         return roomMapper.toResponseDto(updatedRoom);
     }
 
     @Override
     @Transactional
     public RoomResponseDto deleteRoomById(Long id) {
-
+        log.info("Deleting room id={}", id);
         RoomEntity room = findRoomById(id);
         room.setStatus(Status.DELETED);
 
         room = roomRepository.save(room);
-
+        log.info("Room id={} deleted successfully", id);
         return roomMapper.toResponseDto(room);
     }
 
     @Override
     public CustomPaginationResponseDto<RoomResponseDto> getAllRoom(RoomFilterDto filterDto) {
+        log.info("Fetching all rooms, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -147,7 +152,7 @@ public class RoomServiceImpl implements RoomService {
 
         // Map to response DTO
         CustomPaginationResponseDto<RoomResponseDto> response = roomMapper.toRoomAllResponseDto(roomPage);
-
+        log.info("Fetched {} rooms", roomPage.getTotalElements());
         return response;
     }
 

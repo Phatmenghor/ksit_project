@@ -39,6 +39,7 @@ public class SurveyReportServiceImpl implements SurveyReportService {
 
     @Override
     public CustomPaginationResponseDto<SurveyReportRowDto> getSurveyReportWithPagination(SurveyReportFilterDto filterDto) {
+        log.info("Fetching survey report with pagination, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination
         Pageable pageable = PaginationUtils.createPageable(
@@ -57,6 +58,8 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Build report rows with all questions
         List<SurveyReportRowDto> reportRows = buildReportRowsAllQuestions(responsePage.getContent());
 
+        log.info("Survey report fetched. total={}", responsePage.getTotalElements());
+
         // Create pagination response
         CustomPaginationResponseDto<SurveyReportRowDto> response = new CustomPaginationResponseDto<>();
         response.setContent(reportRows);
@@ -71,6 +74,7 @@ public class SurveyReportServiceImpl implements SurveyReportService {
 
     @Override
     public List<SurveyReportRowDto> getSurveyReportForExport(SurveyReportFilterDto filterDto) {
+        log.info("Exporting full survey report");
 
         // Use specification for regular reports (includes all questions)
         Specification<SurveyResponseEntity> spec = SurveyResponseSpecification.buildRegularReportSpecification(filterDto);
@@ -81,6 +85,7 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Build report rows with all questions
         List<SurveyReportRowDto> reportRows = buildReportRowsAllQuestions(responses);
 
+        log.info("Survey report export completed. rows={}", reportRows.size());
         return reportRows;
     }
 
@@ -114,6 +119,7 @@ public class SurveyReportServiceImpl implements SurveyReportService {
 
     @Override
     public CustomPaginationResponseDto<SurveyReportRowDto> getSurveyReportWithPaginationActiveOnly(SurveyReportFilterDto filterDto) {
+        log.info("Fetching active-only survey report with pagination, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination
         Pageable pageable = PaginationUtils.createPageable(
@@ -132,6 +138,8 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Build report rows (questions already filtered at query level)
         List<SurveyReportRowDto> reportRows = buildReportRowsActiveOnly(responsePage.getContent());
 
+        log.info("Active-only survey report fetched. total={}", responsePage.getTotalElements());
+
         // Create pagination response
         CustomPaginationResponseDto<SurveyReportRowDto> response = new CustomPaginationResponseDto<>();
         response.setContent(reportRows);
@@ -146,6 +154,7 @@ public class SurveyReportServiceImpl implements SurveyReportService {
 
     @Override
     public List<SurveyReportRowDto> getSurveyReportForExportActiveOnly(SurveyReportFilterDto filterDto) {
+        log.info("Exporting active-only survey report");
 
         // Use specification for active-only reports (optimized query)
         Specification<SurveyResponseEntity> spec = SurveyResponseSpecification.buildActiveOnlyReportSpecification(filterDto);
@@ -156,6 +165,7 @@ public class SurveyReportServiceImpl implements SurveyReportService {
         // Build report rows (questions already filtered at query level)
         List<SurveyReportRowDto> reportRows = buildReportRowsActiveOnly(responses);
 
+        log.info("Active-only survey report export completed. rows={}", reportRows.size());
         return reportRows;
     }
 

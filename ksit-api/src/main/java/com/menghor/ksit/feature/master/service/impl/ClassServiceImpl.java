@@ -38,6 +38,7 @@ public class ClassServiceImpl implements ClassService {
     @Override
     @Transactional
     public ClassResponseDto createClass(ClassRequestDto classRequestDto) {
+        log.info("Creating class with code={}, majorId={}", classRequestDto.getCode(), classRequestDto.getMajorId());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = classRequestDto.getStatus() != null ?
@@ -50,6 +51,7 @@ public class ClassServiceImpl implements ClassService {
                     classRequestDto.getCode(), Status.ACTIVE);
 
             if (activeClassExists) {
+                log.warn("Duplicate class code={} already exists", classRequestDto.getCode());
                 throw new DuplicateNameException("Class with code '" +
                         classRequestDto.getCode() + "' already exists");
             }
@@ -61,21 +63,21 @@ public class ClassServiceImpl implements ClassService {
         classEntity.setMajor(major);
 
         ClassEntity savedClass = classRepository.save(classEntity);
-
+        log.info("Class created successfully. id={}, code={}", savedClass.getId(), savedClass.getCode());
         return classMapper.toResponseDto(savedClass);
     }
 
     @Override
     public ClassResponseDto getClassById(Long id) {
-
+        log.info("Fetching class id={}", id);
         ClassEntity classEntity = findClassById(id);
-
         return classMapper.toResponseDto(classEntity);
     }
 
     @Override
     @Transactional
     public ClassResponseDto updateClassById(Long id, ClassUpdateDto classUpdateDto) {
+        log.info("Updating class id={}", id);
 
         // Find the existing entity
         ClassEntity existingClass = findClassById(id);
@@ -93,6 +95,7 @@ public class ClassServiceImpl implements ClassService {
                     classUpdateDto.getCode(), Status.ACTIVE);
 
             if (activeClassExists) {
+                log.warn("Duplicate class code={} on update for id={}", classUpdateDto.getCode(), id);
                 throw new DuplicateNameException("Another ACTIVE class with code '" +
                         classUpdateDto.getCode() + "' already exists");
             }
@@ -107,6 +110,7 @@ public class ClassServiceImpl implements ClassService {
                     existingClass.getCode(), Status.ACTIVE, id);
 
             if (activeClassWithSameCodeExists) {
+                log.warn("Duplicate class code={} when reactivating id={}", existingClass.getCode(), id);
                 throw new DuplicateNameException("Class with code '" +
                         existingClass.getCode() + "' already exists");
             }
@@ -123,21 +127,21 @@ public class ClassServiceImpl implements ClassService {
 
         // Save the updated entity
         ClassEntity updatedClass = classRepository.save(existingClass);
-
+        log.info("Class id={} updated successfully", updatedClass.getId());
         return classMapper.toResponseDto(updatedClass);
     }
 
     @Override
     @Transactional
     public ClassResponseDto deleteClassById(Long id) {
-
+        log.info("Deleting class id={}", id);
         ClassEntity classEntity = findClassById(id);
 
         // Set status to DELETED (soft delete)
         classEntity.setStatus(Status.DELETED);
 
         classEntity = classRepository.save(classEntity);
-
+        log.info("Class id={} deleted successfully", id);
         return classMapper.toResponseDto(classEntity);
     }
 

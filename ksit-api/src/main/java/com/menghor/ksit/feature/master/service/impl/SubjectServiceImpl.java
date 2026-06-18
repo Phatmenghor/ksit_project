@@ -32,6 +32,7 @@ public class SubjectServiceImpl implements SubjectService {
     @Override
     @Transactional
     public SubjectResponseDto createSubject(SubjectRequestDto subjectRequest) {
+        log.info("Creating subject with name={}", subjectRequest.getName());
 
         // Determine the status (default to ACTIVE if not specified)
         Status status = subjectRequest.getStatus() != null ?
@@ -44,6 +45,7 @@ public class SubjectServiceImpl implements SubjectService {
                     subjectRequest.getName(), Status.ACTIVE);
 
             if (activeSubjectExists) {
+                log.warn("Duplicate subject name={} already exists", subjectRequest.getName());
                 throw new DuplicateNameException("Subject with name '" +
                         subjectRequest.getName() + "' already exists");
             }
@@ -52,21 +54,21 @@ public class SubjectServiceImpl implements SubjectService {
         // Proceed with subject creation
         SubjectEntity subject = subjectMapper.toEntity(subjectRequest);
         SubjectEntity savedSubject = subjectRepository.save(subject);
-
+        log.info("Subject created successfully. id={}, name={}", savedSubject.getId(), savedSubject.getName());
         return subjectMapper.toResponseDto(savedSubject);
     }
 
     @Override
     public SubjectResponseDto getSubjectById(Long id) {
-
+        log.info("Fetching subject id={}", id);
         SubjectEntity subject = findSubjectById(id);
-
         return subjectMapper.toResponseDto(subject);
     }
 
     @Override
     @Transactional
     public SubjectResponseDto updateSubjectById(SubjectRequestDto subjectRequestDto, Long id) {
+        log.info("Updating subject id={}", id);
 
         // Find the existing entity
         SubjectEntity existingSubject = findSubjectById(id);
@@ -84,6 +86,7 @@ public class SubjectServiceImpl implements SubjectService {
                     subjectRequestDto.getName(), Status.ACTIVE);
 
             if (activeSubjectExists) {
+                log.warn("Duplicate subject name={} on update for id={}", subjectRequestDto.getName(), id);
                 throw new DuplicateNameException("Another ACTIVE subject with name '" +
                         subjectRequestDto.getName() + "' already exists");
             }
@@ -98,6 +101,7 @@ public class SubjectServiceImpl implements SubjectService {
                     existingSubject.getName(), Status.ACTIVE, id);
 
             if (activeSubjectWithSameNameExists) {
+                log.warn("Duplicate subject name={} when reactivating id={}", existingSubject.getName(), id);
                 throw new DuplicateNameException("Subject with name '" +
                         existingSubject.getName() + "' already exists");
             }
@@ -108,24 +112,25 @@ public class SubjectServiceImpl implements SubjectService {
 
         // Save the updated entity
         SubjectEntity updatedSubject = subjectRepository.save(existingSubject);
-
+        log.info("Subject id={} updated successfully", id);
         return subjectMapper.toResponseDto(updatedSubject);
     }
 
     @Override
     @Transactional
     public SubjectResponseDto deleteSubjectById(Long id) {
-
+        log.info("Deleting subject id={}", id);
         SubjectEntity subject = findSubjectById(id);
         subject.setStatus(Status.DELETED);
 
         subject = subjectRepository.save(subject);
-
+        log.info("Subject id={} deleted successfully", id);
         return subjectMapper.toResponseDto(subject);
     }
 
     @Override
     public CustomPaginationResponseDto<SubjectResponseDto> getAllSubjects(SubjectFilterDto filterDto) {
+        log.info("Fetching all subjects, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -146,7 +151,7 @@ public class SubjectServiceImpl implements SubjectService {
 
         // Map to response DTO
         CustomPaginationResponseDto<SubjectResponseDto> response = subjectMapper.toSubjectAllResponseDto(subjectPage);
-
+        log.info("Fetched {} subjects", subjectPage.getTotalElements());
         return response;
     }
 

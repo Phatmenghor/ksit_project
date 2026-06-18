@@ -42,6 +42,8 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public CourseResponseDto createCourse(CourseRequestDto courseRequestDto) {
+        log.info("Creating course with departmentId={}, subjectId={}, teacherId={}",
+                courseRequestDto.getDepartmentId(), courseRequestDto.getSubjectId(), courseRequestDto.getTeacherId());
 
         // Validate all IDs before proceeding
         validateCourseRequestIds(courseRequestDto);
@@ -63,21 +65,21 @@ public class CourseServiceImpl implements CourseService {
         }
 
         CourseEntity savedCourse = courseRepository.save(course);
-
+        log.info("Course created successfully. id={}", savedCourse.getId());
         return courseMapper.toResponseDto(savedCourse);
     }
 
     @Override
     public CourseResponseDto getCourseById(Long id) {
-
+        log.info("Fetching course id={}", id);
         CourseEntity course = findCourseById(id);
-
         return courseMapper.toResponseDto(course);
     }
 
     @Override
     @Transactional
     public CourseResponseDto updateById(Long id, CourseUpdateDto courseRequestDto) {
+        log.info("Updating course id={}", id);
 
         // Find the existing course
         CourseEntity existingCourse = findCourseById(id);
@@ -111,23 +113,24 @@ public class CourseServiceImpl implements CourseService {
         }
 
         CourseEntity updatedCourse = courseRepository.save(existingCourse);
-
+        log.info("Course id={} updated successfully", id);
         return courseMapper.toResponseDto(updatedCourse);
     }
 
     @Override
     @Transactional
     public CourseResponseDto deleteById(Long id) {
-
+        log.info("Deleting course id={}", id);
         CourseEntity course = findCourseById(id);
 
         courseRepository.delete(course);
-
+        log.info("Course id={} deleted successfully", id);
         return courseMapper.toResponseDto(course);
     }
 
     @Override
     public CustomPaginationResponseDto<CourseResponseDto> getAllCourses(CourseFilterDto filterDto) {
+        log.info("Fetching all courses, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         // Always sort by createdAt DESC by default
@@ -161,7 +164,7 @@ public class CourseServiceImpl implements CourseService {
 
         // Map to response DTO
         CustomPaginationResponseDto<CourseResponseDto> response = courseMapper.toCourseAllResponseDto(coursePage);
-
+        log.info("Fetched {} courses", coursePage.getTotalElements());
         return response;
     }
 

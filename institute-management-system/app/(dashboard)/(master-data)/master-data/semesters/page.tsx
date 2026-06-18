@@ -46,7 +46,7 @@ export default function ManageSemester() {
   const [semesters, setSemesters] = useState<SemesterModel | null>(null);
   const [allSemesterData, setAllSemesterData] =
     useState<AllSemesterModel | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(0);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 

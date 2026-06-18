@@ -21,7 +21,7 @@ interface CustomDateTimePickerProps {
   placeholder?: string;
   className?: string;
   error?: boolean;
-  mode?: "date" | "datetime" | "academyYear";
+  mode?: "date" | "datetime" | "academyYear" | "time";
   id?: string;
 }
 
@@ -39,7 +39,7 @@ export function CustomDateTimePicker({
   mode = "date",
   id,
 }: CustomDateTimePickerProps) {
-  const defaultPlaceholder = mode === "academyYear" ? "Select academy year" : "Select date";
+  const defaultPlaceholder = mode === "academyYear" ? "Select academy year" : mode === "time" ? "Select time" : "Select date";
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -69,6 +69,15 @@ export function CustomDateTimePicker({
       setSelectedYear(y && !isNaN(y) ? y : null);
       if (y && !isNaN(y)) {
         setYearPageStart(y - Math.floor(YEARS_PER_PAGE / 2));
+      }
+      return;
+    }
+    if (mode === "time") {
+      if (value && /^\d{1,2}:\d{2}$/.test(value)) {
+        const [h, m] = value.split(":").map(Number);
+        setSelectedPeriod(h >= 12 ? "PM" : "AM");
+        setSelectedHour(String(h % 12 || 12).padStart(2, "0"));
+        setSelectedMinute(String(m).padStart(2, "0"));
       }
       return;
     }
@@ -118,6 +127,14 @@ export function CustomDateTimePicker({
       newDate.setMinutes(selectedDate.getMinutes());
     }
     setSelectedDate(newDate);
+  };
+
+  const applyTime = () => {
+    let h = parseInt(selectedHour);
+    if (selectedPeriod === "PM" && h !== 12) h += 12;
+    else if (selectedPeriod === "AM" && h === 12) h = 0;
+    onChange(`${String(h).padStart(2, "0")}:${selectedMinute}`);
+    setIsOpen(false);
   };
 
   const applyDateTime = () => {
@@ -187,16 +204,28 @@ export function CustomDateTimePicker({
     e.preventDefault();
     if (mode === "academyYear") {
       setSelectedYear(null);
+    } else if (mode === "time") {
+      setSelectedHour("12");
+      setSelectedMinute("00");
+      setSelectedPeriod("AM");
     } else {
       setSelectedDate(null);
     }
     onChange("");
   };
 
-  const hasValue = mode === "academyYear" ? selectedYear !== null : selectedDate !== null;
+  const hasValue = mode === "academyYear" ? selectedYear !== null : mode === "time" ? !!(value && value.length > 0) : selectedDate !== null;
 
   const displayValue = () => {
     if (mode === "academyYear") return selectedYear ? String(selectedYear) : (placeholder ?? defaultPlaceholder);
+    if (mode === "time") {
+      if (!value) return placeholder ?? defaultPlaceholder;
+      const [hStr, mStr] = value.split(":");
+      const h = parseInt(hStr);
+      const period = h >= 12 ? "PM" : "AM";
+      const h12 = h % 12 || 12;
+      return `${String(h12).padStart(2, "0")}:${mStr} ${period}`;
+    }
     return selectedDate ? formatDisplay(selectedDate) : (placeholder ?? defaultPlaceholder);
   };
 
@@ -225,7 +254,7 @@ export function CustomDateTimePicker({
         >
           {mode === "academyYear" ? (
             <GraduationCap className="mr-2 h-4 w-4 shrink-0 opacity-60" />
-          ) : mode === "datetime" ? (
+          ) : mode === "datetime" || mode === "time" ? (
             <Clock className="mr-2 h-4 w-4 shrink-0 opacity-60" />
           ) : (
             <Calendar className="mr-2 h-4 w-4 shrink-0 opacity-60" />
@@ -246,7 +275,7 @@ export function CustomDateTimePicker({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="p-0 z-[200] shadow-lg" style={{ width: mode === "academyYear" ? "220px" : "224px" }} align="start" sideOffset={4}>
+      <PopoverContent className="p-0 z-[200] shadow-lg" style={{ width: mode === "academyYear" ? "220px" : mode === "time" ? "260px" : "224px" }} align="start" sideOffset={4}>
 
         {/* ── Academy Year mode ── */}
         {mode === "academyYear" && yearPageStart !== null && (
@@ -301,8 +330,61 @@ export function CustomDateTimePicker({
           </>
         )}
 
+        {/* ── Time mode ── */}
+        {mode === "time" && (
+          <>
+            <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+              <span className="text-xs font-medium text-muted-foreground">Select Time</span>
+              <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}
+                className="h-6 w-6 p-0 opacity-50 hover:opacity-100 hover:bg-muted">
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="px-4 py-4">
+              <div className="flex items-center justify-center gap-2">
+                <Select value={selectedHour} onValueChange={setSelectedHour}>
+                  <SelectTrigger className="h-9 w-14 text-sm border-input hover:bg-primary/10 hover:border-primary hover:text-primary transition-colors">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[210]">
+                    {hours.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <span className="text-base font-bold text-foreground">:</span>
+                <Select value={selectedMinute} onValueChange={setSelectedMinute}>
+                  <SelectTrigger className="h-9 w-14 text-sm border-input hover:bg-primary/10 hover:border-primary hover:text-primary transition-colors">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[210]">
+                    {minutes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "AM" | "PM")}>
+                  <SelectTrigger className="h-9 w-16 text-sm border-input hover:bg-primary/10 hover:border-primary hover:text-primary transition-colors">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="z-[210]">
+                    <SelectItem value="AM">AM</SelectItem>
+                    <SelectItem value="PM">PM</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="px-2 pb-2 border-t pt-2 bg-muted/30 flex gap-1">
+              <Button variant="outline" size="sm" onClick={() => setIsOpen(false)}
+                className="flex-1 h-7 text-xs text-muted-foreground hover:text-foreground border-border/60">
+                Close
+              </Button>
+              <Button variant="default" size="sm" onClick={applyTime}
+                className="flex-1 h-7 text-xs bg-primary hover:bg-primary/90">
+                Apply
+              </Button>
+            </div>
+          </>
+        )}
+
         {/* ── Date / Datetime mode ── */}
-        {mode !== "academyYear" && (
+        {mode !== "academyYear" && mode !== "time" && (
           <>
             <div className="flex items-center justify-between px-2 py-2 border-b bg-muted/30">
               <div className="flex items-center gap-1">

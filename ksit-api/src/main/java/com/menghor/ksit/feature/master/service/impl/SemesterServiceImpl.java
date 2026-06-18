@@ -37,27 +37,28 @@ public class SemesterServiceImpl implements SemesterService {
     @Override
     @Transactional
     public SemesterResponseDto createSemester(SemesterRequestDto semesterRequestDto) {
+        log.info("Creating semester type={}, academyYear={}", semesterRequestDto.getSemester(), semesterRequestDto.getAcademyYear());
 
         // Validate semester doesn't already exist
         validateSemesterCreation(semesterRequestDto);
 
         SemesterEntity semester = semesterMapper.toEntity(semesterRequestDto);
         SemesterEntity savedSemester = semesterRepository.save(semester);
-
+        log.info("Semester created successfully. id={}", savedSemester.getId());
         return semesterMapper.toResponseDto(savedSemester);
     }
 
     @Override
     public SemesterResponseDto getSemesterById(Long id) {
-
+        log.info("Fetching semester id={}", id);
         SemesterEntity semester = findSemesterById(id);
-
         return semesterMapper.toResponseDto(semester);
     }
 
     @Override
     @Transactional
     public SemesterResponseDto updateSemesterById(Long id, SemesterUpdateDto semesterRequestDto) {
+        log.info("Updating semester id={}", id);
 
         // Find the existing entity
         SemesterEntity existingSemester = findSemesterById(id);
@@ -70,24 +71,25 @@ public class SemesterServiceImpl implements SemesterService {
 
         // Save the updated entity
         SemesterEntity updatedSemester = semesterRepository.save(existingSemester);
-
+        log.info("Semester id={} updated successfully", id);
         return semesterMapper.toResponseDto(updatedSemester);
     }
 
     @Override
     @Transactional
     public SemesterResponseDto deleteSemesterById(Long id) {
-
+        log.info("Deleting semester id={}", id);
         SemesterEntity semester = findSemesterById(id);
         semester.setStatus(Status.DELETED);
 
         semester = semesterRepository.save(semester);
-
+        log.info("Semester id={} deleted successfully", id);
         return semesterMapper.toResponseDto(semester);
     }
 
     @Override
     public CustomPaginationResponseDto<SemesterResponseDto> getAllSemesters(SemesterFilterDto filterDto) {
+        log.info("Fetching all semesters, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         // Validate and prepare pagination using PaginationUtils
         Pageable pageable = PaginationUtils.createPageable(
@@ -109,7 +111,7 @@ public class SemesterServiceImpl implements SemesterService {
 
         // Map to response DTO
         CustomPaginationResponseDto<SemesterResponseDto> response = semesterMapper.toSemesterAllResponseDto(semesterPage);
-
+        log.info("Fetched {} semesters", semesterPage.getTotalElements());
         return response;
     }
 

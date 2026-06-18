@@ -41,61 +41,65 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public RequestResponseDto createRequest(RequestCreateDto createDto) {
-        
         UserEntity currentUser = securityUtils.getCurrentUser();
-        
+        log.info("Creating request for userId={}", currentUser.getId());
+
         // Use MapStruct to convert DTO to entity
         RequestEntity request = requestMapper.toEntity(createDto);
         request.setUser(currentUser);
-        
+
         RequestEntity savedRequest = requestRepository.save(request);
-        
+
         // Create history entry
         createHistoryEntry(savedRequest, RequestStatus.PENDING, RequestStatus.PENDING,
             "Request created by user", currentUser);
-        
+
+        log.info("Request created successfully. id={}, userId={}", savedRequest.getId(), currentUser.getId());
         return requestMapper.toResponseDto(savedRequest);
     }
-    
+
     @Override
     @Transactional
     public RequestResponseDto updateRequest(Long id, RequestUpdateDto updateDto) {
-        
+        log.info("Updating request id={}, newStatus={}", id, updateDto.getStatus());
         RequestEntity request = findRequestById(id);
         UserEntity currentUser = securityUtils.getCurrentUser();
 
         // Use MapStruct to update entity from DTO (only non-null values)
         requestMapper.updateEntityFromDto(updateDto, request);
-        
+
         RequestEntity updatedRequest = requestRepository.save(request);
-        
+
         // Create history entry
         String action = currentUser.isOther() ? "Request updated by staff" : "Request updated by user";
         createHistoryEntry(updatedRequest, request.getStatus(), updateDto.getStatus(), action, currentUser);
-        
+
+        log.info("Request id={} updated successfully", id);
         return requestMapper.toResponseDto(updatedRequest);
     }
-    
+
     @Override
     public RequestResponseDto getRequestById(Long id) {
-        
+        log.info("Fetching request id={}", id);
         RequestEntity request = findRequestById(id);
         return requestMapper.toResponseDto(request);
     }
-    
+
     @Override
     public CustomPaginationResponseDto<RequestResponseDto> getAllRequests(RequestFilterDto filterDto) {
-        
+        log.info("Fetching all requests, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
+
         Pageable pageable = PaginationUtils.createPageable(
             filterDto.getPageNo(),
             filterDto.getPageSize(),
             "createdAt",
             "DESC"
         );
-        
+
         Specification<RequestEntity> spec = RequestSpecification.createSpecification(filterDto);
         Page<RequestEntity> requestPage = requestRepository.findAll(spec, pageable);
 
+        log.info("Fetched {} requests", requestPage.getTotalElements());
         // Use list version for better performance in list view
         return requestMapper.toListPaginationResponse(requestPage);
     }
@@ -157,7 +161,7 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public RequestResponseDto deleteRequest(Long id) {
-
+        log.info("Deleting request id={}", id);
         RequestEntity request = findRequestById(id);
         UserEntity currentUser = securityUtils.getCurrentUser();
 
@@ -173,16 +177,17 @@ public class RequestServiceImpl implements RequestService {
 
         // Save the updated request with new status
         RequestEntity updatedRequest = requestRepository.save(request);
-
-        RequestResponseDto responseDto = requestMapper.toResponseDto(updatedRequest);
-
-        return responseDto;
+        log.info("Request id={} deleted successfully", id);
+        return requestMapper.toResponseDto(updatedRequest);
     }
     // Private helper methods
     
     private RequestEntity findRequestById(Long id) {
         return requestRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Request not found with ID: " + id));
+            .orElseThrow(() -> {
+                log.error("Request not found with ID: {}", id);
+                return new NotFoundException("Request not found with ID: " + id);
+            });
     }
 
     private void createHistoryEntry(RequestEntity request, RequestStatus fromStatus,

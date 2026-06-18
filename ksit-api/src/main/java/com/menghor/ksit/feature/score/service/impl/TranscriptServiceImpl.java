@@ -45,13 +45,18 @@ public class TranscriptServiceImpl implements TranscriptService {
     @Override
     public TranscriptResponseDto getMyCompleteTranscript() {
         UserEntity currentUser = securityUtils.getCurrentUser();
+        log.info("Generating transcript for userId={}", currentUser.getId());
         return generateCompleteTranscript(currentUser);
     }
 
     @Override
     public TranscriptResponseDto getStudentCompleteTranscript(Long studentId) {
+        log.info("Generating transcript for studentId={}", studentId);
         UserEntity student = userRepository.findById(studentId)
-                .orElseThrow(() -> new NotFoundException("Student not found with ID: " + studentId));
+                .orElseThrow(() -> {
+                    log.error("Student not found with ID: {}", studentId);
+                    return new NotFoundException("Student not found with ID: " + studentId);
+                });
 
         return generateCompleteTranscript(student);
     }
