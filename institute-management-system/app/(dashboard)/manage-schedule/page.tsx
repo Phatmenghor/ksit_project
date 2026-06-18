@@ -2,81 +2,60 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import DepartmentCard from "@/components/dashboard/schedule/department/department-card";
-import { AllDepartmentModel } from "@/model/master-data/department/all-department-model";
-import { useCallback, useEffect, useState } from "react";
-import { getAllDepartmentService } from "@/service/master-data/department.service";
-import { toast } from "sonner";
+import { useEffect } from "react";
 import { ROUTE } from "@/constants/routes";
-import { AllDepartmentFilterModel } from "@/model/master-data/department/type-department-model";
 import { Constants } from "@/constants/text-string";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Loading from "@/components/shared/loading";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectDepartmentData,
+  selectDepartmentIsLoading,
+  selectDepartmentFilters,
+} from "@/features/master-data/store/selectors/department-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  resetState,
+} from "@/features/master-data/store/slice/department-slice";
+import { fetchAllDepartmentService } from "@/features/master-data/store/thunks/department-thunks";
 
 export default function DepartmentListPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [allDepartmentData, setAllDepartmentData] =
-    useState<AllDepartmentModel | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const dispatch = useAppDispatch();
+  const allDepartmentData = useAppSelector(selectDepartmentData);
+  const isLoading = useAppSelector(selectDepartmentIsLoading);
+  const filters = useAppSelector(selectDepartmentFilters);
+
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
-    baseRoute: ROUTE.MANAGE_SCHEDULE.DEPARTMENT,
-  });
+  const { currentPage, currentPageSize, handlePageChange, handlePageSizeChange } =
+    usePagination({ baseRoute: ROUTE.MANAGE_SCHEDULE.DEPARTMENT });
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedSearchQuery = useDebounce(filters.search, 500);
+
+  useEffect(() => {
+    dispatch(
+      fetchAllDepartmentService({
+        search: debouncedSearchQuery,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+        status: Constants.ACTIVE,
+      })
+    );
+  }, [dispatch, debouncedSearchQuery, currentPage, currentPageSize]);
+
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
+    dispatch(setSearchFilter(e.target.value));
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
-
-  const loadDepartments = useCallback(
-    async (param: AllDepartmentFilterModel) => {
-      setIsLoading(true);
-
-      try {
-        const response = await getAllDepartmentService({
-          search: debouncedSearchQuery,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          status: Constants.ACTIVE,
-          ...param,
-        });
-
-        if (response) {
-          setAllDepartmentData(response);
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading departments");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [debouncedSearchQuery, currentPage]
-  );
-
-  useEffect(() => {
-    loadDepartments({});
-  }, [loadDepartments]);
 
   function onClickDepartmentCard(departmentId: number) {
     router.push(ROUTE.MANAGE_SCHEDULE.DEPARTMENT_CLASS + `/${departmentId}`);
@@ -94,7 +73,7 @@ export default function DepartmentListPage() {
         config={{
           title: "Manage Schedule",
           totalCount: allDepartmentData?.totalElements,
-          searchValue: searchQuery,
+          searchValue: filters.search,
           searchPlaceholder: "Search department...",
           onSearchChange: handleSearchChange,
           filters: [],
@@ -115,9 +94,7 @@ export default function DepartmentListPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allDepartmentData?.content?.length === 0 ? (
                 <div className="col-span-full">
-                  <p className="text-center text-muted-foreground py-8">
-                    No Department found
-                  </p>
+                  <p className="text-center text-muted-foreground py-8">No Department found</p>
                 </div>
               ) : (
                 allDepartmentData?.content?.map((department) => (
@@ -138,7 +115,7 @@ export default function DepartmentListPage() {
             <DataTablePagination
               currentPage={currentPage}
               totalPages={allDepartmentData.totalPages}
-              onPageChange={handlePageChange}
+              onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
               pageSize={currentPageSize}
               onPageSizeChange={handlePageSizeChange}
             />

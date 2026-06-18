@@ -4,16 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import {
-  AllCourseModel,
-  CourseModel,
-} from "@/model/master-data/course/all-course-model";
-import { useCallback, useEffect, useState } from "react";
-import { AllCourseFilterModel } from "@/model/master-data/course/type-course-model";
-import {
-  deletedCourseService,
-  getAllCourseService,
-} from "@/service/master-data/course.service";
+import { CourseModel } from "@/model/master-data/course/all-course-model";
+import { useEffect, useState } from "react";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -25,197 +17,143 @@ import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectCourseData,
+  selectCourseIsLoading,
+  selectCourseOperations,
+  selectCourseFilters,
+} from "@/features/school/store/selectors/course-selectors";
+import {
+  setSearchFilter,
+  setDepartmentFilter,
+  setPageNo,
+  resetFilters,
+  resetState,
+} from "@/features/school/store/slice/course-slice";
+import {
+  fetchAllCoursesService,
+  deleteCourseService,
+} from "@/features/school/store/thunks/course-thunks";
 
 export default function CoursesPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [allCourseData, setAllCourseData] = useState<AllCourseModel | null>(
-    null
-  );
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectCourseData);
+  const isLoading = useAppSelector(selectCourseIsLoading);
+  const operations = useAppSelector(selectCourseOperations);
+  const filters = useAppSelector(selectCourseFilters);
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<CourseModel | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentModel | null>(null);
+
   const router = useRouter();
-  const [selectedCourse, setSelectedCourse] = useState<CourseModel | null>(
-    null
-  );
-  const [selectedDepartment, setSelectedDepartment] =
-    useState<DepartmentModel | null>(null);
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } =
-    usePagination({
-      baseRoute: ROUTE.MASTER_DATA.COURSES.INDEX,
-    });
+    usePagination({ baseRoute: ROUTE.MASTER_DATA.COURSES.INDEX });
 
-  const searchDebounce = useDebounce(searchQuery, 500);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  const loadCourses = useCallback(
-    async (param: AllCourseFilterModel) => {
-      setIsLoading(true);
-
-      try {
-        const response = await getAllCourseService({
-          search: searchDebounce,
-          departmentId: selectedDepartment?.id,
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          ...param,
-        });
-
-        if (response) {
-          setAllCourseData(response);
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading courses");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [searchDebounce, currentPage, selectedDepartment]
-  );
+  const searchDebounce = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    loadCourses({});
-  }, [loadCourses]);
+    dispatch(
+      fetchAllCoursesService({
+        search: searchDebounce,
+        departmentId: filters.departmentId,
+        status: Constants.ACTIVE,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+      })
+    );
+  }, [dispatch, searchDebounce, filters.departmentId, currentPage, currentPageSize]);
 
-  async function handleDeleteClass() {
-    if (!selectedCourse) return;
-    setIsSubmitting(true);
-    try {
-      const originalData = allCourseData;
-      setAllCourseData((prevData) => {
-        if (!prevData) return null;
-        const updatedContent = prevData.content.filter(
-          (item) => item.id !== selectedCourse.id
-        );
-        return {
-          ...prevData,
-          content: updatedContent,
-          totalElements: prevData.totalElements - 1,
-        };
-      });
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
-      const response = await deletedCourseService(selectedCourse.id);
-
-      if (response) {
-        toast.success(`Class ${selectedCourse.code} deleted successfully`);
-        if (
-          allCourseData &&
-          allCourseData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        }
-      } else {
-        setAllCourseData(originalData);
-        toast.error("Failed to delete class");
-      }
-    } catch (error) {
-      toast.error("An error occurred while deleting the course");
-      loadCourses({});
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
-    }
-  }
-
-  const handleOpenAddCourse = () => {
-    router.push(ROUTE.MASTER_DATA.COURSES.ADD);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
+
+  const handleDepartmentChange = (dept: DepartmentModel | null) => {
+    setSelectedDepartment(dept);
+    dispatch(setDepartmentFilter(dept?.id));
+  };
+
+  async function handleDeleteCourse() {
+    if (!selectedCourse) return;
+    const result = await dispatch(deleteCourseService(selectedCourse.id));
+    if (deleteCourseService.fulfilled.match(result)) {
+      toast.success(`Course ${selectedCourse.code} deleted successfully`);
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
+      }
+    } else {
+      toast.error("Failed to delete course");
+    }
+    setIsDeleteDialogOpen(false);
+    setSelectedCourse(null);
+  }
 
   const columns: TableColumn<CourseModel>[] = [
     {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => {
-        const page = currentPage ?? 1;
-        return (page - 1) * currentPageSize + index + 1;
-      },
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
-    {
-      key: "code",
-      label: "Code",
-      render: (course) => course?.code || "—",
-    },
-    {
-      key: "nameKH",
-      label: "Name (KH)",
-      render: (course) => course?.nameKH || "---",
-    },
-    {
-      key: "nameEn",
-      label: "Name (EN)",
-      render: (course) => course?.nameEn || "---",
-    },
+    { key: "code", label: "Code", render: (c) => c?.code || "—" },
+    { key: "nameKH", label: "Name (KH)", render: (c) => c?.nameKH || "---" },
+    { key: "nameEn", label: "Name (EN)", render: (c) => c?.nameEn || "---" },
     {
       key: "credit",
       label: "Credit",
-      render: (course) =>
-        `${course?.credit || "---"} (${course?.theory},${course?.execute},${course?.apply})`,
+      render: (c) => `${c?.credit || "---"} (${c?.theory},${c?.execute},${c?.apply})`,
     },
     {
       key: "instructor",
       label: "Instructor",
-      render: (course) =>
-        course?.user?.englishFirstName && course?.user?.englishLastName
-          ? `${course.user.englishFirstName} ${course.user.englishLastName}`
-          : course?.user?.khmerFirstName && course?.user?.khmerLastName
-          ? `${course.user.khmerFirstName} ${course.user.khmerLastName}`
-          : course?.user?.username || "---",
+      render: (c) =>
+        c?.user?.englishFirstName && c?.user?.englishLastName
+          ? `${c.user.englishFirstName} ${c.user.englishLastName}`
+          : c?.user?.khmerFirstName && c?.user?.khmerLastName
+          ? `${c.user.khmerFirstName} ${c.user.khmerLastName}`
+          : c?.user?.username || "---",
     },
     {
       key: "createdAt",
       label: "Created At",
-      render: (course) => DateTimeFormatter(course.createdAt),
+      render: (c) => DateTimeFormatter(c.createdAt),
     },
     {
       key: "actions",
       label: "Actions",
-      render: (course) => (
+      render: (c) => (
         <div className="flex justify-start space-x-2">
           <Button
-            onClick={() =>
-              router.push(ROUTE.MASTER_DATA.COURSES.VIEW(String(course.id || "")))
-            }
+            onClick={() => router.push(ROUTE.MASTER_DATA.COURSES.VIEW(String(c.id)))}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-gray-200"
-            disabled={!course.id}
+            disabled={operations.isDeleting}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
-            onClick={() =>
-              router.push(ROUTE.MASTER_DATA.COURSES.UPDATE(String(course.id || "")))
-            }
+            onClick={() => router.push(ROUTE.MASTER_DATA.COURSES.UPDATE(String(c.id)))}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-gray-200"
-            disabled={!course.id}
+            disabled={operations.isDeleting}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            onClick={() => {
-              setSelectedCourse(course);
-              setIsDeleteDialogOpen(true);
-            }}
+            onClick={() => { setSelectedCourse(c); setIsDeleteDialogOpen(true); }}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={isSubmitting || !course.id}
+            disabled={operations.isDeleting}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -235,59 +173,56 @@ export default function CoursesPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Courses",
-          totalCount: allCourseData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search course...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
-          onButtonClick: handleOpenAddCourse,
+          onButtonClick: () => router.push(ROUTE.MASTER_DATA.COURSES.ADD),
           filters: [
             {
               id: "department",
               type: "custom",
               label: "Department",
               value: selectedDepartment,
-              onChange: (v) => setSelectedDepartment(v),
+              onChange: handleDepartmentChange,
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/80">Department</label>
-                  <ComboboxSelectDepartment
-                    dataSelect={value}
-                    onChangeSelected={onChange}
-                  />
+                  <ComboboxSelectDepartment dataSelect={value} onChangeSelected={onChange} />
                 </div>
               ),
             },
           ],
           onClearAll: () => {
+            dispatch(resetFilters());
             setSelectedDepartment(null);
-            setSearchQuery("");
           },
         }}
         essentialFilterIds={["department"]}
       />
 
       <DataTable
-        data={allCourseData?.content ?? null}
+        data={data?.content ?? null}
         columns={columns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allCourseData?.totalPages ?? 0}
-        totalElements={allCourseData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         pageSize={currentPageSize}
         onPageSizeChange={handlePageSizeChange}
         emptyMessage="No courses found"
-        getRowKey={(course) => course.id}
+        getRowKey={(c) => c.id}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onDelete={handleDeleteClass}
+        onClose={() => { setIsDeleteDialogOpen(false); setSelectedCourse(null); }}
+        onDelete={handleDeleteCourse}
         title="Delete Course"
         description="Are you sure you want to delete the course:"
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

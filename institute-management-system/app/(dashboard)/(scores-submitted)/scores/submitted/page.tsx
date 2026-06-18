@@ -1,15 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { SubmittedScoreParam } from "@/model/score/submitted-score/submitted-score.request.model";
-import { useDebounce } from "@/utils/debounce/debounce";
-import { getAllSubmittedScoreService } from "@/service/score/score.service";
 import { SemesterFilter, SubmissionEnum, tabs } from "@/constants/constant";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AllStudentScoreModel, SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
@@ -23,155 +19,109 @@ import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { formatSemester } from "@/utils/map-helper/schedule";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectSubmittedScoreData,
+  selectSubmittedScoreIsLoading,
+  selectSubmittedScoreFilters,
+} from "@/features/scores/store/selectors/score-selectors";
+import {
+  setSearchFilter,
+  setClassFilter,
+  setScheduleFilter,
+  setAcademicYearFilter,
+  setSemesterFilter,
+  setStatusFilter,
+  setPageNo,
+  resetFilters,
+  resetState,
+} from "@/features/scores/store/slice/submitted-score-slice";
+import { fetchAllSubmittedScoresService } from "@/features/scores/store/thunks/submitted-score-thunks";
+import { useDebounce } from "@/utils/debounce/debounce";
 
 type SubmissionItem = SubmissionScoreModel;
 
 const VALID_TABS = tabs.map((t) => t.value);
 
 export default function ScoreSubmittedPage() {
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectSubmittedScoreData);
+  const isLoading = useAppSelector(selectSubmittedScoreIsLoading);
+  const filters = useAppSelector(selectSubmittedScoreFilters);
+
   const [activeTab, setActiveTab] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [submissionsData, setSubmissionsData] = useState<{
-    [key: string]: AllStudentScoreModel | null;
-  }>({});
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectAcademicYear, setSelectAcademicYear] = useState<number>(
-    new Date().getFullYear()
-  );
-  const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
-  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(
-    undefined
-  );
-  const [selectedSchedule, setSelectedSchedule] = useState<
-    ScheduleModel | undefined
-  >(undefined);
+  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(undefined);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleModel | undefined>(undefined);
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.SCORES.SUBMITTED,
-    });
+    usePagination({ baseRoute: ROUTE.SCORES.SUBMITTED });
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const searchDebounce = useDebounce(filters.search, 500);
 
-  const submissions = submissionsData[activeTab] || null;
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  // Sync tab + pageNo from URL on mount / back-navigation
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (tabParam && VALID_TABS.includes(tabParam)) {
       setActiveTab(tabParam);
-    }
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
+      const currentTab = tabs.find((t) => t.value === tabParam);
+      if (currentTab) dispatch(setStatusFilter(currentTab.status || SubmissionEnum.SUBMITTED));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getCurrentTabStatus = useCallback(() => {
-    const currentTab = tabs.find((tab) => tab.value === activeTab);
-    return currentTab?.status || SubmissionEnum.SUBMITTED;
-  }, [activeTab]);
-
-  const loadSubmittedScore = useCallback(
-    async (param: SubmittedScoreParam) => {
-      setIsLoading(true);
-
-      try {
-        const currentStatus = getCurrentTabStatus();
-        const response = await getAllSubmittedScoreService({
-          ...param,
-          status: currentStatus,
-          search: debouncedSearchQuery,
-          pageNo: currentPage,
-          classId: selectedClass?.id,
-          scheduleId: selectedSchedule?.id,
-          academicYear: selectAcademicYear || undefined,
-          semester: selectedSemester === "ALL" ? undefined : selectedSemester,
-          pageSize: currentPageSize,
-        });
-
-        if (response) {
-          setSubmissionsData((prev) => ({
-            ...prev,
-            [activeTab]: response,
-          }));
-
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading submissions");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
-      debouncedSearchQuery,
-      getCurrentTabStatus,
-      selectAcademicYear,
-      currentPage,
-      selectedClass,
-      selectedSchedule,
-      updateUrlWithPage,
-      selectedSemester,
-      activeTab,
-    ]
-  );
+  useEffect(() => {
+    dispatch(
+      fetchAllSubmittedScoresService({
+        search: searchDebounce,
+        status: filters.status,
+        classId: filters.classId,
+        scheduleId: filters.scheduleId,
+        academicYear: filters.academicYear || undefined,
+        semester: filters.semester === "ALL" ? undefined : filters.semester,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+      })
+    );
+  }, [dispatch, searchDebounce, filters.status, filters.classId, filters.scheduleId, filters.academicYear, filters.semester, currentPage, currentPageSize]);
 
   useEffect(() => {
-    loadSubmittedScore({});
-  }, [
-    currentPage,
-    activeTab,
-    debouncedSearchQuery,
-    selectedClass,
-    selectedSchedule,
-    selectAcademicYear,
-    selectedSemester,
-  ]);
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
+  };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Write tab + reset page into URL
+    const currentTab = tabs.find((t) => t.value === value);
+    dispatch(setStatusFilter(currentTab?.status || SubmissionEnum.SUBMITTED));
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
     params.set("pageNo", "1");
     router.replace(`${ROUTE.SCORES.SUBMITTED}?${params.toString()}`);
   };
 
-  useEffect(() => {
-    if (debouncedSearchQuery !== searchQuery) return;
-    setSubmissionsData({});
-  }, [debouncedSearchQuery]);
-
-  const handleSemesterChange = (value: string) => {
-    setSelectedSemester(value);
-    updateUrlWithPage(1);
+  const handleYearChange = (year: number) => {
+    dispatch(setAcademicYearFilter(year));
   };
 
-  const handleYearChange = (e: number) => {
-    setSelectAcademicYear(e);
+  const handleSemesterChange = (value: string) => {
+    dispatch(setSemesterFilter(value));
+    updateUrlWithPage(1);
   };
 
   const handleClassChange = (e: ClassModel | null) => {
     setSelectedClass(e ?? undefined);
+    dispatch(setClassFilter(e?.id));
   };
 
   const handleScheduleChange = (e: ScheduleModel | null) => {
     setSelectedSchedule(e ?? undefined);
+    dispatch(setScheduleFilter(e?.id));
   };
 
   const columns: TableColumn<SubmissionItem>[] = [
@@ -181,40 +131,18 @@ export default function ScoreSubmittedPage() {
       width: "50px",
       render: (_, index) => getDisplayIndex(index),
     },
-    {
-      key: "teacherName",
-      label: "Teacher Name",
-      render: (s) => s.teacherName,
-    },
-    {
-      key: "courseName",
-      label: "Course Name",
-      render: (s) => s.courseName,
-    },
-    {
-      key: "semester",
-      label: "Semester",
-      render: (s) => formatSemester(s.semester),
-    },
-    {
-      key: "classCode",
-      label: "Class",
-      render: (s) => s.classCode,
-    },
-    {
-      key: "submissionDate",
-      label: "Submission Date",
-      render: (s) => DateTimeFormatter(s.submissionDate),
-    },
+    { key: "teacherName", label: "Teacher Name", render: (s) => s.teacherName },
+    { key: "courseName", label: "Course Name", render: (s) => s.courseName },
+    { key: "semester", label: "Semester", render: (s) => formatSemester(s.semester) },
+    { key: "classCode", label: "Class", render: (s) => s.classCode },
+    { key: "submissionDate", label: "Submission Date", render: (s) => DateTimeFormatter(s.submissionDate) },
     {
       key: "action",
       label: "Action",
       width: "80px",
       render: (s) => (
         <Button
-          onClick={() =>
-            router.push(ROUTE.SCORES.SUBMITTED_DETAIL(String(s.id)))
-          }
+          onClick={() => router.push(ROUTE.SCORES.SUBMITTED_DETAIL(String(s.id)))}
           variant="outline"
           size="sm"
           className="h-8 w-8 p-0"
@@ -225,17 +153,10 @@ export default function ScoreSubmittedPage() {
     },
   ];
 
-  const emptyMessage =
-    activeTab === "all"
-      ? "No submitted scores found."
-      : "No approved scores found.";
+  const emptyMessage = activeTab === "all" ? "No submitted scores found." : "No approved scores found.";
 
   return (
-    <Tabs
-      value={activeTab}
-      onValueChange={handleTabChange}
-      className="w-full space-y-4"
-    >
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full space-y-4">
       <Card className="border-0 shadow-none bg-transparent p-0">
         <CardContent className="p-0 space-y-2">
           <PageBreadcrumb items={[{ label: "Score Submitted" }]} />
@@ -245,8 +166,8 @@ export default function ScoreSubmittedPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Submitted List",
-          totalCount: submissions?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search...",
           onSearchChange: handleSearchChange,
           filters: [
@@ -254,14 +175,14 @@ export default function ScoreSubmittedPage() {
               id: "year",
               type: "year",
               label: "Academy Year",
-              value: selectAcademicYear,
+              value: filters.academicYear,
               onChange: handleYearChange,
             },
             {
               id: "semester",
               type: "select",
               label: "Semester",
-              value: selectedSemester,
+              value: filters.semester,
               onChange: handleSemesterChange,
               options: SemesterFilter.map((s) => ({ label: s.label, value: s.value })),
             },
@@ -270,14 +191,13 @@ export default function ScoreSubmittedPage() {
               type: "custom",
               label: "Class",
               value: selectedClass,
-              onChange: (v) => setSelectedClass(v),
+              onChange: (v) => handleClassChange(v ?? null),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/70">Class</label>
                   <ComboboxSelectClass
                     dataSelect={value ?? null}
                     onChangeSelected={(e) => onChange(e ?? undefined)}
-                    disabled={isSubmitting}
                   />
                 </div>
               ),
@@ -287,25 +207,22 @@ export default function ScoreSubmittedPage() {
               type: "custom",
               label: "Schedule",
               value: selectedSchedule,
-              onChange: (v) => setSelectedSchedule(v),
+              onChange: (v) => handleScheduleChange(v ?? null),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/70">Schedule</label>
                   <ComboboxSelectSchedule
                     dataSelect={value ?? null}
                     onChangeSelected={(e) => onChange(e ?? undefined)}
-                    disabled={isSubmitting}
                   />
                 </div>
               ),
             },
           ],
           onClearAll: () => {
+            dispatch(resetFilters());
             setSelectedClass(undefined);
             setSelectedSchedule(undefined);
-            setSelectAcademicYear(new Date().getFullYear());
-            setSelectedSemester("ALL");
-            setSearchQuery("");
           },
         }}
       />
@@ -316,7 +233,7 @@ export default function ScoreSubmittedPage() {
             <TabsTrigger
               key={value}
               value={value}
-              className={`relative pb-2 text-sm font-medium transition-colors duration-200 px-1 hover:text-primary data-[state=active]:text-primary`}
+              className="relative pb-2 text-sm font-medium transition-colors duration-200 px-1 hover:text-primary data-[state=active]:text-primary"
             >
               <div className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
@@ -334,13 +251,13 @@ export default function ScoreSubmittedPage() {
 
       <TabsContent value="all" className="space-y-4 w-full">
         <DataTable
-          data={submissions?.content ?? null}
+          data={data?.content ?? null}
           columns={columns}
           loading={isLoading}
           currentPage={currentPage}
-          totalPages={submissions?.totalPages ?? 0}
-          totalElements={submissions?.totalElements}
-          onPageChange={handlePageChange}
+          totalPages={data?.totalPages ?? 0}
+          totalElements={data?.totalElements}
+          onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
           pageSize={currentPageSize}
           onPageSizeChange={handlePageSizeChange}
           emptyMessage={emptyMessage}
@@ -350,13 +267,13 @@ export default function ScoreSubmittedPage() {
 
       <TabsContent value="accept" className="space-y-4 w-full">
         <DataTable
-          data={submissions?.content ?? null}
+          data={data?.content ?? null}
           columns={columns}
           loading={isLoading}
           currentPage={currentPage}
-          totalPages={submissions?.totalPages ?? 0}
-          totalElements={submissions?.totalElements}
-          onPageChange={handlePageChange}
+          totalPages={data?.totalPages ?? 0}
+          totalElements={data?.totalElements}
+          onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
           pageSize={currentPageSize}
           onPageSizeChange={handlePageSizeChange}
           emptyMessage={emptyMessage}

@@ -1,40 +1,38 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { Clock } from "lucide-react";
-import {
-  DAYS_OF_WEEK,
-  DayType,
-  SemesterFilter,
-  StatusEnum,
-} from "@/constants/constant";
+import { DAYS_OF_WEEK, DayType, SemesterFilter, StatusEnum } from "@/constants/constant";
 import Loading from "@/components/shared/loading";
-import { toast } from "sonner";
-import { getAllMyScheduleService } from "@/service/schedule/schedule.service";
-import { AllScheduleModel } from "@/model/attendance/schedule/schedule-model";
-import { useDebounce } from "@/utils/debounce/debounce";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
-import { useRouter, useSearchParams } from "next/navigation";
-import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
+import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import { ScheduleFilterModel } from "@/model/attendance/schedule/schedule-filter";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectScheduleData,
+  selectScheduleIsLoading,
+  selectScheduleFilters,
+} from "@/features/schedules/store/selectors/schedule-selectors";
+import {
+  setSearchFilter,
+  setDayFilter,
+  setSemesterFilter,
+  setAcademicYearFilter,
+  setClassFilter,
+  setPageNo,
+  resetState,
+} from "@/features/schedules/store/slice/schedule-slice";
+import { fetchMySchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
+import { useDebounce } from "@/utils/debounce/debounce";
 
-const WEEKDAY_VALUES = [
-  "SUNDAY",
-  "MONDAY",
-  "TUESDAY",
-  "WEDNESDAY",
-  "THURSDAY",
-  "FRIDAY",
-  "SATURDAY",
-];
+const WEEKDAY_VALUES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
 const getCurrentDay = (): DayType => {
   const dayValue = WEEKDAY_VALUES[new Date().getDay()];
@@ -42,121 +40,72 @@ const getCurrentDay = (): DayType => {
 };
 
 export default function AllSchedulePage() {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedDay, setSelectedDay] = useState<DayType>(getCurrentDay());
-  const [scheduleData, setScheduleData] = useState<AllScheduleModel | null>(
-    null
-  );
-  const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
-  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(
-    undefined
-  );
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectScheduleData);
+  const isLoading = useAppSelector(selectScheduleIsLoading);
+  const filters = useAppSelector(selectScheduleFilters);
 
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(undefined);
+
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
-    baseRoute: ROUTE.SCORES.STUDENT_SCORE,
-  });
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } =
+    usePagination({ baseRoute: ROUTE.SCORES.STUDENT_SCORE });
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const searchDebounce = useDebounce(filters.search, 500);
+
+  const selectedDay = DAYS_OF_WEEK.find((d) => d.value === filters.dayOfWeek) ?? getCurrentDay();
+
+  useEffect(() => {
+    dispatch(
+      fetchMySchedulesService({
+        search: searchDebounce,
+        status: StatusEnum.ACTIVE,
+        academyYear: filters.academicYear,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+        dayOfWeek: filters.dayOfWeek !== "ALL" ? filters.dayOfWeek : undefined,
+        semester: filters.semester !== "ALL" ? filters.semester : undefined,
+        classId: filters.classId,
+      })
+    );
+  }, [dispatch, searchDebounce, filters.dayOfWeek, filters.academicYear, filters.semester, filters.classId, currentPage, currentPageSize]);
+
+  useEffect(() => {
+    dispatch(setDayFilter(getCurrentDay().value));
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
-
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
-
-  const fetchSchedule = useCallback(
-    async (filters: AllScheduleFilterModel) => {
-      setIsLoading(true);
-      try {
-        const baseFilters: ScheduleFilterModel = {
-          search: debouncedSearchQuery,
-          status: StatusEnum.ACTIVE,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          classId: selectedClass?.id,
-          academyYear: selectedYear,
-          semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
-          dayOfWeek:
-            selectedDay?.value !== "ALL" ? selectedDay?.value : undefined,
-          ...filters,
-        };
-
-        const response = await getAllMyScheduleService(baseFilters);
-        setScheduleData(response);
-        if (response.totalPages > 0 && currentPage > response.totalPages) {
-          updateUrlWithPage(response.totalPages);
-          return;
-        }
-      } catch {
-        toast.error("An error occurred while loading classes");
-        setScheduleData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
-      debouncedSearchQuery,
-      selectedDay,
-      currentPage,
-      currentPageSize,
-      selectedClass,
-      selectedYear,
-      selectedSemester,
-    ]
-  );
-
-  useEffect(() => {
-    if (selectedDay) {
-      fetchSchedule({ pageNo: currentPage });
-    }
-  }, [
-    selectedDay,
-    selectedYear,
-    selectedSemester,
-    selectedClass,
-    debouncedSearchQuery,
-    currentPage,
-  ]);
 
   const handleYearChange = (year: number) => {
-    setSelectedYear(year);
-    updateUrlWithPage(1);
-  };
-
-  const handleSemesterChange = (
-    semester: string | number | null | undefined
-  ) => {
-    setSelectedSemester(semester ? String(semester) : "ALL");
+    dispatch(setAcademicYearFilter(year));
     updateUrlWithPage(1);
   };
 
   const handleDayChange = (value: string | number | null | undefined) => {
     const day = DAYS_OF_WEEK.find((d) => d.value === value) ?? DAYS_OF_WEEK[0];
-    setSelectedDay(day);
+    dispatch(setDayFilter(day.value));
+    dispatch(setPageNo(1));
+    updateUrlWithPage(1);
+  };
+
+  const handleSemesterChange = (value: string | number | null | undefined) => {
+    dispatch(setSemesterFilter(value ? String(value) : "ALL"));
+    updateUrlWithPage(1);
+  };
+
+  const handleClassChange = (e: ClassModel | null) => {
+    setSelectedClass(e ?? undefined);
+    dispatch(setClassFilter(e?.id));
     updateUrlWithPage(1);
   };
 
   const handleCardClick = (scheduleId: number) => {
     router.push(ROUTE.SCORES.STUDENT_SCORE_DETAIL(String(scheduleId)));
-  };
-  const handleClassChange = (e: ClassModel | null) => {
-    setSelectedClass(e ?? undefined);
-    updateUrlWithPage(1);
   };
 
   return (
@@ -170,8 +119,8 @@ export default function AllSchedulePage() {
       <CollapsibleFilterPanel
         config={{
           title: "Student Score",
-          totalCount: scheduleData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search...",
           onSearchChange: handleSearchChange,
           filters: [
@@ -179,7 +128,7 @@ export default function AllSchedulePage() {
               id: "year",
               type: "year",
               label: "Academic Year",
-              value: selectedYear,
+              value: filters.academicYear,
               onChange: handleYearChange,
             },
             {
@@ -189,22 +138,16 @@ export default function AllSchedulePage() {
               placeholder: "Select a day",
               value: selectedDay.value,
               onChange: (v) => handleDayChange(v),
-              options: DAYS_OF_WEEK.map((day) => ({
-                value: day.value,
-                label: day.label,
-              })),
+              options: DAYS_OF_WEEK.map((day) => ({ value: day.value, label: day.label })),
             },
             {
               id: "semester",
               type: "select",
               label: "Semester",
               placeholder: "Select a semester",
-              value: selectedSemester,
+              value: filters.semester,
               onChange: (v) => handleSemesterChange(v),
-              options: SemesterFilter.map((semester) => ({
-                value: semester.value,
-                label: semester.label,
-              })),
+              options: SemesterFilter.map((s) => ({ value: s.value, label: s.label })),
             },
             {
               id: "class",
@@ -215,20 +158,18 @@ export default function AllSchedulePage() {
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/80">Class</label>
-                  <ComboboxSelectClass
-                    dataSelect={value}
-                    onChangeSelected={onChange}
-                  />
+                  <ComboboxSelectClass dataSelect={value} onChangeSelected={onChange} />
                 </div>
               ),
             },
           ],
           onClearAll: () => {
-            setSelectedYear(new Date().getFullYear());
-            setSelectedDay(getCurrentDay());
-            setSelectedSemester("ALL");
+            dispatch(setSearchFilter(""));
+            dispatch(setAcademicYearFilter(new Date().getFullYear()));
+            dispatch(setDayFilter(getCurrentDay().value));
+            dispatch(setSemesterFilter("ALL"));
+            dispatch(setClassFilter(undefined));
             setSelectedClass(undefined);
-            setSearchQuery("");
           },
         }}
       />
@@ -237,23 +178,17 @@ export default function AllSchedulePage() {
         <CardContent className="p-4 sm:p-6">
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
             <h2 className="text-lg font-bold">{selectedDay.label}</h2>
-            <p className="text-sm text-muted-foreground">
-              Total Schedule: {scheduleData?.totalElements || 0}
-            </p>
+            <p className="text-sm text-muted-foreground">Total Schedule: {data?.totalElements || 0}</p>
           </div>
 
           {isLoading ? (
             <Loading />
           ) : (
             <div>
-              {scheduleData && scheduleData.totalElements > 0 ? (
+              {data && data.totalElements > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {scheduleData.content.map((schedule) => (
-                    <ScheduleCard
-                      key={schedule.id}
-                      schedule={schedule}
-                      onClick={handleCardClick}
-                    />
+                  {data.content.map((schedule) => (
+                    <ScheduleCard key={schedule.id} schedule={schedule} onClick={handleCardClick} />
                   ))}
                 </div>
               ) : (
@@ -263,22 +198,18 @@ export default function AllSchedulePage() {
                       <Clock className="h-8 w-8 text-amber-500" />
                     </div>
                   </div>
-                  <p className="text-lg font-medium">
-                    No classes scheduled for {selectedDay?.label}
-                  </p>
-                  <p className="text-sm mt-2 opacity-60">
-                    Try selecting a different day or check back later
-                  </p>
+                  <p className="text-lg font-medium">No classes scheduled for {selectedDay?.label}</p>
+                  <p className="text-sm mt-2 opacity-60">Try selecting a different day or check back later</p>
                 </div>
               )}
             </div>
           )}
 
-          {!isLoading && scheduleData && scheduleData.totalPages > 1 && (
+          {!isLoading && data && data.totalPages > 1 && (
             <DataTablePagination
               currentPage={currentPage}
-              totalPages={scheduleData.totalPages}
-              onPageChange={handlePageChange}
+              totalPages={data.totalPages}
+              onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
               pageSize={currentPageSize}
               onPageSizeChange={handlePageSizeChange}
               className="mt-4"

@@ -1,15 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Download,
-  Eye,
-  Pencil,
-  RotateCcw,
-  Tally1,
-  Trash2,
-} from "lucide-react";
+import { Download, Eye, Loader2, Tally1 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -19,24 +12,11 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
-import {
-  editStudentService,
-  getAllStudentsListService,
-  getAllStudentsService,
-} from "@/service/user/student.service";
+import { useRouter } from "next/navigation";
 import { StatusEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
-import { useDebounce } from "@/utils/debounce/debounce";
-import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
-import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import {
-  AllStudentModel,
-  RequestAllStudent,
-  StudentModel,
-} from "@/model/user/student/student.request.model";
-import Loading from "@/components/shared/loading";
+import { StudentModel } from "@/model/user/student/student.request.model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { usePagination } from "@/hooks/use-pagination";
 import { Constants } from "@/constants/text-string";
@@ -50,246 +30,118 @@ import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-sc
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectStudentData,
+  selectStudentIsLoading,
+  selectStudentFilters,
+} from "@/features/students/store/selectors/student-selectors";
+import {
+  setSearchFilter,
+  setClassFilter,
+  setScheduleFilter,
+  setAcademicYearFilter,
+  setPageNo,
+  resetFilters,
+  resetState,
+} from "@/features/students/store/slice/student-slice";
+import { fetchAllStudentsService } from "@/features/students/store/thunks/student-thunks";
+import { getAllStudentsListService } from "@/service/user/student.service";
+import { useDebounce } from "@/utils/debounce/debounce";
 
-export default function StudentsListPage() {
-  // Core state
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectAcademicYear, setSelectAcademicYear] = useState<
-    number | undefined
-  >();
-  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(
-    undefined
-  );
-  const [selectedSchedule, setSelectedSchedule] = useState<
-    ScheduleModel | undefined
-  >(undefined);
+export default function AttendanceStudentsListPage() {
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectStudentData);
+  const isLoading = useAppSelector(selectStudentIsLoading);
+  const filters = useAppSelector(selectStudentFilters);
 
-  // Main student data from API
-  const [allStudentData, setAllStudentData] = useState<AllStudentModel | null>(
-    null
-  );
+  const [isExporting, setIsExporting] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(undefined);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleModel | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
 
-  // Dialog state
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
-    useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<StudentModel | null>(
-    null
-  );
-
-  // Debounced search to reduce API call frequency
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD,
-    });
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } =
+    usePagination({ baseRoute: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD });
 
-  // Handlers for search, year, class change
+  const searchDebounce = useDebounce(filters.search, 500);
+
+  useEffect(() => {
+    dispatch(
+      fetchAllStudentsService({
+        search: searchDebounce,
+        classId: filters.classId,
+        scheduleId: filters.scheduleId,
+        academicYear: filters.academicYear,
+        status: StatusEnum.ACTIVE,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+      })
+    );
+  }, [dispatch, searchDebounce, filters.classId, filters.scheduleId, filters.academicYear, currentPage, currentPageSize]);
+
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  // Then add this effect for initial URL setup
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
-
-  // Fetch student data from server
-  const loadStudents = useCallback(
-    async (param: RequestAllStudent) => {
-      setIsLoading(true);
-
-      try {
-        const response = await getAllStudentsService({
-          ...param,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          academicYear: selectAcademicYear,
-          scheduleId: selectedSchedule?.id,
-          search: debouncedSearchQuery,
-          status: StatusEnum.ACTIVE,
-          classId: selectedClass?.id,
-        });
-
-        if (response) {
-          setAllStudentData(response);
-          // Handle case where current page exceeds total pages
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading student");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
-      debouncedSearchQuery,
-      currentPage,
-      selectedClass,
-      selectedSchedule,
-      selectAcademicYear,
-    ]
-  );
-
-  // Run fetch on mount and when filters change
-  useEffect(() => {
-    loadStudents({});
-  }, [
-    selectedClass,
-    currentPage,
-    debouncedSearchQuery,
-    selectAcademicYear,
-    selectedSchedule,
-  ]);
-
-  const handleYearChange = (year: number) => {
-    setSelectAcademicYear(year);
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
   const handleClassChange = (e: ClassModel | null) => {
     setSelectedClass(e ?? undefined);
+    dispatch(setClassFilter(e?.id));
   };
 
   const handleScheduleChange = (e: ScheduleModel | null) => {
     setSelectedSchedule(e ?? undefined);
+    dispatch(setScheduleFilter(e?.id));
   };
 
-  // Delete selected student (optimistic UI update)
-  async function handleDeleteStudent() {
-    if (!selectedStudent) return;
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+    dispatch(setAcademicYearFilter(year));
+  };
 
-    setIsSubmitting(true);
-    try {
-      const originalData = allStudentData;
-
-      // Optimistically remove student from UI
-      setAllStudentData((prevData) => {
-        if (!prevData) return null;
-        const updatedContent = prevData.content.filter(
-          (item) => item.id !== selectedStudent.id
-        );
-        return {
-          ...prevData,
-          content: updatedContent,
-          totalElements: prevData.totalElements - 1,
-        };
-      });
-
-      const response = await editStudentService(selectedStudent.id, {
-        status: StatusEnum.INACTIVE,
-      });
-
-      if (response) {
-        toast.success(
-          `Student ${selectedStudent.username ?? ""} deleted successfully`
-        );
-        if (
-          allStudentData &&
-          allStudentData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadStudents({});
-        }
-      } else {
-        setAllStudentData(originalData);
-        toast.error("Failed to delete student");
-      }
-    } catch (error) {
-      toast.error("An error occurred while deleting the student");
-      loadStudents({});
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
-    }
-  }
-
-  // Export to Excel
   const exportToExcel = async (): Promise<void> => {
-    setIsSubmitting(true);
-
+    setIsExporting(true);
     try {
-      setIsLoading(true);
-
-      const studentData = allStudentData?.content?.length;
-
-      if ((studentData || 0) === 0) {
-        toast.warning("No data available to export.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // EXCEL_LIMIT : limit data to export
+      const studentData = data?.content?.length;
+      if ((studentData || 0) === 0) { toast.warning("No data available to export."); return; }
       if ((studentData ?? 0) > Constants.EXCEL_LIMIT) {
-        toast.info(
-          `Only ${Constants.EXCEL_LIMIT} items were exported. Too many records. Please filter the data.`
-        );
-        setIsSubmitting(false);
-        return;
+        toast.info(`Only ${Constants.EXCEL_LIMIT} items were exported.`); return;
       }
 
       const allStudentsRes = await getAllStudentsListService({
-        academicYear: selectAcademicYear || undefined,
-        classId: selectedClass?.id || undefined,
-        search: debouncedSearchQuery || undefined,
-        status: StatusEnum.ACTIVE || undefined,
-        scheduleId: selectedSchedule?.id || undefined,
+        academicYear: filters.academicYear,
+        classId: filters.classId,
+        search: filters.search || undefined,
+        status: StatusEnum.ACTIVE,
+        scheduleId: filters.scheduleId,
       });
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Student list Data");
-
-      // Header table excel
       const columns: string[] = StudentListExcelTableHeader;
+      const PRIMARY_COLOR = "FF024D3E";
 
-      // Add title row at Row 1
       worksheet.mergeCells(1, 1, 1, columns.length);
       const titleCell = worksheet.getCell("A1");
       titleCell.value = "List Student Data";
       titleCell.font = { size: 16, bold: true, color: { argb: "FFFFFFFF" } };
-      titleCell.alignment = { vertical: "middle", horizontal: "center" };
-      titleCell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF1F4E78" },
-      };
+      titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF013328" } };
+      worksheet.getRow(1).height = 26;
 
-      // Add header row at Row 3
       const headerRow = worksheet.getRow(3);
-      columns.forEach((text: string, idx: number) => {
+      const columnWidths = [5, 15, 25, 20, 30, 30, 12, 18, 15, 15, 30, 16, 22];
+      columns.forEach((text, idx) => {
         const cell = headerRow.getCell(idx + 1);
         cell.value = text;
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-        cell.alignment = { vertical: "middle", horizontal: "center" };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FF007ACC" },
-        };
-        cell.border = {
-          top: { style: "thin" },
-          bottom: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-        };
-
-        const columnWidths = [5, 15, 25, 27, 20, 15, 15, 30, 40];
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: PRIMARY_COLOR } };
+        cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
         worksheet.getColumn(idx + 1).width = columnWidths[idx];
       });
 
@@ -298,55 +150,32 @@ export default function StudentsListPage() {
           i + 1,
           item.username || "---",
           item.email || "---",
-          item.status || "---",
           item.identifyNumber || "---",
-          item.khmerFirstName || "---",
-          item.khmerLastName || "---",
-          item.englishFirstName || "---",
-          item.englishLastName || "---",
+          `${item.khmerFirstName || ""} ${item.khmerLastName || ""}`.trim() || "---",
+          `${item.englishFirstName || ""} ${item.englishLastName || ""}`.trim() || "---",
           item.gender || "---",
           item.studentStatus || "---",
-          item.dateOfBirth || "---",
+          item.dateOfBirth ? formatDate(item.dateOfBirth) : "---",
           item.phoneNumber || "---",
-          `${(item || item)?.studentClass?.code} - ${
-            (item || item)?.studentClass?.major?.name
-          }` || "---",
-          formatDate(item.createdAt) || "---",
+          `${item?.studentClass?.code || ""} - ${item?.studentClass?.major?.name || ""}`,
+          item.status || "---",
+          item.createdAt ? formatDate(item.createdAt) : "---",
         ]);
-
         row.eachCell((cell) => {
-          cell.alignment = { vertical: "middle", horizontal: "center" };
-          cell.border = {
-            top: { style: "thin" },
-            bottom: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-          };
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: i % 2 === 0 ? "FFF3F3F3" : "FFFFFFFF" },
-          };
+          cell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+          cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: i % 2 === 0 ? "FFF3F3F3" : "FFFFFFFF" } };
         });
       });
 
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      // File name
-      const fileName = `student_list_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-      saveAs(blob, fileName);
-
-      toast.success(
-        `Excel file exported successfully! Total records: ${allStudentsRes?.length}`
-      );
-    } catch (error: unknown) {
-      toast.error("Error exporting to Excel. Please try again.");
+      saveAs(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+        `student_list_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      toast.success(`Excel exported! Total: ${allStudentsRes?.length}`);
+    } catch {
+      toast.error("Error exporting to Excel.");
     } finally {
-      setIsSubmitting(false);
-      setIsLoading(false);
+      setIsExporting(false);
     }
   };
 
@@ -355,73 +184,44 @@ export default function StudentsListPage() {
       key: "index",
       label: "#",
       width: "50px",
-      render: (_item, index) => getDisplayIndex(index),
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
-    {
-      key: "username",
-      label: "Username",
-      render: (student) => student.username || "---",
-    },
+    { key: "username", label: "Username", render: (s) => s.username || "---" },
     {
       key: "fullnameKH",
       label: "Fullname (KH)",
-      render: (student) =>
-        `${student.khmerFirstName || ""} ${student.khmerLastName || ""}`.trim() ||
-        "---",
+      render: (s) => `${s.khmerFirstName || ""} ${s.khmerLastName || ""}`.trim() || "---",
     },
     {
       key: "fullnameEN",
       label: "Fullname (EN)",
-      render: (student) =>
-        `${student.englishFirstName || ""} ${student.englishLastName || ""}`.trim() ||
-        "---",
+      render: (s) => `${s.englishFirstName || ""} ${s.englishLastName || ""}`.trim() || "---",
     },
-    {
-      key: "gender",
-      label: "Gender",
-      render: (student) => student.gender || "---",
-    },
-    {
-      key: "dateOfBirth",
-      label: "Date Of Birth",
-      render: (student) => student.dateOfBirth || "---",
-    },
+    { key: "gender", label: "Gender", render: (s) => s.gender || "---" },
+    { key: "dateOfBirth", label: "Date Of Birth", render: (s) => s.dateOfBirth || "---" },
     {
       key: "classCode",
       label: "Class code",
-      render: (student) =>
-        `${student?.studentClass?.code || ""} - ${student?.studentClass?.major?.name || ""}` ||
-        "---",
+      render: (s) => `${s?.studentClass?.code || ""} - ${s?.studentClass?.major?.name || ""}` || "---",
     },
     {
       key: "actions",
       label: "Actions",
       width: "80px",
-      render: (student) => (
-        <div className="flex justify-start space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => {
-                    router.push(
-                      `${ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(
-                        String(student.id)
-                      )}`
-                    );
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Student Detail</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+      render: (s) => (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => router.push(ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(String(s.id)))}
+                variant="ghost" size="icon" className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Student Detail</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ),
     },
   ];
@@ -432,10 +232,7 @@ export default function StudentsListPage() {
         <CardContent className="p-0 space-y-2">
           <PageBreadcrumb
             items={[
-              {
-                label: "Attendance",
-                href: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD,
-              },
+              { label: "Attendance", href: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD },
               { label: "Student List" },
             ]}
           />
@@ -445,8 +242,8 @@ export default function StudentsListPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Student List",
-          totalCount: allStudentData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search...",
           onSearchChange: handleSearchChange,
           filters: [
@@ -454,7 +251,7 @@ export default function StudentsListPage() {
               id: "year",
               type: "year",
               label: "Academic Year",
-              value: selectAcademicYear ?? 0,
+              value: selectedYear ?? 0,
               onChange: handleYearChange,
             },
             {
@@ -462,15 +259,11 @@ export default function StudentsListPage() {
               type: "custom",
               label: "Class",
               value: selectedClass ?? null,
-              onChange: (v) => setSelectedClass(v ?? undefined),
+              onChange: (v) => handleClassChange(v ?? null),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/80">Class</label>
-                  <ComboboxSelectClass
-                    dataSelect={value}
-                    onChangeSelected={onChange}
-                    disabled={isSubmitting}
-                  />
+                  <ComboboxSelectClass dataSelect={value} onChangeSelected={onChange} />
                 </div>
               ),
             },
@@ -479,59 +272,57 @@ export default function StudentsListPage() {
               type: "custom",
               label: "Schedule",
               value: selectedSchedule ?? null,
-              onChange: (v) => setSelectedSchedule(v ?? undefined),
+              onChange: (v) => handleScheduleChange(v ?? null),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/80">Schedule</label>
-                  <ComboboxSelectSchedule
-                    dataSelect={value}
-                    onChangeSelected={onChange}
-                    disabled={isSubmitting}
-                  />
+                  <ComboboxSelectSchedule dataSelect={value} onChangeSelected={onChange} />
                 </div>
               ),
             },
           ],
           onClearAll: () => {
-            setSelectAcademicYear(undefined);
+            dispatch(resetFilters());
             setSelectedClass(undefined);
             setSelectedSchedule(undefined);
-            setSearchQuery("");
+            setSelectedYear(undefined);
           },
+          extraActions: (
+            <Button
+              onClick={exportToExcel}
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 border-gray-200 py-5"
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <img src={AppIcons.Excel} alt="excel" className="h-4 w-4 lg:h-5 lg:w-5" />
+                  <span className="ml-1 text-xs font-medium">Excel</span>
+                  <Tally1 className="-mr-[12px] text-gray-300" />
+                  <Download className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          ),
         }}
         essentialFilterIds={["year", "class"]}
       />
 
       <DataTable
-        data={allStudentData?.content ?? null}
+        data={data?.content ?? null}
         columns={tableColumns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allStudentData?.totalPages ?? 0}
-        totalElements={allStudentData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         pageSize={currentPageSize}
         onPageSizeChange={handlePageSizeChange}
         emptyMessage="No student found"
-        getRowKey={(student) => student.id}
-      />
-
-      <ChangePasswordModal
-        isOpen={isChangePasswordDialogOpen}
-        onClose={() => {
-          setSelectedStudent(null);
-          setIsChangePasswordDialogOpen(false);
-        }}
-        userId={selectedStudent?.id}
-      />
-
-      <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onDelete={handleDeleteStudent}
-        title="Delete Student"
-        description={`Are you sure you want to delete the student: ${selectedStudent?.username}?`}
-        isSubmitting={isSubmitting}
+        getRowKey={(s) => s.id}
       />
     </div>
   );

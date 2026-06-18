@@ -13,184 +13,138 @@ import { ClassModel } from "@/model/master-data/class/all-class-model";
 import {
   AllSurveyFilterModel,
   SurveyReportHeader,
-  SurveyReportHeadersRequest,
-  SurveyResponseData,
   SurveyResponseItem,
 } from "@/model/survey/survey-result-model";
 import {
   getAllSurveyResultExcelService,
-  getAllSurveyResultService,
   getSurveyReportHeadersService,
 } from "@/service/survey/survey.service";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
-import {
-  Download,
-  FileSpreadsheet,
-  Loader2,
-  Tally1,
-} from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Download, FileSpreadsheet, Loader2, Tally1 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectSurveyData,
+  selectSurveyHeaders,
+  selectSurveyIsLoading,
+  selectSurveyFilters,
+} from "@/features/survey/store/selectors/survey-selectors";
+import {
+  setSearchFilter,
+  setSemesterFilter,
+  setAcademicYearFilter,
+  setClassFilter,
+  setStartDateFilter,
+  setEndDateFilter,
+  setPageNo,
+  resetFilters,
+  resetState,
+} from "@/features/survey/store/slice/survey-slice";
+import {
+  fetchSurveyResultsService,
+  fetchSurveyHeadersService,
+} from "@/features/survey/store/thunks/survey-thunks";
+
+const hiddenHeaders = [
+  "responseId", "submittedAt", "studentNameEnglish", "studentNameKhmer",
+  "studentId", "studentEmail", "identifyNumber", "studentPhone",
+  "className", "majorName", "scheduleId", "courseCode", "courseName",
+  "teacherName", "roomName", "dayOfWeek", "semester", "academyYear",
+  "surveyTitle", "overallComment", "departmentName", "timeSlot",
+];
 
 export default function SurveyResultPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  const surveyData = useAppSelector(selectSurveyData);
+  const surveyHeaders = useAppSelector(selectSurveyHeaders);
+  const isLoading = useAppSelector(selectSurveyIsLoading);
+  const filters = useAppSelector(selectSurveyFilters);
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
-
-  const [selectAcademicYear, setSelectAcademicYear] = useState<
-    number | undefined
-  >();
-  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(
-    undefined
-  );
-
-  const [surveyHeaders, setSurveyHeaders] = useState<SurveyReportHeader[]>([]);
-  const [surveyData, setSurveyData] = useState<SurveyResponseData | null>(null);
-
+  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(undefined);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
-  const searchParams = useSearchParams();
-
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.SURVEY.RESULT_LIST,
-    });
+    usePagination({ baseRoute: ROUTE.SURVEY.RESULT_LIST });
+
+  const searchDebounce = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
+    dispatch(fetchSurveyHeadersService({ hiddenHeaders }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(
+      fetchSurveyResultsService({
+        search: searchDebounce,
+        academyYear: filters.academicYear,
+        semester: filters.semester !== "ALL" ? filters.semester : undefined,
+        classId: filters.classId,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      })
+    );
+  }, [dispatch, searchDebounce, filters.academicYear, filters.semester, filters.classId, filters.startDate, filters.endDate, currentPage, currentPageSize]);
+
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
-  const hiddenHeaders = [
-    "responseId",
-    "submittedAt",
-    "studentNameEnglish",
-    "studentNameKhmer",
-    "studentId",
-    "studentEmail",
-    "identifyNumber",
-    "studentPhone",
-    "className",
-    "majorName",
-    "scheduleId",
-    "courseCode",
-    "courseName",
-    "teacherName",
-    "roomName",
-    "dayOfWeek",
-    "semester",
-    "academyYear",
-    "surveyTitle",
-    "overallComment",
-    "departmentName",
-    "timeSlot",
-  ];
+  const handleYearChange = (year: number) => {
+    dispatch(setAcademicYearFilter(year));
+  };
 
-  const fetchSurveyResults = useCallback(
-    async (filter: AllSurveyFilterModel = {}) => {
-      setIsLoading(true);
-      try {
-        const headersRequestBody: SurveyReportHeadersRequest = {
-          hiddenHeaders: hiddenHeaders,
-        };
+  const handleClassChange = (e: ClassModel | null) => {
+    setSelectedClass(e ?? undefined);
+    dispatch(setClassFilter(e?.id));
+    updateUrlWithPage(1);
+  };
 
-        const surveyFilter: AllSurveyFilterModel = {
-          search: debouncedSearchQuery,
-          academyYear: selectAcademicYear,
-          semester: selectedSemester != "ALL" ? selectedSemester : undefined,
-          classId: selectedClass?.id,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-          endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-          ...filter,
-        };
+  const handleSemesterChange = (value: string) => {
+    dispatch(setSemesterFilter(value));
+    updateUrlWithPage(1);
+  };
 
-        const [headersData, previewData] = await Promise.all([
-          getSurveyReportHeadersService(headersRequestBody),
-          getAllSurveyResultService(surveyFilter),
-        ]);
+  const handleStartDateChange = (date: Date | undefined) => {
+    setStartDate(date);
+    dispatch(setStartDateFilter(date ? format(date, "yyyy-MM-dd") : undefined));
+    updateUrlWithPage(1);
+  };
 
-        if (headersData) {
-          setSurveyHeaders(headersData);
-        }
+  const handleEndDateChange = (date: Date | undefined) => {
+    setEndDate(date);
+    dispatch(setEndDateFilter(date ? format(date, "yyyy-MM-dd") : undefined));
+    updateUrlWithPage(1);
+  };
 
-        if (previewData) {
-          setSurveyData(previewData);
-          if (
-            previewData.totalPages > 0 &&
-            currentPage > previewData.totalPages
-          ) {
-            updateUrlWithPage(previewData.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
-      debouncedSearchQuery,
-      selectedClass,
-      selectAcademicYear,
-      selectedSemester,
-      startDate,
-      currentPage,
-      endDate,
-    ]
-  );
+  const clearStartDate = () => handleStartDateChange(undefined);
+  const clearEndDate = () => handleEndDateChange(undefined);
 
-  useEffect(() => {
-    fetchSurveyResults({ pageNo: currentPage });
-  }, [
-    debouncedSearchQuery,
-    selectedClass,
-    currentPage,
-    selectAcademicYear,
-    selectedSemester,
-    startDate,
-    endDate,
-  ]);
-
-  const renderCellValue = (
-    item: SurveyResponseItem,
-    header: SurveyReportHeader
-  ): React.ReactNode => {
+  const renderCellValue = (item: SurveyResponseItem, header: SurveyReportHeader): React.ReactNode => {
     const value = (item as any)[header.key];
-
-    if (value === null || value === undefined) {
-      return <span>---</span>;
-    }
-
+    if (value === null || value === undefined) return <span>---</span>;
     if (header.key === "dayOfWeek" && typeof value === "string") {
       return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
     }
-
     if (header.key === "semester" && typeof value === "string") {
       return formatSemesterOne(value);
     }
-
     switch (header.type) {
       case "DATE":
         return formatDate(value as string);
@@ -198,192 +152,86 @@ export default function SurveyResultPage() {
     return value;
   };
 
-  const handleYearChange = (e: number) => {
-    setSelectAcademicYear(e);
-  };
-
-  const handleClassChange = (e: ClassModel | null) => {
-    setSelectedClass(e ?? undefined);
-    updateUrlWithPage(1);
-  };
-
-  const handleSemesterChange = (value: string) => {
-    setSelectedSemester(value);
-    updateUrlWithPage(1);
-  };
-
-  const clearStartDate = () => {
-    setStartDate(undefined);
-    updateUrlWithPage(1);
-  };
-
-  const clearEndDate = () => {
-    setEndDate(undefined);
-    updateUrlWithPage(1);
-  };
-
   const exportToExcel = async () => {
     setIsSubmitting(true);
-
     try {
       const filter: AllSurveyFilterModel = {
-        search: debouncedSearchQuery,
-        academyYear: selectAcademicYear,
-        semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
-        classId: selectedClass?.id,
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+        search: searchDebounce,
+        academyYear: filters.academicYear,
+        semester: filters.semester !== "ALL" ? filters.semester : undefined,
+        classId: filters.classId,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
       };
 
-      const response: SurveyResponseItem[] =
-        await getAllSurveyResultExcelService(filter);
+      const response: SurveyResponseItem[] = await getAllSurveyResultExcelService(filter);
+      const headersData = await getSurveyReportHeadersService({ hiddenHeaders });
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Survey Result Data");
 
-      const headersData = await getSurveyReportHeadersService({
-        hiddenHeaders,
-      });
       const headers: SurveyReportHeader[] = [
         { key: "no", label: "No." },
-        ...(headersData && Array.isArray(headersData)
-          ? headersData
-          : surveyHeaders),
+        ...(headersData && Array.isArray(headersData) ? headersData : surveyHeaders),
       ];
 
-      const columns = headers.map((header: SurveyReportHeader) => header.label);
-      const columnKeys = headers.map(
-        (header: SurveyReportHeader) => header.key
-      );
+      const columns = headers.map((h) => h.label);
+      const columnKeys = headers.map((h) => h.key);
 
-      worksheet.columns = columns.map((label) => ({
-        header: label,
-        key: label,
-        width: 20,
-      }));
-
+      worksheet.columns = columns.map((label) => ({ header: label, key: label, width: 20 }));
       worksheet.mergeCells(1, 1, 1, columns.length);
       const titleCell = worksheet.getCell("A1");
       titleCell.value = "List Survey Result Data";
-      titleCell.font = {
-        size: 16,
-        bold: true,
-        color: { argb: "FFFFFFFF" },
-      };
+      titleCell.font = { size: 16, bold: true, color: { argb: "FFFFFFFF" } };
       titleCell.alignment = { vertical: "middle", horizontal: "center" };
-      titleCell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF1F4E78" },
-      };
+      titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E78" } };
 
       const headerRow = worksheet.getRow(3);
-      columns.forEach((text: string, idx: number) => {
+      columns.forEach((text, idx) => {
         const cell = headerRow.getCell(idx + 1);
         cell.value = text;
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-        cell.alignment = {
-          vertical: "middle",
-          horizontal: "left",
-          wrapText: true,
-        };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FF007ACC" },
-        };
-        cell.border = {
-          top: { style: "thin" },
-          bottom: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-        };
-
+        cell.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF007ACC" } };
+        cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
         const columnWidths = [5, 20, 25, 27, 20, 15, 15, 15, 30];
         worksheet.getColumn(idx + 1).width = columnWidths[idx] || 25;
       });
       worksheet.getRow(3).commit();
 
-      response.forEach((item: any, i: number) => {
-        const rowData = columnKeys.map((key: string) => {
+      response.forEach((item: any, i) => {
+        const rowData = columnKeys.map((key) => {
           if (key === "no") return i + 1;
-
-          if (
-            (key === "createdAt" ||
-              key === "updatedAt" ||
-              key.includes("Date")) &&
-            item[key]
-          ) {
-            try {
-              return new Date(item[key]);
-            } catch (error) {
-              return item[key] || "---";
-            }
+          if ((key === "createdAt" || key === "updatedAt" || key.includes("Date")) && item[key]) {
+            try { return new Date(item[key]); } catch { return item[key] || "---"; }
           }
-
           return item[key] || "---";
         });
-
         const row = worksheet.addRow(rowData);
-
         row.eachCell((cell, colNumber) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: i % 2 === 0 ? "FFF3F3F3" : "FFFFFFFF" },
-          };
-          cell.border = {
-            top: { style: "thin" },
-            bottom: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-          };
-          cell.alignment = {
-            vertical: "middle",
-            horizontal: "left",
-            wrapText: false,
-          };
-
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: i % 2 === 0 ? "FFF3F3F3" : "FFFFFFFF" } };
+          cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
+          cell.alignment = { vertical: "middle", horizontal: "left", wrapText: false };
           const columnKey = columnKeys[colNumber - 1];
-          if (
-            (columnKey === "createdAt" ||
-              columnKey === "updatedAt" ||
-              columnKey.includes("Date")) &&
-            cell.value instanceof Date
-          ) {
+          if ((columnKey === "createdAt" || columnKey === "updatedAt" || columnKey.includes("Date")) && cell.value instanceof Date) {
             cell.numFmt = "dd-mm-yyyy";
           }
         });
       });
 
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      const fileName = `survey_result_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-      saveAs(blob, fileName);
-
-      toast.success(
-        `Excel file exported successfully! Total records: ${response.length}`
-      );
-      setIsSubmitting(false);
-    } catch (error: unknown) {
+      saveAs(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+        `survey_result_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      toast.success(`Excel file exported successfully! Total records: ${response.length}`);
+    } catch {
       toast.error("Failed to export data to Excel.");
-      setIsSubmitting(false);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Build dynamic columns from surveyHeaders
   const columns: TableColumn<SurveyResponseItem>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => getDisplayIndex(index),
-    },
+    { key: "no", label: "#", width: "50px", render: (_, index) => getDisplayIndex(index) },
     ...surveyHeaders.map((header) => ({
       key: header.key,
       label: header.label,
@@ -403,7 +251,7 @@ export default function SurveyResultPage() {
         config={{
           title: "Survey Result",
           totalCount: surveyData?.totalElements,
-          searchValue: searchQuery,
+          searchValue: filters.search,
           searchPlaceholder: "Search by name or ID...",
           onSearchChange: handleSearchChange,
           filters: [
@@ -412,7 +260,7 @@ export default function SurveyResultPage() {
               type: "custom",
               label: "Class",
               value: selectedClass,
-              onChange: (v) => setSelectedClass(v),
+              onChange: (v) => handleClassChange(v ?? null),
               render: ({ value, onChange }) => (
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-foreground/80">Class</label>
@@ -428,38 +276,35 @@ export default function SurveyResultPage() {
               id: "year",
               type: "year",
               label: "Academic Year",
-              value: selectAcademicYear ?? new Date().getFullYear(),
+              value: filters.academicYear ?? new Date().getFullYear(),
               onChange: handleYearChange,
             },
             {
               id: "semester",
               type: "select",
               label: "Semester",
-              value: selectedSemester,
+              value: filters.semester,
               onChange: handleSemesterChange,
               options: SemesterFilter.map((s) => ({ label: s.label, value: s.value })),
             },
           ],
           onClearAll: () => {
+            dispatch(resetFilters());
             setSelectedClass(undefined);
-            setSelectAcademicYear(undefined);
-            setSelectedSemester("ALL");
             setStartDate(undefined);
             setEndDate(undefined);
-            setSearchQuery("");
           },
         }}
         essentialFilterIds={["class", "year", "semester"]}
       />
 
-      {/* Date Range + Export row */}
       <div className="flex flex-col lg:flex-row justify-between gap-4 w-full">
         <div className="flex-1 lg:flex-none min-w-0">
           <DateRangePicker
             startDate={startDate}
             endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
             clearStartDate={clearStartDate}
             clearEndDate={clearEndDate}
           />
@@ -498,7 +343,7 @@ export default function SurveyResultPage() {
         currentPage={currentPage}
         totalPages={surveyData?.totalPages ?? 0}
         totalElements={surveyData?.totalElements}
-        onPageChange={handlePageChange}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         pageSize={currentPageSize}
         onPageSizeChange={handlePageSizeChange}
         emptyMessage="No Record"

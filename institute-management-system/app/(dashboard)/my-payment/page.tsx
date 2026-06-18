@@ -1,22 +1,13 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import {
-  createMyPaymentByTokenService,
-  deletedPaymentService,
-  getAllPaymentService,
-  updateMyPaymentByTokenIdService,
-} from "@/service/payment/payment.service";
-import {
-  AllPaymentFilterModel,
-  AllPaymentModel,
-  PaymentModel,
-} from "@/model/payment/payment-model";
+import { PaymentModel } from "@/model/payment/payment-model";
 import {
   PaymentFormData,
   PaymentFormModal,
@@ -27,52 +18,57 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@radix-ui/react-tooltip";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { UserProfileSection } from "@/components/dashboard/users/shared/user-profile";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
-import { getStudentByIdService } from "@/service/user/student.service";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { PaymentRequest } from "@/model/payment/payment-request-model";
 import { getStudentByTokenService } from "@/service/user/user.service";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectPaymentData,
+  selectPaymentIsLoading,
+  selectPaymentOperations,
+} from "@/features/payments/store/selectors/payment-selectors";
+import {
+  setPageNo,
+  resetState,
+} from "@/features/payments/store/slice/payment-slice";
+import {
+  fetchAllPaymentsService,
+  createPaymentByTokenService,
+  updatePaymentByTokenService,
+  deletePaymentService,
+} from "@/features/payments/store/thunks/payment-thunks";
 
 type PaymentItem = PaymentModel;
 
 export default function PaymentPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectPaymentData);
+  const isLoading = useAppSelector(selectPaymentIsLoading);
+  const operations = useAppSelector(selectPaymentOperations);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentModel | null>(
-    null
-  );
-  const [allPaymentData, setAllPaymentData] = useState<AllPaymentModel | null>(
-    null
-  );
+  const [selectedPayment, setSelectedPayment] = useState<PaymentModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [initialData, setInitialData] = useState<PaymentFormData | undefined>(
-    undefined
-  );
-  const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(
-    null
-  );
+  const [initialData, setInitialData] = useState<PaymentFormData | undefined>(undefined);
+  const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(null);
 
   const params = useParams();
   const id = params?.id ? Number(params.id) : 0;
-  const searchParams = useSearchParams();
 
-  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.PAYMENT.MY_PAYMENT,
-    });
+  const { currentPage, currentPageSize, handlePageChange, handlePageSizeChange, getDisplayIndex } =
+    usePagination({ baseRoute: ROUTE.PAYMENT.MY_PAYMENT });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProfile = async () => {
       try {
         const response = await getStudentByTokenService();
-
         setStudentDetail({
           ...response,
           classId: response.studentClass.id,
@@ -81,33 +77,37 @@ export default function PaymentPage() {
           studentSibling: response.studentSibling,
           nationality: response.nationality,
         });
-      } catch (error) {
+      } catch {
         toast.error("Failed to load profile data");
       }
     };
-
-    fetchData();
+    fetchProfile();
   }, []);
 
   useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
+    dispatch(
+      fetchAllPaymentsService({
+        status: Constants.ACTIVE,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+      })
+    );
+  }, [dispatch, currentPage, currentPageSize]);
 
-  const handleOpenEditModal = (data: PaymentModel) => {
-    const formData: PaymentFormData = {
-      id: data.id,
-      amount: data.amount,
-      comment: data.commend,
-      item: data.item,
-      percentage: data.percentage,
-      type: data.type,
-    };
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
+  const handleOpenEditModal = (p: PaymentModel) => {
     setModalMode("edit");
-    setInitialData(formData);
+    setInitialData({
+      id: p.id,
+      amount: p.amount,
+      comment: p.commend,
+      item: p.item,
+      percentage: p.percentage,
+      type: p.type,
+    });
     setIsModalOpen(true);
   };
 
@@ -118,141 +118,40 @@ export default function PaymentPage() {
   };
 
   async function handleSubmit(formData: PaymentFormData) {
-    setIsSubmitting(true);
-    let response: any;
+    const payload: PaymentRequest = {
+      item: formData.item,
+      type: formData.type,
+      amount: formData.amount,
+      percentage: formData.percentage,
+      date: new Date().toISOString().split("T")[0],
+      status: "ACTIVE",
+      commend: formData.comment,
+      userId: id,
+    };
 
     try {
       if (modalMode === "add") {
-        const payload = {
-          item: formData.item,
-          type: formData.type,
-          amount: formData.amount,
-          percentage: formData.percentage,
-          date: new Date().toISOString().split("T")[0],
-          status: "ACTIVE",
-          commend: formData.comment,
-          userId: id,
-        };
-
-        response = await createMyPaymentByTokenService(payload);
-        if (response) {
-          setAllPaymentData((prevData) => {
-            if (!prevData) return null;
-            const updatedContent = [response, ...prevData.content];
-            return {
-              ...prevData,
-              content: updatedContent,
-              totalElements: prevData.totalElements + 1,
-            } as AllPaymentModel;
-          });
-
-          toast.success("Payment added successfully");
-          setIsModalOpen(false);
-        }
+        await dispatch(createPaymentByTokenService(payload)).unwrap();
+        toast.success("Payment added successfully");
+        setIsModalOpen(false);
       } else if (modalMode === "edit" && formData.id) {
-        const payload = {
-          item: formData.item,
-          type: formData.type,
-          amount: formData.amount,
-          percentage: formData.percentage,
-          date: new Date().toISOString().split("T")[0],
-          status: "ACTIVE",
-          commend: formData.comment,
-          userId: id,
-        };
-
-        response = await updateMyPaymentByTokenIdService(formData.id, payload);
-        if (response) {
-          setAllPaymentData((prevData) => {
-            if (!prevData) return null;
-            const updatedContent = prevData.content.map((dept) =>
-              dept.id === formData.id && response ? response : dept
-            );
-            return {
-              ...prevData,
-              content: updatedContent,
-            } as AllPaymentModel;
-          });
-
-          toast.success("Payment updated successfully");
-          setIsModalOpen(false);
-        }
+        await dispatch(updatePaymentByTokenService({ id: formData.id, data: payload })).unwrap();
+        toast.success("Payment updated successfully");
+        setIsModalOpen(false);
       }
     } catch (error: any) {
       toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
-  const payment = useCallback(
-    async (param: AllPaymentFilterModel) => {
-      setIsLoading(true);
-      try {
-        const response = await getAllPaymentService({
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          ...param,
-        });
-
-        if (response) {
-          setAllPaymentData(response);
-
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading payments");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [currentPage]
-  );
-
-  useEffect(() => {
-    payment({});
-  }, [currentPage]);
-
   async function handleDeletePayment() {
     if (!selectedPayment) return;
-    setIsSubmitting(true);
-
     try {
-      const response = await deletedPaymentService(selectedPayment.id);
-      if (response) {
-        setAllPaymentData((prevData) => {
-          if (!prevData) return null;
-          const updatedContent = prevData.content.filter(
-            (item) => item.id !== selectedPayment.id
-          );
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
-
-        toast.success("Payment deleted successfully");
-        if (
-          allPaymentData &&
-          allPaymentData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        } else {
-          await payment({});
-        }
-      } else {
-        toast.error("Failed to delete payment");
-      }
-    } catch (error) {
+      await dispatch(deletePaymentService(selectedPayment.id)).unwrap();
+      toast.success("Payment deleted successfully");
+    } catch {
       toast.error("An error occurred while deleting the payment.");
     } finally {
-      setIsSubmitting(false);
       setIsDeleteDialogOpen(false);
     }
   }
@@ -262,48 +161,18 @@ export default function PaymentPage() {
       return `${studentDetail.englishFirstName} ${studentDetail.englishLastName}`;
     } else if (studentDetail?.khmerFirstName && studentDetail?.khmerLastName) {
       return `${studentDetail.khmerFirstName} ${studentDetail.khmerLastName}`;
-    } else {
-      return `${studentDetail?.username}`;
     }
+    return `${studentDetail?.username}`;
   };
 
   const columns: TableColumn<PaymentItem>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => getDisplayIndex(index),
-    },
-    {
-      key: "item",
-      label: "Item",
-      render: (p) => p.item,
-    },
-    {
-      key: "type",
-      label: "Type",
-      render: (p) => p.type,
-    },
-    {
-      key: "amount",
-      label: "Amount",
-      render: (p) => p.amount,
-    },
-    {
-      key: "percentage",
-      label: "Percentage",
-      render: (p) => p.percentage,
-    },
-    {
-      key: "date",
-      label: "Date",
-      render: (p) => p.date,
-    },
-    {
-      key: "commend",
-      label: "Comment",
-      render: (p) => p.commend,
-    },
+    { key: "no", label: "#", width: "50px", render: (_, index) => getDisplayIndex(index) },
+    { key: "item", label: "Item", render: (p) => p.item },
+    { key: "type", label: "Type", render: (p) => p.type },
+    { key: "amount", label: "Amount", render: (p) => p.amount },
+    { key: "percentage", label: "Percentage", render: (p) => p.percentage },
+    { key: "date", label: "Date", render: (p) => p.date },
+    { key: "commend", label: "Comment", render: (p) => p.commend },
     {
       key: "action",
       label: "Action",
@@ -318,7 +187,7 @@ export default function PaymentPage() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isUpdating}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -331,14 +200,11 @@ export default function PaymentPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    setSelectedPayment(p);
-                    setIsDeleteDialogOpen(true);
-                  }}
+                  onClick={() => { setSelectedPayment(p); setIsDeleteDialogOpen(true); }}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -358,10 +224,7 @@ export default function PaymentPage() {
         back
         breadcrumbs={[
           { label: "Dashboard", href: ROUTE.DASHBOARD },
-          {
-            label: "Student payment",
-            href: ROUTE.PAYMENT.VIEW_PAYMENT(id.toString()),
-          },
+          { label: "Student payment", href: ROUTE.PAYMENT.VIEW_PAYMENT(id.toString()) },
         ]}
       />
 
@@ -373,12 +236,8 @@ export default function PaymentPage() {
             <div className="relative w-full md:w-1/2">
               <p>ការបង់ថ្លៃផ្សេងៗ</p>
             </div>
-
             <div className="flex items-center gap-2">
-              <Button
-                onClick={handleAddNew}
-                className="bg-green-900 text-white hover:bg-green-950"
-              >
+              <Button onClick={handleAddNew} className="bg-green-900 text-white hover:bg-green-950">
                 <Plus className="mr-2 h-4 w-4" />
                 Add New
               </Button>
@@ -386,13 +245,13 @@ export default function PaymentPage() {
           </div>
 
           <DataTable
-            data={allPaymentData?.content ?? null}
+            data={data?.content ?? null}
             columns={columns}
             loading={isLoading}
             currentPage={currentPage}
-            totalPages={allPaymentData?.totalPages ?? 0}
-            totalElements={allPaymentData?.totalElements}
-            onPageChange={handlePageChange}
+            totalPages={data?.totalPages ?? 0}
+            totalElements={data?.totalElements}
+            onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
             pageSize={currentPageSize}
             onPageSizeChange={handlePageSizeChange}
             emptyMessage="No Records"
@@ -407,7 +266,7 @@ export default function PaymentPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
         initialData={initialData}
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isCreating || operations.isUpdating}
       />
 
       <DeleteConfirmationDialog
@@ -416,7 +275,7 @@ export default function PaymentPage() {
         onDelete={handleDeletePayment}
         title="Delete payment"
         description="Are you sure you want to delete the payment : "
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );
