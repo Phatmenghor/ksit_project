@@ -1,4 +1,4 @@
-import { StaffModel } from "@/model/user/staff/staff.respond.model";
+import { UserSummaryModel } from "@/model/user/staff/staff.respond.model";
 import { DepartmentModel } from "../department/all-department-model";
 import { SubjectModel } from "../subject/all-subject-model";
 
@@ -27,6 +27,6 @@ export interface CourseModel {
   status: string;
   department: DepartmentModel;
   subject: SubjectModel;
-  user: StaffModel;
+  user: UserSummaryModel;
   createdAt: string;
 }

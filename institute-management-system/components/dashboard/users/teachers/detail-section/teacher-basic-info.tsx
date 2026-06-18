@@ -24,7 +24,8 @@ export function BasicInformationForm() {
     control,
   } = useFormContext();
 
-  const handleDepartmentChange = (department: DepartmentModel) => {
+  const handleDepartmentChange = (department: DepartmentModel | null) => {
+    if (!department) return;
     setSelectedDepartment(department);
     setValue("departmentId", department.id as number, {
       shouldValidate: true,

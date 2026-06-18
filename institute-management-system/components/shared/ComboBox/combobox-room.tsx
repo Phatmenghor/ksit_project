@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { StatusEnum } from "@/constants/constant";
 import { RoomModel } from "@/model/master-data/room/all-room-model";
-import { getAllRoomService } from "@/service/master-data/room.service";
+import { useAppDispatch } from "@/store";
+import { fetchRoomComboboxService } from "@/features/master-data/store/thunks/room-thunks";
 
 interface ComboboxSelectRoomProps {
   dataSelect: RoomModel | null;
@@ -20,10 +22,19 @@ export function ComboboxSelectRoom({
   label,
   placeholder = "Select a room...",
 }: ComboboxSelectRoomProps) {
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
+
+  const fetcher = useCallback(
+    ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
+      dispatch(fetchRoomComboboxService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
+    [dispatch]
+  );
+
   const controller = useInfiniteComboboxData<RoomModel>({
-    fetcher: ({ search, pageNo, pageSize }) =>
-      getAllRoomService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE }),
+    fetcher,
     getId: (item) => item.id,
+    enabled: open,
   });
 
   return (
@@ -38,6 +49,8 @@ export function ComboboxSelectRoom({
       searchPlaceholder="Search room..."
       emptyMessage="No room found."
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     />
   );
 }

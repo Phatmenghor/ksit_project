@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
 import { StaffModel } from "@/model/user/staff/staff.respond.model";
-import { getAllStaffService } from "@/service/user/user.service";
+import { useAppDispatch } from "@/store";
+import { fetchStaffComboboxService } from "@/features/users/store/thunks/staff-thunks";
 
 interface ComboboxSelectUserProps {
   dataSelect: StaffModel | null;
@@ -20,16 +22,27 @@ export function ComboboxSelectUser({
   label,
   placeholder = "Select a user...",
 }: ComboboxSelectUserProps) {
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
+
+  const fetcher = useCallback(
+    ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
+      dispatch(
+        fetchStaffComboboxService({
+          search,
+          pageNo,
+          pageSize,
+          status: StatusEnum.ACTIVE,
+          roles: [RoleEnum.STAFF, RoleEnum.TEACHER],
+        })
+      ).unwrap(),
+    [dispatch]
+  );
+
   const controller = useInfiniteComboboxData<StaffModel>({
-    fetcher: ({ search, pageNo, pageSize }) =>
-      getAllStaffService({
-        search,
-        pageNo,
-        pageSize,
-        status: StatusEnum.ACTIVE,
-        roles: [RoleEnum.STAFF, RoleEnum.TEACHER],
-      }),
+    fetcher,
     getId: (item) => item.id,
+    enabled: open,
   });
 
   return (
@@ -44,6 +57,8 @@ export function ComboboxSelectUser({
       searchPlaceholder="Search user..."
       emptyMessage="No user found."
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     />
   );
 }

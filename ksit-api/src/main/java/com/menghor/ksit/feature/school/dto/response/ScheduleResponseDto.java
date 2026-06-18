@@ -5,7 +5,7 @@ import com.menghor.ksit.enumations.DayOfWeek;
 import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.enumations.SurveyStatus;
 import com.menghor.ksit.enumations.YearLevelEnum;
-import com.menghor.ksit.feature.auth.dto.resposne.StaffUserListResponseDto;
+import com.menghor.ksit.feature.auth.dto.resposne.UserSummaryDto;
 import com.menghor.ksit.feature.master.dto.response.ClassResponseDto;
 import com.menghor.ksit.feature.master.dto.response.RoomResponseDto;
 import com.menghor.ksit.feature.master.dto.response.SemesterResponseDto;
@@ -33,7 +33,7 @@ public class ScheduleResponseDto {
     private DayOfWeek day;
     private Status status;
     private ClassResponseDto classes;
-    private StaffUserListResponseDto teacher;
+    private UserSummaryDto teacher;
     private CourseResponseMapWithScheduleDto course;
     private RoomResponseDto room;
     private SemesterResponseDto semester;

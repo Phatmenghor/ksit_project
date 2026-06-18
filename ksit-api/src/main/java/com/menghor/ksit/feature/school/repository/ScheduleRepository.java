@@ -3,6 +3,8 @@ package com.menghor.ksit.feature.school.repository;
 import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -10,18 +12,36 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long>, JpaSpecificationExecutor<ScheduleEntity> {
 
+    @Query("SELECT s FROM ScheduleEntity s " +
+            "LEFT JOIN FETCH s.classes c LEFT JOIN FETCH c.major m LEFT JOIN FETCH m.department " +
+            "LEFT JOIN FETCH s.user LEFT JOIN FETCH s.course co LEFT JOIN FETCH co.department LEFT JOIN FETCH co.subject " +
+            "LEFT JOIN FETCH s.room LEFT JOIN FETCH s.semester " +
+            "WHERE s.id = :id")
+    Optional<ScheduleEntity> findByIdWithDetails(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"classes", "classes.major", "user", "course", "course.department", "course.subject", "room", "semester"})
+    Page<ScheduleEntity> findAll(Specification<ScheduleEntity> spec, Pageable pageable);
+
     /**
      * Find schedules for a specific student (based on class enrollment)
      */
-    @Query("SELECT s FROM ScheduleEntity s " +
-            "JOIN s.classes c " +
+    @Query(value = "SELECT DISTINCT s FROM ScheduleEntity s " +
+            "LEFT JOIN FETCH s.classes c " +
+            "LEFT JOIN FETCH s.user " +
+            "LEFT JOIN FETCH s.course co " +
+            "LEFT JOIN FETCH co.department " +
+            "LEFT JOIN FETCH s.room " +
+            "LEFT JOIN FETCH s.semester " +
             "JOIN c.students st " +
             "WHERE st.id = :studentId " +
-            "ORDER BY s.day ASC, s.startTime ASC")
+            "ORDER BY s.day ASC, s.startTime ASC",
+            countQuery = "SELECT COUNT(DISTINCT s.id) FROM ScheduleEntity s " +
+            "JOIN s.classes c JOIN c.students st WHERE st.id = :studentId")
     Page<ScheduleEntity> findByStudentId(@Param("studentId") Long studentId, Pageable pageable);
 
     /**
@@ -53,8 +73,13 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long>,
     /**
      * Find schedules by student ID
      */
-    @Query("SELECT s FROM ScheduleEntity s " +
-            "JOIN s.classes c " +
+    @Query("SELECT DISTINCT s FROM ScheduleEntity s " +
+            "LEFT JOIN FETCH s.classes c " +
+            "LEFT JOIN FETCH s.user " +
+            "LEFT JOIN FETCH s.course co " +
+            "LEFT JOIN FETCH co.department " +
+            "LEFT JOIN FETCH s.room " +
+            "LEFT JOIN FETCH s.semester " +
             "JOIN c.students st " +
             "WHERE st.id = :studentId " +
             "ORDER BY s.day, s.startTime")

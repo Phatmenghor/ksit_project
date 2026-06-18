@@ -23,8 +23,8 @@ import { CancelButton } from "@/components/shared/form-field/cancel-button";
 import { SubmitButton } from "@/components/shared/form-field/submid-button";
 
 const departmentFormSchema = z.object({
-  code: z.string().min(1, { message: "Department code is required" }).trim(),
-  name: z.string().min(1, { message: "Department name is required" }).trim(),
+  code: z.string().min(1, { message: "Department code is required" }),
+  name: z.string().min(1, { message: "Department name is required" }),
   urlLogo: z.string().optional(),
   imageId: z.string().optional(),
   status: z.literal(Constants.ACTIVE),

@@ -44,11 +44,11 @@ public class AttendanceSessionEntity extends BaseEntity {
     @Column(name = "status", nullable = false)
     private Status status = Status.ACTIVE;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id", nullable = false)
     private ScheduleEntity schedule;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", nullable = false)
     private UserEntity teacher;
     

@@ -22,7 +22,7 @@ import { CancelButton } from "@/components/shared/form-field/cancel-button";
 import { SubmitButton } from "@/components/shared/form-field/submid-button";
 
 export const classFormSchema = z.object({
-  code: z.string().min(1, { message: "Class code is required" }).max(7, { message: "Class code should be less than 7 characters" }).trim(),
+  code: z.string().min(1, { message: "Class code is required" }).max(7, { message: "Class code should be less than 7 characters" }),
   academyYear: z.number({ required_error: "Academy year is required" }),
   degree: z.nativeEnum(DegreeEnum, { required_error: "Degree is required" }),
   yearLevel: z.nativeEnum(YearLevelEnum, { required_error: "Year level is required" }),

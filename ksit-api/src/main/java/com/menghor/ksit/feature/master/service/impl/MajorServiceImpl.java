@@ -243,7 +243,7 @@ public class MajorServiceImpl implements MajorService {
      * Helper method to find a major by ID or throw NotFoundException
      */
     private MajorEntity findMajorById(Long id) {
-        return majorRepository.findById(id)
+        return majorRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> {
                     log.error("Major not found with ID: {}", id);
                     return new NotFoundException("Major id " + id + " not found. Please try again.");

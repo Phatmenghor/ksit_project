@@ -6,6 +6,7 @@ import com.menghor.ksit.feature.score.models.ScoreSessionEntity;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 
 public class ScoreSessionSpecification {
 
@@ -73,7 +74,7 @@ public class ScoreSessionSpecification {
 
     public static Specification<ScoreSessionEntity> searchByNameOrCode(String search) {
         return (root, query, criteriaBuilder) -> {
-            if (search == null || search.trim().isEmpty()) return null;
+            if (!StringUtils.hasText(search)) return null;
             String searchPattern = "%" + search.toLowerCase() + "%";
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("schedule").get("id").as(String.class)), searchPattern),

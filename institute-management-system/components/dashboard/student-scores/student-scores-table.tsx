@@ -222,8 +222,8 @@ export default function StudentScoresTable({
                   >
                     <td className="px-3 py-2.5 text-muted-foreground font-medium">{index + 1}</td>
                     <td className="px-3 py-2.5 font-mono text-xs">{student.studentIdentityNumber}</td>
-                    <td className="px-3 py-2.5 font-medium">{student.studentNameKhmer?.trim() || "—"}</td>
-                    <td className="px-3 py-2.5">{student.studentNameEnglish?.trim() || "—"}</td>
+                    <td className="px-3 py-2.5 font-medium">{student.studentNameKhmer || "—"}</td>
+                    <td className="px-3 py-2.5">{student.studentNameEnglish || "—"}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{student.gender || "—"}</td>
 
                     {scoreColumns.map((col) => (

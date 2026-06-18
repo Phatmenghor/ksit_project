@@ -42,7 +42,7 @@ public class ClassEntity extends BaseEntity {
 
     private Integer academyYear;         // 2025, 2026
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "major_id")
     private MajorEntity major;
 

@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Tooltip,
   TooltipContent,
@@ -7,24 +8,16 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
-import {
-  deletedStaffService,
-  getAllStaffService,
-} from "@/service/user/user.service";
-import { RoleEnum, StatusEnum } from "@/constants/constant";
+import { RoleEnum } from "@/constants/constant";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
-import {
-  AllStaffModel,
-  StaffModel,
-} from "@/model/user/staff/staff.respond.model";
+import { StaffModel } from "@/model/user/staff/staff.respond.model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { StaffListRequest } from "@/model/user/staff/staff.request.model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
@@ -34,125 +27,77 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatEnumLabel } from "@/utils/general/format-enum-label";
 import { formatDate } from "@/utils/date/date";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectStaffData,
+  selectStaffIsLoading,
+  selectStaffOperations,
+  selectStaffFilters,
+} from "@/features/users/store/selectors/staff-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  resetState,
+} from "@/features/users/store/slice/staff-slice";
+import {
+  fetchAllStaffService,
+  deleteStaffService,
+} from "@/features/users/store/thunks/staff-thunks";
 
 export default function TeachersListPage() {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [allTeachersData, setAllTeachersData] = useState<AllStaffModel | null>(
-    null
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
-    useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState<StaffModel | null>(
-    null
-  );
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectStaffData);
+  const isLoading = useAppSelector(selectStaffIsLoading);
+  const operations = useAppSelector(selectStaffOperations);
+  const filters = useAppSelector(selectStaffFilters);
+
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<StaffModel | null>(null);
 
   const router = useRouter();
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.USERS.TEACHERS,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.USERS.TEACHERS,
+    defaultPageSize: 10,
+  });
+
+  const searchDebounce = useDebounce(filters.search, 500);
+
+  useEffect(() => {
+    dispatch(
+      fetchAllStaffService({
+        roles: [RoleEnum.TEACHER],
+        search: searchDebounce,
+        status: "ACTIVE",
+        pageNo: currentPage,
+        pageSize: 30,
+      })
+    );
+  }, [dispatch, searchDebounce, currentPage]);
+
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
-
-  // Then add this effect for initial URL setup
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
-
-  const loadTeachers = useCallback(
-    async (param: StaffListRequest) => {
-      setIsLoading(true);
-      try {
-        const response = await getAllStaffService({
-          roles: [RoleEnum.TEACHER],
-          search: searchQuery,
-          status: StatusEnum.ACTIVE,
-          pageNo: currentPage,
-          pageSize: 30,
-          ...param,
-        });
-
-        if (response) {
-          setAllTeachersData(response);
-          // Handle case where current page exceeds total pages
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading teachers");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [debouncedSearchQuery, currentPage]
-  );
-
-  useEffect(() => {
-    loadTeachers({});
-  }, [debouncedSearchQuery, currentPage]);
 
   async function handleDeleteTeacher() {
     if (!selectedTeacher) return;
-
-    setIsSubmitting(true);
-    try {
-      const originalData = allTeachersData;
-      setAllTeachersData((prevData) => {
-        if (!prevData) return null;
-        const updatedContent = prevData.content.filter(
-          (item) => item.id !== selectedTeacher.id
-        );
-        return {
-          ...prevData,
-          content: updatedContent,
-          totalElements: prevData.totalElements - 1,
-        };
-      });
-
-      const response = await deletedStaffService(selectedTeacher.id);
-
-      if (response) {
-        toast.success(
-          `Teacher ${selectedTeacher.username ?? ""} deleted successfully`
-        );
-        if (
-          allTeachersData &&
-          allTeachersData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadTeachers({});
-        }
-      } else {
-        setAllTeachersData(originalData);
-        toast.error("Failed to delete teacher");
+    const result = await dispatch(deleteStaffService(selectedTeacher.id));
+    if (deleteStaffService.fulfilled.match(result)) {
+      toast.success(`Teacher ${selectedTeacher.username ?? ""} deleted successfully`);
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the teacher");
-      loadTeachers({});
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
+    } else {
+      toast.error("Failed to delete teacher");
     }
+    setIsDeleteDialogOpen(false);
+    setSelectedTeacher(null);
   }
 
   const columns: TableColumn<StaffModel>[] = [
@@ -160,7 +105,7 @@ export default function TeachersListPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, i) => getDisplayIndex(i),
+      render: (_, index) => (currentPage - 1) * 30 + index + 1,
     },
     {
       key: "profile",
@@ -170,12 +115,20 @@ export default function TeachersListPage() {
         const url = item.profileUrl
           ? `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${item.profileUrl}`
           : undefined;
-        const initials = [item.englishFirstName, item.englishLastName]
-          .filter(Boolean).map(n => n![0]).join("").toUpperCase() || item.username?.charAt(0).toUpperCase() || "U";
+        const initials =
+          [item.englishFirstName, item.englishLastName]
+            .filter(Boolean)
+            .map((n) => n![0])
+            .join("")
+            .toUpperCase() ||
+          item.username?.charAt(0).toUpperCase() ||
+          "U";
         return (
           <Avatar className="h-8 w-8">
             <AvatarImage src={url} alt={item.username} className="object-cover" />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">{initials}</AvatarFallback>
+            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
+              {initials}
+            </AvatarFallback>
           </Avatar>
         );
       },
@@ -183,21 +136,19 @@ export default function TeachersListPage() {
     {
       key: "username",
       label: "Username",
-      render: (teacher) => teacher.username.trim() || "---",
+      render: (teacher) => teacher.username || "---",
     },
     {
       key: "khmerName",
       label: "Khmer Name",
       render: (teacher) =>
-        `${teacher.khmerFirstName || ""} ${teacher.khmerLastName || ""}`.trim() ||
-        "---",
+        `${teacher.khmerFirstName || ""} ${teacher.khmerLastName || ""}`.trim() || "---",
     },
     {
       key: "englishName",
       label: "English Name",
       render: (teacher) =>
-        `${teacher.englishFirstName ?? ""} ${teacher.englishLastName ?? ""}`.trim() ||
-        "---",
+        `${teacher.englishFirstName ?? ""} ${teacher.englishLastName ?? ""}`.trim() || "---",
     },
     {
       key: "identifyNumber",
@@ -212,24 +163,30 @@ export default function TeachersListPage() {
     {
       key: "dateOfBirth",
       label: "Date of Birth",
-      render: (teacher) =>
-        teacher.dateOfBirth ? formatDate(teacher.dateOfBirth) : "---",
+      render: (teacher) => (teacher.dateOfBirth ? formatDate(teacher.dateOfBirth) : "---"),
     },
     {
       key: "phoneNumber",
       label: "Phone",
-      render: (teacher) => teacher.phoneNumber?.trim() || "---",
+      render: (teacher) => teacher.phoneNumber || "---",
     },
     {
       key: "department",
       label: "Department",
-      render: (teacher) => teacher.department?.name?.trim() || "---",
+      render: (teacher) => teacher.department?.name || "---",
     },
     {
       key: "status",
       label: "Status",
       render: (teacher) => (
-        <Badge variant="outline" className={teacher.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
+        <Badge
+          variant="outline"
+          className={
+            teacher.status === "ACTIVE"
+              ? "border-green-500 text-green-700 bg-green-50"
+              : "border-gray-400 text-gray-500"
+          }
+        >
           {formatEnumLabel(teacher.status)}
         </Badge>
       ),
@@ -249,35 +206,27 @@ export default function TeachersListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    router.push(
-                      `${ROUTE.USERS.VIEW_TEACHER(String(teacher.id))}`
-                    );
-                  }}
+                  onClick={() => router.push(ROUTE.USERS.VIEW_TEACHER(String(teacher.id)))}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>teacher Detail</TooltipContent>
+              <TooltipContent>Teacher Detail</TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() =>
-                    router.push(
-                      ROUTE.USERS.EDIT_TEACHER(String(teacher.id))
-                    )
-                  }
+                  onClick={() => router.push(ROUTE.USERS.EDIT_TEACHER(String(teacher.id)))}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -289,14 +238,11 @@ export default function TeachersListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    setSelectedTeacher(teacher);
-                    setIsChangePasswordDialogOpen(true);
-                  }}
+                  onClick={() => { setSelectedTeacher(teacher); setIsChangePasswordDialogOpen(true); }}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
@@ -308,14 +254,11 @@ export default function TeachersListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    setSelectedTeacher(teacher);
-                    setIsDeleteDialogOpen(true);
-                  }}
+                  onClick={() => { setSelectedTeacher(teacher); setIsDeleteDialogOpen(true); }}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -339,51 +282,43 @@ export default function TeachersListPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Teachers",
-          totalCount: allTeachersData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
           onButtonClick: () => router.push(ROUTE.USERS.ADD_TEACHER),
           filters: [],
-          onClearAll: () => {
-            setSearchQuery("");
-          },
+          onClearAll: () => dispatch(setSearchFilter("")),
         }}
         essentialFilterIds={[]}
       />
 
       <DataTable
-        data={allTeachersData?.content ?? null}
+        data={data?.content ?? null}
         columns={columns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allTeachersData?.totalPages ?? 0}
-        totalElements={allTeachersData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         emptyMessage="No teacher found"
         getRowKey={(teacher) => teacher.id}
       />
 
       <ChangePasswordModal
         isOpen={isChangePasswordDialogOpen}
-        onClose={() => {
-          setSelectedTeacher(null);
-          setIsChangePasswordDialogOpen(false);
-        }}
+        onClose={() => { setSelectedTeacher(null); setIsChangePasswordDialogOpen(false); }}
         userId={selectedTeacher?.id}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setSelectedTeacher(null);
-        }}
+        onClose={() => { setIsDeleteDialogOpen(false); setSelectedTeacher(null); }}
         onDelete={handleDeleteTeacher}
-        title="Disable Staff"
-        description={`Are you sure you want to disable the staff: ${selectedTeacher?.username}?`}
-        isSubmitting={isSubmitting}
+        title="Disable Teacher"
+        description="Are you sure you want to disable the teacher:"
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

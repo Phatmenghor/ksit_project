@@ -1,94 +1,82 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import {
-  createMajorService,
-  deletedMajorService,
-  getAllMajorService,
-  updateMajorService,
-} from "@/service/master-data/major.service";
-import { toast } from "sonner";
-import { Constants } from "@/constants/text-string";
-import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
-import {
-  AllMajorModel,
-  MajorModel,
-} from "@/model/master-data/major/all-major-model";
+import { MajorModel } from "@/model/master-data/major/all-major-model";
 import {
   MajorFormData,
   MajorFormModal,
 } from "@/components/dashboard/master-data/manage-major/major-form-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { toast } from "sonner";
+import { Constants } from "@/constants/text-string";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectMajorData,
+  selectMajorIsLoading,
+  selectMajorOperations,
+  selectMajorFilters,
+} from "@/features/master-data/store/selectors/major-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  resetState,
+} from "@/features/master-data/store/slice/major-slice";
+import {
+  fetchAllMajorService,
+  createMajorService,
+  updateMajorService,
+  deleteMajorService,
+} from "@/features/master-data/store/thunks/major-thunks";
+import { useDebounce } from "@/utils/debounce/debounce";
 
 export default function ManageMajorPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectMajorData);
+  const isLoading = useAppSelector(selectMajorIsLoading);
+  const operations = useAppSelector(selectMajorOperations);
+  const filters = useAppSelector(selectMajorFilters);
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [majors, setMajors] = useState<MajorModel | null>(null);
-  const [allMajorData, setAllMajorData] = useState<AllMajorModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [initialData, setInitialData] = useState<MajorFormData | undefined>(
-    undefined
-  );
+  const [deletingMajor, setDeletingMajor] = useState<MajorModel | null>(null);
+  const [initialData, setInitialData] = useState<MajorFormData | undefined>(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } =
-    usePagination({
-      baseRoute: ROUTE.MASTER_DATA.MANAGE_MAJOR,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.MASTER_DATA.MANAGE_MAJOR,
+    defaultPageSize: 10,
+  });
 
-  const searchDebounce = useDebounce(searchQuery, 500);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  const loadMajors = useCallback(
-    async (param: AllMajorFilterModel) => {
-      setIsLoading(true);
-      try {
-        const response = await getAllMajorService({
-          search: searchDebounce,
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          pageSize: 30,
-          ...param,
-        });
-
-        if (response) {
-          setAllMajorData(response);
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading majors");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [searchDebounce, currentPage]
-  );
+  const searchDebounce = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    loadMajors({});
-  }, [loadMajors]);
+    dispatch(
+      fetchAllMajorService({
+        search: searchDebounce,
+        status: Constants.ACTIVE,
+        pageNo: currentPage,
+        pageSize: 30,
+      })
+    );
+  }, [dispatch, searchDebounce, currentPage]);
+
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
+  };
 
   const handleOpenAddModal = () => {
     setModalMode("add");
@@ -96,126 +84,58 @@ export default function ManageMajorPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (majorData: MajorModel) => {
-    const formData: MajorFormData = {
-      id: majorData.id,
-      name: majorData.name,
-      code: majorData.code,
-      departmentId: majorData.department.id,
+  const handleOpenEditModal = (major: MajorModel) => {
+    setInitialData({
+      id: major.id,
+      name: major.name,
+      code: major.code,
+      departmentId: major.department.id,
       status: Constants.ACTIVE,
-    };
+    });
     setModalMode("edit");
-    setInitialData(formData);
     setIsModalOpen(true);
   };
 
   async function handleSubmit(formData: MajorFormData) {
-    setIsSubmitting(true);
+    const payload = {
+      code: formData.code,
+      name: formData.name,
+      departmentId: formData.departmentId,
+      status: formData.status,
+    };
 
-    try {
-      const majorData = {
-        code: formData.code,
-        name: formData.name.trim(),
-        departmentId: formData.departmentId,
-        status: formData.status,
-      };
-
-      let response: MajorModel | null = null;
-
-      if (modalMode === "add") {
-        try {
-          response = await createMajorService(majorData);
-
-          if (response) {
-            setAllMajorData((prevData) => {
-              if (!prevData) return null;
-              const updatedContent = response
-                ? [response, ...prevData.content]
-                : [...prevData.content];
-
-              return {
-                ...prevData,
-                content: updatedContent,
-                totalElements: prevData.totalElements + 1,
-              } as AllMajorModel;
-            });
-
-            toast.success("Major added successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to add major");
-        }
-      } else if (modalMode === "edit" && formData.id) {
-        try {
-          response = await updateMajorService(formData.id, majorData);
-          if (response) {
-            setAllMajorData((prevData) => {
-              if (!prevData) return null;
-
-              const updatedContent = prevData.content.map((dept) =>
-                dept.id === formData.id && response ? response : dept
-              );
-
-              return {
-                ...prevData,
-                content: updatedContent,
-              } as AllMajorModel;
-            });
-
-            toast.success("Major updated successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to update major");
-        }
+    if (modalMode === "add") {
+      const result = await dispatch(createMajorService(payload));
+      if (createMajorService.fulfilled.match(result)) {
+        toast.success("Major added successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to add major");
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
+    } else if (modalMode === "edit" && formData.id) {
+      const result = await dispatch(updateMajorService({ id: formData.id, data: payload }));
+      if (updateMajorService.fulfilled.match(result)) {
+        toast.success("Major updated successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to update major");
+      }
     }
   }
 
   async function handleDeleteMajor() {
-    if (!majors) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await deletedMajorService(majors.id);
-
-      if (response) {
-        setAllMajorData((prevData) => {
-          if (!prevData) return null;
-
-          const updatedContent = prevData.content.filter(
-            (item) => item.id !== majors.id
-          );
-
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
-
-        toast.success("Major deleted successfully");
-        if (
-          allMajorData &&
-          allMajorData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        }
-      } else {
-        toast.error("Failed to delete major");
+    if (!deletingMajor) return;
+    const result = await dispatch(deleteMajorService(deletingMajor.id));
+    if (deleteMajorService.fulfilled.match(result)) {
+      toast.success("Major deleted successfully");
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the major");
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
+    } else {
+      toast.error("Failed to delete major");
     }
+    setIsDeleteDialogOpen(false);
+    setDeletingMajor(null);
   }
 
   const columns: TableColumn<MajorModel>[] = [
@@ -223,53 +143,32 @@ export default function ManageMajorPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => {
-        const page = currentPage ?? 1;
-        return (page - 1) * 30 + index + 1;
-      },
+      render: (_, index) => (currentPage - 1) * 30 + index + 1,
     },
-    {
-      key: "code",
-      label: "Code",
-      render: (major) => major.code,
-    },
-    {
-      key: "name",
-      label: "Name",
-      render: (major) => major.name,
-    },
-    {
-      key: "department",
-      label: "Department",
-      render: (major) => major.department.name,
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      render: (major) => DateTimeFormatter(major.createdAt),
-    },
+    { key: "code", label: "Code", render: (m) => m.code },
+    { key: "name", label: "Name", render: (m) => m.name },
+    { key: "department", label: "Department", render: (m) => m.department.name },
+    { key: "createdAt", label: "Created At", render: (m) => DateTimeFormatter(m.createdAt) },
     {
       key: "actions",
       label: "Actions",
-      render: (major) => (
+      render: (m) => (
         <div className="flex justify-start space-x-2">
           <Button
-            onClick={() => handleOpenEditModal(major)}
+            onClick={() => handleOpenEditModal(m)}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-gray-200"
+            disabled={operations.isDeleting}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            onClick={() => {
-              setMajors(major);
-              setIsDeleteDialogOpen(true);
-            }}
+            onClick={() => { setDeletingMajor(m); setIsDeleteDialogOpen(true); }}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={isSubmitting}
+            disabled={operations.isDeleting}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -289,30 +188,28 @@ export default function ManageMajorPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Majors",
-          totalCount: allMajorData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search major...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
           onButtonClick: handleOpenAddModal,
           filters: [],
-          onClearAll: () => {
-            setSearchQuery("");
-          },
+          onClearAll: () => dispatch(setSearchFilter("")),
         }}
         essentialFilterIds={[]}
       />
 
       <DataTable
-        data={allMajorData?.content ?? null}
+        data={data?.content ?? null}
         columns={columns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allMajorData?.totalPages ?? 0}
-        totalElements={allMajorData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         emptyMessage="No majors found"
-        getRowKey={(major) => major.id}
+        getRowKey={(m) => m.id}
       />
 
       <MajorFormModal
@@ -321,16 +218,16 @@ export default function ManageMajorPage() {
         onSubmit={handleSubmit}
         initialData={initialData}
         mode={modalMode}
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isCreating || operations.isUpdating}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        onClose={() => { setIsDeleteDialogOpen(false); setDeletingMajor(null); }}
         onDelete={handleDeleteMajor}
         title="Delete Major"
         description="Are you sure you want to delete the major:"
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

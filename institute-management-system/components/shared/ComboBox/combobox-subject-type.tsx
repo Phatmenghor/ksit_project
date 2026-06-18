@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { StatusEnum } from "@/constants/constant";
 import { SubjectModel } from "@/model/master-data/subject/all-subject-model";
-import { getAllSubjectService } from "@/service/master-data/subject.service";
+import { useAppDispatch } from "@/store";
+import { fetchSubjectComboboxService } from "@/features/master-data/store/thunks/subject-thunks";
 
 interface ComboboxSelectSubjectTypeProps {
   dataSelect: SubjectModel | null;
@@ -20,10 +22,19 @@ export function ComboboxSelectSubjectType({
   label,
   placeholder = "Select a subject...",
 }: ComboboxSelectSubjectTypeProps) {
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
+
+  const fetcher = useCallback(
+    ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
+      dispatch(fetchSubjectComboboxService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
+    [dispatch]
+  );
+
   const controller = useInfiniteComboboxData<SubjectModel>({
-    fetcher: ({ search, pageNo, pageSize }) =>
-      getAllSubjectService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE }),
+    fetcher,
     getId: (item) => item.id,
+    enabled: open,
   });
 
   return (
@@ -38,6 +49,8 @@ export function ComboboxSelectSubjectType({
       searchPlaceholder="Search subject..."
       emptyMessage="No subject found."
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     />
   );
 }

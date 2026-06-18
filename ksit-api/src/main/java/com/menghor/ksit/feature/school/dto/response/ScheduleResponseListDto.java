@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.menghor.ksit.enumations.DayOfWeek;
 import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.enumations.YearLevelEnum;
-import com.menghor.ksit.feature.auth.dto.resposne.StaffUserListResponseDto;
+import com.menghor.ksit.feature.auth.dto.resposne.UserSummaryDto;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,7 +22,7 @@ public class ScheduleResponseListDto {
     private Status status;
     private Long classId;
     private YearLevelEnum yearLevel;
-    private StaffUserListResponseDto teacher;
+    private UserSummaryDto teacher;
     private Long courseId;
     private Long roomId;
     private Long semesterId;

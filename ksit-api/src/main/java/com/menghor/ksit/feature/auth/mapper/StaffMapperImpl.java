@@ -4,6 +4,7 @@ import com.menghor.ksit.enumations.RoleEnum;
 import com.menghor.ksit.feature.auth.dto.resposne.StaffUserAllResponseDto;
 import com.menghor.ksit.feature.auth.dto.resposne.StaffUserListResponseDto;
 import com.menghor.ksit.feature.auth.dto.resposne.StaffUserResponseDto;
+import com.menghor.ksit.feature.auth.dto.resposne.UserSummaryDto;
 import com.menghor.ksit.feature.auth.models.Role;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.master.mapper.DepartmentMapper;
@@ -207,6 +208,21 @@ public class StaffMapperImpl implements StaffMapper {
         return entities.stream()
                 .map(this::toStaffUserMapDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserSummaryDto toUserSummaryDto(UserEntity user) {
+        if (user == null) return null;
+        return UserSummaryDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .staffId(user.getStaffId())
+                .khmerFirstName(user.getKhmerFirstName())
+                .khmerLastName(user.getKhmerLastName())
+                .englishFirstName(user.getEnglishFirstName())
+                .englishLastName(user.getEnglishLastName())
+                .profileUrl(user.getProfileUrl())
+                .build();
     }
 
     @Override

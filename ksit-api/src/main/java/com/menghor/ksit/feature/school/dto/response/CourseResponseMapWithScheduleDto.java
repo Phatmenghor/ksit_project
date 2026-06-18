@@ -18,11 +18,7 @@ public class CourseResponseMapWithScheduleDto {
     private Integer execute;
     private Integer apply;
     private Integer totalHour;
-    private String description;
-    private String purpose;
-    private String expectedOutcome;
     private Status status;
-
     private DepartmentResponseDto department;
     private SubjectResponseDto subject;
     private LocalDateTime createdAt;

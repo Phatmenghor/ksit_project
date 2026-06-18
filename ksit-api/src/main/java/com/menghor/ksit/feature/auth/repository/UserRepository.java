@@ -30,11 +30,12 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
     @Query("SELECT u FROM UserEntity u WHERE u.identifyNumber LIKE :pattern")
     List<UserEntity> findByIdentifyNumberLike(@Param("pattern") String pattern);
 
-    List<UserEntity> findByClassesId(Long classesId);
+    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.department LEFT JOIN FETCH u.classes c LEFT JOIN FETCH c.major WHERE u.classes.id = :classesId")
+    List<UserEntity> findByClassesId(@Param("classesId") Long classesId);
 
     @Query("SELECT COUNT(u) FROM UserEntity u JOIN u.roles r WHERE r.name = :role AND u.status = :status")
     long countActiveUsersByRole(@Param("role") RoleEnum role, @Param("status") Status status);
 
-    @EntityGraph(attributePaths = {"department"})
+    @EntityGraph(attributePaths = {"roles", "department", "classes", "classes.major"})
     Page<UserEntity> findAll(org.springframework.data.jpa.domain.Specification<UserEntity> spec, Pageable pageable);
 }

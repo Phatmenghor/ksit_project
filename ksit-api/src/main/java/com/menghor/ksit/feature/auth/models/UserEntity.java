@@ -64,11 +64,11 @@ public class UserEntity extends BaseEntity {
     @Column(name = "identify_number")
     private String identifyNumber; // National ID or other identification number
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private DepartmentEntity department;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
     private ClassEntity classes;
 

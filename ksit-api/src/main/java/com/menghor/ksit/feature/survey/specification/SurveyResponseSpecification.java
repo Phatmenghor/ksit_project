@@ -7,6 +7,7 @@ import com.menghor.ksit.feature.survey.model.SurveyResponseEntity;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class SurveyResponseSpecification {
             List<Predicate> predicates = new ArrayList<>();
 
             // Search filter - student name, ID, or course name
-            if (filterDto.getSearch() != null && !filterDto.getSearch().trim().isEmpty()) {
+            if (StringUtils.hasText(filterDto.getSearch())) {
                 String searchTerm = "%" + filterDto.getSearch().toLowerCase() + "%";
                 Predicate searchPredicate = criteriaBuilder.or(
                         criteriaBuilder.like(

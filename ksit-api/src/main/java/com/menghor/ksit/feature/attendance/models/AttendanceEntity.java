@@ -42,11 +42,11 @@ public class AttendanceEntity extends BaseEntity {
     @Column(name = "finalization_status")
     private AttendanceFinalizationStatus finalizationStatus = AttendanceFinalizationStatus.DRAFT;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id")
     private UserEntity student;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attendance_session_id")
     private AttendanceSessionEntity attendanceSession;
 }

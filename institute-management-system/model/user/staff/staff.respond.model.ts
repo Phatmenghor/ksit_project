@@ -82,6 +82,17 @@ interface Department {
   createdAt: string;
 }
 
+export interface UserSummaryModel {
+  id: number;
+  username: string;
+  staffId: string;
+  khmerFirstName: string;
+  khmerLastName: string;
+  englishFirstName: string;
+  englishLastName: string;
+  profileUrl: string;
+}
+
 interface TeachersProfessionalRank {
   id: number;
   typeOfProfessionalRank: string;

@@ -67,4 +67,10 @@ public interface SurveyResponseRepository extends JpaRepository<SurveyResponseEn
      */
     @Query("SELECT sr FROM SurveyResponseEntity sr WHERE sr.schedule.id = :scheduleId")
     List<SurveyResponseEntity> findByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    /**
+     * Batch fetch all responses for a user across multiple schedules — eliminates N+1 in addSurveyStatusToSchedules
+     */
+    @Query("SELECT sr FROM SurveyResponseEntity sr WHERE sr.user.id = :userId AND sr.schedule.id IN :scheduleIds")
+    List<SurveyResponseEntity> findByUserIdAndScheduleIdIn(@Param("userId") Long userId, @Param("scheduleIds") List<Long> scheduleIds);
 }

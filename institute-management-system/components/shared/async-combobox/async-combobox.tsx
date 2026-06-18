@@ -36,8 +36,13 @@ export function AsyncCombobox<T>({
   error,
   disabled = false,
   className,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: AsyncComboboxProps<T>) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setInternalOpen;
+
   const { data: rawData, loading, lastPage, searchTerm, setSearchTerm, sentinelRef } = controller;
   const data = rawData.filter((item) => item != null);
 

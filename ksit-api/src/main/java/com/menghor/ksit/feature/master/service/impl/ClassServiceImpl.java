@@ -211,7 +211,7 @@ public class ClassServiceImpl implements ClassService {
      * Helper method to find a class by ID or throw NotFoundException
      */
     private ClassEntity findClassById(Long id) {
-        return classRepository.findById(id)
+        return classRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> {
                     log.error("Class not found with ID: {}", id);
                     return new NotFoundException("Class id " + id + " not found. Please try again.");

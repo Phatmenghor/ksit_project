@@ -40,4 +40,6 @@ export interface AsyncComboboxProps<T> {
   error?: string;
   disabled?: boolean;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }

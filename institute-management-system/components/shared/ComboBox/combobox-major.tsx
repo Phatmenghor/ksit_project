@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { StatusEnum } from "@/constants/constant";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
-import { getAllMajorService } from "@/service/master-data/major.service";
+import { useAppDispatch } from "@/store";
+import { fetchMajorComboboxService } from "@/features/master-data/store/thunks/major-thunks";
 
 interface ComboboxSelectMajorProps {
   dataSelect: MajorModel | null;
@@ -20,10 +22,19 @@ export function ComboboxSelectMajor({
   label,
   placeholder = "Select a major...",
 }: ComboboxSelectMajorProps) {
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
+
+  const fetcher = useCallback(
+    ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
+      dispatch(fetchMajorComboboxService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
+    [dispatch]
+  );
+
   const controller = useInfiniteComboboxData<MajorModel>({
-    fetcher: ({ search, pageNo, pageSize }) =>
-      getAllMajorService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE }),
+    fetcher,
     getId: (item) => item.id,
+    enabled: open,
   });
 
   return (
@@ -38,6 +49,8 @@ export function ComboboxSelectMajor({
       searchPlaceholder="Search major..."
       emptyMessage="No major found."
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     />
   );
 }

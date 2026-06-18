@@ -3,10 +3,9 @@ import { ClassModel } from "../master-data/class/all-class-model";
 import { CourseModel } from "../master-data/course/all-course-model";
 import { RoomModel } from "../master-data/room/all-room-model";
 import { SemesterModel } from "../master-data/semester/semester-model";
-import { StaffModel } from "../user/staff/staff.respond.model";
 
 export interface AllScheduleodel {
-  content: RoomModel[];
+  content: ScheduleModel[];
   pageNo: number;
   pageSize: number;
   totalElements: number;
@@ -54,21 +53,12 @@ export interface Major {
 export interface Teacher {
   id: number;
   username: string;
-  email: string;
-  roles: string[];
-  status: string;
-  department: any;
-  khmerFirstName: any;
-  profileUrl: any;
-  khmerLastName: any;
-  englishFirstName: any;
-  englishLastName: any;
-  gender: any;
-  dateOfBirth: any;
-  phoneNumber: any;
-  identifyNumber: any;
-  staffId: any;
-  createdAt: string;
+  staffId: string;
+  khmerFirstName: string;
+  khmerLastName: string;
+  englishFirstName: string;
+  englishLastName: string;
+  profileUrl: string;
 }
 
 export interface Course {
@@ -81,9 +71,6 @@ export interface Course {
   execute: number;
   apply: number;
   totalHour: number;
-  description: string;
-  purpose: string;
-  expectedOutcome: string;
   status: string;
   department: Department;
   subject: Subject;

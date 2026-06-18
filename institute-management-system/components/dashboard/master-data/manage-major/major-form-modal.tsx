@@ -56,7 +56,8 @@ export function MajorFormModal({ isOpen, onClose, onSubmit, initialData, mode, i
     }
   }, [isOpen, initialData, mode]);
 
-  const handleDepartmentChange = (dept: DepartmentModel) => {
+  const handleDepartmentChange = (dept: DepartmentModel | null) => {
+    if (!dept) return;
     setSelectedDepartment(dept);
     form.setValue("departmentId", dept.id as number, { shouldValidate: true });
   };

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { StatusEnum } from "@/constants/constant";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
-import { getAllClassService } from "@/service/master-data/class.service";
+import { useAppDispatch } from "@/store";
+import { fetchClassComboboxService } from "@/features/master-data/store/thunks/class-thunks";
 
 interface ComboboxSelectClassProps {
   dataSelect: ClassModel | null;
@@ -20,10 +22,19 @@ export function ComboboxSelectClass({
   label,
   placeholder = "Select a class...",
 }: ComboboxSelectClassProps) {
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
+
+  const fetcher = useCallback(
+    ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
+      dispatch(fetchClassComboboxService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
+    [dispatch]
+  );
+
   const controller = useInfiniteComboboxData<ClassModel>({
-    fetcher: ({ search, pageNo, pageSize }) =>
-      getAllClassService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE }),
+    fetcher,
     getId: (item) => item?.id,
+    enabled: open,
   });
 
   return (
@@ -38,6 +49,8 @@ export function ComboboxSelectClass({
       searchPlaceholder="Search class..."
       emptyMessage="No class found."
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     />
   );
 }

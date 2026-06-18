@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { StatusEnum } from "@/constants/constant";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
-import { getAllScheduleService } from "@/service/schedule/schedule.service";
+import { useAppDispatch } from "@/store";
+import { fetchScheduleComboboxService } from "@/features/school/store/thunks/schedule-thunks";
 import { formatTime12h } from "@/utils/map-helper/schedule";
 
 interface ComboboxSelectScheduleProps {
@@ -24,10 +26,19 @@ export function ComboboxSelectSchedule({
   label,
   placeholder = "Select a schedule...",
 }: ComboboxSelectScheduleProps) {
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
+
+  const fetcher = useCallback(
+    ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
+      dispatch(fetchScheduleComboboxService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
+    [dispatch]
+  );
+
   const controller = useInfiniteComboboxData<ScheduleModel>({
-    fetcher: ({ search, pageNo, pageSize }) =>
-      getAllScheduleService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE }),
+    fetcher,
     getId: (item) => item.id,
+    enabled: open,
   });
 
   return (
@@ -44,6 +55,8 @@ export function ComboboxSelectSchedule({
       searchPlaceholder="Search schedule..."
       emptyMessage="No schedule found."
       disabled={disabled}
+      open={open}
+      onOpenChange={setOpen}
     />
   );
 }

@@ -3,6 +3,7 @@ package com.menghor.ksit.feature.auth.mapper;
 import com.menghor.ksit.feature.auth.dto.resposne.StaffUserAllResponseDto;
 import com.menghor.ksit.feature.auth.dto.resposne.StaffUserListResponseDto;
 import com.menghor.ksit.feature.auth.dto.resposne.StaffUserResponseDto;
+import com.menghor.ksit.feature.auth.dto.resposne.UserSummaryDto;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import org.springframework.data.domain.Page;
 
@@ -20,9 +21,15 @@ public interface StaffMapper {
     StaffUserResponseDto toStaffUserDto(UserEntity user);
 
     /**
-     * Convert UserEntity to StaffUserResponseDto
+     * Convert UserEntity to StaffUserListResponseDto
      */
     StaffUserListResponseDto toStaffUserMapDto(UserEntity user);
+
+    /**
+     * Convert UserEntity to UserSummaryDto — only name fields, no roles/department.
+     * Used as nested reference in listing DTOs to avoid N+1.
+     */
+    UserSummaryDto toUserSummaryDto(UserEntity user);
 
     /**
      * Convert list of UserEntity to list of StaffUserResponseDto

@@ -1,219 +1,116 @@
 "use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { useCallback, useEffect, useState } from "react";
-import { RoomModel } from "@/model/master-data/room/all-room-model";
-import { Constants } from "@/constants/text-string";
-import { toast } from "sonner";
+import { SubjectModel } from "@/model/master-data/subject/all-subject-model";
 import { RoomFormData as SubjectFormData } from "@/components/dashboard/master-data/manage-room/room-form-model";
-import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import {
-  AllSubjectModel,
-  SubjectModel,
-} from "@/model/master-data/subject/all-subject-model";
-import { AllSubjectFilterModel } from "@/model/master-data/subject/type-subject-mode";
-import {
-  createSubjectService,
-  deletedSubjectService,
-  getAllSubjectService,
-  updateSubjectService,
-} from "@/service/master-data/subject.service";
 import { SubjectModal } from "@/components/dashboard/master-data/manage-subject/subject-form-model";
-import { useDebounce } from "@/utils/debounce/debounce";
+import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { toast } from "sonner";
+import { Constants } from "@/constants/text-string";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectSubjectData,
+  selectSubjectIsLoading,
+  selectSubjectOperations,
+  selectSubjectFilters,
+} from "@/features/master-data/store/selectors/subject-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  resetState,
+} from "@/features/master-data/store/slice/subject-slice";
+import {
+  fetchAllSubjectService,
+  createSubjectService,
+  updateSubjectService,
+  deleteSubjectService,
+} from "@/features/master-data/store/thunks/subject-thunks";
+import { useDebounce } from "@/utils/debounce/debounce";
 
 export default function ManageSubjectPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectSubjectData);
+  const isLoading = useAppSelector(selectSubjectIsLoading);
+  const operations = useAppSelector(selectSubjectOperations);
+  const filters = useAppSelector(selectSubjectFilters);
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [subject, setSubject] = useState<SubjectModel | null>(null);
-  const [allSubjectData, setAllSubjectData] = useState<AllSubjectModel | null>(
-    null
-  );
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [initialData, setInitialData] = useState<SubjectFormData | undefined>(
-    undefined
-  );
+  const [deletingSubject, setDeletingSubject] = useState<SubjectModel | null>(null);
+  const [initialData, setInitialData] = useState<SubjectFormData | undefined>(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } =
-    usePagination({
-      baseRoute: ROUTE.MASTER_DATA.MANAGE_SUBJECT,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.MASTER_DATA.MANAGE_SUBJECT,
+    defaultPageSize: 10,
+  });
 
-  const searchDebounce = useDebounce(searchQuery, 500);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  const loadSubjects = useCallback(
-    async (param: AllSubjectFilterModel) => {
-      setIsLoading(true);
-
-      try {
-        const response = await getAllSubjectService({
-          search: searchDebounce,
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          pageSize: 30,
-          ...param,
-        });
-
-        if (response) {
-          setAllSubjectData(response);
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading subject");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [searchDebounce, currentPage]
-  );
+  const searchDebounce = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    loadSubjects({});
-  }, [loadSubjects]);
+    dispatch(
+      fetchAllSubjectService({
+        search: searchDebounce,
+        status: Constants.ACTIVE,
+        pageNo: currentPage,
+        pageSize: 30,
+      })
+    );
+  }, [dispatch, searchDebounce, currentPage]);
 
-  const handleOpenAddModal = () => {
-    setModalMode("add");
-    setInitialData(undefined);
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
 
-  const handleOpenEditModal = (subjectData: SubjectModel) => {
-    const formData: SubjectFormData = {
-      id: subjectData.id,
-      name: subjectData.name,
-      status: subjectData.status,
-    };
-
-    setModalMode("edit");
-    setInitialData(formData);
-    setIsModalOpen(true);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
   async function handleSubmit(formData: SubjectFormData) {
-    setIsSubmitting(true);
+    const payload = { name: formData.name, status: formData.status };
 
-    try {
-      const subjectData = {
-        name: formData.name.trim(),
-        status: formData.status,
-      };
-
-      let response: RoomModel | null = null;
-
-      if (modalMode === "add") {
-        try {
-          response = await createSubjectService(subjectData);
-
-          if (response) {
-            setAllSubjectData((prevData) => {
-              if (!prevData) return null;
-              const updatedContent = response
-                ? [response, ...prevData.content]
-                : [...prevData.content];
-
-              return {
-                ...prevData,
-                content: updatedContent,
-                totalElements: prevData.totalElements + 1,
-              } as AllSubjectModel;
-            });
-
-            toast.success("Subject added successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to add subject");
-        }
-      } else if (modalMode === "edit" && formData.id) {
-        try {
-          response = await updateSubjectService(formData.id, subjectData);
-          if (response) {
-            setAllSubjectData((prevData) => {
-              if (!prevData) return null;
-
-              const updatedContent = prevData.content.map((s) =>
-                s.id === formData.id && response ? response : s
-              );
-
-              return {
-                ...prevData,
-                content: updatedContent,
-              } as AllSubjectModel;
-            });
-
-            toast.success("Subject updated successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to update subject");
-        }
+    if (modalMode === "add") {
+      const result = await dispatch(createSubjectService(payload));
+      if (createSubjectService.fulfilled.match(result)) {
+        toast.success("Subject added successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to add subject");
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
+    } else if (modalMode === "edit" && formData.id) {
+      const result = await dispatch(updateSubjectService({ id: formData.id, data: payload }));
+      if (updateSubjectService.fulfilled.match(result)) {
+        toast.success("Subject updated successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to update subject");
+      }
     }
   }
 
   async function handleDeleteSubject() {
-    if (!subject) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await deletedSubjectService(subject.id);
-
-      if (response) {
-        setAllSubjectData((prevData) => {
-          if (!prevData) return null;
-
-          const updatedContent = prevData.content.filter(
-            (item) => item.id !== subject.id
-          );
-
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
-
-        toast.success("Subject deleted successfully");
-        if (
-          allSubjectData &&
-          allSubjectData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        }
-      } else {
-        toast.error("Failed to delete subject");
+    if (!deletingSubject) return;
+    const result = await dispatch(deleteSubjectService(deletingSubject.id));
+    if (deleteSubjectService.fulfilled.match(result)) {
+      toast.success("Subject deleted successfully");
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the subject.");
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
+    } else {
+      toast.error("Failed to delete subject");
     }
+    setIsDeleteDialogOpen(false);
+    setDeletingSubject(null);
   }
 
   const columns: TableColumn<SubjectModel>[] = [
@@ -221,44 +118,34 @@ export default function ManageSubjectPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => {
-        const page = currentPage ?? 1;
-        return (page - 1) * 30 + index + 1;
-      },
+      render: (_, index) => (currentPage - 1) * 30 + index + 1,
     },
-    {
-      key: "name",
-      label: "Name",
-      render: (s) => s.name,
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      render: (s) => DateTimeFormatter(s.createdAt),
-    },
+    { key: "name", label: "Name", render: (s) => s.name },
+    { key: "createdAt", label: "Created At", render: (s) => DateTimeFormatter(s.createdAt) },
     {
       key: "actions",
       label: "Actions",
       render: (s) => (
         <div className="flex justify-start space-x-2">
           <Button
-            onClick={() => handleOpenEditModal(s)}
+            onClick={() => {
+              setInitialData({ id: s.id, name: s.name, status: s.status });
+              setModalMode("edit");
+              setIsModalOpen(true);
+            }}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-            disabled={isSubmitting}
+            disabled={operations.isDeleting}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            onClick={() => {
-              setSubject(s);
-              setIsDeleteDialogOpen(true);
-            }}
+            onClick={() => { setDeletingSubject(s); setIsDeleteDialogOpen(true); }}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={isSubmitting}
+            disabled={operations.isDeleting}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -278,28 +165,26 @@ export default function ManageSubjectPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Subjects",
-          totalCount: allSubjectData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search subject...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
-          onButtonClick: handleOpenAddModal,
+          onButtonClick: () => { setModalMode("add"); setInitialData(undefined); setIsModalOpen(true); },
           filters: [],
-          onClearAll: () => {
-            setSearchQuery("");
-          },
+          onClearAll: () => dispatch(setSearchFilter("")),
         }}
         essentialFilterIds={[]}
       />
 
       <DataTable
-        data={allSubjectData?.content ?? null}
+        data={data?.content ?? null}
         columns={columns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allSubjectData?.totalPages ?? 0}
-        totalElements={allSubjectData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         emptyMessage="No subjects found"
         getRowKey={(s) => s.id}
       />
@@ -310,16 +195,16 @@ export default function ManageSubjectPage() {
         initialData={initialData}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isCreating || operations.isUpdating}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        onClose={() => { setIsDeleteDialogOpen(false); setDeletingSubject(null); }}
         onDelete={handleDeleteSubject}
         title="Delete Subject"
         description="Are you sure you want to delete the subject:"
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

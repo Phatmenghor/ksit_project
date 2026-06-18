@@ -1,95 +1,82 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Pencil, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { useCallback, useEffect, useState } from "react";
-import {
-  AllRoomModel,
-  RoomModel,
-} from "@/model/master-data/room/all-room-model";
-import { AllRoomFilterModel } from "@/model/master-data/room/type-room-model";
-import {
-  createRoomService,
-  deletedRoomService,
-  getAllRoomService,
-  updateRoomService,
-} from "@/service/master-data/room.service";
-import { Constants } from "@/constants/text-string";
-import { toast } from "sonner";
+import { RoomModel } from "@/model/master-data/room/all-room-model";
 import {
   RoomFormData,
   RoomModal,
 } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { toast } from "sonner";
+import { Constants } from "@/constants/text-string";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectRoomData,
+  selectRoomIsLoading,
+  selectRoomOperations,
+  selectRoomFilters,
+} from "@/features/master-data/store/selectors/room-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  resetState,
+} from "@/features/master-data/store/slice/room-slice";
+import {
+  fetchAllRoomService,
+  createRoomService,
+  updateRoomService,
+  deleteRoomService,
+} from "@/features/master-data/store/thunks/room-thunks";
+import { useDebounce } from "@/utils/debounce/debounce";
 
 export default function ManageRoomPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectRoomData);
+  const isLoading = useAppSelector(selectRoomIsLoading);
+  const operations = useAppSelector(selectRoomOperations);
+  const filters = useAppSelector(selectRoomFilters);
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [room, setRoom] = useState<RoomModel | null>(null);
-  const [allRoomData, setAllRoomData] = useState<AllRoomModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [initialData, setInitialData] = useState<RoomFormData | undefined>(
-    undefined
-  );
+  const [deletingRoom, setDeletingRoom] = useState<RoomModel | null>(null);
+  const [initialData, setInitialData] = useState<RoomFormData | undefined>(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } =
-    usePagination({
-      baseRoute: ROUTE.MASTER_DATA.MANAGE_ROOM,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.MASTER_DATA.MANAGE_ROOM,
+    defaultPageSize: 10,
+  });
 
-  const searchDebounceQuery = useDebounce(searchQuery, 500);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  const loadRooms = useCallback(
-    async (param: AllRoomFilterModel) => {
-      setIsLoading(true);
-
-      try {
-        const response = await getAllRoomService({
-          search: searchDebounceQuery,
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          pageSize: 30,
-          ...param,
-        });
-
-        if (response) {
-          setAllRoomData(response);
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading rooms");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [searchDebounceQuery, currentPage]
-  );
+  const searchDebounce = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    loadRooms({});
-  }, [loadRooms]);
+    dispatch(
+      fetchAllRoomService({
+        search: searchDebounce,
+        status: Constants.ACTIVE,
+        pageNo: currentPage,
+        pageSize: 30,
+      })
+    );
+  }, [dispatch, searchDebounce, currentPage]);
+
+  useEffect(() => {
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
+  };
 
   const handleOpenAddModal = () => {
     setModalMode("add");
@@ -97,125 +84,47 @@ export default function ManageRoomPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (roomData: RoomModel) => {
-    const formData: RoomFormData = {
-      id: roomData.id,
-      name: roomData.name,
-      status: roomData.status,
-    };
-
+  const handleOpenEditModal = (room: RoomModel) => {
+    setInitialData({ id: room.id, name: room.name, status: room.status });
     setModalMode("edit");
-    setInitialData(formData);
     setIsModalOpen(true);
   };
 
   async function handleSubmit(formData: RoomFormData) {
-    setIsSubmitting(true);
+    const payload = { name: formData.name, status: formData.status };
 
-    try {
-      const roomData = {
-        name: formData.name.trim(),
-        status: formData.status,
-      };
-
-      let response: RoomModel | null = null;
-
-      if (modalMode === "add") {
-        try {
-          response = await createRoomService(roomData);
-
-          if (response) {
-            setAllRoomData((prevData) => {
-              if (!prevData) return null;
-
-              const updatedContent = response
-                ? [response, ...prevData.content]
-                : [...prevData.content];
-
-              return {
-                ...prevData,
-                content: updatedContent,
-                totalElements: prevData.totalElements + 1,
-              } as AllRoomModel;
-            });
-
-            toast.success("Room added successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to add room");
-        }
-      } else if (modalMode === "edit" && formData.id) {
-        try {
-          response = await updateRoomService(formData.id, roomData);
-
-          if (response) {
-            setAllRoomData((prevData) => {
-              if (!prevData) return null;
-
-              const updatedContent = prevData.content.map((r) =>
-                r.id === formData.id && response ? response : r
-              );
-
-              return {
-                ...prevData,
-                content: updatedContent,
-              } as AllRoomModel;
-            });
-
-            toast.success("Room updated successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to update room");
-        }
+    if (modalMode === "add") {
+      const result = await dispatch(createRoomService(payload));
+      if (createRoomService.fulfilled.match(result)) {
+        toast.success("Room added successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to add room");
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
+    } else if (modalMode === "edit" && formData.id) {
+      const result = await dispatch(updateRoomService({ id: formData.id, data: payload }));
+      if (updateRoomService.fulfilled.match(result)) {
+        toast.success("Room updated successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to update room");
+      }
     }
   }
 
   async function handleDeleteRoom() {
-    if (!room) return;
-    setIsSubmitting(true);
-
-    try {
-      const response = await deletedRoomService(room.id);
-
-      if (response) {
-        setAllRoomData((prevData) => {
-          if (!prevData) return null;
-
-          const updatedContent = prevData.content.filter(
-            (item) => item.id !== room.id
-          );
-
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
-
-        toast.success("Room deleted successfully");
-        if (
-          allRoomData &&
-          allRoomData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        }
-      } else {
-        toast.error("Failed to delete Room");
+    if (!deletingRoom) return;
+    const result = await dispatch(deleteRoomService(deletingRoom.id));
+    if (deleteRoomService.fulfilled.match(result)) {
+      toast.success("Room deleted successfully");
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the Room");
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
+    } else {
+      toast.error("Failed to delete room");
     }
+    setIsDeleteDialogOpen(false);
+    setDeletingRoom(null);
   }
 
   const columns: TableColumn<RoomModel>[] = [
@@ -223,21 +132,10 @@ export default function ManageRoomPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => {
-        const page = currentPage ?? 1;
-        return (page - 1) * 30 + index + 1;
-      },
+      render: (_, index) => (currentPage - 1) * 30 + index + 1,
     },
-    {
-      key: "name",
-      label: "Name",
-      render: (r) => r?.name,
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      render: (r) => DateTimeFormatter(r.createdAt),
-    },
+    { key: "name", label: "Name", render: (r) => r.name },
+    { key: "createdAt", label: "Created At", render: (r) => DateTimeFormatter(r.createdAt) },
     {
       key: "actions",
       label: "Actions",
@@ -248,19 +146,16 @@ export default function ManageRoomPage() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-            disabled={isSubmitting}
+            disabled={operations.isDeleting}
           >
             <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            onClick={() => {
-              setRoom(r);
-              setIsDeleteDialogOpen(true);
-            }}
+            onClick={() => { setDeletingRoom(r); setIsDeleteDialogOpen(true); }}
             variant="ghost"
             size="icon"
             className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={isSubmitting}
+            disabled={operations.isDeleting}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -280,28 +175,26 @@ export default function ManageRoomPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Rooms",
-          totalCount: allRoomData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search room...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
           onButtonClick: handleOpenAddModal,
           filters: [],
-          onClearAll: () => {
-            setSearchQuery("");
-          },
+          onClearAll: () => dispatch(setSearchFilter("")),
         }}
         essentialFilterIds={[]}
       />
 
       <DataTable
-        data={allRoomData?.content ?? null}
+        data={data?.content ?? null}
         columns={columns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allRoomData?.totalPages ?? 0}
-        totalElements={allRoomData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         emptyMessage="No rooms found"
         getRowKey={(r) => r.id}
       />
@@ -312,16 +205,16 @@ export default function ManageRoomPage() {
         initialData={initialData}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isCreating || operations.isUpdating}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        onClose={() => { setIsDeleteDialogOpen(false); setDeletingRoom(null); }}
         onDelete={handleDeleteRoom}
         title="Delete Room"
         description="Are you sure you want to delete the room:"
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

@@ -4,27 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { RoleEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
-import {
-  deletedStaffService,
-  getAllStaffService,
-} from "@/service/user/user.service";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { useDebounce } from "@/utils/debounce/debounce";
-import {
-  AllStaffModel,
-  StaffModel,
-} from "@/model/user/staff/staff.respond.model";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { StaffModel } from "@/model/user/staff/staff.respond.model";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import ResetPasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
@@ -33,107 +26,77 @@ import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatEnumLabel } from "@/utils/general/format-enum-label";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectStaffData,
+  selectStaffIsLoading,
+  selectStaffOperations,
+  selectStaffFilters,
+} from "@/features/users/store/selectors/staff-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  resetState,
+} from "@/features/users/store/slice/staff-slice";
+import {
+  fetchAllStaffService,
+  deleteStaffService,
+} from "@/features/users/store/thunks/staff-thunks";
 
 export default function AdminsListPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<AllStaffModel | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] =
-    useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState<StaffModel | null>(null);
-  const [statusFilter, setStatusFilter] = useState("ACTIVE");
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectStaffData);
+  const isLoading = useAppSelector(selectStaffIsLoading);
+  const operations = useAppSelector(selectStaffOperations);
+  const filters = useAppSelector(selectStaffFilters);
 
-  const searchParams = useSearchParams();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState<StaffModel | null>(null);
+
   const router = useRouter();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.USERS.ADMIN.INDEX,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.USERS.ADMIN.INDEX,
+    defaultPageSize: 10,
+  });
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const searchDebounce = useDebounce(filters.search, 500);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    // Reset to page 1 when searching
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  // Then add this effect for initial URL setup
   useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await getAllStaffService({
+    dispatch(
+      fetchAllStaffService({
         roles: [RoleEnum.ADMIN],
-        search: debouncedSearchQuery,
+        search: searchDebounce,
         pageNo: currentPage,
         pageSize: 30,
-        status: statusFilter,
-      });
-
-      if (response) {
-        setData(response);
-
-        // Handle case where current page exceeds total pages
-        if (response.totalPages > 0 && currentPage > response.totalPages) {
-          updateUrlWithPage(response.totalPages);
-          return;
-        }
-      } else {
-        setData(null);
-      }
-    } catch (error) {
-      toast.error("An error occurred while loading admins");
-      setData(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [debouncedSearchQuery, currentPage, statusFilter, updateUrlWithPage]);
+        status: "ACTIVE",
+      })
+    );
+  }, [dispatch, searchDebounce, currentPage]);
 
   useEffect(() => {
-    loadData();
-  }, [currentPage]);
+    return () => { dispatch(resetState()); };
+  }, [dispatch]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
+  };
 
   async function handleDeleteAdmin() {
     if (!selectedAdmin) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await deletedStaffService(selectedAdmin.id);
-
-      if (response) {
-        toast.success(
-          `Admin ${selectedAdmin.username ?? ""} deleted successfully`
-        );
-
-        // After deletion, check if we need to go back a page
-        if (data && data.content.length === 1 && currentPage > 1) {
-          updateUrlWithPage(currentPage - 1);
-        } else {
-          await loadData();
-        }
-      } else {
-        toast.error("Failed to delete admin");
+    const result = await dispatch(deleteStaffService(selectedAdmin.id));
+    if (deleteStaffService.fulfilled.match(result)) {
+      toast.success(`Admin ${selectedAdmin.username ?? ""} deleted successfully`);
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the admin");
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
+    } else {
+      toast.error("Failed to delete admin");
     }
+    setIsDeleteDialogOpen(false);
+    setSelectedAdmin(null);
   }
 
   const columns: TableColumn<StaffModel>[] = [
@@ -141,7 +104,7 @@ export default function AdminsListPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, i) => getDisplayIndex(i),
+      render: (_, index) => (currentPage - 1) * 30 + index + 1,
     },
     {
       key: "profile",
@@ -161,11 +124,7 @@ export default function AdminsListPage() {
           "U";
         return (
           <Avatar className="h-8 w-8">
-            <AvatarImage
-              src={url}
-              alt={item.username}
-              className="object-cover"
-            />
+            <AvatarImage src={url} alt={item.username} className="object-cover" />
             <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
               {initials}
             </AvatarFallback>
@@ -176,7 +135,7 @@ export default function AdminsListPage() {
     {
       key: "username",
       label: "Username",
-      render: (admin) => admin.username.trim() || "---",
+      render: (admin) => admin.username || "---",
     },
     {
       key: "email",
@@ -187,8 +146,7 @@ export default function AdminsListPage() {
       key: "name",
       label: "Name",
       render: (admin) =>
-        `${admin.khmerFirstName || ""} ${admin.khmerLastName || ""}`.trim() ||
-        "---",
+        `${admin.khmerFirstName || ""} ${admin.khmerLastName || ""}`.trim() || "---",
     },
     {
       key: "gender",
@@ -199,7 +157,14 @@ export default function AdminsListPage() {
       key: "status",
       label: "Status",
       render: (admin) => (
-        <Badge variant="outline" className={admin.status === "ACTIVE" ? "border-green-500 text-green-700 bg-green-50" : "border-gray-400 text-gray-500"}>
+        <Badge
+          variant="outline"
+          className={
+            admin.status === "ACTIVE"
+              ? "border-green-500 text-green-700 bg-green-50"
+              : "border-gray-400 text-gray-500"
+          }
+        >
           {formatEnumLabel(admin.status)}
         </Badge>
       ),
@@ -219,15 +184,11 @@ export default function AdminsListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    router.push(
-                      `${ROUTE.USERS.ADMIN.ADMIN_VIEW(String(admin.id))}`
-                    );
-                  }}
+                  onClick={() => router.push(ROUTE.USERS.ADMIN.ADMIN_VIEW(String(admin.id)))}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -239,15 +200,11 @@ export default function AdminsListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() =>
-                    router.push(
-                      ROUTE.USERS.ADMIN.EDIT_ADMIN(String(admin.id))
-                    )
-                  }
+                  onClick={() => router.push(ROUTE.USERS.ADMIN.EDIT_ADMIN(String(admin.id)))}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -259,14 +216,11 @@ export default function AdminsListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    setSelectedAdmin(admin);
-                    setIsChangePasswordDialogOpen(true);
-                  }}
+                  onClick={() => { setSelectedAdmin(admin); setIsChangePasswordDialogOpen(true); }}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
@@ -278,14 +232,11 @@ export default function AdminsListPage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => {
-                    setSelectedAdmin(admin);
-                    setIsDeleteDialogOpen(true);
-                  }}
+                  onClick={() => { setSelectedAdmin(admin); setIsDeleteDialogOpen(true); }}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -310,15 +261,13 @@ export default function AdminsListPage() {
         config={{
           title: "Manage Admins",
           totalCount: data?.totalElements,
-          searchValue: searchQuery,
+          searchValue: filters.search,
           searchPlaceholder: "Search...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
           onButtonClick: () => router.push(ROUTE.USERS.ADMIN.ADD_ADMIN),
           filters: [],
-          onClearAll: () => {
-            setSearchQuery("");
-          },
+          onClearAll: () => dispatch(setSearchFilter("")),
         }}
         essentialFilterIds={[]}
       />
@@ -330,7 +279,7 @@ export default function AdminsListPage() {
         currentPage={currentPage}
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
-        onPageChange={handlePageChange}
+        onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
         emptyMessage="No admin found"
         getRowKey={(admin) => admin.id}
       />
@@ -338,20 +287,17 @@ export default function AdminsListPage() {
       <ResetPasswordModal
         isOpen={isChangePasswordDialogOpen}
         userName={selectedAdmin?.username}
-        onClose={() => {
-          setIsChangePasswordDialogOpen(false);
-          setSelectedAdmin(null);
-        }}
+        onClose={() => { setIsChangePasswordDialogOpen(false); setSelectedAdmin(null); }}
         userId={selectedAdmin?.id}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        onClose={() => { setIsDeleteDialogOpen(false); setSelectedAdmin(null); }}
         onDelete={handleDeleteAdmin}
         title="Delete Admin"
-        description={`Are you sure you want to delete the admin: ${selectedAdmin?.username}?`}
-        isSubmitting={isSubmitting}
+        description="Are you sure you want to delete the admin:"
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

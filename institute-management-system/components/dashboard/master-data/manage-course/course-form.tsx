@@ -208,6 +208,7 @@ export function CourseForm({ courseId }: CourseFormProps) {
                     <FormLabel>Department <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <ComboboxSelectDepartment dataSelect={selectedDepartment} onChangeSelected={(dept) => {
+                        if (!dept) return;
                         setSelectedDepartment(dept);
                         form.setValue("departmentId", dept.id, { shouldValidate: true });
                       }} />

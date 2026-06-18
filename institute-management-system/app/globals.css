@@ -83,10 +83,25 @@
   * {
     @apply border-border;
   }
+
+  html,
+  body {
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Noto Sans Khmer", "Poppins", ui-sans-serif, system-ui,
       sans-serif;
+    touch-action: manipulation;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  input:not([type="hidden"]):not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: max(1rem, 0.875em);
   }
 
   dialog {

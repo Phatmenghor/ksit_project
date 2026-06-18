@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_TC, Noto_Sans_Khmer } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import PageProgressBar from "@/components/shared/progress/page-progress-bar";
+import { ReduxProvider } from "@/store/provider";
 
 // Font definitions
 const inter = Inter({
@@ -46,7 +48,8 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${notoSansKhmer.variable} ${notoSansTC.variable} antialiased h-full overflow-hidden`}
       >
-        {children}
+        <PageProgressBar />
+        <ReduxProvider>{children}</ReduxProvider>
         <Toaster />
       </body>
     </html>

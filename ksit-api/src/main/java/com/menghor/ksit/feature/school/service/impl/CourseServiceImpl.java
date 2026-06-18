@@ -172,7 +172,7 @@ public class CourseServiceImpl implements CourseService {
      * Helper method to find a course by ID or throw NotFoundException
      */
     private CourseEntity findCourseById(Long id) {
-        return courseRepository.findById(id)
+        return courseRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> {
                     log.error("Course not found with ID: {}", id);
                     return new NotFoundException("Course id " + id + " not found. Please try again.");

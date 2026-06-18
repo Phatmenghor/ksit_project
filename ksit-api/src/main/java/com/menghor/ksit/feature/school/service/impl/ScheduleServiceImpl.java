@@ -481,70 +481,56 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private void addSurveyStatusToSchedules(List<ScheduleResponseDto> schedules, Long userId) {
-
-        // Get current user to check roles and enrollment
         UserEntity currentUser = null;
         try {
             currentUser = securityUtils.getCurrentUser();
         } catch (Exception e) {
+            // no user context
         }
 
+        if (currentUser == null || !isStudent(currentUser)) {
+            schedules.forEach(s -> {
+                s.setSurveyStatus(SurveyStatus.NONE);
+                s.setSurveySubmittedAt(null);
+                s.setSurveyResponseId(null);
+            });
+            return;
+        }
+
+        // Batch-fetch all survey responses for this user across all schedules in one query
+        List<Long> scheduleIds = schedules.stream().map(ScheduleResponseDto::getId).collect(Collectors.toList());
+        Map<Long, SurveyResponseEntity> responseByScheduleId = surveyResponseRepository
+                .findByUserIdAndScheduleIdIn(userId, scheduleIds)
+                .stream()
+                .collect(Collectors.toMap(sr -> sr.getSchedule().getId(), sr -> sr, (a, b) -> a));
+
+        final UserEntity user = currentUser;
         for (ScheduleResponseDto schedule : schedules) {
             try {
-                // Set survey status based on user role and enrollment
-                SurveyStatus status = determineSurveyStatus(currentUser, schedule, userId);
-                schedule.setSurveyStatus(status);
+                if (!isStudentEnrolledInSchedule(user, schedule)) {
+                    schedule.setSurveyStatus(SurveyStatus.NONE);
+                    schedule.setSurveySubmittedAt(null);
+                    schedule.setSurveyResponseId(null);
+                    continue;
+                }
 
-                // Set submission details based on status
-                if (status == SurveyStatus.COMPLETED) {
-                    setSurveyCompletionDetails(schedule, userId);
+                SurveyResponseEntity response = responseByScheduleId.get(schedule.getId());
+                if (response != null) {
+                    schedule.setSurveyStatus(SurveyStatus.COMPLETED);
+                    schedule.setSurveySubmittedAt(response.getSubmittedAt());
+                    schedule.setSurveyResponseId(response.getId());
                 } else {
-                    // Clear submission details for non-completed surveys
+                    schedule.setSurveyStatus(SurveyStatus.NOT_STARTED);
                     schedule.setSurveySubmittedAt(null);
                     schedule.setSurveyResponseId(null);
                 }
-
             } catch (Exception e) {
-                log.error("Error checking survey status for schedule {} and user {}: {}",
+                log.error("Error setting survey status for schedule {} and user {}: {}",
                         schedule.getId(), userId, e.getMessage());
-
-                // Set default values on error
                 schedule.setSurveyStatus(SurveyStatus.NONE);
                 schedule.setSurveySubmittedAt(null);
                 schedule.setSurveyResponseId(null);
             }
-        }
-
-        Map<SurveyStatus, Long> statusCount = schedules.stream()
-                .collect(Collectors.groupingBy(
-                        ScheduleResponseDto::getSurveyStatus,
-                        Collectors.counting()
-                ));
-
-    }
-
-    /**
-     * Determine survey status based on user role and enrollment
-     */
-    private SurveyStatus determineSurveyStatus(UserEntity currentUser, ScheduleResponseDto schedule, Long userId) {
-        // Case 1: No current user or user is not a student
-        if (currentUser == null || !isStudent(currentUser)) {
-            return SurveyStatus.NONE;
-        }
-
-        // Case 2: Student is not enrolled in this schedule's class
-        if (!isStudentEnrolledInSchedule(currentUser, schedule)) {
-            return SurveyStatus.NONE;
-        }
-
-        // Case 3: Student is enrolled - check if they completed the survey
-        Optional<SurveyResponseEntity> responseOpt =
-                surveyResponseRepository.findByUserIdAndScheduleId(userId, schedule.getId());
-
-        if (responseOpt.isPresent()) {
-            return SurveyStatus.COMPLETED;
-        } else {
-            return SurveyStatus.NOT_STARTED;
         }
     }
 
@@ -560,7 +546,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     /**
-     * Set survey completion details for completed surveys
+     * Set survey completion details for a single schedule (used by getScheduleById)
      */
     private void setSurveyCompletionDetails(ScheduleResponseDto schedule, Long userId) {
         Optional<SurveyResponseEntity> responseOpt =
@@ -570,8 +556,19 @@ public class ScheduleServiceImpl implements ScheduleService {
             SurveyResponseEntity response = responseOpt.get();
             schedule.setSurveySubmittedAt(response.getSubmittedAt());
             schedule.setSurveyResponseId(response.getId());
-
         }
+    }
+
+    private SurveyStatus determineSurveyStatus(UserEntity currentUser, ScheduleResponseDto schedule, Long userId) {
+        if (currentUser == null || !isStudent(currentUser)) {
+            return SurveyStatus.NONE;
+        }
+        if (!isStudentEnrolledInSchedule(currentUser, schedule)) {
+            return SurveyStatus.NONE;
+        }
+        Optional<SurveyResponseEntity> responseOpt =
+                surveyResponseRepository.findByUserIdAndScheduleId(userId, schedule.getId());
+        return responseOpt.isPresent() ? SurveyStatus.COMPLETED : SurveyStatus.NOT_STARTED;
     }
 
     private void addSurveyStatusToSchedule(ScheduleResponseDto schedule) {
@@ -627,7 +624,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     // Entity finder methods
     private ScheduleEntity findScheduleById(Long id) {
-        return scheduleRepository.findById(id)
+        return scheduleRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new NotFoundException("Schedule not found with ID: " + id));
     }
 

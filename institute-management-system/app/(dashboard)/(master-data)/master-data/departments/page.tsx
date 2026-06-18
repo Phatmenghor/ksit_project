@@ -6,15 +6,12 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   DepartmentFormData,
   DepartmentFormModal,
 } from "@/components/dashboard/master-data/manage-department/department-form-modal";
-import {
-  AllDepartmentModel,
-  DepartmentModel,
-} from "@/model/master-data/department/all-department-model";
+import { DepartmentModel } from "@/model/master-data/department/all-department-model";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -22,213 +19,154 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  AllDepartmentFilterModel,
-  CreateDepartmentModel,
-} from "@/model/master-data/department/type-department-model";
-import {
-  getAllDepartmentService,
-  createDepartmentService,
-  updateDepartmentService,
-  deletedDepartmentService,
-} from "@/service/master-data/department.service";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Constants } from "@/constants/text-string";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { baseAPI } from "@/constants/api";
-import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectDepartmentData,
+  selectDepartmentIsLoading,
+  selectDepartmentOperations,
+  selectDepartmentFilters,
+  selectSelectedDepartment,
+} from "@/features/master-data/store/selectors/department-selectors";
+import {
+  setSearchFilter,
+  setPageNo,
+  clearSelectedDepartment,
+  resetState,
+} from "@/features/master-data/store/slice/department-slice";
+import {
+  fetchAllDepartmentService,
+  createDepartmentService,
+  updateDepartmentService,
+  deleteDepartmentService,
+} from "@/features/master-data/store/thunks/department-thunks";
+import { useDebounce } from "@/utils/debounce/debounce";
+import { useState } from "react";
 
 export default function ManageDepartmentPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const dispatch = useAppDispatch();
+  const data = useAppSelector(selectDepartmentData);
+  const isLoading = useAppSelector(selectDepartmentIsLoading);
+  const operations = useAppSelector(selectDepartmentOperations);
+  const filters = useAppSelector(selectDepartmentFilters);
+  const selectedDepartment = useAppSelector(selectSelectedDepartment);
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [department, setDepartment] = useState<DepartmentModel | null>(null);
-  const [allDepartmentData, setAllDepartmentData] =
-    useState<AllDepartmentModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingDepartment, setDeletingDepartment] =
+    useState<DepartmentModel | null>(null);
   const [initialData, setInitialData] = useState<
     DepartmentFormData | undefined
   >(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } =
-    usePagination({
-      baseRoute: ROUTE.MASTER_DATA.MANAGE_DEPARTMENT,
-      defaultPageSize: 10,
-    });
+  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+    baseRoute: ROUTE.MASTER_DATA.MANAGE_DEPARTMENT,
+    defaultPageSize: 10,
+  });
 
-  const searchDebounce = useDebounce(searchQuery, 500);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  const loadDepartments = useCallback(
-    async (param: AllDepartmentFilterModel) => {
-      setIsLoading(true);
-
-      try {
-        const response = await getAllDepartmentService({
-          search: searchDebounce,
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          ...param,
-        });
-
-        if (response) {
-          setAllDepartmentData(response);
-          if (response.totalPages > 0 && currentPage > response.totalPages) {
-            updateUrlWithPage(response.totalPages);
-            return;
-          }
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading departments");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [searchDebounce, currentPage]
-  );
+  const searchDebounce = useDebounce(filters.search, 500);
 
   useEffect(() => {
-    loadDepartments({});
-  }, [loadDepartments]);
+    dispatch(
+      fetchAllDepartmentService({
+        search: searchDebounce,
+        status: Constants.ACTIVE,
+        pageNo: currentPage,
+      })
+    );
+  }, [dispatch, searchDebounce, currentPage]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetState());
+    };
+  }, [dispatch]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchFilter(e.target.value));
+    if (currentPage !== 1) updateUrlWithPage(1);
+  };
 
   const handleOpenAddModal = () => {
+    dispatch(clearSelectedDepartment());
     setModalMode("add");
     setInitialData(undefined);
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (dept: DepartmentModel) => {
-    const formData: DepartmentFormData = {
+    setInitialData({
       id: dept.id,
       code: dept.code,
       name: dept.name,
       urlLogo: dept.urlLogo,
       status: dept.status,
-    };
-
+    });
     setModalMode("edit");
-    setInitialData(formData);
     setIsModalOpen(true);
   };
 
   async function handleSubmit(formData: DepartmentFormData) {
-    setIsSubmitting(true);
-
-    try {
-      const departmentData: CreateDepartmentModel = {
-        code: formData.code.trim(),
-        name: formData.name.trim(),
-        urlLogo: formData.urlLogo ? formData.urlLogo.trim() : undefined,
-        status: formData.status,
-      };
-
-      let response: DepartmentModel | null = null;
-
-      if (modalMode === "add") {
-        try {
-          response = await createDepartmentService(departmentData);
-
-          if (response) {
-            setAllDepartmentData((prevData) => {
-              if (!prevData) return null;
-              const updatedContent = response
-                ? [response, ...prevData.content]
-                : [...prevData.content];
-
-              return {
-                ...prevData,
-                content: updatedContent,
-                totalElements: prevData.totalElements + 1,
-              } as AllDepartmentModel;
-            });
-
-            toast.success("Department added successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to add department");
-        }
-      } else if (modalMode === "edit" && formData.id) {
-        try {
-          response = await updateDepartmentService(formData.id, departmentData);
-
-          if (response) {
-            setAllDepartmentData((prevData) => {
-              if (!prevData) return null;
-              const updatedContent = prevData.content.map((dept) =>
-                dept.id === formData.id && response ? response : dept
-              );
-
-              return {
-                ...prevData,
-                content: updatedContent,
-              } as AllDepartmentModel;
-            });
-
-            toast.success("Department updated successfully");
-            setIsModalOpen(false);
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to update department");
-        }
+    if (modalMode === "add") {
+      const result = await dispatch(
+        createDepartmentService({
+          code: formData.code,
+          name: formData.name,
+          urlLogo: formData.urlLogo || undefined,
+          status: formData.status,
+        })
+      );
+      if (createDepartmentService.fulfilled.match(result)) {
+        toast.success("Department added successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error((result.payload as string) || "Failed to add department");
       }
-    } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
+    } else if (modalMode === "edit" && formData.id) {
+      const result = await dispatch(
+        updateDepartmentService({
+          id: Number(formData.id),
+          data: {
+            code: formData.code,
+            name: formData.name,
+            urlLogo: formData.urlLogo || undefined,
+            status: formData.status,
+          },
+        })
+      );
+      if (updateDepartmentService.fulfilled.match(result)) {
+        toast.success("Department updated successfully");
+        setIsModalOpen(false);
+      } else {
+        toast.error(
+          (result.payload as string) || "Failed to update department"
+        );
+      }
     }
   }
 
   async function handleDeleteDepartment() {
-    if (!department) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await deletedDepartmentService(department.id);
-
-      if (response) {
-        setAllDepartmentData((prevData) => {
-          if (!prevData) return null;
-
-          const updatedContent = prevData.content.filter(
-            (item) => item.id !== department.id
-          );
-
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
-
-        toast.success("Department deleted successfully");
-        if (
-          allDepartmentData &&
-          allDepartmentData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        }
-      } else {
-        toast.error("Failed to delete department");
+    if (!deletingDepartment) return;
+    const result = await dispatch(
+      deleteDepartmentService(deletingDepartment.id)
+    );
+    if (deleteDepartmentService.fulfilled.match(result)) {
+      toast.success("Department deleted successfully");
+      if (data && data.content.length === 1 && currentPage > 1) {
+        updateUrlWithPage(currentPage - 1);
       }
-    } catch (error) {
-      toast.error("An error occurred while deleting the department");
-    } finally {
-      setIsSubmitting(false);
-      setIsDeleteDialogOpen(false);
+    } else {
+      toast.error("Failed to delete department");
     }
+    setIsDeleteDialogOpen(false);
+    setDeletingDepartment(null);
   }
 
   const columns: TableColumn<DepartmentModel>[] = [
@@ -236,21 +174,10 @@ export default function ManageDepartmentPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => {
-        const page = currentPage ?? 1;
-        return (page - 1) * 10 + index + 1;
-      },
+      render: (_, index) => (currentPage - 1) * 10 + index + 1,
     },
-    {
-      key: "code",
-      label: "Code",
-      render: (dept) => dept.code,
-    },
-    {
-      key: "name",
-      label: "Name",
-      render: (dept) => dept.name,
-    },
+    { key: "code", label: "Code", render: (dept) => dept.code },
+    { key: "name", label: "Name", render: (dept) => dept.name },
     {
       key: "logo",
       label: "Logo",
@@ -286,7 +213,7 @@ export default function ManageDepartmentPage() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -300,13 +227,13 @@ export default function ManageDepartmentPage() {
               <TooltipTrigger asChild>
                 <Button
                   onClick={() => {
-                    setDepartment(dept);
+                    setDeletingDepartment(dept);
                     setIsDeleteDialogOpen(true);
                   }}
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                  disabled={isSubmitting}
+                  disabled={operations.isDeleting}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -330,28 +257,29 @@ export default function ManageDepartmentPage() {
       <CollapsibleFilterPanel
         config={{
           title: "Manage Departments",
-          totalCount: allDepartmentData?.totalElements,
-          searchValue: searchQuery,
+          totalCount: data?.totalElements,
+          searchValue: filters.search,
           searchPlaceholder: "Search department...",
           onSearchChange: handleSearchChange,
           buttonText: "Add New",
           onButtonClick: handleOpenAddModal,
           filters: [],
-          onClearAll: () => {
-            setSearchQuery("");
-          },
+          onClearAll: () => dispatch(setSearchFilter("")),
         }}
         essentialFilterIds={[]}
       />
 
       <DataTable
-        data={allDepartmentData?.content ?? null}
+        data={data?.content ?? null}
         columns={columns}
         loading={isLoading}
         currentPage={currentPage}
-        totalPages={allDepartmentData?.totalPages ?? 0}
-        totalElements={allDepartmentData?.totalElements}
-        onPageChange={handlePageChange}
+        totalPages={data?.totalPages ?? 0}
+        totalElements={data?.totalElements}
+        onPageChange={(page) => {
+          dispatch(setPageNo(page));
+          handlePageChange(page);
+        }}
         emptyMessage="No departments found"
         getRowKey={(dept) => dept.id}
       />
@@ -362,16 +290,19 @@ export default function ManageDepartmentPage() {
         initialData={initialData}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isCreating || operations.isUpdating}
       />
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setDeletingDepartment(null);
+        }}
         onDelete={handleDeleteDepartment}
         title="Delete Department"
         description="Are you sure you want to delete the department:"
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

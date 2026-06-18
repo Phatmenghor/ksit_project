@@ -273,12 +273,12 @@ export default function ScoreSubmissionDetailPage() {
     {
       key: "studentNameKhmer",
       label: "Name (KH)",
-      render: (s) => <span className="font-medium">{s.studentNameKhmer?.trim() || "---"}</span>,
+      render: (s) => <span className="font-medium">{s.studentNameKhmer || "---"}</span>,
     },
     {
       key: "studentNameEnglish",
       label: "Name (EN)",
-      render: (s) => s.studentNameEnglish?.trim() || "---",
+      render: (s) => s.studentNameEnglish || "---",
     },
     {
       key: "gender",
