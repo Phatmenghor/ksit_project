@@ -59,9 +59,8 @@ const ScheduleAllPage = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.SURVEY.STUDENT_RECORDS,
-    defaultPageSize: 10,
   });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +85,7 @@ const ScheduleAllPage = () => {
           search: debouncedSearchQuery,
           status: StatusEnum.ACTIVE,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           courseId: selectedCourse?.id,
           academyYear: selectedYear,
           semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
@@ -112,6 +111,7 @@ const ScheduleAllPage = () => {
     [
       debouncedSearchQuery,
       currentPage,
+      currentPageSize,
       selectedDay,
       selectedYear,
       selectedSemester,
@@ -284,6 +284,8 @@ const ScheduleAllPage = () => {
               currentPage={currentPage}
               totalPages={scheduleData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
               className="mt-4"
             />
           )}

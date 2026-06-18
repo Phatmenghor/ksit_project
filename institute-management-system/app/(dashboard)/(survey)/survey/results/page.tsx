@@ -62,10 +62,9 @@ export default function SurveyResultPage() {
 
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.SURVEY.RESULT_LIST,
-      defaultPageSize: 20,
     });
 
   useEffect(() => {
@@ -121,7 +120,7 @@ export default function SurveyResultPage() {
           semester: selectedSemester != "ALL" ? selectedSemester : undefined,
           classId: selectedClass?.id,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
           endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
           ...filter,
@@ -500,6 +499,8 @@ export default function SurveyResultPage() {
         totalPages={surveyData?.totalPages ?? 0}
         totalElements={surveyData?.totalElements}
         onPageChange={handlePageChange}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No Record"
         getRowKey={(s) => s.responseId}
       />

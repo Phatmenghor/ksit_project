@@ -57,9 +57,8 @@ export default function ManageClassPage() {
   const [initialData, setInitialData] = useState<ClassFormData | undefined>(undefined);
   const [selectedMajor, setSelectedMajor] = useState<MajorModel | null>(null);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MASTER_DATA.MANAGE_CLASS,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -72,10 +71,10 @@ export default function ManageClassPage() {
         majorId: filters.majorId,
         academyYear: filters.academyYear || undefined,
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
       })
     );
-  }, [dispatch, searchDebounce, currentPage, filters.majorId, filters.academyYear]);
+  }, [dispatch, searchDebounce, currentPage, currentPageSize, filters.majorId, filters.academyYear]);
 
   useEffect(() => {
     return () => { dispatch(resetState()); };
@@ -156,7 +155,7 @@ export default function ManageClassPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     { key: "code", label: "Class Code", width: "140px", render: (cls) => cls.code },
     { key: "major", label: "Major", render: (cls) => cls.major.name },
@@ -286,6 +285,8 @@ export default function ManageClassPage() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No classes found"
         getRowKey={(cls) => cls.id}
       />

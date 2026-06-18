@@ -1,20 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { PAGE_SIZE_OPTIONS } from "@/hooks/use-pagination";
 
 interface CustomPaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
   className?: string;
 }
 
@@ -22,6 +16,8 @@ export default function PaginationPage({
   currentPage,
   totalPages,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   className = "",
 }: CustomPaginationProps) {
   // Handle previous page
@@ -96,6 +92,24 @@ export default function PaginationPage({
 
   return (
     <div className={`p-4 ${className}`}>
+      {/* Page size selector */}
+      {onPageSizeChange && pageSize !== undefined && (
+        <div className="flex justify-end mb-3">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span>Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="h-8 rounded-md border border-input px-2 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary transition-colors"
+            >
+              {PAGE_SIZE_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Pagination */}
       <div className="hidden md:block">
         <div className="flex justify-center items-center gap-2">

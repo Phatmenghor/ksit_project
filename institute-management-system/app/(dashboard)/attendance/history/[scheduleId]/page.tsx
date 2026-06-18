@@ -77,12 +77,11 @@ export default function StudentsListPage() {
   const params = useParams();
   const scheduleId = params?.scheduleId ? Number(params.scheduleId) : null;
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.ATTENDANCE.STUDENT_LIST_HISTORY_RECORD(
         String(scheduleId)
       ),
-      defaultPageSize: 10,
     });
 
   // Handlers for search, year, class change
@@ -110,7 +109,7 @@ export default function StudentsListPage() {
         const response = await getAllStudentsService({
           ...param,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           academicYear: selectAcademicYear,
           scheduleId: scheduleId ? scheduleId : selectedSchedule?.id,
           search: debouncedSearchQuery,
@@ -468,6 +467,8 @@ export default function StudentsListPage() {
           totalPages={allStudentData?.totalPages ?? 0}
           totalElements={allStudentData?.totalElements}
           onPageChange={handlePageChange}
+          pageSize={currentPageSize}
+          onPageSizeChange={handlePageSizeChange}
           emptyMessage="No student found"
           getRowKey={(student) => student.id}
         />

@@ -57,9 +57,8 @@ export default function TeachersListPage() {
 
   const router = useRouter();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.USERS.TEACHERS,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -71,7 +70,7 @@ export default function TeachersListPage() {
         search: searchDebounce,
         status: "ACTIVE",
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
       })
     );
   }, [dispatch, searchDebounce, currentPage]);
@@ -105,7 +104,7 @@ export default function TeachersListPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     {
       key: "profile",
@@ -302,6 +301,8 @@ export default function TeachersListPage() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No teacher found"
         getRowKey={(teacher) => teacher.id}
       />

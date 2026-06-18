@@ -59,9 +59,8 @@ export default function AllSchedulePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.SCORES.STUDENT_SCORE,
-    defaultPageSize: 10,
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -88,7 +87,7 @@ export default function AllSchedulePage() {
           search: debouncedSearchQuery,
           status: StatusEnum.ACTIVE,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           classId: selectedClass?.id,
           academyYear: selectedYear,
           semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
@@ -114,6 +113,7 @@ export default function AllSchedulePage() {
       debouncedSearchQuery,
       selectedDay,
       currentPage,
+      currentPageSize,
       selectedClass,
       selectedYear,
       selectedSemester,
@@ -279,6 +279,8 @@ export default function AllSchedulePage() {
               currentPage={currentPage}
               totalPages={scheduleData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
               className="mt-4"
             />
           )}

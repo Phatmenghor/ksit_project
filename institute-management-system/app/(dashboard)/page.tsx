@@ -50,10 +50,9 @@ export default function ManageClassPage() {
 
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } =
     usePagination({
       baseRoute: ROUTE.DASHBOARD,
-      defaultPageSize: 10,
     });
 
   // Then add this effect for initial URL setup
@@ -72,7 +71,7 @@ export default function ManageClassPage() {
         const response = await getMyDepartmentService({
           status: Constants.ACTIVE,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           ...param,
         });
 
@@ -208,6 +207,8 @@ export default function ManageClassPage() {
               currentPage={currentPage}
               totalPages={allDepartmentData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
             />
           </div>
         )}

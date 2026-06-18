@@ -41,10 +41,9 @@ export default function StudentListPage() {
 
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.STUDENT_LIST(String(scheduleId)),
-      defaultPageSize: 10,
     });
 
   // Then add this effect for initial URL setup
@@ -64,7 +63,7 @@ export default function StudentListPage() {
           scheduleId: scheduleId || 0,
           sortType: "ASC",
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           status: Constants.ACTIVE,
           ...filters,
         };
@@ -270,6 +269,8 @@ export default function StudentListPage() {
         totalPages={students?.totalPages ?? 0}
         totalElements={students?.totalElements}
         onPageChange={handlePageChange}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No student found"
         getRowKey={(student) => student.id}
       />

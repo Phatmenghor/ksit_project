@@ -36,20 +36,20 @@
     --card-radius: 15px;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 168 95% 16%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 217 19% 27%;
     --secondary-foreground: 210 40% 98%;
     --muted: 215 16% 90%;
     --muted-foreground: 215 28% 39%;
-    --accent: 211 100% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 168 40% 92%;
+    --accent-foreground: 168 95% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
     --border: 214 32% 65%; /* Darker border color for better visibility */
     --input: 214 32% 81%;
-    --ring: 221 83% 53%;
-    --chart-1: 221 83% 53%;
+    --ring: 168 95% 16%;
+    --chart-1: 168 95% 16%;
     --chart-2: 340 82% 52%;
     --chart-3: 145 63% 42%;
     --chart-4: 43 96% 58%;
@@ -57,12 +57,12 @@
     --radius: 0.4rem;
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary: 168 95% 16%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-ring: 168 95% 16%;
 
     /* Table specific colors */
     --table-header-bg: #000000; /* Pure black */

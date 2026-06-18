@@ -66,9 +66,8 @@ export default function ManageDepartmentPage() {
     DepartmentFormData | undefined
   >(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MASTER_DATA.MANAGE_DEPARTMENT,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -174,7 +173,7 @@ export default function ManageDepartmentPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 10 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     { key: "code", label: "Code", render: (dept) => dept.code },
     { key: "name", label: "Name", render: (dept) => dept.name },
@@ -280,6 +279,8 @@ export default function ManageDepartmentPage() {
           dispatch(setPageNo(page));
           handlePageChange(page);
         }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No departments found"
         getRowKey={(dept) => dept.id}
       />

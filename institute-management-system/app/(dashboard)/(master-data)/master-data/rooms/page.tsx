@@ -51,9 +51,8 @@ export default function ManageRoomPage() {
   const [deletingRoom, setDeletingRoom] = useState<RoomModel | null>(null);
   const [initialData, setInitialData] = useState<RoomFormData | undefined>(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MASTER_DATA.MANAGE_ROOM,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -64,10 +63,10 @@ export default function ManageRoomPage() {
         search: searchDebounce,
         status: Constants.ACTIVE,
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
       })
     );
-  }, [dispatch, searchDebounce, currentPage]);
+  }, [dispatch, searchDebounce, currentPage, currentPageSize]);
 
   useEffect(() => {
     return () => { dispatch(resetState()); };
@@ -132,7 +131,7 @@ export default function ManageRoomPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     { key: "name", label: "Name", render: (r) => r.name },
     { key: "createdAt", label: "Created At", render: (r) => DateTimeFormatter(r.createdAt) },
@@ -195,6 +194,8 @@ export default function ManageRoomPage() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No rooms found"
         getRowKey={(r) => r.id}
       />

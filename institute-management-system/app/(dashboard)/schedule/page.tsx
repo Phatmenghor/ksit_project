@@ -57,9 +57,8 @@ const ScheduleAllPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.SCHEDULE.ROOT,
-    defaultPageSize: 10,
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -90,7 +89,7 @@ const ScheduleAllPage = () => {
           academyYear: selectedYear,
           pageNo: currentPage,
           courseId: selectedCourse?.id,
-          pageSize: 30,
+          pageSize: currentPageSize,
           semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
           dayOfWeek:
             selectedDay?.value !== "ALL" ? selectedDay?.value : undefined,
@@ -111,6 +110,7 @@ const ScheduleAllPage = () => {
       debouncedSearchQuery,
       selectedDay,
       currentPage,
+      currentPageSize,
       selectedYear,
       selectedSemester,
       selectedCourse?.id,
@@ -281,6 +281,8 @@ const ScheduleAllPage = () => {
               currentPage={currentPage}
               totalPages={scheduleData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
               className="mt-4"
             />
           )}

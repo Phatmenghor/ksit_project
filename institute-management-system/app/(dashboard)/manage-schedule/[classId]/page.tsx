@@ -64,9 +64,8 @@ const AllSchedulePage = () => {
     setIsHydrated(true);
   }, [params?.classId]);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MANAGE_SCHEDULE.All_SCHEDULE_DETAIL(String(classId)),
-    defaultPageSize: 10,
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -101,7 +100,7 @@ const AllSchedulePage = () => {
           search: debouncedSearchQuery,
           status: StatusEnum.ACTIVE,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           academyYear: selectedYear,
           semester: selectedSemester != "ALL" ? selectedSemester : undefined,
           dayOfWeek:
@@ -375,6 +374,8 @@ const AllSchedulePage = () => {
               currentPage={currentPage}
               totalPages={scheduleData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
             />
           )}
         </CardContent>

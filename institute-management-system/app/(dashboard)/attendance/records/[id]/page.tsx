@@ -80,10 +80,9 @@ export default function StudentAttendancePage() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(studentId),
-      defaultPageSize: 10,
     });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +111,7 @@ export default function StudentAttendancePage() {
           semester: selectedSemester != "ALL" ? selectedSemester : undefined,
           classId: selectedClass?.id,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           studentId: studentId ? parseInt(studentId) : undefined,
           finalizationStatus: "FINAL",
           startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
@@ -538,6 +537,8 @@ export default function StudentAttendancePage() {
           totalPages={attendanceHistoryData?.totalPages ?? 0}
           totalElements={attendanceHistoryData?.totalElements}
           onPageChange={handlePageChange}
+          pageSize={currentPageSize}
+          onPageSizeChange={handlePageSizeChange}
           emptyMessage="No Record"
           getRowKey={(history) => history.id}
         />

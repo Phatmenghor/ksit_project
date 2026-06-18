@@ -49,10 +49,9 @@ export default function RequestPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.REQUESTS,
-      defaultPageSize: 10,
     });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -78,7 +77,7 @@ export default function RequestPage() {
           search: debouncedSearchQuery,
           pageNo: currentPage,
           userId: Number(selectedUser?.id) || undefined,
-          pageSize: 30,
+          pageSize: currentPageSize,
           status: selectedType?.value,
           ...filters,
         });
@@ -377,6 +376,8 @@ export default function RequestPage() {
         totalPages={requestData?.totalPages ?? 0}
         totalElements={requestData?.totalElements}
         onPageChange={handlePageChange}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No Record"
         getRowKey={(req) => req.id}
       />

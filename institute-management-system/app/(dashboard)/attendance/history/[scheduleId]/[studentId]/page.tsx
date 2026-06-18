@@ -48,13 +48,12 @@ export default function HistoryRecordsPage() {
     useState<AllAttendanceHistoryModel | null>(null);
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.ATTENDANCE.HISTORY_RECORD_DETAIL(
         String(scheduleId),
         String(studentId)
       ),
-      defaultPageSize: 10,
     });
 
   // Then add this effect for initial URL setup
@@ -75,7 +74,7 @@ export default function HistoryRecordsPage() {
           studentId: Number(studentId),
           finalizationStatus: "FINAL",
           pageNo: currentPage || 1,
-          pageSize: 30,
+          pageSize: currentPageSize,
         });
 
         setAttendanceHistoryData(response);
@@ -419,6 +418,8 @@ export default function HistoryRecordsPage() {
               totalPages={attendanceHistoryData?.totalPages ?? 0}
               totalElements={attendanceHistoryData?.totalElements}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
               emptyMessage="No Record"
               getRowKey={(history) => history.id}
             />

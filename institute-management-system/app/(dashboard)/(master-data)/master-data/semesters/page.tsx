@@ -59,9 +59,8 @@ export default function ManageSemester() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingSemester, setDeletingSemester] = useState<SemesterModel | null>(null);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MASTER_DATA.MANAGE_SEMESTER,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -73,10 +72,10 @@ export default function ManageSemester() {
         academyYear: filters.academyYear || undefined,
         status: Constants.ACTIVE,
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
       })
     );
-  }, [dispatch, searchDebounce, currentPage, filters.academyYear]);
+  }, [dispatch, searchDebounce, currentPage, currentPageSize, filters.academyYear]);
 
   useEffect(() => {
     return () => { dispatch(resetState()); };
@@ -135,7 +134,7 @@ export default function ManageSemester() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     {
       key: "semester",
@@ -244,6 +243,8 @@ export default function ManageSemester() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No semesters found"
         getRowKey={(s) => s.id ?? 0}
       />

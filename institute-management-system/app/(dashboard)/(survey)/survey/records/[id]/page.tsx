@@ -52,10 +52,9 @@ export default function AllStudentResultPage() {
   const [surveyData, setSurveyData] = useState<SurveyResponseData | null>(null);
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.SURVEY.STUDENT_RECORD(String(rawId)),
-      defaultPageSize: 10,
     });
 
   const router = useRouter();
@@ -115,7 +114,7 @@ export default function AllStudentResultPage() {
           search: debouncedSearchQuery,
           scheduleId: id,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           ...filter,
         };
 
@@ -430,6 +429,8 @@ export default function AllStudentResultPage() {
           totalPages={surveyData?.totalPages ?? 0}
           totalElements={surveyData?.totalElements}
           onPageChange={handlePageChange}
+          pageSize={currentPageSize}
+          onPageSizeChange={handlePageSizeChange}
           emptyMessage="No Record"
           getRowKey={(item) => item.responseId}
         />

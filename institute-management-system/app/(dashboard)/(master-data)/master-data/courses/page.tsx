@@ -41,10 +41,9 @@ export default function CoursesPage() {
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentModel | null>(null);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.COURSES.INDEX,
-      defaultPageSize: 10,
     });
 
   const searchDebounce = useDebounce(searchQuery, 500);
@@ -66,7 +65,7 @@ export default function CoursesPage() {
           departmentId: selectedDepartment?.id,
           status: Constants.ACTIVE,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           ...param,
         });
 
@@ -142,7 +141,7 @@ export default function CoursesPage() {
       width: "50px",
       render: (_, index) => {
         const page = currentPage ?? 1;
-        return (page - 1) * 30 + index + 1;
+        return (page - 1) * currentPageSize + index + 1;
       },
     },
     {
@@ -276,6 +275,8 @@ export default function CoursesPage() {
         totalPages={allCourseData?.totalPages ?? 0}
         totalElements={allCourseData?.totalElements}
         onPageChange={handlePageChange}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No courses found"
         getRowKey={(course) => course.id}
       />

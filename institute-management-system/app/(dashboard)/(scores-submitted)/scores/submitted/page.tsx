@@ -49,10 +49,9 @@ export default function ScoreSubmittedPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.SCORES.SUBMITTED,
-      defaultPageSize: 10,
     });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -99,7 +98,7 @@ export default function ScoreSubmittedPage() {
           scheduleId: selectedSchedule?.id,
           academicYear: selectAcademicYear || undefined,
           semester: selectedSemester === "ALL" ? undefined : selectedSemester,
-          pageSize: 30,
+          pageSize: currentPageSize,
         });
 
         if (response) {
@@ -342,6 +341,8 @@ export default function ScoreSubmittedPage() {
           totalPages={submissions?.totalPages ?? 0}
           totalElements={submissions?.totalElements}
           onPageChange={handlePageChange}
+          pageSize={currentPageSize}
+          onPageSizeChange={handlePageSizeChange}
           emptyMessage={emptyMessage}
           getRowKey={(s) => s.id}
         />
@@ -356,6 +357,8 @@ export default function ScoreSubmittedPage() {
           totalPages={submissions?.totalPages ?? 0}
           totalElements={submissions?.totalElements}
           onPageChange={handlePageChange}
+          pageSize={currentPageSize}
+          onPageSizeChange={handlePageSizeChange}
           emptyMessage={emptyMessage}
           getRowKey={(s) => s.id}
         />

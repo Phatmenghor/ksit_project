@@ -56,9 +56,8 @@ export default function StuffOfficerListPage() {
 
   const router = useRouter();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.USERS.STUFF_OFFICER,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -70,10 +69,10 @@ export default function StuffOfficerListPage() {
         search: searchDebounce,
         status: "ACTIVE",
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
       })
     );
-  }, [dispatch, searchDebounce, currentPage]);
+  }, [dispatch, searchDebounce, currentPage, currentPageSize]);
 
   useEffect(() => {
     return () => { dispatch(resetState()); };
@@ -104,7 +103,7 @@ export default function StuffOfficerListPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     {
       key: "profile",
@@ -281,6 +280,8 @@ export default function StuffOfficerListPage() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No staff found"
         getRowKey={(staff) => staff.id}
       />

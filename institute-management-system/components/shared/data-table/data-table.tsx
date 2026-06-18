@@ -49,9 +49,9 @@ export function DataTable<T = unknown>({
   totalPages,
   totalElements = 0,
   onPageChange,
-  pageSize = 10,
+  pageSize = 30,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [10, 20, 30, 50, 100],
   showPageSizeSelector = true,
   showPagination = true,
 }: DataTableProps<T>) {

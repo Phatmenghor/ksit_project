@@ -51,9 +51,8 @@ export default function ManageMajorPage() {
   const [deletingMajor, setDeletingMajor] = useState<MajorModel | null>(null);
   const [initialData, setInitialData] = useState<MajorFormData | undefined>(undefined);
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MASTER_DATA.MANAGE_MAJOR,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -64,10 +63,10 @@ export default function ManageMajorPage() {
         search: searchDebounce,
         status: Constants.ACTIVE,
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
       })
     );
-  }, [dispatch, searchDebounce, currentPage]);
+  }, [dispatch, searchDebounce, currentPage, currentPageSize]);
 
   useEffect(() => {
     return () => { dispatch(resetState()); };
@@ -143,7 +142,7 @@ export default function ManageMajorPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     { key: "code", label: "Code", render: (m) => m.code },
     { key: "name", label: "Name", render: (m) => m.name },
@@ -208,6 +207,8 @@ export default function ManageMajorPage() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No majors found"
         getRowKey={(m) => m.id}
       />

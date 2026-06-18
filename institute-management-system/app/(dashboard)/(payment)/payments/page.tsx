@@ -54,10 +54,9 @@ export default function StudentsListPage() {
 
   const isStudent = Array.isArray(roles) && roles.includes(RoleEnum.STUDENT);
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.PAYMENT.LIST,
-      defaultPageSize: 10,
     });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -87,7 +86,7 @@ export default function StudentsListPage() {
           status: StatusEnum.ACTIVE,
           pageNo: currentPage,
           scheduleId: selectedSchedule?.id,
-          pageSize: 30,
+          pageSize: currentPageSize,
           classId: selectedClass?.id,
           courseId: selectedCourse?.id,
         });
@@ -287,6 +286,8 @@ export default function StudentsListPage() {
         totalPages={allStudentData?.totalPages ?? 0}
         totalElements={allStudentData?.totalElements}
         onPageChange={handlePageChange}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No student found"
         getRowKey={(s) => s.id}
       />

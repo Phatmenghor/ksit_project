@@ -63,10 +63,9 @@ export default function PaymentPage() {
   const id = params?.id ? Number(params.id) : 0;
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
     usePagination({
       baseRoute: ROUTE.PAYMENT.MY_PAYMENT,
-      defaultPageSize: 10,
     });
 
   useEffect(() => {
@@ -193,7 +192,7 @@ export default function PaymentPage() {
         const response = await getAllPaymentService({
           status: Constants.ACTIVE,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           ...param,
         });
 
@@ -394,6 +393,8 @@ export default function PaymentPage() {
             totalPages={allPaymentData?.totalPages ?? 0}
             totalElements={allPaymentData?.totalElements}
             onPageChange={handlePageChange}
+            pageSize={currentPageSize}
+            onPageSizeChange={handlePageSizeChange}
             emptyMessage="No Records"
             getRowKey={(p) => p.id}
           />

@@ -5,7 +5,7 @@ import NextTopLoader from "nextjs-toploader";
 export default function PageProgressBar() {
   return (
     <NextTopLoader
-      color="hsl(var(--primary))"
+      color="#ffffff"
       height={3}
       showSpinner={false}
       speed={200}

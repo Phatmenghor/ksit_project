@@ -48,9 +48,8 @@ const AttendanceScheduleCheckPage = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.ATTENDANCE.CLASS_SCHEDULE,
-    defaultPageSize: 10,
   });
 
   useEffect(() => {
@@ -76,7 +75,7 @@ const AttendanceScheduleCheckPage = () => {
           status: StatusEnum.ACTIVE,
           academyYear: selectedYear,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           dayOfWeek:
             selectedDay && selectedDay.value !== "ALL"
               ? selectedDay.value
@@ -91,7 +90,7 @@ const AttendanceScheduleCheckPage = () => {
         setIsLoading(false);
       }
     },
-    [debouncedSearchQuery, selectedDay, selectedYear, currentPage]
+    [debouncedSearchQuery, selectedDay, selectedYear, currentPage, currentPageSize]
   );
 
   useEffect(() => {
@@ -205,6 +204,8 @@ const AttendanceScheduleCheckPage = () => {
               currentPage={currentPage}
               totalPages={scheduleData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
               className="mt-4"
             />
           )}

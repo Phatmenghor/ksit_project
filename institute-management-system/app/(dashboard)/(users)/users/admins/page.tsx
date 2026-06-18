@@ -56,9 +56,8 @@ export default function AdminsListPage() {
 
   const router = useRouter();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.USERS.ADMIN.INDEX,
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(filters.search, 500);
@@ -69,7 +68,7 @@ export default function AdminsListPage() {
         roles: [RoleEnum.ADMIN],
         search: searchDebounce,
         pageNo: currentPage,
-        pageSize: 30,
+        pageSize: currentPageSize,
         status: "ACTIVE",
       })
     );
@@ -104,7 +103,7 @@ export default function AdminsListPage() {
       key: "no",
       label: "#",
       width: "50px",
-      render: (_, index) => (currentPage - 1) * 30 + index + 1,
+      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
     },
     {
       key: "profile",
@@ -280,6 +279,8 @@ export default function AdminsListPage() {
         totalPages={data?.totalPages ?? 0}
         totalElements={data?.totalElements}
         onPageChange={(page) => { dispatch(setPageNo(page)); handlePageChange(page); }}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
         emptyMessage="No admin found"
         getRowKey={(admin) => admin.id}
       />

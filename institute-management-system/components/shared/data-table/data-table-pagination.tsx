@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PAGE_SIZE_OPTIONS } from "@/hooks/use-pagination";
 
 export function getPaginationItems(
   currentPage: number,
@@ -27,26 +28,52 @@ export function getPaginationItems(
 interface DataTablePaginationProps {
   currentPage: number;
   totalPages: number;
+  totalElements?: number;
   onPageChange: (page: number) => void;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
   className?: string;
 }
 
 export function DataTablePagination({
   currentPage,
   totalPages,
+  totalElements = 0,
   onPageChange,
+  pageSize,
+  onPageSizeChange,
   className,
 }: DataTablePaginationProps) {
-  if (totalPages <= 1) return null;
+  const showPaginationButtons = totalElements >= 10;
+
+  if (!onPageSizeChange && !showPaginationButtons) return null;
 
   return (
     <div className={cn("flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1 pt-4 pb-1", className)}>
-      <div className="text-xs text-muted-foreground">
-        Page <span className="font-medium text-foreground">{currentPage}</span> of{" "}
-        <span className="font-medium text-foreground">{totalPages}</span>
+      <div className="flex items-center gap-3">
+        {onPageSizeChange && pageSize !== undefined && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">Rows per page</span>
+            <select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="h-7 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showPaginationButtons && (
+          <div className="text-xs text-muted-foreground">
+            Page <span className="font-medium text-foreground">{currentPage}</span> of{" "}
+            <span className="font-medium text-foreground">{totalPages}</span>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center gap-1">
+      {showPaginationButtons && <div className="flex items-center gap-1">
         <button
           onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
           disabled={currentPage === 1}

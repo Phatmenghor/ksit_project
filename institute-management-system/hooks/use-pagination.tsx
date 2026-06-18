@@ -1,47 +1,51 @@
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+export const PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100];
+export const DEFAULT_PAGE_SIZE = 30;
+
 interface UsePaginationOptions {
   baseRoute: string;
   defaultPageSize?: number;
-  totalPages?: number; // Add totalPages to options
+  totalPages?: number;
   onPageChange?: (page: number) => void;
 }
 
 interface UsePaginationReturn {
   currentPage: number;
+  currentPageSize: number;
   updateUrlWithPage: (newPage: number, replace?: boolean) => void;
-  handlePageChange: (newPage: number) => void; // Remove totalPages parameter
+  handlePageChange: (newPage: number) => void;
+  handlePageSizeChange: (newSize: number) => void;
   getDisplayIndex: (index: number, pageSize?: number) => number;
 }
 
 export function usePagination({
   baseRoute,
-  defaultPageSize = 10,
-  totalPages, // Remove default value to handle it properly
+  defaultPageSize = DEFAULT_PAGE_SIZE,
+  totalPages,
   onPageChange,
 }: UsePaginationOptions): UsePaginationReturn {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Get current page from URL
   const currentPage = useMemo(() => {
     const pageParam = searchParams.get("pageNo");
     const parsed = pageParam ? parseInt(pageParam, 10) : 1;
     return isNaN(parsed) || parsed < 1 ? 1 : parsed;
   }, [searchParams]);
 
-  // Centralized URL update function
+  const currentPageSize = useMemo(() => {
+    const sizeParam = searchParams.get("pageSize");
+    const parsed = sizeParam ? parseInt(sizeParam, 10) : defaultPageSize;
+    return PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : defaultPageSize;
+  }, [searchParams, defaultPageSize]);
+
   const updateUrlWithPage = useCallback(
     (newPage: number, replace: boolean = false) => {
       const params = new URLSearchParams(searchParams);
-
-      // Always show pageNo in URL (including page 1)
       params.set("pageNo", newPage.toString());
-
-      const queryString = params.toString();
-      const url = `${baseRoute}?${queryString}`;
-
+      const url = `${baseRoute}?${params.toString()}`;
       if (replace) {
         router.replace(url);
       } else {
@@ -51,50 +55,44 @@ export function usePagination({
     [searchParams, router, baseRoute]
   );
 
-
-  // Page change handler with validation - now only takes newPage
   const handlePageChange = useCallback(
     (newPage: number) => {
-      // If totalPages is not available yet, don't validate bounds
       if (totalPages) {
-        // Validate page bounds
-        if (newPage < 1 || newPage > totalPages) {
-          return;
-        }
+        if (newPage < 1 || newPage > totalPages) return;
       } else {
-        // Basic validation when totalPages is not available
-        if (newPage < 1) {
-          return;
-        }
+        if (newPage < 1) return;
       }
-
-      // Don't update if we're already on the target page
-      if (newPage === currentPage) {
-        return;
-      }
-
+      if (newPage === currentPage) return;
       updateUrlWithPage(newPage);
-
-      // Call optional callback
-      if (onPageChange) {
-        onPageChange(newPage);
-      }
+      if (onPageChange) onPageChange(newPage);
     },
     [currentPage, updateUrlWithPage, onPageChange, totalPages]
   );
 
-  // Calculate display index for table rows
+  const handlePageSizeChange = useCallback(
+    (newSize: number) => {
+      if (newSize === currentPageSize) return;
+      const params = new URLSearchParams(searchParams);
+      params.set("pageSize", newSize.toString());
+      params.set("pageNo", "1");
+      router.push(`${baseRoute}?${params.toString()}`);
+    },
+    [currentPageSize, searchParams, router, baseRoute]
+  );
+
   const getDisplayIndex = useCallback(
-    (index: number, pageSize: number = defaultPageSize) => {
+    (index: number, pageSize: number = currentPageSize) => {
       return (currentPage - 1) * pageSize + index + 1;
     },
-    [currentPage, defaultPageSize]
+    [currentPage, currentPageSize]
   );
 
   return {
     currentPage,
+    currentPageSize,
     updateUrlWithPage,
     handlePageChange,
+    handlePageSizeChange,
     getDisplayIndex,
   };
 }

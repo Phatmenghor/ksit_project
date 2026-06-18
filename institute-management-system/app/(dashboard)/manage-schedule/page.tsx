@@ -25,9 +25,8 @@ export default function DepartmentListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MANAGE_SCHEDULE.DEPARTMENT,
-    defaultPageSize: 10,
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -54,7 +53,7 @@ export default function DepartmentListPage() {
         const response = await getAllDepartmentService({
           search: debouncedSearchQuery,
           pageNo: currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
           status: Constants.ACTIVE,
           ...param,
         });
@@ -140,6 +139,8 @@ export default function DepartmentListPage() {
               currentPage={currentPage}
               totalPages={allDepartmentData.totalPages}
               onPageChange={handlePageChange}
+              pageSize={currentPageSize}
+              onPageSizeChange={handlePageSizeChange}
             />
           )}
         </CardContent>

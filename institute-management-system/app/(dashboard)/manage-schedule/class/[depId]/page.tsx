@@ -56,9 +56,8 @@ const ClassSchedulePage = () => {
 
   const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange } = usePagination({
+  const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MANAGE_SCHEDULE.CLASS(String(depId)),
-    defaultPageSize: 10,
   });
 
   const searchDebounce = useDebounce(searchQuery, 500);
@@ -122,7 +121,7 @@ const ClassSchedulePage = () => {
           search: search || undefined,
           majorId: majorId,
           pageNo: page || currentPage,
-          pageSize: 30,
+          pageSize: currentPageSize,
         });
 
         setAllClassData(responseListClass);
@@ -255,6 +254,8 @@ const ClassSchedulePage = () => {
                   currentPage={currentPage}
                   totalPages={allClassData.totalPages}
                   onPageChange={handlePageChange}
+                  pageSize={currentPageSize}
+                  onPageSizeChange={handlePageSizeChange}
                 />
               </div>
             ) : (
