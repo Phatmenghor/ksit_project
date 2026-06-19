@@ -133,7 +133,7 @@ function renderFilter(filter: FilterConfig): React.ReactNode {
         <div key={filter.id} className="flex flex-col gap-1">
           <label className="text-xs font-medium text-foreground/70">{filter.label}</label>
           <YearSelector
-            value={filter.value}
+            value={filter.value ?? 0}
             onChange={filter.onChange}
             minYear={minYear}
             maxYear={maxYear}

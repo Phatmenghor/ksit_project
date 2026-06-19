@@ -43,7 +43,7 @@ export interface DateFilterConfig extends BaseFilterConfig {
 
 export interface YearFilterConfig extends BaseFilterConfig {
   type: "year";
-  value: number;
+  value: number | undefined;
   onChange: (value: number) => void;
   minYear?: number;
   maxYear?: number;
