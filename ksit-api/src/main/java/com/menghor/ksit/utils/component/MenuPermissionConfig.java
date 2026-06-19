@@ -122,6 +122,9 @@ public class MenuPermissionConfig {
             RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));
 
+        permissions.put("schedule-group", Set.of(
+            RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
+        ));
         permissions.put("schedule", Set.of(
             RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
         ));

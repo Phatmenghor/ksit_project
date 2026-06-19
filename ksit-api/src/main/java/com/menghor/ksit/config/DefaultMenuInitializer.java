@@ -138,12 +138,16 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity studentRecords = upsertMenuItem("student-records", "Student Records", "/attendance/records", attendance, "file-text", false, 3);
         addPermissions(studentRecords, 3, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity schedule = upsertMenuItem("schedule", "Schedule", "/schedule", null, "calendar", false, 6);
+        MenuItemEntity scheduleGroup = upsertMenuItem("schedule-group", "Schedule", null, null, "calendar", true, 6);
+        addPermissions(scheduleGroup, 1,
+                RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+
+        MenuItemEntity schedule = upsertMenuItem("schedule", "My Schedule", "/schedule", scheduleGroup, "calendar", false, 1);
         addPermissions(schedule, 1,
                 RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity manageSchedule = upsertMenuItem("manage-schedule", "Manage Schedule", "/manage-schedule", null, "calendar-cog", false, 7);
-        addPermissions(manageSchedule, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+        MenuItemEntity manageSchedule = upsertMenuItem("manage-schedule", "Manage Schedule", "/manage-schedule", scheduleGroup, "calendar-cog", false, 2);
+        addPermissions(manageSchedule, 2, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity scores = upsertMenuItem("scores-submitted", "Scores", null, null, "bar-chart-2", true, 8);
         addPermissions(scores, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
