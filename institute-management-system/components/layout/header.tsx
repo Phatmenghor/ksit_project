@@ -31,6 +31,7 @@ import { RoleEnum } from "@/constants/constant";
 import Image from "next/image";
 import { AppIcons, AppResource } from "@/constants/icons/icon";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function Header() {
   const isMobile = useIsMobile();
@@ -38,6 +39,7 @@ export function Header() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [roleDisplay, setRoleDisplay] = useState<{ label: string; color: string } | null>(null);
   const { user } = useCurrentUser();
+  const isUserLoading = user === undefined;
   const router = useRouter();
 
   const getProfileUrl = () => {
@@ -196,28 +198,41 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="flex items-center gap-3 cursor-pointer group hover:bg-white/10 rounded-lg p-2 transition-colors duration-200">
-                <Avatar className="h-10 w-10 border-2 cursor-pointer border-white/20 shadow-sm">
-                  <AvatarImage
-                    src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
-                    alt="User"
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-white/20 text-white font-semibold text-sm backdrop-blur-sm">
-                    {getAvatarFallback()}
-                  </AvatarFallback>
-                </Avatar>
+                {isUserLoading ? (
+                  <Skeleton className="h-10 w-10 rounded-full bg-white/20" />
+                ) : (
+                  <Avatar className="h-10 w-10 border-2 cursor-pointer border-white/20 shadow-sm">
+                    <AvatarImage
+                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
+                      alt="User"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-white/20 text-white font-semibold text-sm backdrop-blur-sm">
+                      {getAvatarFallback()}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
 
-                <div className="hidden md:flex flex-col items-start" suppressHydrationWarning>
-                  <span
-                    suppressHydrationWarning
-                    className="text-white text-sm font-medium leading-tight max-w-[150px] truncate"
-                    title={getDisplayName()}
-                  >
-                    {getTruncatedName(getDisplayName())}
-                  </span>
-                  <span suppressHydrationWarning className={`text-xs font-normal leading-tight ${roleDisplay?.color ?? ""}`}>
-                    {roleDisplay?.label ?? ""}
-                  </span>
+                <div className="hidden md:flex flex-col items-start gap-1" suppressHydrationWarning>
+                  {isUserLoading ? (
+                    <>
+                      <Skeleton className="h-3.5 w-24 bg-white/20" />
+                      <Skeleton className="h-3 w-14 bg-white/20" />
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        suppressHydrationWarning
+                        className="text-white text-sm font-medium leading-tight max-w-[150px] truncate"
+                        title={getDisplayName()}
+                      >
+                        {getTruncatedName(getDisplayName())}
+                      </span>
+                      <span suppressHydrationWarning className={`text-xs font-normal leading-tight ${roleDisplay?.color ?? ""}`}>
+                        {roleDisplay?.label ?? ""}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </DropdownMenuTrigger>
@@ -226,31 +241,44 @@ export function Header() {
               {/* User info in dropdown */}
               <div className="px-3 py-3 border-b">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border border-border">
-                    <AvatarImage
-                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
-                      alt="User"
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                      {getAvatarFallback()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-semibold truncate">{getDisplayName()}</span>
-                    {roleDisplay && (
-                      <span className={`text-xs font-medium ${
-                        roleDisplay.label === "Admin" ? "text-red-500" :
-                        roleDisplay.label === "Developer" ? "text-purple-500" :
-                        roleDisplay.label === "Teacher" ? "text-blue-500" :
-                        roleDisplay.label === "Staff" ? "text-emerald-600" :
-                        "text-yellow-600"
-                      }`}>
-                        {roleDisplay.label}
-                      </span>
-                    )}
-                    {user?.department?.name && (
-                      <span className="text-xs text-muted-foreground truncate">{user.department.name}</span>
+                  {isUserLoading ? (
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                  ) : (
+                    <Avatar className="h-10 w-10 border border-border">
+                      <AvatarImage
+                        src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
+                        alt="User"
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                        {getAvatarFallback()}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className="flex flex-col min-w-0 gap-1.5">
+                    {isUserLoading ? (
+                      <>
+                        <Skeleton className="h-3.5 w-28" />
+                        <Skeleton className="h-3 w-16" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-sm font-semibold truncate">{getDisplayName()}</span>
+                        {roleDisplay && (
+                          <span className={`text-xs font-medium ${
+                            roleDisplay.label === "Admin" ? "text-red-500" :
+                            roleDisplay.label === "Developer" ? "text-purple-500" :
+                            roleDisplay.label === "Teacher" ? "text-blue-500" :
+                            roleDisplay.label === "Staff" ? "text-emerald-600" :
+                            "text-yellow-600"
+                          }`}>
+                            {roleDisplay.label}
+                          </span>
+                        )}
+                        {user?.department?.name && (
+                          <span className="text-xs text-muted-foreground truncate">{user.department.name}</span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
