@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RequestManagementState } from "../models/type/request-type";
-import { fetchAllRequestsService, createRequestThunk } from "../thunks/request-thunks";
+import { MyRequestState } from "../models/type/request-type";
+import { fetchMyRequestsService } from "../thunks/my-request-thunks";
+import { createRequestThunk } from "../thunks/request-thunks";
 
-const initialState: RequestManagementState = {
+const initialState: MyRequestState = {
   data: null,
   isLoading: true,
   error: null,
@@ -10,13 +11,12 @@ const initialState: RequestManagementState = {
   filters: {
     search: "",
     status: "PENDING",
-    userId: undefined,
     pageNo: 1,
   },
 };
 
-const requestSlice = createSlice({
-  name: "requests",
+const myRequestSlice = createSlice({
+  name: "myRequests",
   initialState,
   reducers: {
     setSearchFilter: (state, action: PayloadAction<string>) => {
@@ -27,31 +27,25 @@ const requestSlice = createSlice({
       state.filters.status = action.payload;
       state.filters.pageNo = 1;
     },
-    setUserFilter: (state, action: PayloadAction<number | undefined>) => {
-      state.filters.userId = action.payload;
-      state.filters.pageNo = 1;
-    },
     setPageNo: (state, action: PayloadAction<number>) => {
       state.filters.pageNo = action.payload;
     },
     resetFilters: (state) => {
       state.filters = initialState.filters;
     },
-    resetState: () => {
-      return initialState;
-    },
+    resetState: () => initialState,
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAllRequestsService.pending, (state) => {
+      .addCase(fetchMyRequestsService.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchAllRequestsService.fulfilled, (state, action) => {
+      .addCase(fetchMyRequestsService.fulfilled, (state, action) => {
         state.data = action.payload;
         state.isLoading = false;
       })
-      .addCase(fetchAllRequestsService.rejected, (state, action) => {
+      .addCase(fetchMyRequestsService.rejected, (state, action) => {
         state.error = action.payload as string;
         state.isLoading = false;
       });
@@ -75,6 +69,11 @@ const requestSlice = createSlice({
   },
 });
 
-export const { setSearchFilter, setStatusFilter, setUserFilter, setPageNo, resetFilters, resetState } =
-  requestSlice.actions;
-export default requestSlice.reducer;
+export const {
+  setSearchFilter,
+  setStatusFilter,
+  setPageNo,
+  resetFilters,
+  resetState,
+} = myRequestSlice.actions;
+export default myRequestSlice.reducer;

@@ -5,8 +5,8 @@ import { ConfirmRejectModal } from "@/components/dashboard/requests/confirm-reje
 import { ConfirmReturnModal } from "@/components/dashboard/requests/confirm-return-modal";
 import { RequestCompletedModal } from "@/components/dashboard/requests/request-completed-modal";
 import { RequestHistory } from "@/components/dashboard/requests/request-history";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { RequestTranscript } from "@/components/dashboard/requests/request-transcript";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -511,16 +511,17 @@ export default function StudentDetail() {
   };
 
   return (
-    <div>
-      <CardHeaderSection
-        title="Request View Details"
-        back
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Request List", href: ROUTE.REQUESTS },
-          { label: "View Detail", href: ROUTE.REQUEST_DETAIL(requestId) },
-        ]}
-      />
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <PageBreadcrumb
+            items={[
+              { label: "Requests", href: ROUTE.REQUESTS },
+              { label: "View Detail" },
+            ]}
+          />
+        </CardContent>
+      </Card>
 
       <div className="relative flex items-center my-6 ">
         <Button

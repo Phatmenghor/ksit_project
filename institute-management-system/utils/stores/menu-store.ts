@@ -19,6 +19,8 @@ const iconMapping: Record<string, string> = {
   "student-scores": AppSidebarIcons.Student_Scores,
   "scores-submitted": AppSidebarIcons.Scores_Submitted,
   request: AppSidebarIcons.Request,
+  "request-group": AppSidebarIcons.Request,
+  "my-requests": AppSidebarIcons.Request,
   schedule: AppSidebarIcons.Schedule,
   "schedule-group": AppSidebarIcons.Schedule,
   "manage-schedule": AppSidebarIcons.Manage_Schedule,

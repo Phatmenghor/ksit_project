@@ -130,7 +130,13 @@ public class MenuPermissionConfig {
         ));
         permissions.put("manage-schedule", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
 
-        permissions.put("request", Set.of(RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("request-group", Set.of(
+            RoleEnum.STUDENT, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
+        ));
+        permissions.put("request", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
+        permissions.put("my-requests", Set.of(
+            RoleEnum.STUDENT, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER
+        ));
 
         permissions.put("payment", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));
         permissions.put("student-payment", Set.of(RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER));

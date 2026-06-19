@@ -186,8 +186,16 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity surveyStudentRecords = upsertMenuItem("survey-student-records", "Student Records", "/survey/records", survey, "file-user", false, 4);
         addPermissions(surveyStudentRecords, 4, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity requests = upsertMenuItem("request", "Requests", "/requests", null, "inbox", false, 11);
-        addPermissions(requests, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+        MenuItemEntity requestGroup = upsertMenuItem("request-group", "Requests", null, null, "inbox", true, 11);
+        addPermissions(requestGroup, 1,
+                RoleEnum.STUDENT, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+
+        MenuItemEntity requestList = upsertMenuItem("request", "Request List", "/requests", requestGroup, "list", false, 1);
+        addPermissions(requestList, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+
+        MenuItemEntity myRequests = upsertMenuItem("my-requests", "My Requests", "/my-requests", requestGroup, "plus-circle", false, 2);
+        addPermissions(myRequests, 2,
+                RoleEnum.STUDENT, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity rolePermission = upsertMenuItem("role-permission", "Role & Permissions", "/permissions", null, "shield", false, 12);
         addPermissions(rolePermission, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);

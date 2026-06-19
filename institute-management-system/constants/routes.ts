@@ -97,6 +97,8 @@ export const ROUTE = {
   },
 
   REQUESTS: "/requests",
+  REQUEST_CREATE: "/requests/new",
+  MY_REQUESTS: "/my-requests",
   REQUEST_DETAIL: (id: string) => `/requests/${id}`,
   REQUEST_UPDATE: (id: string) => `/requests/${id}`,
 

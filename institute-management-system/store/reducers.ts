@@ -15,10 +15,13 @@ import scheduleReducer from "@/features/schedules/store/slice/schedule-slice";
 import submittedScoreReducer from "@/features/scores/store/slice/submitted-score-slice";
 
 import requestReducer from "@/features/requests/store/slice/request-slice";
+import myRequestReducer from "@/features/requests/store/slice/my-request-slice";
 
 import paymentReducer from "@/features/payments/store/slice/payment-slice";
 
 import surveyReducer from "@/features/survey/store/slice/survey-slice";
+import surveyQAReducer from "@/features/survey/store/slice/survey-qa-slice";
+import permissionReducer from "@/features/permissions/store/slice/permission-slice";
 
 import uiReducer from "./slices/ui-slice";
 import comboboxCacheReducer from "./slices/combobox-cache-slice";
@@ -44,8 +47,11 @@ export const reducers = {
   submittedScores: submittedScoreReducer,
 
   requests: requestReducer,
+  myRequests: myRequestReducer,
 
   payments: paymentReducer,
 
   surveyResults: surveyReducer,
+  surveyQA: surveyQAReducer,
+  permissionsData: permissionReducer,
 };
