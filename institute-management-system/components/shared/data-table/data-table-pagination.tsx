@@ -51,7 +51,7 @@ export function DataTablePagination({
   onPageSizeChange,
   className,
 }: DataTablePaginationProps) {
-  const showPaginationButtons = totalElements >= 10;
+  const showPaginationButtons = totalPages > 1;
 
   if (!onPageSizeChange && !showPaginationButtons) return null;
 
