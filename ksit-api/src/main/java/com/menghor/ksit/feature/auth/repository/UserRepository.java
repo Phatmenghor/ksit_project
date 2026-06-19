@@ -36,6 +36,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
     @Query("SELECT COUNT(u) FROM UserEntity u JOIN u.roles r WHERE r.name = :role AND u.status = :status")
     long countActiveUsersByRole(@Param("role") RoleEnum role, @Param("status") Status status);
 
-    @EntityGraph(attributePaths = {"roles", "department", "classes", "classes.major"})
+    // "roles" intentionally excluded: it's a @ManyToMany collection, and fetching a
+    // collection together with Pageable forces Hibernate to paginate in memory
+    // (load everything, then slice) instead of pushing LIMIT/OFFSET to the database.
+    // UserEntity.roles already has @BatchSize(30), so it still avoids N+1 when the
+    // mapper lazily accesses it per row, just via a batched follow-up query instead.
+    @EntityGraph(attributePaths = {"department", "classes", "classes.major"})
     Page<UserEntity> findAll(org.springframework.data.jpa.domain.Specification<UserEntity> spec, Pageable pageable);
 }
