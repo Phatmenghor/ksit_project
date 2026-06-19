@@ -3,9 +3,9 @@
 import { useState, useCallback } from "react";
 import { AsyncCombobox, useInfiniteComboboxData } from "@/components/shared/async-combobox";
 import { StatusEnum } from "@/constants/constant";
-import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { useAppDispatch } from "@/store";
-import { fetchScheduleComboboxService } from "@/features/school/store/thunks/schedule-thunks";
+import { fetchAllSchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
 import { formatTime12h } from "@/utils/map-helper/schedule";
 
 interface ComboboxSelectScheduleProps {
@@ -31,7 +31,7 @@ export function ComboboxSelectSchedule({
 
   const fetcher = useCallback(
     ({ search, pageNo, pageSize }: { search: string; pageNo: number; pageSize: number }) =>
-      dispatch(fetchScheduleComboboxService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
+      dispatch(fetchAllSchedulesService({ search, pageNo, pageSize, status: StatusEnum.ACTIVE })).unwrap(),
     [dispatch]
   );
 

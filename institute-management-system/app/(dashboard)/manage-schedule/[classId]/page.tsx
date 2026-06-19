@@ -10,8 +10,9 @@ import Loading from "@/components/shared/loading";
 import { toast } from "sonner";
 import {
   deleteScheduleService,
-  getAllScheduleService,
-} from "@/service/schedule/schedule.service";
+  fetchAllSchedulesService,
+} from "@/features/schedules/store/thunks/schedule-thunks";
+import { useAppDispatch } from "@/store";
 import {
   AllScheduleModel,
   ScheduleModel,
@@ -53,6 +54,7 @@ const AllSchedulePage = () => {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     setSelectedYear(new Date().getFullYear());
@@ -108,7 +110,7 @@ const AllSchedulePage = () => {
           ...filters,
         };
 
-        const response = await getAllScheduleService(baseFilters);
+        const response = await dispatch(fetchAllSchedulesService(baseFilters)).unwrap();
 
         setScheduleData(response);
         if (response.totalPages > 0 && currentPage > response.totalPages) {
@@ -130,6 +132,7 @@ const AllSchedulePage = () => {
       currentPage,
       selectedSemester,
       isHydrated,
+      dispatch,
     ]
   );
 
@@ -172,30 +175,26 @@ const AllSchedulePage = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await deleteScheduleService(selectedSchedule.id);
+      await dispatch(deleteScheduleService(selectedSchedule.id)).unwrap();
 
-      if (response) {
-        toast.success("Schedule deleted successfully");
+      toast.success("Schedule deleted successfully");
 
-        setScheduleData((prevData) => {
-          if (!prevData) return null;
+      setScheduleData((prevData) => {
+        if (!prevData) return null;
 
-          const updatedContent = prevData.content.filter(
-            (schedule) => schedule.id !== selectedSchedule.id
-          );
+        const updatedContent = prevData.content.filter(
+          (schedule) => schedule.id !== selectedSchedule.id
+        );
 
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
+        return {
+          ...prevData,
+          content: updatedContent,
+          totalElements: prevData.totalElements - 1,
+        };
+      });
 
-        setSelectedSchedule(null);
-        setIsDeleteDialogOpen(false);
-      } else {
-        toast.error("Failed to delete schedule");
-      }
+      setSelectedSchedule(null);
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       toast.error("An error occurred while deleting the schedule");
     } finally {

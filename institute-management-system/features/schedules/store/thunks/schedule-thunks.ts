@@ -13,3 +13,22 @@ export const fetchMySchedulesService = createApiThunk<
   );
   return response.data.data;
 });
+
+export const fetchAllSchedulesService = createApiThunk<
+  AllScheduleModel,
+  ScheduleFilterModel
+>("schedules/fetchAll", async (params) => {
+  const response = await axiosClientWithAuth.post<{ data: AllScheduleModel }>(
+    "/v1/schedules/all",
+    params
+  );
+  return response.data.data;
+});
+
+export const deleteScheduleService = createApiThunk<number, number>(
+  "schedules/delete",
+  async (scheduleId) => {
+    await axiosClientWithAuth.delete(`/v1/schedules/${scheduleId}`);
+    return scheduleId;
+  }
+);

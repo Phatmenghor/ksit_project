@@ -28,10 +28,8 @@ import {
 } from "@/constants/constant";
 import Loading from "@/components/shared/loading";
 import { toast } from "sonner";
-import {
-  getAllMyScheduleService,
-  getAllScheduleService,
-} from "@/service/schedule/schedule.service";
+import { fetchAllSchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
+import { useAppDispatch } from "@/store";
 import { AllScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { Separator } from "@/components/ui/separator";
@@ -68,6 +66,7 @@ const MySchedulePage = () => {
   );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const params = useParams();
   const classId = params?.classId ? Number(params.classId) : null;
@@ -113,7 +112,7 @@ const MySchedulePage = () => {
             selectedDay?.value !== "ALL" ? selectedDay?.value : undefined,
           ...filters,
         };
-        const response = await getAllScheduleService(baseFilters);
+        const response = await dispatch(fetchAllSchedulesService(baseFilters)).unwrap();
         setScheduleData(response);
         // Handle case where current page exceeds total pages
         if (response.totalPages > 0 && currentPage > response.totalPages) {
@@ -133,6 +132,7 @@ const MySchedulePage = () => {
       currentPage,
       selectedYear,
       selectedSemester,
+      dispatch,
     ]
   );
 

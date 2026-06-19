@@ -8,15 +8,6 @@ import {
 } from "@/model/schedules/type-schedule-model";
 import { axiosClientWithAuth } from "@/utils/axios";
 
-export async function getAllScheduleService(data: ScheduleFilterModel) {
-  try {
-    const response = await axiosClientWithAuth.post(`/v1/schedules/all`, data);
-    return response.data.data;
-  } catch (error: any) {
-    return null;
-  }
-}
-
 export async function duplicateScheduleService(data: DuplicateFilterModel) {
   try {
     const response = await axiosClientWithAuth.post(
@@ -24,18 +15,6 @@ export async function duplicateScheduleService(data: DuplicateFilterModel) {
       data
     );
     return response.data;
-  } catch (error: any) {
-    return null;
-  }
-}
-
-export async function getAllMyScheduleService(data: ScheduleFilterModel) {
-  try {
-    const response = await axiosClientWithAuth.post(
-      `/v1/schedules/my-schedules`,
-      data
-    );
-    return response.data.data;
   } catch (error: any) {
     return null;
   }
@@ -95,14 +74,3 @@ export async function updateScheduleService(
 }
 /** @deprecated Use getDetailScheduleService instead */
 export const getScheduleByIdService = getDetailScheduleService;
-
-export async function deleteScheduleService(scheduleId: number) {
-  try {
-    const response = await axiosClientWithAuth.delete(
-      `/v1/schedules/${scheduleId}`
-    );
-    return response.data.data;
-  } catch (error: any) {
-    return null;
-  }
-}
