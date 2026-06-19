@@ -167,7 +167,16 @@ export default function AttendanceStudentsListPage() {
     }
   };
 
-  const tableColumns = createAttendanceRecordsColumns({ currentPage, currentPageSize, router });
+  const tableColumns = createAttendanceRecordsColumns({
+    currentPage,
+    currentPageSize,
+    router,
+    filterParams: {
+      classId: filters.classId,
+      scheduleId: filters.scheduleId,
+      academicYear: filters.academicYear,
+    },
+  });
 
   return (
     <div className="space-y-4">

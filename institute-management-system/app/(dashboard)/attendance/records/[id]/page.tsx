@@ -2,23 +2,12 @@
 
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import { YearSelector } from "@/components/shared/year-selector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SemesterFilter } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { useCallback, useEffect, useState } from "react";
-import {
-  AttendanceHistoryExcelTableHeader,
-} from "@/constants/table/attendance-history";
+import { AttendanceHistoryExcelTableHeader } from "@/constants/table/attendance-history";
 import {
   AttendanceHistoryFilter,
   AttendanceHistoryModel,
@@ -29,25 +18,24 @@ import {
   getAllAttendanceHistoryService,
 } from "@/service/schedule/attendance.service";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
-import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { format } from "date-fns";
-import { Input } from "@/components/ui/input";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { DateRangePicker } from "@/components/shared/start-end-date";
 import { Constants } from "@/constants/text-string";
 import { createAttendanceRecordDetailColumns } from "./columns";
 import { AllAttendanceHistoryModel } from "@/model/attendance/attendance-history";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useParams, useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
-import Loading from "@/components/shared/loading";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export default function StudentAttendancePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -56,212 +44,144 @@ export default function StudentAttendancePage() {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
 
-  const [selectAcademicYear, setSelectAcademicYear] = useState<
-    number | undefined
-  >();
-  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(
-    undefined
-  );
-  const [selectedCourse, setSelectedCourse] = useState<CourseModel | undefined>(
-    undefined
-  );
-  const [selectedSchedule, setSelectedSchedule] = useState<
-    ScheduleModel | undefined
-  >(undefined);
-  const [attendanceHistoryData, setAttendanceHistoryData] =
-    useState<AllAttendanceHistoryModel | null>(null);
+  const [selectAcademicYear, setSelectAcademicYear] = useState<number>(0);
+  const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(undefined);
+  const [selectedCourse, setSelectedCourse] = useState<CourseModel | undefined>(undefined);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleModel | undefined>(undefined);
+  const [attendanceHistoryData, setAttendanceHistoryData] = useState<AllAttendanceHistoryModel | null>(null);
+
   const params = useParams();
   const studentId = params.id as string;
-
-  // Date filter states
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const searchParams = useSearchParams();
 
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
-    usePagination({
-      baseRoute: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(studentId),
-    });
+    usePagination({ baseRoute: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(studentId) });
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
-  };
-
-  // Then add this effect for initial URL setup
+  // Initialise filters from URL query params passed by the records list page
   useEffect(() => {
+    const classIdParam = searchParams.get("classId");
+    const scheduleIdParam = searchParams.get("scheduleId");
+    const academicYearParam = searchParams.get("academicYear");
+
+    if (academicYearParam) setSelectAcademicYear(parseInt(academicYearParam));
+    // class and schedule objects can't be reconstructed from just an id without an extra API call,
+    // so we store the ids and pass them directly to the fetch
+    if (classIdParam) setInitialClassId(parseInt(classIdParam));
+    if (scheduleIdParam) setInitialScheduleId(parseInt(scheduleIdParam));
+
     const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
+    if (!pageParam) updateUrlWithPage(1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const fetchAttendanceHistory = useCallback(
-    async (filter: AttendanceHistoryFilter) => {
-      setIsLoading(true);
-      try {
-        const response = await getAllAttendanceHistoryService({
-          search: debouncedSearchQuery,
-          academyYear: selectAcademicYear,
-          semester: selectedSemester != "ALL" ? selectedSemester : undefined,
-          classId: selectedClass?.id,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          studentId: studentId ? parseInt(studentId) : undefined,
-          finalizationStatus: "FINAL",
-          startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-          endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-          ...filter,
-        });
+  // Store raw ids from URL so we can send them even without a full model object
+  const [initialClassId, setInitialClassId] = useState<number | undefined>(undefined);
+  const [initialScheduleId, setInitialScheduleId] = useState<number | undefined>(undefined);
 
-        setAttendanceHistoryData(response);
-        if (response.totalPages > 0 && currentPage > response.totalPages) {
-          updateUrlWithPage(response.totalPages);
-          return;
-        }
-      } catch (error: any) {
-        toast.error("An error occurred while loading attendance history");
-        setAttendanceHistoryData(null);
-      } finally {
-        setIsLoading(false);
+  const fetchAttendanceHistory = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllAttendanceHistoryService({
+        search: debouncedSearchQuery,
+        academyYear: selectAcademicYear || undefined,
+        semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
+        classId: selectedClass?.id ?? initialClassId,
+        courseId: selectedCourse?.id,
+        scheduleId: selectedSchedule?.id ?? initialScheduleId,
+        pageNo: currentPage,
+        pageSize: currentPageSize,
+        studentId: studentId ? parseInt(studentId) : undefined,
+        finalizationStatus: "FINAL",
+        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+      });
+
+      setAttendanceHistoryData(response);
+      if (response.totalPages > 0 && currentPage > response.totalPages) {
+        updateUrlWithPage(response.totalPages);
       }
-    },
-    [
-      debouncedSearchQuery,
-      selectedClass,
-      selectAcademicYear,
-      currentPage,
-      selectedSemester,
-      startDate,
-      endDate,
-    ]
-  );
-
-  useEffect(() => {
-    fetchAttendanceHistory({ pageNo: currentPage });
+    } catch {
+      toast.error("An error occurred while loading attendance history");
+      setAttendanceHistoryData(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, [
     debouncedSearchQuery,
     selectedClass,
+    selectedCourse,
+    selectedSchedule,
+    initialClassId,
+    initialScheduleId,
     selectAcademicYear,
-    selectedSemester,
     currentPage,
+    currentPageSize,
+    selectedSemester,
     startDate,
     endDate,
+    studentId,
+    updateUrlWithPage,
   ]);
 
-  const handleYearChange = (e: number) => {
-    setSelectAcademicYear(e);
-  };
+  useEffect(() => {
+    fetchAttendanceHistory();
+  }, [fetchAttendanceHistory]);
 
-  const handleScheduleChange = (e: ScheduleModel | null) => {
-    setSelectedSchedule(e ?? undefined);
-    updateUrlWithPage(1);
-  };
-
-  const handleCourseChange = (e: CourseModel | null) => {
-    setSelectedCourse(e ?? undefined);
-    updateUrlWithPage(1);
-  };
-
-  const clearStartDate = () => {
-    setStartDate(undefined);
-    updateUrlWithPage(1);
-  };
-
-  const clearEndDate = () => {
-    setEndDate(undefined);
-    updateUrlWithPage(1);
-  };
-
-  // Export to Excel - Fixed version
   const exportToExcel = async (): Promise<void> => {
     setIsSubmitting(true);
-
     try {
       setIsLoading(true);
-      // Create a proper filter object for the API call
       const exportFilter: AttendanceHistoryFilter = {
         search: debouncedSearchQuery,
-        academyYear: selectAcademicYear,
+        academyYear: selectAcademicYear || undefined,
         finalizationStatus: "FINAL",
         semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
-        classId: selectedClass?.id,
+        classId: selectedClass?.id ?? initialClassId,
+        courseId: selectedCourse?.id,
+        scheduleId: selectedSchedule?.id ?? initialScheduleId,
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
       };
 
-      // count data
-      const countFilter = await getAllAttedanceHistoryCountService(
-        exportFilter
-      );
-
+      const countFilter = await getAllAttedanceHistoryCountService(exportFilter);
       if ((countFilter || 0) === 0) {
         toast.warning("No data available to export.");
-        setIsSubmitting(false);
         return;
       }
-
-      // EXCEL_LIMIT : limit data to export
       if (countFilter > Constants.EXCEL_LIMIT) {
-        toast.info(
-          `Only ${Constants.EXCEL_LIMIT} items were exported. Too many records. Please filter the data.`
-        );
-        setIsSubmitting(false);
+        toast.info(`Only ${Constants.EXCEL_LIMIT} items were exported. Please filter the data.`);
         return;
       }
 
-      // Fetch data for export
-      const allDataResponse: AttendanceHistoryModel[] =
-        await getAllAttedanceHistoryExcelService(exportFilter);
+      const allDataResponse: AttendanceHistoryModel[] = await getAllAttedanceHistoryExcelService(exportFilter);
 
-
-      // Use API data if available, otherwise use current data
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Attendance History Data");
-
-      // Header table excel
       const columns: string[] = AttendanceHistoryExcelTableHeader;
 
-      // Add title row at Row 1
       worksheet.mergeCells(1, 1, 1, columns.length);
       const titleCell = worksheet.getCell("A1");
       titleCell.value = "List Attendance History Data";
       titleCell.font = { size: 16, bold: true, color: { argb: "FFFFFFFF" } };
       titleCell.alignment = { vertical: "middle", horizontal: "center" };
-      titleCell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF1F4E78" },
-      };
+      titleCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E78" } };
 
-      // Add header row at Row 3
       const headerRow = worksheet.getRow(3);
       columns.forEach((text: string, idx: number) => {
         const cell = headerRow.getCell(idx + 1);
         cell.value = text;
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
         cell.alignment = { vertical: "middle", horizontal: "center" };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FF007ACC" },
-        };
-        cell.border = {
-          top: { style: "thin" },
-          bottom: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-        };
-
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF007ACC" } };
+        cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
         const columnWidths = [5, 15, 25, 27, 20, 15, 15, 15, 30];
         worksheet.getColumn(idx + 1).width = columnWidths[idx];
       });
 
-      // Add data rows starting at row 4
-      allDataResponse.forEach((item: any, i: number) => {
+      allDataResponse.forEach((item: AttendanceHistoryModel, i: number) => {
         const row = worksheet.addRow([
           i + 1,
           item.identifyNumber || "---",
@@ -273,61 +193,30 @@ export default function StudentAttendancePage() {
           item.createdAt || "---",
           item.comment || "---",
         ]);
-
-        // Zebra striping
         row.eachCell((cell) => {
-          cell.fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: i % 2 === 0 ? "FFF3F3F3" : "FFFFFFFF" },
-          };
-          cell.border = {
-            top: { style: "thin" },
-            bottom: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-          };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: i % 2 === 0 ? "FFF3F3F3" : "FFFFFFFF" } };
+          cell.border = { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } };
           cell.alignment = { vertical: "middle", horizontal: "center" };
         });
-
-        // Color the "Attendance" column (6th column)
         const attendanceCell = row.getCell(6);
-        const attendanceValue = item.status?.toLowerCase();
-
-        if (attendanceValue === "absent") {
-          attendanceCell.font = { color: { argb: "FFFF0000" }, bold: true };
-        } else if (attendanceValue === "present") {
-          attendanceCell.font = { color: { argb: "FF00AA00" }, bold: true };
-        }
+        const status = item.status?.toLowerCase();
+        if (status === "absent") attendanceCell.font = { color: { argb: "FFFF0000" }, bold: true };
+        else if (status === "present") attendanceCell.font = { color: { argb: "FF00AA00" }, bold: true };
       });
 
-      // Format check-in time as date (column 8)
       worksheet.getColumn(8).eachCell((cell, rowNumber: number) => {
         if (rowNumber > 3 && cell.value) {
-          try {
-            cell.value = new Date(cell.value as string);
-            cell.numFmt = "dd-mm-yyyy";
-          } catch (error) {
-          }
+          try { cell.value = new Date(cell.value as string); cell.numFmt = "dd-mm-yyyy"; } catch { /* skip */ }
         }
       });
 
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      // File name
-      const fileName = `attendance_history_${format(
-        new Date(),
-        "yyyy-MM-dd"
-      )}.xlsx`;
-      saveAs(blob, fileName);
-
-      toast.success(
-        `Excel file exported successfully! Total records: ${allDataResponse.length}`
+      saveAs(
+        new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+        `attendance_history_${format(new Date(), "yyyy-MM-dd")}.xlsx`
       );
-    } catch (error: unknown) {
+      toast.success(`Excel exported! Total records: ${allDataResponse.length}`);
+    } catch {
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -335,110 +224,161 @@ export default function StudentAttendancePage() {
     }
   };
 
+  const handleClearAll = () => {
+    setSearchQuery("");
+    setSelectedClass(undefined);
+    setSelectedSchedule(undefined);
+    setSelectedCourse(undefined);
+    setSelectAcademicYear(0);
+    setSelectedSemester("ALL");
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setInitialClassId(undefined);
+    setInitialScheduleId(undefined);
+  };
+
   const tableColumns = createAttendanceRecordDetailColumns({ getDisplayIndex });
 
   return (
-    <div>
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Student Record", href: "" },
-        ]}
-        title="Student Record"
-        customSelect={
-          <div className="flex flex-col gap-4">
-            {/* First row: Search, Class, Year, and Semester */}
-            <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-2">
-              <div className="relative w-full min-w-[200px] md:w-auto md:flex-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search by name or ID..."
-                  className="pl-8 w-full"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-              </div>
-              <div className="w-full min-w-[200px] md:w-auto md:flex-1">
-                <ComboboxSelectSchedule
-                  dataSelect={selectedSchedule ?? null}
-                  onChangeSelected={handleScheduleChange}
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <PageBreadcrumb
+            items={[
+              { label: "Attendance", href: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD },
+              { label: "Student Record" },
+            ]}
+          />
+        </CardContent>
+      </Card>
+
+      <CollapsibleFilterPanel
+        config={{
+          title: "Student Record",
+          totalCount: attendanceHistoryData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search by name or ID...",
+          onSearchChange: (e) => {
+            setSearchQuery(e.target.value);
+            if (currentPage !== 1) updateUrlWithPage(1);
+          },
+          onBack: () => window.history.back(),
+          filters: [
+            {
+              id: "year",
+              type: "custom",
+              label: "Academic Year",
+              value: selectAcademicYear,
+              onChange: (v: unknown) => setSelectAcademicYear((v as number) || 0),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
                   disabled={isSubmitting}
                 />
-              </div>
-              <div className="w-full min-w-[200px] md:w-auto md:flex-1">
-                <ComboboxSelectCourse
-                  dataSelect={selectedCourse ?? null}
-                  onChangeSelected={handleCourseChange}
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div className="w-full min-w-[200px] md:w-auto md:flex-1">
-                <YearSelector
-                  title="Select Year"
-                  onChange={handleYearChange}
-                  value={selectAcademicYear || 0}
-                />
-              </div>
-              <div className="w-full min-w-[200px] md:w-auto md:flex-1">
-                <Select
-                  onValueChange={setSelectedSemester}
-                  value={selectedSemester}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a semester" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SemesterFilter.map((semester) => (
-                      <SelectItem key={semester.value} value={semester.value}>
-                        {semester.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Second row: Date pickers */}
-            <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-2 justify-between">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-2">
-                <DateRangePicker
-                  startDate={startDate}
-                  endDate={endDate}
-                  onStartDateChange={setStartDate}
-                  onEndDateChange={setEndDate}
-                  clearStartDate={clearStartDate}
-                  clearEndDate={clearEndDate}
-                />
-              </div>
-
-              {/* export excel */}
-              <div>
-                <div className="flex items-center gap-2 justify-end">
-                  <span className="text-sm mr-2">Export Data by Class</span>
-                  <ExcelDownloadButton onClick={exportToExcel} isLoading={isLoading} />
+              ),
+            },
+            {
+              id: "class",
+              type: "custom",
+              label: "Class",
+              value: selectedClass ?? null,
+              onChange: (v: unknown) => setSelectedClass((v as ClassModel) ?? undefined),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Class</label>
+                  <ComboboxSelectClass
+                    dataSelect={(value as ClassModel) ?? null}
+                    onChangeSelected={(item) => { onChange(item); setInitialClassId(undefined); }}
+                    disabled={isSubmitting}
+                  />
                 </div>
-              </div>
-            </div>
-          </div>
-        }
+              ),
+            },
+            {
+              id: "schedule",
+              type: "custom",
+              label: "Schedule",
+              value: selectedSchedule ?? null,
+              onChange: (v: unknown) => setSelectedSchedule((v as ScheduleModel) ?? undefined),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Schedule</label>
+                  <ComboboxSelectSchedule
+                    dataSelect={(value as ScheduleModel) ?? null}
+                    onChangeSelected={(item) => { onChange(item); setInitialScheduleId(undefined); }}
+                    disabled={isSubmitting}
+                    allowClear
+                  />
+                </div>
+              ),
+            },
+            {
+              id: "course",
+              type: "custom",
+              label: "Course",
+              value: selectedCourse ?? null,
+              onChange: (v: unknown) => setSelectedCourse((v as CourseModel) ?? undefined),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Course</label>
+                  <ComboboxSelectCourse
+                    dataSelect={(value as CourseModel) ?? null}
+                    onChangeSelected={(item) => onChange(item)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              ),
+            },
+            {
+              id: "semester",
+              type: "select",
+              label: "Semester",
+              value: selectedSemester,
+              onChange: (v: unknown) => setSelectedSemester(String(v || "ALL")),
+              options: SemesterFilter.map((s) => ({ value: s.value, label: s.label })),
+            },
+            {
+              id: "dateRange",
+              type: "custom",
+              label: "Date Range",
+              value: null,
+              onChange: () => {},
+              render: () => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Date Range</label>
+                  <DateRangePicker
+                    startDate={startDate}
+                    endDate={endDate}
+                    onStartDateChange={setStartDate}
+                    onEndDateChange={setEndDate}
+                    clearStartDate={() => setStartDate(undefined)}
+                    clearEndDate={() => setEndDate(undefined)}
+                  />
+                </div>
+              ),
+            },
+          ],
+          onClearAll: handleClearAll,
+          extraActions: (
+            <ExcelDownloadButton onClick={exportToExcel} isLoading={isSubmitting} />
+          ),
+        }}
       />
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        <DataTable
-          data={attendanceHistoryData?.content ?? null}
-          columns={tableColumns}
-          loading={isLoading}
-          currentPage={currentPage}
-          totalPages={attendanceHistoryData?.totalPages ?? 0}
-          totalElements={attendanceHistoryData?.totalElements}
-          onPageChange={handlePageChange}
-          pageSize={currentPageSize}
-          onPageSizeChange={handlePageSizeChange}
-          emptyMessage="No Record"
-          getRowKey={(history) => history.id}
-        />
-      </div>
+      <DataTable
+        data={attendanceHistoryData?.content ?? null}
+        columns={tableColumns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={attendanceHistoryData?.totalPages ?? 0}
+        totalElements={attendanceHistoryData?.totalElements}
+        onPageChange={handlePageChange}
+        pageSize={currentPageSize}
+        onPageSizeChange={handlePageSizeChange}
+        emptyMessage="No Record"
+        getRowKey={(history) => history.id}
+      />
     </div>
   );
 }
