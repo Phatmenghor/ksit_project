@@ -32,11 +32,11 @@ VALUES
   ('users',           'Users',            NULL,          'users',          3,  'ACTIVE', true, NULL, NOW()),
   ('students',        'Students',         NULL,          'graduation-cap', 4,  'ACTIVE', true, NULL, NOW()),
   ('attendance',      'Attendance',       NULL,          'clipboard-check',5,  'ACTIVE', true, NULL, NOW()),
-  ('schedule-group',  'Schedule',         NULL,          'calendar',       6,  'ACTIVE', true, NULL, NOW()),
+  ('schedule',  'Schedule',         NULL,          'calendar',       6,  'ACTIVE', true, NULL, NOW()),
   ('scores-submitted','Scores',           NULL,          'bar-chart-2',    8,  'ACTIVE', true, NULL, NOW()),
   ('payment',         'Payments',         NULL,          'credit-card',    9,  'ACTIVE', true, NULL, NOW()),
   ('survey',          'Survey',           NULL,          'clipboard',      10, 'ACTIVE', true, NULL, NOW()),
-  ('request-group',   'Requests',         NULL,          'inbox',          11, 'ACTIVE', true, NULL, NOW()),
+  ('request',   'Requests',         NULL,          'inbox',          11, 'ACTIVE', true, NULL, NOW()),
   ('role-permission', 'Role & Permissions','/permissions','shield',        12, 'ACTIVE', false, NULL, NOW());
 
 -- ── MASTER DATA children ─────────────────────────────────
@@ -74,8 +74,8 @@ VALUES
 -- ── SCHEDULE children ────────────────────────────────────
 INSERT INTO menu_items (code, title, route, icon, display_order, status, is_parent, parent_id, created_at)
 VALUES
-  ('schedule',         'My Schedule',     '/schedule',       'calendar',     1, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='schedule-group'), NOW()),
-  ('manage-schedule',  'Manage Schedule', '/manage-schedule','calendar-cog', 2, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='schedule-group'), NOW());
+  ('schedule',         'My Schedule',     '/schedule',       'calendar',     1, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='schedule'), NOW()),
+  ('manage-schedule',  'Manage Schedule', '/manage-schedule','calendar-cog', 2, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='schedule'), NOW());
 
 -- ── SCORES children ──────────────────────────────────────
 INSERT INTO menu_items (code, title, route, icon, display_order, status, is_parent, parent_id, created_at)
@@ -101,8 +101,8 @@ VALUES
 -- ── REQUEST children ─────────────────────────────────────
 INSERT INTO menu_items (code, title, route, icon, display_order, status, is_parent, parent_id, created_at)
 VALUES
-  ('request',     'Request List', '/requests',    'list',        1, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='request-group'), NOW()),
-  ('my-requests', 'My Requests',  '/my-requests', 'plus-circle', 2, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='request-group'), NOW());
+  ('request',     'Request List', '/requests',    'list',        1, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='request'), NOW()),
+  ('my-requests', 'My Requests',  '/my-requests', 'plus-circle', 2, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='request'), NOW());
 
 -- =========================================================
 -- 4. INSERT menu_permissions  (role-based defaults)
@@ -172,12 +172,12 @@ FROM menu_items
 CROSS JOIN (VALUES ('STAFF',1),('ADMIN',2),('DEVELOPER',3)) AS r(role,ord)
 WHERE code = 'student-records';
 
--- schedule-group + schedule → ALL roles
+-- schedule + schedule → ALL roles
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
 SELECT id, role, NULL, true, ord, 'ACTIVE', NOW()
 FROM menu_items
 CROSS JOIN (VALUES ('STUDENT',1),('TEACHER',2),('STAFF',3),('ADMIN',4),('DEVELOPER',5)) AS r(role,ord)
-WHERE code IN ('schedule-group','schedule');
+WHERE code IN ('schedule','schedule');
 
 -- manage-schedule → STAFF, ADMIN, DEVELOPER
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
@@ -233,12 +233,12 @@ FROM menu_items
 CROSS JOIN (VALUES ('STUDENT',1),('TEACHER',2),('STAFF',3),('ADMIN',4),('DEVELOPER',5)) AS r(role,ord)
 WHERE code = 'survey-student';
 
--- request-group + my-requests → STUDENT, STAFF, ADMIN, DEVELOPER
+-- request + my-requests → STUDENT, STAFF, ADMIN, DEVELOPER
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
 SELECT id, role, NULL, true, ord, 'ACTIVE', NOW()
 FROM menu_items
 CROSS JOIN (VALUES ('STUDENT',1),('STAFF',2),('ADMIN',3),('DEVELOPER',4)) AS r(role,ord)
-WHERE code IN ('request-group','my-requests');
+WHERE code IN ('request','my-requests');
 
 -- request (list) → STAFF, ADMIN, DEVELOPER
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
