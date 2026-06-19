@@ -19,7 +19,9 @@ import java.time.LocalDateTime;
     @Index(name = "idx_attendance_type", columnList = "attendance_type"),
     @Index(name = "idx_attendance_finalization", columnList = "finalization_status"),
     @Index(name = "idx_attendance_student_session", columnList = "student_id, attendance_session_id"),
-    @Index(name = "idx_attendance_session_status", columnList = "attendance_session_id, status")
+    @Index(name = "idx_attendance_session_status", columnList = "attendance_session_id, status"),
+    @Index(name = "idx_attendance_created_at", columnList = "created_at"),
+    @Index(name = "idx_attendance_student_created", columnList = "student_id, created_at")
 })
 @Getter
 @Setter

@@ -28,6 +28,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,20 @@ public class AttendanceMapper {
     private final AttendanceRepository attendanceRepository;
     private final ScoreConfigurationRepository scoreConfigurationRepository;
 
+    public record ScheduleStudentKey(Long scheduleId, Long studentId) {}
+
     public AttendanceDto toDto(AttendanceEntity entity) {
+        return toDto(entity, null, null, null);
+    }
+
+    /**
+     * Batch-aware variant: pass precomputed grouped counts and the active score config
+     * so callers mapping a page of results avoid issuing per-row COUNT queries.
+     */
+    public AttendanceDto toDto(AttendanceEntity entity,
+                                Map<Long, Long> finalizedSessionCountByScheduleId,
+                                Map<ScheduleStudentKey, Long> presentCountByScheduleAndStudent,
+                                ScoreConfigurationEntity activeScoreConfig) {
         if (entity == null) {
             return null;
         }
@@ -124,7 +138,8 @@ public class AttendanceMapper {
                 }
 
                 // Calculate attendance score information
-                calculateAttendanceScoreInfo(dto, entity);
+                calculateAttendanceScoreInfo(dto, entity, finalizedSessionCountByScheduleId,
+                        presentCountByScheduleAndStudent, activeScoreConfig);
             }
         }
 
@@ -132,9 +147,15 @@ public class AttendanceMapper {
     }
 
     /**
-     * Calculate attendance score information for the DTO
+     * Calculate attendance score information for the DTO.
+     * When the grouped-count maps/config are null (single-entity callers), falls back to
+     * per-row queries. When provided (batch/page mapping), uses the precomputed values instead
+     * of issuing a COUNT query per row.
      */
-    private void calculateAttendanceScoreInfo(AttendanceDto dto, AttendanceEntity entity) {
+    private void calculateAttendanceScoreInfo(AttendanceDto dto, AttendanceEntity entity,
+                                               Map<Long, Long> finalizedSessionCountByScheduleId,
+                                               Map<ScheduleStudentKey, Long> presentCountByScheduleAndStudent,
+                                               ScoreConfigurationEntity activeScoreConfig) {
         try {
             Long scheduleId = dto.getScheduleId();
             Long studentId = dto.getStudentId();
@@ -143,38 +164,45 @@ public class AttendanceMapper {
                 return;
             }
 
-            // Count total FINALIZED sessions for this schedule - FIXED VERSION
-            Specification<AttendanceSessionEntity> finalizedSessionSpec = new Specification<AttendanceSessionEntity>() {
-                @Override
-                public Predicate toPredicate(Root<AttendanceSessionEntity> root,
-                                             CriteriaQuery<?> query,
-                                             CriteriaBuilder cb) {
-                    List<Predicate> predicates = new ArrayList<>();
-                    predicates.add(cb.equal(root.get("schedule").get("id"), scheduleId));
-                    predicates.add(cb.equal(root.get("finalizationStatus"), AttendanceFinalizationStatus.FINAL));
-                    return cb.and(predicates.toArray(new Predicate[0]));
-                }
-            };
-
-            long totalFinalizedSessions = sessionRepository.count(finalizedSessionSpec);
+            long totalFinalizedSessions;
+            if (finalizedSessionCountByScheduleId != null) {
+                totalFinalizedSessions = finalizedSessionCountByScheduleId.getOrDefault(scheduleId, 0L);
+            } else {
+                Specification<AttendanceSessionEntity> finalizedSessionSpec = new Specification<AttendanceSessionEntity>() {
+                    @Override
+                    public Predicate toPredicate(Root<AttendanceSessionEntity> root,
+                                                 CriteriaQuery<?> query,
+                                                 CriteriaBuilder cb) {
+                        List<Predicate> predicates = new ArrayList<>();
+                        predicates.add(cb.equal(root.get("schedule").get("id"), scheduleId));
+                        predicates.add(cb.equal(root.get("finalizationStatus"), AttendanceFinalizationStatus.FINAL));
+                        return cb.and(predicates.toArray(new Predicate[0]));
+                    }
+                };
+                totalFinalizedSessions = sessionRepository.count(finalizedSessionSpec);
+            }
             dto.setTotalSessionsConducted((int) totalFinalizedSessions);
 
-            // Count sessions where this student was PRESENT - FIXED VERSION
-            Specification<AttendanceEntity> presentSpec = new Specification<AttendanceEntity>() {
-                @Override
-                public Predicate toPredicate(Root<AttendanceEntity> root,
-                                             CriteriaQuery<?> query,
-                                             CriteriaBuilder cb) {
-                    List<Predicate> predicates = new ArrayList<>();
-                    predicates.add(cb.equal(root.get("student").get("id"), studentId));
-                    predicates.add(cb.equal(root.get("attendanceSession").get("schedule").get("id"), scheduleId));
-                    predicates.add(cb.equal(root.get("finalizationStatus"), AttendanceFinalizationStatus.FINAL));
-                    predicates.add(cb.equal(root.get("status"), AttendanceStatus.PRESENT));
-                    return cb.and(predicates.toArray(new Predicate[0]));
-                }
-            };
-
-            long sessionsPresent = attendanceRepository.count(presentSpec);
+            long sessionsPresent;
+            if (presentCountByScheduleAndStudent != null) {
+                sessionsPresent = presentCountByScheduleAndStudent.getOrDefault(
+                        new ScheduleStudentKey(scheduleId, studentId), 0L);
+            } else {
+                Specification<AttendanceEntity> presentSpec = new Specification<AttendanceEntity>() {
+                    @Override
+                    public Predicate toPredicate(Root<AttendanceEntity> root,
+                                                 CriteriaQuery<?> query,
+                                                 CriteriaBuilder cb) {
+                        List<Predicate> predicates = new ArrayList<>();
+                        predicates.add(cb.equal(root.get("student").get("id"), studentId));
+                        predicates.add(cb.equal(root.get("attendanceSession").get("schedule").get("id"), scheduleId));
+                        predicates.add(cb.equal(root.get("finalizationStatus"), AttendanceFinalizationStatus.FINAL));
+                        predicates.add(cb.equal(root.get("status"), AttendanceStatus.PRESENT));
+                        return cb.and(predicates.toArray(new Predicate[0]));
+                    }
+                };
+                sessionsPresent = attendanceRepository.count(presentSpec);
+            }
             dto.setSessionsAttended((int) sessionsPresent);
 
             // Calculate attendance percentage
@@ -190,7 +218,9 @@ public class AttendanceMapper {
             dto.setAttendancePercentage(percentage);
 
             // Get score configuration for max attendance score
-            Optional<ScoreConfigurationEntity> scoreConfigOpt = scoreConfigurationRepository.findByStatus(Status.ACTIVE);
+            Optional<ScoreConfigurationEntity> scoreConfigOpt = activeScoreConfig != null
+                    ? Optional.of(activeScoreConfig)
+                    : scoreConfigurationRepository.findByStatus(Status.ACTIVE);
             if (scoreConfigOpt.isPresent()) {
                 Integer maxScore = scoreConfigOpt.get().getAttendancePercentage();
                 dto.setMaxAttendanceScore(maxScore);

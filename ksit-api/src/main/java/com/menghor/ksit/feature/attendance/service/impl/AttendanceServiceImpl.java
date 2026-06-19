@@ -1,6 +1,8 @@
 package com.menghor.ksit.feature.attendance.service.impl;
 
+import com.menghor.ksit.enumations.AttendanceFinalizationStatus;
 import com.menghor.ksit.enumations.AttendanceStatus;
+import com.menghor.ksit.enumations.Status;
 import com.menghor.ksit.feature.attendance.dto.request.AttendanceHistoryFilterDto;
 import com.menghor.ksit.feature.attendance.dto.response.AttendanceDto;
 import com.menghor.ksit.feature.attendance.dto.update.AttendanceUpdateRequest;
@@ -10,6 +12,8 @@ import com.menghor.ksit.feature.attendance.repository.AttendanceRepository;
 import com.menghor.ksit.feature.attendance.repository.AttendanceSessionRepository;
 import com.menghor.ksit.feature.attendance.service.AttendanceService;
 import com.menghor.ksit.feature.attendance.specification.AttendanceSpecification;
+import com.menghor.ksit.feature.score.models.ScoreConfigurationEntity;
+import com.menghor.ksit.feature.score.repository.ScoreConfigurationRepository;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +27,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +40,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final AttendanceSessionRepository sessionRepository;
     private final AttendanceMapper attendanceMapper;
+    private final ScoreConfigurationRepository scoreConfigurationRepository;
 
     @Override
     public AttendanceDto findById(Long id) {
@@ -127,8 +134,38 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         Page<AttendanceEntity> attendancePage = attendanceRepository.findAll(spec, pageable);
 
-        List<AttendanceDto> content = attendancePage.getContent().stream()
-                .map(attendanceMapper::toDto)
+        List<AttendanceEntity> pageContent = attendancePage.getContent();
+
+        List<Long> scheduleIds = pageContent.stream()
+                .map(a -> a.getAttendanceSession() != null && a.getAttendanceSession().getSchedule() != null
+                        ? a.getAttendanceSession().getSchedule().getId() : null)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        List<Long> studentIds = pageContent.stream()
+                .map(a -> a.getStudent() != null ? a.getStudent().getId() : null)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Long> finalizedSessionCountByScheduleId = new HashMap<>();
+        Map<AttendanceMapper.ScheduleStudentKey, Long> presentCountByScheduleAndStudent = new HashMap<>();
+        ScoreConfigurationEntity activeScoreConfig = scoreConfigurationRepository.findByStatus(Status.ACTIVE).orElse(null);
+
+        if (!scheduleIds.isEmpty() && !studentIds.isEmpty()) {
+            for (Object[] row : sessionRepository.countFinalizedGroupedByScheduleId(scheduleIds, AttendanceFinalizationStatus.FINAL)) {
+                finalizedSessionCountByScheduleId.put((Long) row[0], (Long) row[1]);
+            }
+            for (Object[] row : attendanceRepository.countPresentGroupedByScheduleAndStudent(
+                    scheduleIds, studentIds, AttendanceFinalizationStatus.FINAL, AttendanceStatus.PRESENT)) {
+                presentCountByScheduleAndStudent.put(
+                        new AttendanceMapper.ScheduleStudentKey((Long) row[0], (Long) row[1]), (Long) row[2]);
+            }
+        }
+
+        List<AttendanceDto> content = pageContent.stream()
+                .map(a -> attendanceMapper.toDto(a, finalizedSessionCountByScheduleId,
+                        presentCountByScheduleAndStudent, activeScoreConfig))
                 .collect(Collectors.toList());
 
         log.info("Fetched {} attendance records (total={})", content.size(), attendancePage.getTotalElements());
