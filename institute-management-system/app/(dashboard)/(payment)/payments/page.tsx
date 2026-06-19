@@ -16,6 +16,7 @@ import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-cour
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
@@ -144,13 +145,20 @@ export default function PaymentStudentListPage() {
             },
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
-              value: selectedYear ?? new Date().getFullYear(),
-              onChange: (year) => {
+              value: selectedYear ?? new Date().getFullYear() ?? 0,
+              onChange: (v: unknown) => {
+                const year = (v as number) || 0;
                 setSelectedYear(year);
                 dispatch(setAcademicYearFilter(year));
               },
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
           ],
           onClearAll: () => {

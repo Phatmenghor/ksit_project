@@ -14,6 +14,7 @@ import ScheduleCard from "@/components/shared/schedule-card";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectScheduleData,
@@ -124,10 +125,16 @@ export default function AllSchedulePage() {
           filters: [
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
-              value: filters.academicYear,
-              onChange: handleYearChange,
+              value: filters.academicYear ?? 0,
+              onChange: (v: unknown) => handleYearChange((v as number) || 0),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
             {
               id: "day",

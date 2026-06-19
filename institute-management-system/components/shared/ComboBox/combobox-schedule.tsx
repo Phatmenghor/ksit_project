@@ -39,6 +39,7 @@ export function ComboboxSelectSchedule({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:schedule",
   });
 
   return (

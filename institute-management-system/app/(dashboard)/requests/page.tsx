@@ -3,12 +3,11 @@
 import { ChevronLeft, ChevronRight, Logs } from "lucide-react";
 import { createRequestColumns } from "./columns";
 import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { REQUEST_TYPES, RequestType } from "@/constants/constant";
-import { AllRequestModel } from "@/model/request/request-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { getAllRequestService } from "@/service/request/request.service";
 import { useRouter } from "next/navigation";
@@ -32,8 +31,7 @@ import {
   resetFilters,
 } from "@/features/requests/store/slice/request-slice";
 import { fetchAllRequestsService } from "@/features/requests/store/thunks/request-thunks";
-
-type RequestItem = RequestModel;
+import { CreateRequestModal } from "@/components/dashboard/requests/create-request-modal";
 
 export default function RequestPage() {
   const dispatch = useAppDispatch();
@@ -49,6 +47,7 @@ export default function RequestPage() {
   const [selectedUser, setSelectedUser] = useState<StudentModel | null>(null);
   const [requestCounts, setRequestCounts] = useState<Record<string, number>>({});
   const [isLoadingCounts, setIsLoadingCounts] = useState<boolean>(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -69,33 +68,33 @@ export default function RequestPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.status, filters.userId, currentPage, currentPageSize]);
-  const fetchRequestCounts = useCallback(async () => {
-    setIsLoadingCounts(true);
-    try {
-      const counts: Record<string, number> = {};
-      for (const type of REQUEST_TYPES) {
-        try {
-          const response = await getAllRequestService({
-            status: type.value,
-            userId: filters.userId,
-            search: searchDebounce,
-            pageNo: 1,
-            pageSize: 1,
-          });
-          counts[type.value] = response?.totalElements || 0;
-        } catch {
-          counts[type.value] = 0;
-        }
-      }
-      setRequestCounts(counts);
-    } finally {
-      setIsLoadingCounts(false);
-    }
-  }, [filters.userId, searchDebounce]);
 
   useEffect(() => {
-    fetchRequestCounts();
-  }, [fetchRequestCounts]);
+    const fetchCounts = async () => {
+      setIsLoadingCounts(true);
+      try {
+        const counts: Record<string, number> = {};
+        for (const type of REQUEST_TYPES) {
+          try {
+            const response = await getAllRequestService({
+              status: type.value,
+              userId: filters.userId,
+              search: searchDebounce,
+              pageNo: 1,
+              pageSize: 1,
+            });
+            counts[type.value] = response?.totalElements || 0;
+          } catch {
+            counts[type.value] = 0;
+          }
+        }
+        setRequestCounts(counts);
+      } finally {
+        setIsLoadingCounts(false);
+      }
+    };
+    fetchCounts();
+  }, [filters.userId, searchDebounce]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
@@ -114,17 +113,8 @@ export default function RequestPage() {
     updateUrlWithPage(1);
   };
 
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  };
+  const scrollLeft = () => scrollContainerRef.current?.scrollBy({ left: -200, behavior: "smooth" });
+  const scrollRight = () => scrollContainerRef.current?.scrollBy({ left: 200, behavior: "smooth" });
 
   const columns = createRequestColumns({ getDisplayIndex, router });
 
@@ -143,6 +133,8 @@ export default function RequestPage() {
           searchValue: filters.search,
           searchPlaceholder: "Search by name or ID...",
           onSearchChange: handleSearchChange,
+          buttonText: "Create Request",
+          onButtonClick: () => setIsCreateModalOpen(true),
           filters: [
             {
               id: "student",
@@ -173,10 +165,10 @@ export default function RequestPage() {
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-0 z-10 rounded-full h-10 w-10 sm:h-9 sm:w-9 transition-all duration-300 hover:bg-amber-50 hover:border-amber-300 hover:shadow-lg"
+          className="absolute left-0 z-10 rounded-full h-10 w-10 sm:h-9 sm:w-9 transition-all duration-300 hover:bg-amber-50 hover:border-amber-300"
           onClick={scrollLeft}
         >
-          <ChevronLeft className="h-4 w-4 transition-all duration-300 group-hover:-translate-x-0.5 group-hover:text-amber-600" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
 
         <div
@@ -194,9 +186,7 @@ export default function RequestPage() {
                 key={type.label}
                 variant={isActive ? "default" : "outline"}
                 className={`whitespace-nowrap ${
-                  selectedType?.value === type.value
-                    ? "bg-amber-500 hover:bg-amber-600 text-white"
-                    : "hover:bg-amber-100"
+                  isActive ? "bg-amber-500 hover:bg-amber-600 text-white" : "hover:bg-amber-100"
                 }`}
                 onClick={() => handleTypeSelect(type)}
                 disabled={isLoadingCounts}
@@ -229,7 +219,21 @@ export default function RequestPage() {
         pageSize={currentPageSize}
         onPageSizeChange={handlePageSizeChange}
         emptyMessage="No Record"
-        getRowKey={(req) => req.id}
+        getRowKey={(req: RequestModel) => req.id}
+      />
+
+      <CreateRequestModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSuccess={() => {
+          dispatch(fetchAllRequestsService({
+            search: searchDebounce,
+            pageNo: currentPage,
+            userId: filters.userId,
+            pageSize: currentPageSize,
+            status: filters.status,
+          }));
+        }}
       />
     </div>
   );

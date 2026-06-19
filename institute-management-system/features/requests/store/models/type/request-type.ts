@@ -12,4 +12,19 @@ export interface RequestManagementState {
   isLoading: boolean;
   error: string | null;
   filters: RequestFilters;
+  isCreating: boolean;
+}
+
+export interface MyRequestFilters {
+  search: string;
+  status: string;
+  pageNo: number;
+}
+
+export interface MyRequestState {
+  data: AllRequestModel | null;
+  isLoading: boolean;
+  error: string | null;
+  filters: MyRequestFilters;
+  isCreating: boolean;
 }

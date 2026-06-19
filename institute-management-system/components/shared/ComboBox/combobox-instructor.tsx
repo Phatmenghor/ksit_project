@@ -53,6 +53,7 @@ export function ComboboxSelectInstructor({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:instructor",
   });
 
   return (

@@ -11,6 +11,7 @@ import { SemesterModel } from "@/model/master-data/semester/semester-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
 import { Constants } from "@/constants/text-string";
@@ -140,10 +141,16 @@ export default function ManageSemester() {
           filters: [
             {
               id: "year",
-              type: "year",
-              label: "Academy Year",
+              type: "custom",
+              label: "Academic Year",
               value: filters.academyYear ?? 0,
-              onChange: (v) => dispatch(setAcademyYearFilter((v as number) || undefined)),
+              onChange: (v: unknown) => dispatch(setAcademyYearFilter((v as number) || undefined)),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
           ],
           onClearAll: () => {

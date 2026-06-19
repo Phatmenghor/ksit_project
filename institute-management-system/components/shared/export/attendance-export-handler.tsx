@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -191,21 +192,11 @@ export const ExportButtonGroup = ({
 
   return (
     <div className="flex gap-2">
-      {/* Quick Export Buttons */}
-      <Button
+      <ExcelDownloadButton
         onClick={() => handleExportToExcel()}
-        variant="outline"
-        size="sm"
+        isLoading={isExporting && exportType === "excel"}
         disabled={isExporting}
-        className="flex items-center gap-2"
-      >
-        {isExporting && exportType === "excel" ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <FileSpreadsheet className="h-4 w-4" />
-        )}
-        Excel
-      </Button>
+      />
       {/* 
       <Button
         onClick={() => handleExportToPDF()}
@@ -296,19 +287,12 @@ export const SimpleExportButtons = ({
 
   return (
     <div className="flex gap-2">
-      <Button
+      <ExcelDownloadButton
         onClick={handleQuickExcelExport}
-        variant="outline"
-        size="sm"
+        isLoading={isExporting && exportType === "excel"}
         disabled={isExporting}
-      >
-        {isExporting && exportType === "excel" ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-        ) : (
-          <FileSpreadsheet className="h-4 w-4 mr-2" />
-        )}
-        Export Excel
-      </Button>
+        label="Export Excel"
+      />
       {/* 
       <Button
         onClick={handleQuickPDFExport}

@@ -1,6 +1,6 @@
 import { createApiThunk } from "@/utils/axios/api-wrapper";
 import { axiosClientWithAuth } from "@/utils/axios";
-import { AllRequestModel } from "@/model/request/request-model";
+import { AllRequestModel, CreateRequestModel, RequestModel } from "@/model/request/request-model";
 import { RequestFilterModel } from "@/model/request/request-filter";
 
 export const fetchAllRequestsService = createApiThunk<
@@ -13,3 +13,14 @@ export const fetchAllRequestsService = createApiThunk<
   );
   return response.data.data;
 });
+
+export const createRequestThunk = createApiThunk<RequestModel, CreateRequestModel>(
+  "requests/create",
+  async (data) => {
+    const response = await axiosClientWithAuth.post<{ data: RequestModel }>(
+      "/v1/requests",
+      data
+    );
+    return response.data.data;
+  }
+);

@@ -43,6 +43,7 @@ export function ComboboxSelectUser({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:user",
   });
 
   return (

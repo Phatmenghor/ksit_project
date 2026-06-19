@@ -10,13 +10,29 @@ export interface AttendanceRecordsColumnsProps {
   currentPage: number;
   currentPageSize: number;
   router: AppRouterInstance;
+  filterParams?: {
+    classId?: number;
+    scheduleId?: number;
+    academicYear?: number;
+  };
 }
 
 export function createAttendanceRecordsColumns({
   currentPage,
   currentPageSize,
   router,
+  filterParams,
 }: AttendanceRecordsColumnsProps): TableColumn<StudentModel>[] {
+  const buildDetailUrl = (id: string) => {
+    const base = ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(id);
+    const params = new URLSearchParams();
+    if (filterParams?.classId) params.set("classId", String(filterParams.classId));
+    if (filterParams?.scheduleId) params.set("scheduleId", String(filterParams.scheduleId));
+    if (filterParams?.academicYear) params.set("academicYear", String(filterParams.academicYear));
+    const qs = params.toString();
+    return qs ? `${base}?${qs}` : base;
+  };
+
   return [
     {
       key: "index",
@@ -52,9 +68,7 @@ export function createAttendanceRecordsColumns({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={() =>
-                  router.push(ROUTE.ATTENDANCE.STUDENT_LIST_RECORD_DETAIL(String(s.id)))
-                }
+                onClick={() => router.push(buildDetailUrl(String(s.id)))}
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 bg-gray-200 hover:bg-gray-300"

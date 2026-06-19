@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createAttendanceHistoryColumns } from "./columns";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -36,6 +35,8 @@ import { DataTable } from "@/components/shared/data-table";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 
 export default function StudentsListPage() {
   // Core state
@@ -370,10 +371,17 @@ export default function StudentsListPage() {
           filters: [
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
-              value: selectAcademicYear,
-              onChange: handleYearChange,
+              value: selectAcademicYear ?? 0,
+              onChange: (v) => handleYearChange((v as number) || 0),
+              render: ({ value, onChange }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                  disabled={isSubmitting}
+                />
+              ),
             },
             {
               id: "class",
@@ -406,6 +414,9 @@ export default function StudentsListPage() {
               ),
             },
           ],
+          extraActions: (
+            <ExcelDownloadButton onClick={exportToExcel} isLoading={isSubmitting} />
+          ),
         }}
       />
 

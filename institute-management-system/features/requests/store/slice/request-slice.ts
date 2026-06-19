@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RequestManagementState } from "../models/type/request-type";
-import { fetchAllRequestsService } from "../thunks/request-thunks";
+import { fetchAllRequestsService, createRequestThunk } from "../thunks/request-thunks";
 
 const initialState: RequestManagementState = {
   data: null,
   isLoading: true,
   error: null,
+  isCreating: false,
   filters: {
     search: "",
     status: "PENDING",
@@ -53,6 +54,23 @@ const requestSlice = createSlice({
       .addCase(fetchAllRequestsService.rejected, (state, action) => {
         state.error = action.payload as string;
         state.isLoading = false;
+      });
+
+    builder
+      .addCase(createRequestThunk.pending, (state) => {
+        state.isCreating = true;
+        state.error = null;
+      })
+      .addCase(createRequestThunk.fulfilled, (state, action) => {
+        if (state.data) {
+          state.data.content = [action.payload, ...state.data.content];
+          state.data.totalElements += 1;
+        }
+        state.isCreating = false;
+      })
+      .addCase(createRequestThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isCreating = false;
       });
   },
 });

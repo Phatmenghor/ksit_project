@@ -25,10 +25,13 @@ import {
 import { z } from "zod";
 import { Separator } from "@/components/ui/separator";
 
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
-  getAllSurveySectionService,
-  updateSurveyService,
-} from "@/service/survey/survey.service";
+  selectSurveyQAData,
+  selectSurveyQAIsLoading,
+  selectSurveyQAIsSaving,
+} from "@/features/survey/store/selectors/survey-qa-selectors";
+import { fetchSurveyQAThunk, saveSurveyQAThunk } from "@/features/survey/store/thunks/survey-qa-thunks";
 import { toast } from "sonner";
 import {
   Question,
@@ -712,35 +715,22 @@ const SectionComponent: React.FC<SectionProps> = ({
 
 // Main Survey Manager Component
 const SurveyManager: React.FC = () => {
-  const [sections, setSections] = useState<Section[]>([]);
-  const [surveyData, setSurveyData] = useState<SurveyMainModel | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const surveyData = useAppSelector(selectSurveyQAData);
+  const isLoading = useAppSelector(selectSurveyQAIsLoading);
+  const isSaving = useAppSelector(selectSurveyQAIsSaving);
 
-  const loadSurveyApi = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await getAllSurveySectionService();
-      if (response) {
-        const surveyData = SurveySchema.parse(response) as SurveyMainModel;
-        setSurveyData(surveyData);
-        setSections(surveyData.sections || []);
-      } else {
-        setSurveyData(null);
-        setSections([]);
-      }
-    } catch (error) {
-      toast.error("Failed to load survey data");
-      setSurveyData(null);
-      setSections([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [sections, setSections] = useState<Section[]>([]);
 
   useEffect(() => {
-    loadSurveyApi();
-  }, [loadSurveyApi]);
+    dispatch(fetchSurveyQAThunk());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (surveyData) {
+      setSections(surveyData.sections || []);
+    }
+  }, [surveyData]);
 
   const handleAddSection = () => {
     const tempId = `temp-section-${Date.now()}-${Math.random()}`;
@@ -822,40 +812,18 @@ const SurveyManager: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!surveyData) {
+      toast.error("No survey data available to save");
+      return;
+    }
+
+    const cleanedData = cleanDataForApi({ ...surveyData, sections });
+
     try {
-      if (!surveyData) {
-        toast.error("No survey data available to save");
-        return;
-      }
-
-      setIsSubmitting(true);
-
-      // Prepare data for API using the current survey data structure
-      const updatedSurveyData: SurveyMainModel = {
-        ...surveyData,
-        sections: sections,
-      };
-
-
-      // Clean the data by removing temp properties and handling IDs properly
-      const cleanedData = cleanDataForApi(updatedSurveyData);
-
-      const response = await updateSurveyService(cleanedData);
-
-      if (response) {
-        const surveyData = SurveySchema.parse(response) as SurveyMainModel;
-        setSurveyData(surveyData);
-        setSections(surveyData.sections || []);
-        toast.success("Survey saved successfully!");
-      } else {
-        setSurveyData(null);
-        setSections([]);
-        toast.error("Failed to save survey data");
-      }
-    } catch (error) {
+      await dispatch(saveSurveyQAThunk(cleanedData)).unwrap();
+      toast.success("Survey saved successfully!");
+    } catch {
       toast.error("Failed to save survey data. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -916,12 +884,12 @@ const SurveyManager: React.FC = () => {
                 type="submit"
                 onClick={handleSave}
                 className="bg-[#024D3E] hover:bg-teal-700"
-                disabled={!surveyData || isSubmitting}
+                disabled={!surveyData || isSaving}
               >
-                {isSubmitting ? (
+                {isSaving ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    {isSubmitting && "Saving..."}
+                    Saving...
                   </>
                 ) : (
                   "Save Survey"

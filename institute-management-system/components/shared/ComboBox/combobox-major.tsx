@@ -35,6 +35,7 @@ export function ComboboxSelectMajor({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:major",
   });
 
   return (
