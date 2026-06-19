@@ -36,3 +36,8 @@ build/
 logs/
 *.log
 *.log.*
+
+# Web artifacts and dependencies
+.next/
+node_modules/
+package-lock.json

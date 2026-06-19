@@ -16,3 +16,8 @@ Thumbs.db
 target/
 build/
 dist/
+.next/
+
+# Dependencies and lockfiles
+node_modules/
+package-lock.json
