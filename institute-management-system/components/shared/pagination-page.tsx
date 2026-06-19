@@ -2,6 +2,13 @@
 
 import { useCallback } from "react";
 import { PAGE_SIZE_OPTIONS } from "@/hooks/use-pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CustomPaginationProps {
   currentPage: number;
@@ -97,15 +104,21 @@ export default function PaginationPage({
         <div className="flex justify-end mb-3">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span>Rows per page:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-8 rounded-md border border-input px-2 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary transition-colors"
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => onPageSizeChange(Number(v))}
             >
-              {PAGE_SIZE_OPTIONS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              <SelectTrigger className="h-8 w-[72px] text-xs px-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={String(s)} className="text-xs">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}

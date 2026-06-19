@@ -39,6 +39,7 @@ interface DataTablePaginationProps {
   onPageChange: (page: number) => void;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
   className?: string;
 }
 
@@ -49,6 +50,7 @@ export function DataTablePagination({
   onPageChange,
   pageSize,
   onPageSizeChange,
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
   className,
 }: DataTablePaginationProps) {
   const showPaginationButtons = totalPages > 1;
@@ -69,7 +71,7 @@ export function DataTablePagination({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((size) => (
+                {pageSizeOptions.map((size) => (
                   <SelectItem key={size} value={String(size)} className="text-xs">
                     {size}
                   </SelectItem>

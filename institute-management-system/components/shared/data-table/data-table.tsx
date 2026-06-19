@@ -134,29 +134,15 @@ export function DataTable<T = unknown>({
       </div>
 
       {showPagination && totalPages > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1 pt-4 pb-1">
-          {showPageSizeSelector && onPageSizeChange && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>Rows per page:</span>
-              <select
-                value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="h-8 rounded-md border border-input px-2 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary transition-colors"
-              >
-                {pageSizeOptions.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <DataTablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-            className="px-0 pt-0 pb-0 flex-1"
-          />
-        </div>
+        <DataTablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalElements={totalElements}
+          onPageChange={onPageChange}
+          pageSize={showPageSizeSelector ? pageSize : undefined}
+          onPageSizeChange={showPageSizeSelector ? onPageSizeChange : undefined}
+          pageSizeOptions={pageSizeOptions}
+        />
       )}
     </div>
   );
