@@ -59,6 +59,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/images/**",
                                 "/api/v1/enums/**",
+                                "/ws-attendance/**",
 
                                 // Static resources
                                 "/favicon.ico",

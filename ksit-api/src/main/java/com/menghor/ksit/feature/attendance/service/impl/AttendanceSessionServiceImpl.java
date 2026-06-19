@@ -14,6 +14,7 @@ import com.menghor.ksit.feature.attendance.models.AttendanceSessionEntity;
 import com.menghor.ksit.feature.attendance.repository.AttendanceRepository;
 import com.menghor.ksit.feature.attendance.repository.AttendanceSessionRepository;
 import com.menghor.ksit.feature.attendance.service.AttendanceSessionService;
+import com.menghor.ksit.feature.attendance.websocket.AttendanceWebSocketHandler;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import com.menghor.ksit.feature.master.model.ClassEntity;
@@ -44,6 +45,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
     private final ScheduleRepository scheduleRepository;
     private final AttendanceMapper attendanceMapper;
     private final SecurityUtils securityUtils;
+    private final AttendanceWebSocketHandler webSocketHandler;
 
     @Override
     public AttendanceSessionDto findById(Long id) {
@@ -68,35 +70,8 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         ScheduleEntity schedule = scheduleRepository.findById(request.getScheduleId())
                 .orElseThrow(() -> new EntityNotFoundException("Schedule not found with id: " + request.getScheduleId()));
 
-        // Check if current user is the teacher assigned to this schedule
-        if (!schedule.getUser().getId().equals(currentUser.getId())) {
-            log.warn("Access denied: User {} (ID: {}) is not the teacher assigned to schedule {} (Assigned teacher ID: {})",
-                    currentUser.getUsername(), currentUser.getId(),
-                    request.getScheduleId(), schedule.getUser().getId());
-
-            throw new AccessDeniedException("You are not authorized to generate attendance sessions for this schedule. " +
-                    "Only the assigned teacher can perform this action.");
-        }
-
         // Get current date/time
         LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
-
-        // Check if an attendance session already exists for this schedule today
-        List<AttendanceSessionEntity> todaySessions = findTodaySessionsForSchedule(schedule.getId(), today);
-
-        // Check if there's a DRAFT session for today
-        Optional<AttendanceSessionEntity> draftSession = todaySessions.stream()
-                .filter(session -> session.getFinalizationStatus() == AttendanceFinalizationStatus.DRAFT)
-                .findFirst();
-
-        // If a draft session exists for today, return it (don't create a new one)
-        if (draftSession.isPresent()) {
-            log.info("Returning existing draft attendance session id={} for scheduleId={}",
-                    draftSession.get().getId(), request.getScheduleId());
-            // Sorting will be handled by the mapper
-            return attendanceMapper.toDto(draftSession.get());
-        }
 
         // Create new attendance session
         AttendanceSessionEntity session = new AttendanceSessionEntity();
@@ -137,8 +112,17 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
                 .orElseThrow(() -> new EntityNotFoundException("Session not found after creation"));
 
         log.info("Attendance session created successfully. id={}, studentCount={}", savedSession.getId(), students.size());
-        // The sorting will be handled automatically in the mapper
-        return attendanceMapper.toDto(refreshedSession);
+        
+        AttendanceSessionDto refreshedSessionDto = attendanceMapper.toDto(refreshedSession);
+
+        // Broadcast session creation in real-time
+        try {
+            webSocketHandler.broadcastSessionCreated(schedule.getId(), refreshedSessionDto);
+        } catch (Exception e) {
+            log.error("Failed to broadcast session creation WebSocket event", e);
+        }
+
+        return refreshedSessionDto;
     }
 
     /**
@@ -174,10 +158,21 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
         session = sessionRepository.save(session);
         log.info("QR code regenerated successfully for sessionId={}", sessionId);
-        return QrResponse.builder()
+        
+        QrResponse response = QrResponse.builder()
                 .qrCode(session.getQrCode())
                 .expiryTime(session.getQrExpiryTime().toString())
                 .build();
+
+        // Broadcast session update when QR is regenerated
+        try {
+            AttendanceSessionDto sessionDto = attendanceMapper.toDto(session);
+            webSocketHandler.broadcastAttendanceUpdated(sessionId, sessionDto);
+        } catch (Exception e) {
+            log.error("Failed to broadcast QR code regeneration WebSocket event", e);
+        }
+
+        return response;
     }
 
     @Override
@@ -187,14 +182,20 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         // Find session by QR code
         AttendanceSessionEntity session = sessionRepository.findByQrCode(request.getQrCode())
                 .orElseThrow(() -> {
-                    log.warn("Invalid or expired QR code used by studentId={}", request.getStudentId());
-                    return new EntityNotFoundException("Invalid or expired QR code");
+                    log.warn("Invalid QR code used by studentId={}", request.getStudentId());
+                    return new EntityNotFoundException("Invalid QR code");
                 });
 
-        // Check if QR code has expired
-        if (LocalDateTime.now().isAfter(session.getQrExpiryTime())) {
-            log.warn("Expired QR code used by studentId={} for sessionId={}", request.getStudentId(), session.getId());
-            throw new IllegalStateException("QR code has expired");
+        // Validate session is not finalized
+        if (session.getFinalizationStatus() == AttendanceFinalizationStatus.FINAL) {
+            log.warn("Attempt to mark attendance for finalized session id={} by studentId={}", session.getId(), request.getStudentId());
+            throw new IllegalStateException("This attendance session has already been finalized and closed");
+        }
+
+        // Validate session is active
+        if (session.getStatus() != Status.ACTIVE) {
+            log.warn("Attempt to mark attendance for inactive session id={} by studentId={}", session.getId(), request.getStudentId());
+            throw new IllegalStateException("This attendance session is inactive");
         }
 
         // Find student's attendance record
@@ -205,12 +206,29 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
                     return new EntityNotFoundException("Student not found in this attendance session");
                 });
 
+        // Prevent duplicate attendance scans
+        if (attendance.getStatus() == AttendanceStatus.PRESENT) {
+            log.warn("Attendance already marked present for studentId={} in sessionId={}", request.getStudentId(), session.getId());
+            throw new IllegalStateException("Attendance has already been marked as PRESENT");
+        }
+
         // Mark as present
         attendance.setStatus(AttendanceStatus.PRESENT);
         attendance.setRecordedTime(LocalDateTime.now());
         attendanceRepository.save(attendance);
         log.info("Attendance marked PRESENT for studentId={} in sessionId={}", request.getStudentId(), session.getId());
-        return attendanceMapper.toDto(session);
+
+        // Fetch refreshed session and broadcast updates to listening teacher and admin clients
+        AttendanceSessionEntity refreshedSession = sessionRepository.findById(session.getId()).orElse(session);
+        AttendanceSessionDto sessionDto = attendanceMapper.toDto(refreshedSession);
+
+        try {
+            webSocketHandler.broadcastAttendanceUpdated(session.getId(), sessionDto);
+        } catch (Exception e) {
+            log.error("Failed to broadcast attendance update WebSocket event", e);
+        }
+
+        return sessionDto;
     }
 
     @Override
@@ -241,6 +259,16 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         attendanceRepository.saveAll(attendances);
         session = sessionRepository.save(session);
         log.info("Attendance session id={} finalized successfully. recordsProcessed={}", sessionId, attendances.size());
-        return attendanceMapper.toDto(session);
+
+        AttendanceSessionDto sessionDto = attendanceMapper.toDto(session);
+
+        // Broadcast session finalization to WebSocket clients (students, teachers, admins)
+        try {
+            webSocketHandler.broadcastSessionFinalized(sessionId, sessionDto);
+        } catch (Exception e) {
+            log.error("Failed to broadcast session finalization WebSocket event", e);
+        }
+
+        return sessionDto;
     }
 }

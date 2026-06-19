@@ -110,7 +110,10 @@ class ScanController extends GetxController {
         if (_qrDetectionCount >= qrDetectionCountThreshold) {
           if ((optimalZoom - currentZoom.value).abs() > 0.1) {
             currentZoom.value = optimalZoom;
-            LoggerUtils.debug('Auto-zoom: ${optimalZoom.toStringAsFixed(2)}x');
+            // Map 1.0 - 3.0 multiplier to 0.0 - 1.0 zoom scale
+            final zoomScale = (optimalZoom - 1.0) / (maxZoom.value - 1.0);
+            scannerController.setZoomScale(zoomScale.clamp(0.0, 1.0));
+            LoggerUtils.debug('Auto-zoom: ${optimalZoom.toStringAsFixed(2)}x (scale: ${zoomScale.toStringAsFixed(2)})');
           }
         }
       }
@@ -153,6 +156,11 @@ class ScanController extends GetxController {
   void _resetAutoZoom() {
     if (currentZoom.value != 1.0) {
       currentZoom.value = 1.0;
+      try {
+        scannerController.setZoomScale(0.0);
+      } catch (e) {
+        LoggerUtils.debug('Failed to reset zoom: $e');
+      }
       _qrDetectionCount = 0;
     }
   }
@@ -334,6 +342,11 @@ class ScanController extends GetxController {
     hasScannedInSession.value = false;
     scannedQrCode.value = '';
     currentZoom.value = 1.0;
+    try {
+      scannerController.setZoomScale(0.0);
+    } catch (e) {
+      LoggerUtils.debug('Failed to reset zoom in resetSession: $e');
+    }
     _pendingQrCode = null;
     _qrDetectionCount = 0;
 

@@ -13,13 +13,14 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
+class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
   final scanController = Get.put(ScanController());
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _animationController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -31,8 +32,27 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      try {
+        scanController.scannerController.stop();
+      } catch (e) {
+        // Ignored
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      try {
+        scanController.scannerController.start();
+      } catch (e) {
+        // Ignored
+      }
+    }
   }
 
   @override
@@ -124,21 +144,18 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildScanOverlay() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
+    return CustomPaint(
+      painter: ScannerOverlayPainter(
+        scanAreaWidth: 280,
+        scanAreaHeight: 280,
+        borderRadius: 24,
+        borderColor: AppColors.primary.withOpacity(0.3),
+        cornerColor: AppColors.primary,
       ),
       child: Center(
-        child: Container(
+        child: SizedBox(
           width: 280,
           height: 280,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: AppColors.primary,
-              width: 2.5,
-            ),
-            borderRadius: BorderRadius.circular(24),
-          ),
           child: Stack(
             children: [
               // Scanning line animation
@@ -146,9 +163,9 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                 animation: _animationController,
                 builder: (context, child) {
                   return Positioned(
-                    top: _animationController.value * 260,
-                    left: 8,
-                    right: 8,
+                    top: 10 + _animationController.value * 260,
+                    left: 12,
+                    right: 12,
                     child: Container(
                       height: 2.5,
                       decoration: BoxDecoration(
@@ -171,87 +188,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
                   );
                 },
               ),
-
-              // Corner indicators (subtle)
-              ..._buildCornerIndicators(),
             ],
           ),
         ),
       ),
     );
-  }
-
-  List<Widget> _buildCornerIndicators() {
-    return [
-      // Top-left
-      Positioned(
-        top: 0,
-        left: 0,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.primary, width: 2.5),
-              left: BorderSide(color: AppColors.primary, width: 2.5),
-            ),
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(8)),
-          ),
-        ),
-      ),
-      // Top-right
-      Positioned(
-        top: 0,
-        right: 0,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.primary, width: 2.5),
-              right: BorderSide(color: AppColors.primary, width: 2.5),
-            ),
-            borderRadius: const BorderRadius.only(topRight: Radius.circular(8)),
-          ),
-        ),
-      ),
-      // Bottom-left
-      Positioned(
-        bottom: 0,
-        left: 0,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.primary, width: 2.5),
-              left: BorderSide(color: AppColors.primary, width: 2.5),
-            ),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(8),
-            ),
-          ),
-        ),
-      ),
-      // Bottom-right
-      Positioned(
-        bottom: 0,
-        right: 0,
-        child: Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColors.primary, width: 2.5),
-              right: BorderSide(color: AppColors.primary, width: 2.5),
-            ),
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(8),
-            ),
-          ),
-        ),
-      ),
-    ];
   }
 
   Widget _buildDetectionCountdown() {
@@ -451,4 +392,105 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin {
       ),
     );
   }
+}
+
+class ScannerOverlayPainter extends CustomPainter {
+  final double scanAreaWidth;
+  final double scanAreaHeight;
+  final double borderRadius;
+  final Color borderColor;
+  final Color cornerColor;
+
+  ScannerOverlayPainter({
+    required this.scanAreaWidth,
+    required this.scanAreaHeight,
+    this.borderRadius = 24.0,
+    this.borderColor = Colors.white24,
+    this.cornerColor = const Color(0xFF024D3E),
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double left = (size.width - scanAreaWidth) / 2;
+    final double top = (size.height - scanAreaHeight) / 2;
+    final rect = Rect.fromLTWH(left, top, scanAreaWidth, scanAreaHeight);
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+
+    // 1. Draw background mask
+    final backgroundPaint = Paint()
+      ..color = Colors.black.withOpacity(0.65)
+      ..style = PaintingStyle.fill;
+
+    final backgroundPath = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..addRRect(rrect);
+
+    canvas.drawPath(backgroundPath, backgroundPaint);
+
+    // 2. Draw thin border
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(rrect, borderPaint);
+
+    // 3. Draw bold corners
+    final cornerPaint = Paint()
+      ..color = cornerColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round;
+
+    final double cornerLength = 20.0;
+    
+    // Top Left Corner
+    final topLeftPath = Path()
+      ..moveTo(rect.left, rect.top + cornerLength)
+      ..lineTo(rect.left, rect.top + borderRadius)
+      ..arcToPoint(
+        Offset(rect.left + borderRadius, rect.top),
+        radius: Radius.circular(borderRadius),
+      )
+      ..lineTo(rect.left + cornerLength, rect.top);
+    canvas.drawPath(topLeftPath, cornerPaint);
+
+    // Top Right Corner
+    final topRightPath = Path()
+      ..moveTo(rect.right - cornerLength, rect.top)
+      ..lineTo(rect.right - borderRadius, rect.top)
+      ..arcToPoint(
+        Offset(rect.right, rect.top + borderRadius),
+        radius: Radius.circular(borderRadius),
+      )
+      ..lineTo(rect.right, rect.top + cornerLength);
+    canvas.drawPath(topRightPath, cornerPaint);
+
+    // Bottom Left Corner
+    final bottomLeftPath = Path()
+      ..moveTo(rect.left, rect.top + scanAreaHeight - cornerLength)
+      ..lineTo(rect.left, rect.top + scanAreaHeight - borderRadius)
+      ..arcToPoint(
+        Offset(rect.left + borderRadius, rect.top + scanAreaHeight),
+        radius: Radius.circular(borderRadius),
+        clockwise: false,
+      )
+      ..lineTo(rect.left + cornerLength, rect.top + scanAreaHeight);
+    canvas.drawPath(bottomLeftPath, cornerPaint);
+
+    // Bottom Right Corner
+    final bottomRightPath = Path()
+      ..moveTo(rect.right - cornerLength, rect.top + scanAreaHeight)
+      ..lineTo(rect.right - borderRadius, rect.top + scanAreaHeight)
+      ..arcToPoint(
+        Offset(rect.right, rect.top + scanAreaHeight - borderRadius),
+        radius: Radius.circular(borderRadius),
+        clockwise: false,
+      )
+      ..lineTo(rect.right, rect.top + scanAreaHeight - cornerLength);
+    canvas.drawPath(bottomRightPath, cornerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

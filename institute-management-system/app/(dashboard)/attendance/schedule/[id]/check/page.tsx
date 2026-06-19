@@ -42,6 +42,16 @@ import {
 } from "@/constants/filter/filter-page";
 import { Badge } from "@/components/ui/badge";
 import AttendanceCheckHeader from "@/components/dashboard/attendance/schedule/attendance-check-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const AttendanceCheckPage = () => {
   const params = useParams();
@@ -418,6 +428,123 @@ const AttendanceCheckPage = () => {
   useEffect(() => {
     loadScheduleData();
   }, [loadScheduleData]);
+
+  // WebSocket subscription for real-time updates
+  useEffect(() => {
+    if (!attendanceGenerate?.id || isSubmitted) return;
+
+    let socket: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isMounted = true;
+
+    const connectWebSocket = () => {
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api';
+        let wsUrl = apiBase.replace(/^http/, 'ws');
+        wsUrl = wsUrl.replace(/\/api(\/v1)?\/?$/, '');
+        wsUrl = `${wsUrl}/ws-attendance?sessionId=${attendanceGenerate.id}`;
+
+        console.log("Connecting web socket to:", wsUrl);
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          console.log("WebSocket connected successfully for sessionId:", attendanceGenerate.id);
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            console.log("WebSocket received event:", payload.event);
+            
+            if (payload.event === "ATTENDANCE_MARKED" && payload.data) {
+              const updatedSession = payload.data as AttendanceGenerateModel;
+              
+              // Merge incoming real-time scans
+              setAttendanceGenerate((prev) => {
+                if (!prev) return prev;
+                const updatedAttendances = prev.attendances.map((student) => {
+                  const matchingPayloadStudent = updatedSession.attendances?.find(
+                    (ps: any) => ps.id === student.id
+                  );
+                  if (matchingPayloadStudent) {
+                    if (unsavedChanges.has(student.id)) {
+                      return student;
+                    }
+                    return {
+                      ...student,
+                      status: matchingPayloadStudent.status,
+                      attendanceType: matchingPayloadStudent.attendanceType,
+                      comment: matchingPayloadStudent.comment,
+                    };
+                  }
+                  return student;
+                });
+                
+                return {
+                  ...prev,
+                  attendances: updatedAttendances,
+                };
+              });
+
+              // Update originalData mapping
+              setOriginalData((prevOriginal) => {
+                const newOriginal = new Map(prevOriginal);
+                updatedSession.attendances?.forEach((student: any) => {
+                  if (!unsavedChanges.has(student.id)) {
+                    newOriginal.set(student.id, {
+                      status: student.status,
+                      attendanceType: student.attendanceType,
+                      comment: student.comment || "",
+                    });
+                  }
+                });
+                return newOriginal;
+              });
+
+              setLastUpdated(new Date());
+              toast.info("Attendance updated in real-time");
+            } else if (payload.event === "SESSION_FINALIZED") {
+              setIsSubmitted(true);
+              setSubmissionTime(new Date());
+              setAutoRefresh(false);
+              toast.success("Attendance has been finalized");
+              if (socket) socket.close();
+            }
+          } catch (err) {
+            console.error("Error parsing WebSocket message:", err);
+          }
+        };
+
+        socket.onclose = (event) => {
+          console.log("WebSocket connection closed:", event.reason);
+          if (isMounted && !isSubmitted) {
+            reconnectTimeout = setTimeout(() => {
+              console.log("Reconnecting WebSocket...");
+              connectWebSocket();
+            }, 3000);
+          }
+        };
+
+        socket.onerror = (err) => {
+          console.error("WebSocket error:", err);
+        };
+      } catch (err) {
+        console.error("Failed to connect WebSocket:", err);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      isMounted = false;
+      if (socket) {
+        socket.close();
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+    };
+  }, [attendanceGenerate?.id, isSubmitted, unsavedChanges]);
 
   // Memoized filtered data
   const filteredAttendances = useMemo(() => {
