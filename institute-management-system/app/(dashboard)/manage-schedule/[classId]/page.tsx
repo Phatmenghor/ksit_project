@@ -337,6 +337,7 @@ const AllSchedulePage = () => {
             }
             isOpen={isDuplicateScheduleModalOpen}
             onOpenChange={() => setIsDuplicateScheduleModalOpen(false)}
+            onSuccess={() => fetchSchedule({ pageNo: currentPage })}
           />
           <DeleteConfirmationDialog
             isOpen={isDeleteDialogOpen}

@@ -44,11 +44,7 @@ export default function DuplicateScheduleModal({ isOpen, onOpenChange, sources, 
   }, []);
 
   useEffect(() => {
-    if (selectedYear) { fetchSemesters(selectedYear); setSelectedSemester(""); }
-  }, [selectedYear, fetchSemesters]);
-
-  useEffect(() => {
-    if (isOpen && selectedYear) fetchSemesters(selectedYear);
+    if (isOpen && selectedYear) { fetchSemesters(selectedYear); setSelectedSemester(""); }
   }, [isOpen, selectedYear, fetchSemesters]);
 
   const getSemesterEnum = useCallback((id: number) => {
@@ -73,12 +69,14 @@ export default function DuplicateScheduleModal({ isOpen, onOpenChange, sources, 
 
       if (results.length === 0) { toast.error("No schedules were successfully duplicated. Please try again."); return; }
 
+      const duplicatedSchedules = results.flatMap((r) => r.data?.duplicatedSchedules || []);
       const total = results.reduce((acc, r) => {
-        const data = r?.data || r;
+        const data = r.data;
         acc.success += data?.successfullyDuplicated || 0;
         acc.total += data?.totalSourceSchedules || 0;
         acc.failed += data?.failed || 0;
         acc.skipped += data?.skipped || 0;
+        if (data?.errors?.length) errors.push(...data.errors);
         return acc;
       }, { success: 0, total: 0, failed: 0, skipped: 0 });
 
@@ -89,7 +87,14 @@ export default function DuplicateScheduleModal({ isOpen, onOpenChange, sources, 
         toast.warning("No new schedules were created. All schedules may already exist or have failed.");
       }
 
-      if (onSuccess && results.length > 0) onSuccess({ ...results[0], summary: total, errors: errors.length > 0 ? errors : undefined });
+      if (onSuccess && results.length > 0) {
+        onSuccess({
+          ...results[0],
+          data: { ...results[0].data, duplicatedSchedules },
+          summary: total,
+          errors: errors.length > 0 ? errors : undefined,
+        });
+      }
       onOpenChange(false);
       resetForm();
     } catch { toast.error("An unexpected error occurred while duplicating schedules. Please try again."); }
