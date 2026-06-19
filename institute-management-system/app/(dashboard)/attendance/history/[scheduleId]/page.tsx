@@ -11,9 +11,7 @@ import {
   getAllStudentsService,
 } from "@/service/user/student.service";
 import { StatusEnum } from "@/constants/constant";
-import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import { YearSelector } from "@/components/shared/year-selector";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
@@ -35,6 +33,9 @@ import { formatDate } from "@/utils/date/date";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { DataTable } from "@/components/shared/data-table";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function StudentsListPage() {
   // Core state
@@ -347,44 +348,65 @@ export default function StudentsListPage() {
 
   return (
     <div className="space-y-4">
-      <CardHeaderSection
-        breadcrumbs={[
-          { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "Attendance", href: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD },
-          { label: "Student List", href: "" },
-        ]}
-        searchValue={searchQuery}
-        searchPlaceholder="Search..."
-        onSearchChange={handleSearchChange}
-        buttonHref={ROUTE.STUDENTS.ADD_NEW}
-        customSelect={
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-4">
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <div className="w-full min-w-[200px]">
-                <YearSelector
-                  title="Select Year"
-                  onChange={handleYearChange}
-                  value={selectAcademicYear || 0}
-                />
-              </div>
-            </div>
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <PageBreadcrumb
+            items={[
+              { label: "Attendance", href: ROUTE.ATTENDANCE.STUDENT_LIST_RECORD },
+              { label: "Student List" },
+            ]}
+          />
+        </CardContent>
+      </Card>
 
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <ComboboxSelectClass
-                dataSelect={selectedClass ?? null}
-                onChangeSelected={handleClassChange}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="w-full min-w-[200px] md:w-1/2">
-              <ComboboxSelectSchedule
-                dataSelect={selectedSchedule ?? null}
-                onChangeSelected={handleScheduleChange}
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
-        }
+      <CollapsibleFilterPanel
+        config={{
+          title: "Student List",
+          onBack: () => router.back(),
+          totalCount: allStudentData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search...",
+          onSearchChange: handleSearchChange,
+          filters: [
+            {
+              id: "year",
+              type: "year",
+              label: "Academic Year",
+              value: selectAcademicYear,
+              onChange: handleYearChange,
+            },
+            {
+              id: "class",
+              type: "custom",
+              label: "Class",
+              value: selectedClass,
+              onChange: handleClassChange,
+              render: () => (
+                <ComboboxSelectClass
+                  dataSelect={selectedClass ?? null}
+                  onChangeSelected={handleClassChange}
+                  disabled={isSubmitting}
+                  allowClear
+                />
+              ),
+            },
+            {
+              id: "schedule",
+              type: "custom",
+              label: "Schedule",
+              value: selectedSchedule,
+              onChange: handleScheduleChange,
+              render: () => (
+                <ComboboxSelectSchedule
+                  dataSelect={selectedSchedule ?? null}
+                  onChangeSelected={handleScheduleChange}
+                  disabled={isSubmitting}
+                  allowClear
+                />
+              ),
+            },
+          ],
+        }}
       />
 
       <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>

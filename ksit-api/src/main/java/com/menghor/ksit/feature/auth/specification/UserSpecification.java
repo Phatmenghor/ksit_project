@@ -13,6 +13,8 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -64,21 +66,25 @@ public class UserSpecification {
     }
 
     /**
-     * Filter students by schedule ID
-     * This will find students whose class is associated with the given schedule
+     * Filter students by schedule ID (student's class is associated with the given schedule).
+     *
+     * Uses a subquery instead of joining the to-many "classes.schedule" collection directly:
+     * a direct join multiplies rows per matching schedule, forcing Hibernate to paginate
+     * in memory (fetch everything, then slice) instead of pushing LIMIT/OFFSET to the
+     * database, which made this filtered listing slow.
      */
     public static Specification<UserEntity> hasScheduleId(Long scheduleId) {
         return (root, query, criteriaBuilder) -> {
             if (scheduleId == null) return criteriaBuilder.conjunction();
 
-            // Join with class first
-            Join<UserEntity, ClassEntity> classJoin = root.join("classes", JoinType.LEFT);
+            Subquery<Long> classIdsWithSchedule = query.subquery(Long.class);
+            Root<ClassEntity> classRoot = classIdsWithSchedule.from(ClassEntity.class);
+            Join<ClassEntity, ScheduleEntity> scheduleJoin = classRoot.join("schedule", JoinType.INNER);
+            classIdsWithSchedule
+                    .select(classRoot.get("id"))
+                    .where(criteriaBuilder.equal(scheduleJoin.get("id"), scheduleId));
 
-            // Then join class with schedules using the correct relationship
-            // Since ClassEntity has "schedule" field (List<ScheduleEntity>), we use "schedule"
-            Join<ClassEntity, ScheduleEntity> scheduleJoin = classJoin.join("schedule", JoinType.INNER);
-
-            return criteriaBuilder.equal(scheduleJoin.get("id"), scheduleId);
+            return root.get("classes").get("id").in(classIdsWithSchedule);
         };
     }
 
