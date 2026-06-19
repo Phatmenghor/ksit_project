@@ -3,20 +3,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { createCourseColumns } from "./columns";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { useEffect, useState } from "react";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { ComboboxSelectDepartment } from "@/components/shared/ComboBox/combobox-department";
 import { DepartmentModel } from "@/model/master-data/department/all-department-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectCourseData,
@@ -29,7 +28,6 @@ import {
   setDepartmentFilter,
   setPageNo,
   resetFilters,
-  resetState,
 } from "@/features/school/store/slice/course-slice";
 import {
   fetchAllCoursesService,
@@ -65,11 +63,6 @@ export default function CoursesPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.departmentId, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -95,72 +88,13 @@ export default function CoursesPage() {
     setSelectedCourse(null);
   }
 
-  const columns: TableColumn<CourseModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "code", label: "Code", render: (c) => c?.code || "—" },
-    { key: "nameKH", label: "Name (KH)", render: (c) => c?.nameKH || "---" },
-    { key: "nameEn", label: "Name (EN)", render: (c) => c?.nameEn || "---" },
-    {
-      key: "credit",
-      label: "Credit",
-      render: (c) => `${c?.credit || "---"} (${c?.theory},${c?.execute},${c?.apply})`,
-    },
-    {
-      key: "instructor",
-      label: "Instructor",
-      render: (c) =>
-        c?.user?.englishFirstName && c?.user?.englishLastName
-          ? `${c.user.englishFirstName} ${c.user.englishLastName}`
-          : c?.user?.khmerFirstName && c?.user?.khmerLastName
-          ? `${c.user.khmerFirstName} ${c.user.khmerLastName}`
-          : c?.user?.username || "---",
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      render: (c) => DateTimeFormatter(c.createdAt),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (c) => (
-        <div className="flex justify-start space-x-2">
-          <Button
-            onClick={() => router.push(ROUTE.MASTER_DATA.COURSES.VIEW(String(c.id)))}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-gray-200"
-            disabled={operations.isDeleting}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => router.push(ROUTE.MASTER_DATA.COURSES.UPDATE(String(c.id)))}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-gray-200"
-            disabled={operations.isDeleting}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => { setSelectedCourse(c); setIsDeleteDialogOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={operations.isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = createCourseColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    router,
+    onDelete: (c) => { setSelectedCourse(c); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

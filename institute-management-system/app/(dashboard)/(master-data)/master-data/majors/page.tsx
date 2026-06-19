@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
+import { createMajorColumns } from "./columns";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
 import {
@@ -13,9 +13,8 @@ import {
 } from "@/components/dashboard/master-data/manage-major/major-form-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
 import { Constants } from "@/constants/text-string";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -28,7 +27,6 @@ import {
 import {
   setSearchFilter,
   setPageNo,
-  resetState,
 } from "@/features/master-data/store/slice/major-slice";
 import {
   fetchAllMajorService,
@@ -67,11 +65,6 @@ export default function ManageMajorPage() {
       })
     );
   }, [dispatch, searchDebounce, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -137,44 +130,13 @@ export default function ManageMajorPage() {
     setDeletingMajor(null);
   }
 
-  const columns: TableColumn<MajorModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "code", label: "Code", render: (m) => m.code },
-    { key: "name", label: "Name", render: (m) => m.name },
-    { key: "department", label: "Department", render: (m) => m.department.name },
-    { key: "createdAt", label: "Created At", render: (m) => DateTimeFormatter(m.createdAt) },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (m) => (
-        <div className="flex justify-start space-x-2">
-          <Button
-            onClick={() => handleOpenEditModal(m)}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-gray-200"
-            disabled={operations.isDeleting}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => { setDeletingMajor(m); setIsDeleteDialogOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={operations.isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = createMajorColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    onEdit: handleOpenEditModal,
+    onDelete: (m) => { setDeletingMajor(m); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

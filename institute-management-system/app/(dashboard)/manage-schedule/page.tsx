@@ -21,7 +21,6 @@ import {
 import {
   setSearchFilter,
   setPageNo,
-  resetState,
 } from "@/features/master-data/store/slice/department-slice";
 import { fetchAllDepartmentService } from "@/features/master-data/store/thunks/department-thunks";
 
@@ -48,11 +47,6 @@ export default function DepartmentListPage() {
       })
     );
   }, [dispatch, debouncedSearchQuery, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
   };
@@ -88,7 +82,7 @@ export default function DepartmentListPage() {
             </p>
           </div>
 
-          {isLoading ? (
+          {isLoading && !allDepartmentData ? (
             <Loading />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

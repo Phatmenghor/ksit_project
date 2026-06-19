@@ -3,17 +3,16 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
+import { createSubjectColumns } from "./columns";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { SubjectModel } from "@/model/master-data/subject/all-subject-model";
 import { RoomFormData as SubjectFormData } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { SubjectModal } from "@/components/dashboard/master-data/manage-subject/subject-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
 import { Constants } from "@/constants/text-string";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -26,7 +25,6 @@ import {
 import {
   setSearchFilter,
   setPageNo,
-  resetState,
 } from "@/features/master-data/store/slice/subject-slice";
 import {
   fetchAllSubjectService,
@@ -65,11 +63,6 @@ export default function ManageSubjectPage() {
       })
     );
   }, [dispatch, searchDebounce, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -112,46 +105,13 @@ export default function ManageSubjectPage() {
     setDeletingSubject(null);
   }
 
-  const columns: TableColumn<SubjectModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "name", label: "Name", render: (s) => s.name },
-    { key: "createdAt", label: "Created At", render: (s) => DateTimeFormatter(s.createdAt) },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (s) => (
-        <div className="flex justify-start space-x-2">
-          <Button
-            onClick={() => {
-              setInitialData({ id: s.id, name: s.name, status: s.status });
-              setModalMode("edit");
-              setIsModalOpen(true);
-            }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-            disabled={operations.isDeleting}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => { setDeletingSubject(s); setIsDeleteDialogOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={operations.isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = createSubjectColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    onEdit: (s) => { setInitialData({ id: s.id, name: s.name, status: s.status }); setModalMode("edit"); setIsModalOpen(true); },
+    onDelete: (s) => { setDeletingSubject(s); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { Eye, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { createAdminColumns } from "./columns";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { RoleEnum } from "@/constants/constant";
@@ -11,21 +11,11 @@ import { ROUTE } from "@/constants/routes";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { StaffModel } from "@/model/user/staff/staff.respond.model";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
 import ResetPasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { formatEnumLabel } from "@/utils/general/format-enum-label";
+import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectStaffData,
@@ -36,7 +26,6 @@ import {
 import {
   setSearchFilter,
   setPageNo,
-  resetState,
 } from "@/features/users/store/slice/staff-slice";
 import {
   fetchAllStaffService,
@@ -73,11 +62,6 @@ export default function AdminsListPage() {
       })
     );
   }, [dispatch, searchDebounce, currentPage]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -98,155 +82,14 @@ export default function AdminsListPage() {
     setSelectedAdmin(null);
   }
 
-  const columns: TableColumn<StaffModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    {
-      key: "profile",
-      label: "Profile",
-      width: "70px",
-      render: (item) => {
-        const url = item.profileUrl
-          ? `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${item.profileUrl}`
-          : undefined;
-        const initials =
-          [item.englishFirstName, item.englishLastName]
-            .filter(Boolean)
-            .map((n) => n![0])
-            .join("")
-            .toUpperCase() ||
-          item.username?.charAt(0).toUpperCase() ||
-          "U";
-        return (
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={url} alt={item.username} className="object-cover" />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        );
-      },
-    },
-    {
-      key: "username",
-      label: "Username",
-      render: (admin) => admin.username || "---",
-    },
-    {
-      key: "email",
-      label: "Email",
-      render: (admin) => admin?.email || "---",
-    },
-    {
-      key: "name",
-      label: "Name",
-      render: (admin) =>
-        `${admin.khmerFirstName || ""} ${admin.khmerLastName || ""}`.trim() || "---",
-    },
-    {
-      key: "gender",
-      label: "Gender",
-      render: (admin) => formatEnumLabel(admin.gender),
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (admin) => (
-        <Badge
-          variant="outline"
-          className={
-            admin.status === "ACTIVE"
-              ? "border-green-500 text-green-700 bg-green-50"
-              : "border-gray-400 text-gray-500"
-          }
-        >
-          {formatEnumLabel(admin.status)}
-        </Badge>
-      ),
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      render: (admin) => DateTimeFormatter(admin.createdAt),
-    },
-    {
-      key: "actions",
-      label: "",
-      width: "160px",
-      render: (admin) => (
-        <div className="flex justify-start space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => router.push(ROUTE.USERS.ADMIN.ADMIN_VIEW(String(admin.id)))}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Admin Detail</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => router.push(ROUTE.USERS.ADMIN.EDIT_ADMIN(String(admin.id)))}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => { setSelectedAdmin(admin); setIsChangePasswordDialogOpen(true); }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Reset Password</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => { setSelectedAdmin(admin); setIsDeleteDialogOpen(true); }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={operations.isDeleting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const columns = createAdminColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    router,
+    onResetPassword: (admin) => { setSelectedAdmin(admin); setIsChangePasswordDialogOpen(true); },
+    onDelete: (admin) => { setSelectedAdmin(admin); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

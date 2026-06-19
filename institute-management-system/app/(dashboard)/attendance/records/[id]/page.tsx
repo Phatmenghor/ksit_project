@@ -33,11 +33,9 @@ import { Button } from "@/components/ui/button";
 import { Download, Search, Tally1 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
-import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
-import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "@/components/shared/start-end-date";
 import { Constants } from "@/constants/text-string";
-import { formatType } from "@/constants/format-enum/formate-type-attendance";
+import { createAttendanceRecordDetailColumns } from "./columns";
 import { AllAttendanceHistoryModel } from "@/model/attendance/attendance-history";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { AppIcons } from "@/constants/icons/icon";
@@ -48,7 +46,7 @@ import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-cour
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import Loading from "@/components/shared/loading";
 
 export default function StudentAttendancePage() {
@@ -153,41 +151,6 @@ export default function StudentAttendancePage() {
     startDate,
     endDate,
   ]);
-
-  const getStatusAttendance = (status: string) => {
-    if (!status) {
-      return null;
-    }
-    const baseBadgeAttendance =
-      "w-24 h-8 flex items-center justify-center text-sm font-medium rounded-full";
-
-    switch (status.toUpperCase()) {
-      case "PRESENT":
-        return (
-          <Badge
-            className={`bg-green-100 text-green-800 hover:bg-green-100 ${baseBadgeAttendance}`}
-          >
-            Present
-          </Badge>
-        );
-      case "ABSENT":
-        return (
-          <Badge
-            className={`bg-red-100 text-red-800 hover:bg-red-100 ${baseBadgeAttendance}`}
-          >
-            Absent
-          </Badge>
-        );
-      default:
-        return (
-          <Badge
-            className={`bg-gray-100 text-gray-800 hover:bg-gray-100 ${baseBadgeAttendance}`}
-          >
-            {status}
-          </Badge>
-        );
-    }
-  };
 
   const handleYearChange = (e: number) => {
     setSelectAcademicYear(e);
@@ -372,53 +335,7 @@ export default function StudentAttendancePage() {
     }
   };
 
-  const tableColumns: TableColumn<AttendanceHistoryModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      render: (_, index) => getDisplayIndex(index),
-    },
-    {
-      key: "identifyNumber",
-      label: "Identify Number",
-      render: (history) => history.identifyNumber || "---",
-    },
-    {
-      key: "studentName",
-      label: "Student Name",
-      render: (history) => history.studentName || "---",
-    },
-    {
-      key: "teacherName",
-      label: "Teacher Name",
-      render: (history) => history.teacherName || "---",
-    },
-    {
-      key: "courseName",
-      label: "Course Name",
-      render: (history) => history.courseName || "---",
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (history) => getStatusAttendance(history.status) || "---",
-    },
-    {
-      key: "attendanceType",
-      label: "Type",
-      render: (history) => formatType(history.attendanceType) || "---",
-    },
-    {
-      key: "createdAt",
-      label: "Date",
-      render: (history) => formatDate(history.createdAt) || "---",
-    },
-    {
-      key: "comment",
-      label: "Comment",
-      render: (history) => history.comment || "---",
-    },
-  ];
+  const tableColumns = createAttendanceRecordDetailColumns({ getDisplayIndex });
 
   return (
     <div>

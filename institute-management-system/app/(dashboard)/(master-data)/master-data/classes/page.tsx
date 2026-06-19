@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
+import { createClassColumns } from "./columns";
 import { useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -13,14 +13,13 @@ import {
   ClassFormData,
   ClassFormModal,
 } from "@/components/dashboard/master-data/manage-class/class-form-modal";
-import { DegreeEnum, Degrees } from "@/constants/constant";
+import { DegreeEnum } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { DataTable } from "@/components/shared/data-table";
 import { AcademyYearPicker } from "@/components/shared/academy-year-picker";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -34,7 +33,6 @@ import {
   setPageNo,
   setMajorFilter,
   setAcademyYearFilter,
-  resetState,
 } from "@/features/master-data/store/slice/class-slice";
 import {
   fetchAllClassService,
@@ -75,11 +73,6 @@ export default function ManageClassPage() {
       })
     );
   }, [dispatch, searchDebounce, currentPage, currentPageSize, filters.majorId, filters.academyYear]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -150,65 +143,13 @@ export default function ManageClassPage() {
     setDeletingClass(null);
   }
 
-  const columns: TableColumn<ClassModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "code", label: "Class Code", width: "140px", render: (cls) => cls.code },
-    { key: "major", label: "Major", render: (cls) => cls.major.name },
-    {
-      key: "degree",
-      label: "Degree",
-      render: (cls) => Degrees.find((d) => d.value === cls.degree)?.label ?? cls.degree,
-    },
-    {
-      key: "yearLevel",
-      label: "Year Level",
-      render: (cls) => {
-        const map: Record<string, string> = {
-          FIRST_YEAR: "Year 1",
-          SECOND_YEAR: "Year 2",
-          THIRD_YEAR: "Year 3",
-          FOURTH_YEAR: "Year 4",
-        };
-        return map[cls.yearLevel] ?? cls.yearLevel;
-      },
-    },
-    { key: "academyYear", label: "Academy Year", render: (cls) => cls.academyYear },
-    { key: "createdAt", label: "Created At", render: (cls) => DateTimeFormatter(cls.createdAt) },
-    {
-      key: "actions",
-      label: "",
-      width: "90px",
-      render: (cls) => (
-        <div className="flex gap-1">
-          <Button
-            onClick={() => handleOpenEditModal(cls)}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 bg-gray-200 hover:bg-gray-300"
-            title="Edit"
-            disabled={operations.isDeleting}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            onClick={() => { setDeletingClass(cls); setIsDeleteDialogOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 bg-red-500 text-white hover:bg-red-600"
-            disabled={operations.isDeleting}
-            title="Delete"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = createClassColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    onEdit: handleOpenEditModal,
+    onDelete: (cls) => { setDeletingClass(cls); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

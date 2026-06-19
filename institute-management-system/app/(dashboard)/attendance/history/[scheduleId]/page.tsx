@@ -2,14 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { createAttendanceHistoryColumns } from "./columns";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   editStudentService,
@@ -40,7 +34,7 @@ import { StudentListExcelTableHeader } from "@/constants/excel/student-header";
 import { formatDate } from "@/utils/date/date";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 
 export default function StudentsListPage() {
   // Core state
@@ -344,77 +338,12 @@ export default function StudentsListPage() {
     }
   };
 
-  const columns: TableColumn<StudentModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      render: (_, index) => getDisplayIndex(index),
-    },
-    {
-      key: "username",
-      label: "Username",
-      render: (student) => student.username || "---",
-    },
-    {
-      key: "khmerName",
-      label: "Khmer Name",
-      render: (student) =>
-        `${student.khmerFirstName || ""} ${student.khmerLastName || ""}`.trim() || "---",
-    },
-    {
-      key: "englishName",
-      label: "English Name",
-      render: (student) =>
-        `${student.englishFirstName || ""} ${student.englishLastName || ""}`.trim() || "---",
-    },
-    {
-      key: "gender",
-      label: "Gender",
-      render: (student) => student.gender || "---",
-    },
-    {
-      key: "dateOfBirth",
-      label: "Date of Birth",
-      render: (student) => student.dateOfBirth || "---",
-    },
-    {
-      key: "class",
-      label: "Class",
-      render: (student) =>
-        `${student?.studentClass.code} - ${student?.studentClass.major.name}` || "---",
-    },
-    {
-      key: "actions",
-      label: "",
-      render: (student) => (
-        <div className="flex justify-start space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => {
-                    router.push(
-                      `${ROUTE.ATTENDANCE.HISTORY_RECORD_DETAIL(
-                        String(scheduleId),
-                        String(student.id)
-                      )}`
-                    );
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Student Detail</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const columns = createAttendanceHistoryColumns({
+    getDisplayIndex,
+    router,
+    scheduleId: String(scheduleId),
+    isSubmitting,
+  });
 
   return (
     <div className="space-y-4">

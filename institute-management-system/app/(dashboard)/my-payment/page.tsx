@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import { createMyPaymentColumns } from "./columns";
 import { useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { Constants } from "@/constants/text-string";
@@ -12,12 +13,6 @@ import {
   PaymentFormData,
   PaymentFormModal,
 } from "@/components/dashboard/payment/payment-form-model";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@radix-ui/react-tooltip";
 import { useParams } from "next/navigation";
 import { UserProfileSection } from "@/components/dashboard/users/shared/user-profile";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
@@ -26,7 +21,7 @@ import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmatio
 import { usePagination } from "@/hooks/use-pagination";
 import { PaymentRequest } from "@/model/payment/payment-request-model";
 import { getStudentByTokenService } from "@/service/user/user.service";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectPaymentData,
@@ -35,7 +30,6 @@ import {
 } from "@/features/payments/store/selectors/payment-selectors";
 import {
   setPageNo,
-  resetState,
 } from "@/features/payments/store/slice/payment-slice";
 import {
   fetchAllPaymentsService,
@@ -93,11 +87,6 @@ export default function PaymentPage() {
       })
     );
   }, [dispatch, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleOpenEditModal = (p: PaymentModel) => {
     setModalMode("edit");
     setInitialData({
@@ -165,57 +154,13 @@ export default function PaymentPage() {
     return `${studentDetail?.username}`;
   };
 
-  const columns: TableColumn<PaymentItem>[] = [
-    { key: "no", label: "#", width: "50px", render: (_, index) => getDisplayIndex(index) },
-    { key: "item", label: "Item", render: (p) => p.item },
-    { key: "type", label: "Type", render: (p) => p.type },
-    { key: "amount", label: "Amount", render: (p) => p.amount },
-    { key: "percentage", label: "Percentage", render: (p) => p.percentage },
-    { key: "date", label: "Date", render: (p) => p.date },
-    { key: "commend", label: "Comment", render: (p) => p.commend },
-    {
-      key: "action",
-      label: "Action",
-      width: "100px",
-      render: (p) => (
-        <div className="flex gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => handleOpenEditModal(p)}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isUpdating}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => { setSelectedPayment(p); setIsDeleteDialogOpen(true); }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={operations.isDeleting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const columns = createMyPaymentColumns({
+    getDisplayIndex,
+    isUpdating: operations.isUpdating,
+    isDeleting: operations.isDeleting,
+    onEdit: handleOpenEditModal,
+    onDelete: (p) => { setSelectedPayment(p); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

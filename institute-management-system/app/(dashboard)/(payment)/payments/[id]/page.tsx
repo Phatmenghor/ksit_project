@@ -1,7 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import { createPaymentDetailColumns } from "./columns";
 import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { Constants } from "@/constants/text-string";
@@ -22,12 +23,6 @@ import {
   PaymentFormData,
   PaymentFormModal,
 } from "@/components/dashboard/payment/payment-form-model";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@radix-ui/react-tooltip";
 import { useParams, useSearchParams } from "next/navigation";
 import { UserProfileSection } from "@/components/dashboard/users/shared/user-profile";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
@@ -35,7 +30,7 @@ import { StudentByIdModel } from "@/model/user/student/student.respond.model";
 import { getStudentByIdService } from "@/service/user/student.service";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 
 export default function PaymentPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -265,89 +260,12 @@ export default function PaymentPage() {
     }
   };
 
-  const columns: TableColumn<PaymentModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => getDisplayIndex(index),
-    },
-    {
-      key: "item",
-      label: "Item",
-      render: (pay) => pay.item,
-    },
-    {
-      key: "type",
-      label: "Type",
-      render: (pay) => pay.type,
-    },
-    {
-      key: "amount",
-      label: "Amount",
-      render: (pay) => pay.amount,
-    },
-    {
-      key: "percentage",
-      label: "Percentage",
-      render: (pay) => pay.percentage,
-    },
-    {
-      key: "date",
-      label: "Date",
-      render: (pay) => pay.date,
-    },
-    {
-      key: "commend",
-      label: "Comment",
-      render: (pay) => pay.commend,
-    },
-    {
-      key: "actions",
-      label: "",
-      width: "100px",
-      render: (pay) => (
-        <div className="flex gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => handleOpenEditModal(pay)}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={isSubmitting}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => {
-                    setSelectedPayment(pay);
-                    setIsDeleteDialogOpen(true);
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={isSubmitting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const columns = createPaymentDetailColumns({
+    getDisplayIndex,
+    isSubmitting,
+    onEdit: handleOpenEditModal,
+    onDelete: (pay) => { setSelectedPayment(pay); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

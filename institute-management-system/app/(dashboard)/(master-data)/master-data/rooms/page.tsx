@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
+import { createRoomColumns } from "./columns";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { RoomModel } from "@/model/master-data/room/all-room-model";
 import {
@@ -13,9 +13,8 @@ import {
 } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
 import { Constants } from "@/constants/text-string";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -28,7 +27,6 @@ import {
 import {
   setSearchFilter,
   setPageNo,
-  resetState,
 } from "@/features/master-data/store/slice/room-slice";
 import {
   fetchAllRoomService,
@@ -67,11 +65,6 @@ export default function ManageRoomPage() {
       })
     );
   }, [dispatch, searchDebounce, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -126,42 +119,13 @@ export default function ManageRoomPage() {
     setDeletingRoom(null);
   }
 
-  const columns: TableColumn<RoomModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "name", label: "Name", render: (r) => r.name },
-    { key: "createdAt", label: "Created At", render: (r) => DateTimeFormatter(r.createdAt) },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (r) => (
-        <div className="flex justify-start space-x-2">
-          <Button
-            onClick={() => handleOpenEditModal(r)}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-            disabled={operations.isDeleting}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => { setDeletingRoom(r); setIsDeleteDialogOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={operations.isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = createRoomColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    onEdit: handleOpenEditModal,
+    onDelete: (r) => { setDeletingRoom(r); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

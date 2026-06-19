@@ -2,21 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Download,
-  Eye,
-  Loader2,
-  Pencil,
-  RotateCcw,
-  Tally1,
-  Trash2,
-} from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Download, Loader2, Tally1 } from "lucide-react";
+import { createStudentColumns } from "./columns";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -40,7 +27,7 @@ import { formatEnumLabel } from "@/utils/general/format-enum-label";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectStudentData,
@@ -55,7 +42,6 @@ import {
   setAcademicYearFilter,
   setPageNo,
   resetFilters,
-  resetState,
 } from "@/features/students/store/slice/student-slice";
 import {
   fetchAllStudentsService,
@@ -100,11 +86,6 @@ export default function StudentsListPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.classId, filters.scheduleId, filters.academicYear, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -226,97 +207,14 @@ export default function StudentsListPage() {
     }
   };
 
-  const tableColumns: TableColumn<StudentModel>[] = [
-    {
-      key: "index",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "username", label: "Username", render: (s) => s.username || "---" },
-    {
-      key: "fullnameKH",
-      label: "Fullname (KH)",
-      render: (s) => `${s.khmerFirstName || ""} ${s.khmerLastName || ""}`.trim() || "---",
-    },
-    {
-      key: "fullnameEN",
-      label: "Fullname (EN)",
-      render: (s) => `${s.englishFirstName || ""} ${s.englishLastName || ""}`.trim() || "---",
-    },
-    { key: "gender", label: "Gender", render: (s) => formatEnumLabel(s.gender) },
-    { key: "dateOfBirth", label: "Date Of Birth", render: (s) => s.dateOfBirth ? formatDate(s.dateOfBirth) : "---" },
-    {
-      key: "classCode",
-      label: "Class code",
-      render: (s) => `${s?.studentClass?.code || ""} - ${s?.studentClass?.major?.name || ""}` || "---",
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      width: "160px",
-      render: (s) => (
-        <div className="flex justify-start space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => router.push(ROUTE.STUDENTS.VIEW(String(s.id)))}
-                  variant="ghost" size="icon" className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Student Detail</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => router.push(ROUTE.STUDENTS.EDIT_STUDENT(String(s.id)))}
-                  variant="ghost" size="icon" className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => { setSelectedStudent(s); setIsChangePasswordDialogOpen(true); }}
-                  variant="ghost" size="icon" className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Reset Password</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => { setSelectedStudent(s); setIsDeleteDialogOpen(true); }}
-                  variant="ghost" size="icon" className="h-8 w-8 bg-red-500 text-white hover:text-gray-100 hover:bg-red-600"
-                  disabled={operations.isDeleting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const tableColumns = createStudentColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    router,
+    onResetPassword: (s) => { setSelectedStudent(s); setIsChangePasswordDialogOpen(true); },
+    onDelete: (s) => { setSelectedStudent(s); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

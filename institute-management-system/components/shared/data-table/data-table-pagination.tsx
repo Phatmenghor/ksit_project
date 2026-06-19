@@ -3,6 +3,13 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PAGE_SIZE_OPTIONS } from "@/hooks/use-pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function getPaginationItems(
   currentPage: number,
@@ -54,15 +61,21 @@ export function DataTablePagination({
         {onPageSizeChange && pageSize !== undefined && (
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">Rows per page</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-7 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => onPageSizeChange(Number(v))}
             >
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
+              <SelectTrigger className="h-7 w-[64px] text-xs px-2">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={String(size)} className="text-xs">
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
         {showPaginationButtons && (
@@ -112,7 +125,7 @@ export function DataTablePagination({
           <span className="hidden sm:inline">Next</span>
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
-      </div>
+      </div>}
     </div>
   );
 }

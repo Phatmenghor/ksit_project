@@ -16,9 +16,7 @@ import {
 } from "@/service/schedule/attendance.service";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
-import { Badge } from "@/components/ui/badge";
-import { formatType } from "@/constants/format-enum/formate-type-attendance";
+import { createAttendanceStudentHistoryColumns } from "./columns";
 import { AllAttendanceHistoryModel } from "@/model/attendance/attendance-history";
 import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { useParams, useSearchParams } from "next/navigation";
@@ -32,7 +30,7 @@ import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
 import { ROUTE } from "@/constants/routes";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 
 export default function HistoryRecordsPage() {
   const params = useParams();
@@ -96,41 +94,6 @@ export default function HistoryRecordsPage() {
   useEffect(() => {
     fetchAttendanceHistory({ pageNo: currentPage });
   }, [currentPage]);
-
-  const getStatusAttendance = (status: string) => {
-    if (!status) {
-      return null;
-    }
-    const baseBadgeAttendance =
-      "w-24 h-8 flex items-center justify-center text-sm font-medium rounded-full";
-
-    switch (status.toUpperCase()) {
-      case "PRESENT":
-        return (
-          <Badge
-            className={`bg-green-100 text-green-800 hover:bg-green-100 ${baseBadgeAttendance}`}
-          >
-            Present
-          </Badge>
-        );
-      case "ABSENT":
-        return (
-          <Badge
-            className={`bg-red-100 text-red-800 hover:bg-red-100 ${baseBadgeAttendance}`}
-          >
-            Absent
-          </Badge>
-        );
-      default:
-        return (
-          <Badge
-            className={`bg-gray-100 text-gray-800 hover:bg-gray-100 ${baseBadgeAttendance}`}
-          >
-            {status}
-          </Badge>
-        );
-    }
-  };
 
   const loadScheduleData = useCallback(async () => {
     if (!scheduleId) return;
@@ -292,63 +255,7 @@ export default function HistoryRecordsPage() {
       (record) => record.status === "PRESENT"
     ).length || 0;
 
-  const tableColumns: TableColumn<AttendanceHistoryModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      render: (_, index) => getDisplayIndex(index),
-    },
-    {
-      key: "identifyNumber",
-      label: "Identify Number",
-      render: (history) => history.identifyNumber || "---",
-    },
-    {
-      key: "studentName",
-      label: "Student Name",
-      render: (history) => history.studentName || "---",
-    },
-    {
-      key: "teacherName",
-      label: "Teacher Name",
-      render: (history) => history.teacherName || "---",
-    },
-    {
-      key: "courseName",
-      label: "Course Name",
-      render: (history) => history.courseName || "---",
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (history) => getStatusAttendance(history.status) || "---",
-    },
-    {
-      key: "attendanceType",
-      label: "Type",
-      render: (history) => formatType(history.attendanceType) || "---",
-    },
-    {
-      key: "createdAt",
-      label: "Date",
-      render: (history) => formatDate(history.createdAt) || "---",
-    },
-    {
-      key: "attendanceScore",
-      label: "Score",
-      render: (history) => history?.attendanceScore || "---",
-    },
-    {
-      key: "maxAttendanceScore",
-      label: "Max Score",
-      render: (history) => history.maxAttendanceScore || "---",
-    },
-    {
-      key: "comment",
-      label: "Comment",
-      render: (history) => history.comment || "---",
-    },
-  ];
+  const tableColumns = createAttendanceStudentHistoryColumns({ getDisplayIndex });
 
   return (
     <div className="container space-y-4">

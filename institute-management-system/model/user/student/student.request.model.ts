@@ -75,6 +75,7 @@ export interface RequestAllStudent {
   search?: string;
   status?: string;
   classId?: number;
+  courseId?: number;
   scheduleId?: number;
   academicYear?: number;
   sortType?: string;

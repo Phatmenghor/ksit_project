@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
 import { toast } from "sonner";
+import { createPaymentListColumns } from "./columns";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
-import { BreadcrumbLink } from "@/components/ui/breadcrumb";
 import { StudentModel } from "@/model/user/student/student.request.model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { useRouter } from "next/navigation";
@@ -18,7 +16,7 @@ import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-cour
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -35,7 +33,6 @@ import {
   setAcademicYearFilter,
   setPageNo,
   resetFilters,
-  resetState,
 } from "@/features/students/store/slice/student-slice";
 import { fetchAllStudentsService } from "@/features/students/store/thunks/student-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
@@ -74,54 +71,12 @@ export default function PaymentStudentListPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.classId, filters.scheduleId, filters.courseId, filters.academicYear, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
   };
 
-  const columns: TableColumn<StudentModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "username", label: "Username", render: (s) => s.username || "---" },
-    {
-      key: "khmerName",
-      label: "Khmer Name",
-      render: (s) => `${s.khmerFirstName || ""} ${s.khmerLastName || ""}`.trim() || "---",
-    },
-    {
-      key: "englishName",
-      label: "English Name",
-      render: (s) => `${s.englishFirstName || ""} ${s.englishLastName || ""}`.trim() || "---",
-    },
-    { key: "gender", label: "Gender", render: (s) => s.gender || "---" },
-    { key: "dateOfBirth", label: "Date of Birth", render: (s) => s.dateOfBirth || "---" },
-    {
-      key: "action",
-      label: "Action",
-      width: "100px",
-      render: (s) => (
-        <BreadcrumbLink href={ROUTE.PAYMENT.VIEW_PAYMENT(String(s.id))}>
-          <Button
-            variant="link"
-            size="icon"
-            className="text-black underline hover:text-blue-600 flex items-center"
-          >
-            <Eye className="h-4 w-4" />
-            <span className="text-sm"> Detail</span>
-          </Button>
-        </BreadcrumbLink>
-      ),
-    },
-  ];
+  const columns = createPaymentListColumns({ currentPage, currentPageSize });
 
   return (
     <div className="space-y-4">

@@ -23,7 +23,8 @@ import {
   Timer,
   Plus,
 } from "lucide-react";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
+import { createAttendanceCheckColumns } from "./columns";
 import { useParams } from "next/navigation";
 import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
@@ -97,18 +98,6 @@ const AttendanceCheckPage = () => {
   // Auto-refresh timing constants
   const REFRESH_INTERVAL = 30; // 30 seconds
   const PROGRESS_UPDATE_INTERVAL = 100; // Update progress every 100ms
-
-  // Get status color with smooth transitions
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "present":
-        return "text-green-700 bg-green-100 border-green-300 shadow-sm transition-all duration-200";
-      case "absent":
-        return "text-red-700 bg-red-100 border-red-300 shadow-sm transition-all duration-200";
-      default:
-        return "text-gray-700 bg-gray-100 border-gray-300 shadow-sm transition-all duration-200";
-    }
-  };
 
   // Enhanced data loading functions with better error handling
   const loadScheduleData = useCallback(async () => {
@@ -705,166 +694,12 @@ const AttendanceCheckPage = () => {
                 <div className="overflow-x-auto relative" ref={tableRef}>
                   <DataTable
                     data={filteredAttendances}
-                    columns={[
-                      {
-                        key: "no",
-                        label: "#",
-                        width: "50px",
-                        render: (_, index) => index + 1,
-                      },
-                      {
-                        key: "studentName",
-                        label: "Student Name",
-                        render: (student) => (
-                          <div className="flex items-center gap-2">
-                            {student.studentName || "- - -"}
-                            {unsavedChanges.has(student.id) && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs animate-pulse"
-                              >
-                                Unsaved
-                              </Badge>
-                            )}
-                          </div>
-                        ),
-                      },
-                      {
-                        key: "identifyNumber",
-                        label: "Student IdentifyNumber",
-                        render: (student) => student.identifyNumber,
-                      },
-                      {
-                        key: "attendance",
-                        label: "Attendance",
-                        render: (student) => (
-                          <Select
-                            value={student.status}
-                            onValueChange={(value) =>
-                              handleFieldChange(student.id, "status", value)
-                            }
-                            disabled={isSubmitted}
-                          >
-                            <SelectTrigger
-                              className={`h-8 w-full border ${getStatusColor(
-                                student.status
-                              )} ${isSubmitted ? "cursor-not-allowed" : ""}`}
-                            >
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {attendanceStatusOptions.map((option) => (
-                                <SelectItem
-                                  key={option.value}
-                                  value={option.value}
-                                >
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ),
-                      },
-                      {
-                        key: "type",
-                        label: "Type",
-                        render: (student) => (
-                          <Select
-                            value={student.attendanceType}
-                            onValueChange={(value) =>
-                              handleFieldChange(
-                                student.id,
-                                "attendanceType",
-                                value
-                              )
-                            }
-                            disabled={isSubmitted}
-                          >
-                            <SelectTrigger
-                              className={`h-8 w-full border ${
-                                isSubmitted ? "cursor-not-allowed" : ""
-                              }`}
-                            >
-                              <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {attendanceTypeOptions.map((option) => (
-                                <SelectItem
-                                  key={option.value}
-                                  value={option.value}
-                                >
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ),
-                      },
-                      {
-                        key: "recordedTime",
-                        label: "Check-in Time",
-                        render: (student) => student.recordedTime || "--",
-                      },
-                      {
-                        key: "attendanceScore",
-                        label: "attendanceScore",
-                        render: (student) => student.attendanceScore || "--",
-                      },
-                      {
-                        key: "maxAttendanceScore",
-                        label: "maxAttendanceScore",
-                        render: (student) => student.maxAttendanceScore || "--",
-                      },
-                      {
-                        key: "comment",
-                        label: "Comments",
-                        render: (student) => (
-                          <Input
-                            placeholder="Add Comment"
-                            className={`h-8 text-sm w-full transition-all duration-100 ease-in-out ${
-                              unsavedChanges.has(student.id)
-                                ? "border-yellow-300 ring-1 ring-yellow-200"
-                                : ""
-                            } ${isSubmitted ? "cursor-not-allowed" : ""}`}
-                            value={student.comment || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                student.id,
-                                "comment",
-                                e.target.value
-                              )
-                            }
-                            disabled={isSubmitted}
-                          />
-                        ),
-                      },
-                      {
-                        key: "status",
-                        label: "Status",
-                        render: (student) =>
-                          isSubmitted ? (
-                            <Badge variant="secondary" className="text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Submitted
-                            </Badge>
-                          ) : unsavedChanges.has(student.id) ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleRemoveFromUnsaved(student.id)
-                              }
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">
-                              Saved
-                            </Badge>
-                          ),
-                      },
-                    ]}
+                    columns={createAttendanceCheckColumns({
+                      unsavedChanges,
+                      isSubmitted,
+                      onFieldChange: handleFieldChange,
+                      onRemoveFromUnsaved: handleRemoveFromUnsaved,
+                    })}
                     loading={loading}
                     currentPage={1}
                     totalPages={0}

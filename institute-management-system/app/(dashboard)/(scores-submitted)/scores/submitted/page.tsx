@@ -3,22 +3,20 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SemesterFilter, SubmissionEnum, tabs } from "@/constants/constant";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AllStudentScoreModel, SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
+import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
 import { usePagination } from "@/hooks/use-pagination";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { formatSemester } from "@/utils/map-helper/schedule";
+import { createSubmittedScoresColumns } from "./columns";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectSubmittedScoreData,
@@ -34,7 +32,6 @@ import {
   setStatusFilter,
   setPageNo,
   resetFilters,
-  resetState,
 } from "@/features/scores/store/slice/submitted-score-slice";
 import { fetchAllSubmittedScoresService } from "@/features/scores/store/thunks/submitted-score-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
@@ -85,11 +82,6 @@ export default function ScoreSubmittedPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.status, filters.classId, filters.scheduleId, filters.academicYear, filters.semester, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -109,8 +101,8 @@ export default function ScoreSubmittedPage() {
     dispatch(setAcademicYearFilter(year));
   };
 
-  const handleSemesterChange = (value: string) => {
-    dispatch(setSemesterFilter(value));
+  const handleSemesterChange = (value: string | number | null | undefined) => {
+    dispatch(setSemesterFilter(value ? String(value) : "ALL"));
     updateUrlWithPage(1);
   };
 
@@ -124,34 +116,7 @@ export default function ScoreSubmittedPage() {
     dispatch(setScheduleFilter(e?.id));
   };
 
-  const columns: TableColumn<SubmissionItem>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => getDisplayIndex(index),
-    },
-    { key: "teacherName", label: "Teacher Name", render: (s) => s.teacherName },
-    { key: "courseName", label: "Course Name", render: (s) => s.courseName },
-    { key: "semester", label: "Semester", render: (s) => formatSemester(s.semester) },
-    { key: "classCode", label: "Class", render: (s) => s.classCode },
-    { key: "submissionDate", label: "Submission Date", render: (s) => DateTimeFormatter(s.submissionDate) },
-    {
-      key: "action",
-      label: "Action",
-      width: "80px",
-      render: (s) => (
-        <Button
-          onClick={() => router.push(ROUTE.SCORES.SUBMITTED_DETAIL(String(s.id)))}
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      ),
-    },
-  ];
+  const columns = createSubmittedScoresColumns({ getDisplayIndex, router });
 
   const emptyMessage = activeTab === "all" ? "No submitted scores found." : "No approved scores found.";
 

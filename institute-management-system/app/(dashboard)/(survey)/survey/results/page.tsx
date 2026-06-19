@@ -7,7 +7,7 @@ import { DateRangePicker } from "@/components/shared/start-end-date";
 import { Button } from "@/components/ui/button";
 import { SemesterFilter } from "@/constants/constant";
 import { formatSemester } from "@/constants/format-enum/format-semester";
-import { formatSemesterOne } from "@/constants/format-enum/format-semester-1";
+import { createSurveyResultsColumns } from "./columns";
 import { ROUTE } from "@/constants/routes";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import {
@@ -19,7 +19,6 @@ import {
   getAllSurveyResultExcelService,
   getSurveyReportHeadersService,
 } from "@/service/survey/survey.service";
-import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
 import { Download, FileSpreadsheet, Loader2, Tally1 } from "lucide-react";
@@ -29,7 +28,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectSurveyData,
@@ -46,7 +45,6 @@ import {
   setEndDateFilter,
   setPageNo,
   resetFilters,
-  resetState,
 } from "@/features/survey/store/slice/survey-slice";
 import {
   fetchSurveyResultsService,
@@ -96,11 +94,6 @@ export default function SurveyResultPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.academicYear, filters.semester, filters.classId, filters.startDate, filters.endDate, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -116,8 +109,8 @@ export default function SurveyResultPage() {
     updateUrlWithPage(1);
   };
 
-  const handleSemesterChange = (value: string) => {
-    dispatch(setSemesterFilter(value));
+  const handleSemesterChange = (value: string | number | null | undefined) => {
+    dispatch(setSemesterFilter(value ? String(value) : "ALL"));
     updateUrlWithPage(1);
   };
 
@@ -135,22 +128,6 @@ export default function SurveyResultPage() {
 
   const clearStartDate = () => handleStartDateChange(undefined);
   const clearEndDate = () => handleEndDateChange(undefined);
-
-  const renderCellValue = (item: SurveyResponseItem, header: SurveyReportHeader): React.ReactNode => {
-    const value = (item as any)[header.key];
-    if (value === null || value === undefined) return <span>---</span>;
-    if (header.key === "dayOfWeek" && typeof value === "string") {
-      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-    }
-    if (header.key === "semester" && typeof value === "string") {
-      return formatSemesterOne(value);
-    }
-    switch (header.type) {
-      case "DATE":
-        return formatDate(value as string);
-    }
-    return value;
-  };
 
   const exportToExcel = async () => {
     setIsSubmitting(true);
@@ -230,14 +207,7 @@ export default function SurveyResultPage() {
     }
   };
 
-  const columns: TableColumn<SurveyResponseItem>[] = [
-    { key: "no", label: "#", width: "50px", render: (_, index) => getDisplayIndex(index) },
-    ...surveyHeaders.map((header) => ({
-      key: header.key,
-      label: header.label,
-      render: (item: SurveyResponseItem) => renderCellValue(item, header),
-    })),
-  ];
+  const columns = createSurveyResultsColumns({ getDisplayIndex, surveyHeaders });
 
   return (
     <div className="space-y-4">

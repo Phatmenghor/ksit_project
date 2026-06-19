@@ -1,13 +1,7 @@
 "use client";
 
-import { Clock, Eye, MapPin, Users } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { formatDate } from "@/utils/date/date";
+import { Clock, MapPin, Users } from "lucide-react";
+import { createStudentClassColumns } from "./columns";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
@@ -26,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constants/icons/icon";
 import { usePagination } from "@/hooks/use-pagination";
 import { Constants } from "@/constants/text-string";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 
 type StudentItem = AllStudentModel["content"][number];
 
@@ -106,70 +100,7 @@ export default function StudentListPage() {
   }, [currentPage, fetchClassDetail]);
   const router = useRouter();
 
-  const tableColumns: TableColumn<StudentItem>[] = [
-    {
-      key: "index",
-      label: "#",
-      width: "50px",
-      render: (_item, index) => getDisplayIndex(index),
-    },
-    {
-      key: "username",
-      label: "Student ID",
-      render: (student) => student.username || "---",
-    },
-    {
-      key: "fullnameKH",
-      label: "Fullname (KH)",
-      render: (student) =>
-        `${student.khmerFirstName || ""} ${student.khmerLastName || ""}`.trim() ||
-        "---",
-    },
-    {
-      key: "fullnameEN",
-      label: "Fullname (EN)",
-      render: (student) =>
-        `${student.englishFirstName || ""} ${student.englishLastName || ""}`.trim() ||
-        "---",
-    },
-    {
-      key: "gender",
-      label: "Gender",
-      render: (student) => student.gender || "---",
-    },
-    {
-      key: "dateOfBirth",
-      label: "Date Of Birth",
-      render: (student) =>
-        student.dateOfBirth ? formatDate(student.dateOfBirth) : "---",
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      width: "80px",
-      render: (student) => (
-        <div className="flex justify-start space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() =>
-                    router.push(ROUTE.STUDENTS.VIEW(String(student.id)))
-                  }
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Student Detail</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const tableColumns = createStudentClassColumns({ getDisplayIndex, router });
 
   return (
     <div>

@@ -1,6 +1,7 @@
 export interface ScheduleFilterModel {
   search?: string;
   classId?: number;
+  courseId?: number;
   roomId?: number;
   teacherId?: number;
   studentId?: number;

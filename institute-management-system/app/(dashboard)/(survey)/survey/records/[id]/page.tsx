@@ -4,7 +4,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatSemesterOne } from "@/constants/format-enum/format-semester-1";
+import { createSurveyRecordDetailColumns } from "./columns";
 import { ROUTE } from "@/constants/routes";
 import {
   AllSurveyFilterModel,
@@ -18,7 +18,6 @@ import {
   getAllSurveyResultService,
   getSurveyReportHeadersService,
 } from "@/service/survey/survey.service";
-import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
 import {
@@ -36,7 +35,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AppIcons } from "@/constants/icons/icon";
 import { usePagination } from "@/hooks/use-pagination";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 
 export default function AllStudentResultPage() {
   const params = useParams();
@@ -150,40 +149,10 @@ export default function AllStudentResultPage() {
     fetchSurveyResults({ pageNo: currentPage });
   }, [debouncedSearchQuery, currentPage]);
 
-  // Render cell value based on type
-  const renderCellValue = (
-    item: SurveyResponseItem,
-    header: SurveyReportHeader
-  ): React.ReactNode => {
-    const value = (item as any)[header.key];
-
-    if (value === null || value === undefined) {
-      return <span>---</span>;
-    }
-
-    if (header.key === "dayOfWeek" && typeof value === "string") {
-      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-    }
-
-    if (header.key === "semester" && typeof value === "string") {
-      return formatSemesterOne(value);
-    }
-
-    switch (header.type) {
-      case "DATE":
-        return formatDate(value as string);
-    }
-    return value;
-  };
-
-  const columns: TableColumn<SurveyResponseItem>[] = useMemo(() => [
-    { key: "no", label: "#", width: "50px", render: (_, i) => getDisplayIndex(i) },
-    ...surveyHeaders.map((header) => ({
-      key: header.key,
-      label: header.label,
-      render: (item: SurveyResponseItem) => renderCellValue(item, header),
-    })),
-  ], [surveyHeaders, getDisplayIndex]);
+  const columns = useMemo(
+    () => createSurveyRecordDetailColumns({ getDisplayIndex, surveyHeaders }),
+    [surveyHeaders, getDisplayIndex]
+  );
 
   const exportToExcel = async () => {
     setIsSubmitting(true);

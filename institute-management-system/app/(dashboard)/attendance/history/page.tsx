@@ -23,7 +23,6 @@ import {
   setDayFilter,
   setAcademicYearFilter,
   setPageNo,
-  resetState,
 } from "@/features/schedules/store/slice/schedule-slice";
 import { fetchMySchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
@@ -65,7 +64,6 @@ const HistoryRecordSchedulePage = () => {
 
   useEffect(() => {
     dispatch(setDayFilter(getCurrentDay().value));
-    return () => { dispatch(resetState()); };
   }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,7 +135,7 @@ const HistoryRecordSchedulePage = () => {
             <p className="text-sm text-muted-foreground">Total Schedule: {data?.totalElements || 0}</p>
           </div>
 
-          {isLoading ? (
+          {isLoading && !data ? (
             <Loading />
           ) : (
             <div>

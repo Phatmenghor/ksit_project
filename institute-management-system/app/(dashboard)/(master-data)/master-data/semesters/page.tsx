@@ -3,18 +3,15 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarClock, CheckCircle, Loader, Pencil, Trash2 } from "lucide-react";
+import { createSemesterColumns } from "./columns";
 import { ROUTE } from "@/constants/routes";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
-import { format, parseISO } from "date-fns";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { SemesterFormModal } from "@/components/dashboard/master-data/manage-semester/semester-form-modal";
 import { SemesterModel } from "@/model/master-data/semester/semester-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { SemesterType } from "@/constants/constant";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
 import { Constants } from "@/constants/text-string";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -28,7 +25,6 @@ import {
   setSearchFilter,
   setPageNo,
   setAcademyYearFilter,
-  resetState,
 } from "@/features/master-data/store/slice/semester-slice";
 import {
   fetchAllSemesterService,
@@ -37,14 +33,6 @@ import {
   deleteSemesterService,
 } from "@/features/master-data/store/thunks/semester-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
-
-const formatDate = (dateString: string) => {
-  try {
-    return format(parseISO(dateString), "MMMM dd, yyyy");
-  } catch {
-    return dateString;
-  }
-};
 
 export default function ManageSemester() {
   const dispatch = useAppDispatch();
@@ -76,11 +64,6 @@ export default function ManageSemester() {
       })
     );
   }, [dispatch, searchDebounce, currentPage, currentPageSize, filters.academyYear]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
     if (currentPage !== 1) updateUrlWithPage(1);
@@ -129,77 +112,13 @@ export default function ManageSemester() {
     setDeletingSemester(null);
   }
 
-  const columns: TableColumn<SemesterModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    {
-      key: "semester",
-      label: "Semester",
-      render: (s) =>
-        s.semester === "SEMESTER_1"
-          ? "Semester 1"
-          : s.semester === "SEMESTER_2"
-          ? "Semester 2"
-          : s.semester,
-    },
-    { key: "startDate", label: "Start Date", render: (s) => formatDate(s.startDate) },
-    { key: "endDate", label: "End Date", render: (s) => formatDate(s.endDate) },
-    { key: "academyYear", label: "Academy Year", render: (s) => s.academyYear },
-    {
-      key: "semesterType",
-      label: "Status",
-      render: (s) => (
-        <>
-          {s.semesterType === SemesterType.DONE && (
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle size={16} /><span>Done</span>
-            </div>
-          )}
-          {s.semesterType === SemesterType.PROCESSING && (
-            <div className="flex items-center gap-2 text-blue-600">
-              <Loader size={16} /><span>Processing</span>
-            </div>
-          )}
-          {s.semesterType === SemesterType.PROGRESS && (
-            <div className="flex items-center gap-2 text-yellow-500">
-              <CalendarClock size={16} /><span>Progress</span>
-            </div>
-          )}
-        </>
-      ),
-    },
-    { key: "createdAt", label: "Created At", render: (s) => DateTimeFormatter(s.createdAt) },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (s) => (
-        <div className="flex justify-start space-x-2">
-          <Button
-            onClick={() => { setModalMode("edit"); setInitialData(s); setIsModalOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-            disabled={operations.isDeleting}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={() => { setDeletingSemester(s); setIsDeleteDialogOpen(true); }}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-            disabled={operations.isDeleting}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const columns = createSemesterColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    onEdit: (s) => { setModalMode("edit"); setInitialData(s); setIsModalOpen(true); },
+    onDelete: (s) => { setDeletingSemester(s); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">

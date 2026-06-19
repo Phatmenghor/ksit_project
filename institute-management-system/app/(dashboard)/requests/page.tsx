@@ -1,6 +1,7 @@
 "use client";
 
-import { Eye, ChevronLeft, ChevronRight, Logs } from "lucide-react";
+import { ChevronLeft, ChevronRight, Logs } from "lucide-react";
+import { createRequestColumns } from "./columns";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ROUTE } from "@/constants/routes";
@@ -10,16 +11,12 @@ import { REQUEST_TYPES, RequestType } from "@/constants/constant";
 import { AllRequestModel } from "@/model/request/request-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { getAllRequestService } from "@/service/request/request.service";
-import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
-import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
-import { truncateText } from "@/utils/format/format-width-text";
-import { formatGender } from "@/constants/format-enum/formate-gender";
 import { usePagination } from "@/hooks/use-pagination";
 import { StudentModel } from "@/model/user/student/student.request.model";
 import { ComboboxSelectStudent } from "@/components/shared/ComboBox/combobox-student";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { RequestModel } from "@/model/request/request-model";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -33,7 +30,6 @@ import {
   setUserFilter,
   setPageNo,
   resetFilters,
-  resetState,
 } from "@/features/requests/store/slice/request-slice";
 import { fetchAllRequestsService } from "@/features/requests/store/thunks/request-thunks";
 
@@ -73,11 +69,6 @@ export default function RequestPage() {
       })
     );
   }, [dispatch, searchDebounce, filters.status, filters.userId, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    return () => { dispatch(resetState()); };
-  }, [dispatch]);
-
   const fetchRequestCounts = useCallback(async () => {
     setIsLoadingCounts(true);
     try {
@@ -135,60 +126,7 @@ export default function RequestPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const baseBadgeClasses = "w-24 h-8 flex items-center justify-center text-sm font-medium rounded-full border-0";
-    switch (status.toUpperCase()) {
-      case "DONE":
-        return <Badge className={`bg-green-100 text-green-800 hover:bg-green-100 ${baseBadgeClasses}`}>Done</Badge>;
-      case "ACCEPTED":
-        return <div className={`bg-blue-100 text-blue-800 hover:bg-blue-100 ${baseBadgeClasses}`}>Accepted</div>;
-      case "REJECTED":
-        return <Badge className={`bg-red-100 text-red-800 hover:bg-red-100 ${baseBadgeClasses}`}>Rejected</Badge>;
-      case "PENDING":
-        return <Badge className={`bg-orange-100 text-orange-800 hover:bg-orange-100 hover:text-orange-800 ${baseBadgeClasses}`}>Pending</Badge>;
-      case "RETURN":
-        return <Badge className={`bg-yellow-100 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-800 ${baseBadgeClasses}`}>Returned</Badge>;
-      default:
-        return <Badge variant="secondary" className={`bg-gray-100 text-gray-800 hover:bg-gray-100 hover:text-gray-800 ${baseBadgeClasses}`}>{status}</Badge>;
-    }
-  };
-
-  const columns: TableColumn<RequestItem>[] = [
-    { key: "no", label: "#", width: "50px", render: (_, index) => getDisplayIndex(index) },
-    {
-      key: "identifyNumber",
-      label: "ID",
-      render: (req) => req.user ? `${req.user?.identifyNumber || "---"}` : "---",
-    },
-    {
-      key: "name",
-      label: "Name",
-      render: (req) => req.user ? `${req.user?.englishFirstName || "---"} ${req.user?.englishLastName || "---"}` : "---",
-    },
-    {
-      key: "gender",
-      label: "Gender",
-      render: (req) => req.user ? `${formatGender(req.user?.gender) || "---"}` : "---",
-    },
-    { key: "title", label: "Title", render: (req) => truncateText(req?.title, 20) },
-    { key: "createdAt", label: "Date", render: (req) => formatDate(req?.createdAt || "---") },
-    { key: "status", label: "Status", render: (req) => getStatusBadge(req?.status || "---") },
-    {
-      key: "action",
-      label: "Action",
-      width: "100px",
-      render: (req) => (
-        <Button
-          onClick={() => router.push(`${ROUTE.REQUEST_DETAIL(String(req.id))}`)}
-          variant="outline"
-          className="flex items-center gap-2 border-none bg-transparent transition-all duration-200 hover:bg-muted hover:scale-105"
-        >
-          <Eye className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-          <span className="border-b-2 transition-all duration-200 hover:border-primary">Detail</span>
-        </Button>
-      ),
-    },
-  ];
+  const columns = createRequestColumns({ getDisplayIndex, router });
 
   return (
     <div className="space-y-4">

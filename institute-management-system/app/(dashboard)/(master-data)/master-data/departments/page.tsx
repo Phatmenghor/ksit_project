@@ -2,9 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ROUTE } from "@/constants/routes";
+import { createDepartmentColumns } from "./columns";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { useEffect } from "react";
 import {
@@ -13,19 +12,11 @@ import {
 } from "@/components/dashboard/master-data/manage-department/department-form-modal";
 import { DepartmentModel } from "@/model/master-data/department/all-department-model";
 import { toast } from "sonner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Constants } from "@/constants/text-string";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { baseAPI } from "@/constants/api";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
-import { DataTable, TableColumn } from "@/components/shared/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectDepartmentData,
@@ -81,12 +72,6 @@ export default function ManageDepartmentPage() {
       })
     );
   }, [dispatch, searchDebounce, currentPage]);
-
-  useEffect(() => {
-    return () => {
-      dispatch(resetState());
-    };
-  }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
@@ -168,82 +153,13 @@ export default function ManageDepartmentPage() {
     setDeletingDepartment(null);
   }
 
-  const columns: TableColumn<DepartmentModel>[] = [
-    {
-      key: "no",
-      label: "#",
-      width: "50px",
-      render: (_, index) => (currentPage - 1) * currentPageSize + index + 1,
-    },
-    { key: "code", label: "Code", render: (dept) => dept.code },
-    { key: "name", label: "Name", render: (dept) => dept.name },
-    {
-      key: "logo",
-      label: "Logo",
-      render: (dept) => (
-        <Avatar className="h-12 w-12">
-          <AvatarImage
-            src={
-              dept.urlLogo
-                ? `${baseAPI.BASE_IMAGE}${dept.urlLogo}`
-                : baseAPI.NO_IMAGE
-            }
-            alt={dept.name}
-          />
-          <AvatarFallback>{dept.name?.charAt(0)}</AvatarFallback>
-        </Avatar>
-      ),
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      render: (dept) => DateTimeFormatter(dept.createdAt),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (dept) => (
-        <div className="flex justify-start space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => handleOpenEditModal(dept)}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                  disabled={operations.isDeleting}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={() => {
-                    setDeletingDepartment(dept);
-                    setIsDeleteDialogOpen(true);
-                  }}
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                  disabled={operations.isDeleting}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      ),
-    },
-  ];
+  const columns = createDepartmentColumns({
+    currentPage,
+    currentPageSize,
+    isDeleting: operations.isDeleting,
+    onEdit: handleOpenEditModal,
+    onDelete: (dept) => { setDeletingDepartment(dept); setIsDeleteDialogOpen(true); },
+  });
 
   return (
     <div className="space-y-4">
