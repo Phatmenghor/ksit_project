@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "45539224275",
+    "project_id": "ksit-dev",
+    "storage_bucket": "ksit-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45539224275:android:87353de061c1211f954226",
+        "android_client_info": {
+          "package_name": "com.ksit.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBseXGdQCOADedtVZ3vhksprLvHMaXHYoo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

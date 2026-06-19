@@ -1,0 +1,62 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VSCode (optional - some teams like to share this)
+.vscode/
+
+# Flutter/Dart/Pub related - ONLY BUILD ARTIFACTS
+**/doc/api/
+.dart_tool/
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android - ONLY BUILD ARTIFACTS
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle/
+/android/captures/
+/android/local.properties
+
+# iOS - ONLY BUILD ARTIFACTS  
+/ios/.symlinks/
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Runner.xcworkspace/xcshareddata/
+
+# Web
+/web/
+
+# Windows
+/windows/
+
+# MacOS
+/macos/
+
+# Web artifacts and dependencies
+.next/
+node_modules/
+package-lock.json

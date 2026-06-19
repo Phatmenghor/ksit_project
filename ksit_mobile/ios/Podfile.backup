@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# Simple Flutter project cleanup script
+# First manually fix your ios/Podfile, then run this script
+
+set -e
+trap 'echo "❌ Script failed at line $LINENO"' ERR
+
+echo "🧹 Cleaning Flutter project completely..."
+
+# Check if we're in a Flutter project
+if [ ! -f "pubspec.yaml" ]; then
+    echo "❌ Error: Not in a Flutter project directory"
+    exit 1
+fi
+
+# Step 1: Clean flutter build
+echo "🔄 Running flutter clean..."
+flutter clean
+
+# Step 2: Delete additional cache & build artifacts
+echo "🗑️ Removing build artifacts..."
+rm -rf .dart_tool/ .packages pubspec.lock
+rm -rf build/
+rm -rf android/.gradle android/build android/app/build
+rm -rf ios/Pods ios/.symlinks ios/build ios/Podfile.lock
+rm -rf macos/build macos/Flutter/ephemeral
+rm -rf windows/build linux/build web/build
+
+# Step 3: Get Flutter packages
+echo "📦 Getting Flutter packages..."
+flutter pub get
+
+# Step 4: iOS setup
+if [ -d "ios" ]; then
+    echo "🍎 Setting up iOS..."
+    
+    mkdir -p ios/Flutter
+    
+    # Create Debug.xcconfig
+    cat > ios/Flutter/Debug.xcconfig << 'EOF'
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
+#include "Generated.xcconfig"
+EOF
+
+    # Create Release.xcconfig
+    cat > ios/Flutter/Release.xcconfig << 'EOF'
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
+#include "Generated.xcconfig"
+EOF
+
+    # Update Xcode project deployment target
+    if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+        echo "🔧 Updating Xcode project deployment target..."
+        sed -i.bak 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9]*\.[0-9]*/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' ios/Runner.xcodeproj/project.pbxproj
+        rm -f ios/Runner.xcodeproj/project.pbxproj.bak
+    fi
+    
+    # Check Podfile
+    cd ios
+    if [ -f "Podfile" ]; then
+        echo "🔧 Checking Podfile..."
+        if ! grep -q "platform :ios, '13.0'" Podfile; then
+            echo "⚠️ Please manually update your Podfile to set: platform :ios, '13.0'"
+            echo "⚠️ Also ensure your post_install hook includes:"
+            echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'"
+            echo "📖 See the instructions printed after script completion."
+        fi
+        
+        echo "🔄 Running pod install..."
+        pod install --repo-update
+    fi
+    cd ..
+fi
+
+echo ""
+echo "✅ Project cleanup completed!"
+echo ""
+echo "📋 If you encountered iOS deployment target issues, manually edit ios/Podfile:"
+echo ""
+echo "1. Ensure the first line is:"
+echo "   platform :ios, '13.0'"
+echo ""
+echo "2. In your existing post_install hook, add this line inside the config loop:"
+echo "   config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'"
+echo ""
+echo "Example post_install hook:"
+echo "post_install do |installer|"
+echo "  installer.pods_project.targets.each do |target|"
+echo "    target.build_configurations.each do |config|"
+echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'"
+echo "      # your other settings here..."
+echo "    end"
+echo "  end"
+echo "end"
+echo ""
+echo "Then run: cd ios && pod install && cd .."
