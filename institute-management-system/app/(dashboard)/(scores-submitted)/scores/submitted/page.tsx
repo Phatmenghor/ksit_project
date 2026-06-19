@@ -14,6 +14,7 @@ import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { createSubmittedScoresColumns } from "./columns";
@@ -138,10 +139,16 @@ export default function ScoreSubmittedPage() {
           filters: [
             {
               id: "year",
-              type: "year",
-              label: "Academy Year",
-              value: filters.academicYear,
-              onChange: handleYearChange,
+              type: "custom",
+              label: "Academic Year",
+              value: filters.academicYear ?? 0,
+              onChange: (v: unknown) => handleYearChange((v as number) || 0),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
             {
               id: "semester",

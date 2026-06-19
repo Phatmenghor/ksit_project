@@ -35,6 +35,7 @@ export function ComboboxSelectSubjectType({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:subject",
   });
 
   return (

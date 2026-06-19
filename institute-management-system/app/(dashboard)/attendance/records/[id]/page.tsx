@@ -30,7 +30,8 @@ import {
 } from "@/service/schedule/attendance.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Download, Search, Tally1 } from "lucide-react";
+import { Search } from "lucide-react";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { DateRangePicker } from "@/components/shared/start-end-date";
@@ -38,7 +39,6 @@ import { Constants } from "@/constants/text-string";
 import { createAttendanceRecordDetailColumns } from "./columns";
 import { AllAttendanceHistoryModel } from "@/model/attendance/attendance-history";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
-import { AppIcons } from "@/constants/icons/icon";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useParams, useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
@@ -416,28 +416,7 @@ export default function StudentAttendancePage() {
               <div>
                 <div className="flex items-center gap-2 justify-end">
                   <span className="text-sm mr-2">Export Data by Class</span>
-                  <Button
-                    onClick={exportToExcel}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2 border-gray-200 py-5"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <>
-                        <img
-                          src={AppIcons.Excel}
-                          alt="excel Icon"
-                          className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0"
-                        />{" "}
-                        <span className="ml-1 text-xs font-medium">Excel</span>
-                        <Tally1 className="-mr-[12px] text-gray-300" />
-                        <Download className="h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
+                  <ExcelDownloadButton onClick={exportToExcel} isLoading={isLoading} />
                 </div>
               </div>
             </div>

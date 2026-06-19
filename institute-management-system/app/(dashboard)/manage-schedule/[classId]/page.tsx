@@ -26,6 +26,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
@@ -248,10 +249,16 @@ const AllSchedulePage = () => {
           filters: [
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
-              value: selectedYear,
-              onChange: handleYearChange,
+              value: selectedYear ?? 0,
+              onChange: (v: unknown) => handleYearChange((v as number) || 0),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
             {
               id: "day",

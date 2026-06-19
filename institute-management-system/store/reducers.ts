@@ -21,9 +21,11 @@ import paymentReducer from "@/features/payments/store/slice/payment-slice";
 import surveyReducer from "@/features/survey/store/slice/survey-slice";
 
 import uiReducer from "./slices/ui-slice";
+import comboboxCacheReducer from "./slices/combobox-cache-slice";
 
 export const reducers = {
   ui: uiReducer,
+  comboboxCache: comboboxCacheReducer,
 
   departments: departmentReducer,
   majors: majorReducer,

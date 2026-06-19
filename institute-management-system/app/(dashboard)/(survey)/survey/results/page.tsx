@@ -4,7 +4,6 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { DateRangePicker } from "@/components/shared/start-end-date";
-import { Button } from "@/components/ui/button";
 import { SemesterFilter } from "@/constants/constant";
 import { formatSemester } from "@/constants/format-enum/format-semester";
 import { createSurveyResultsColumns } from "./columns";
@@ -21,13 +20,14 @@ import {
 } from "@/service/survey/survey.service";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
-import { Download, FileSpreadsheet, Loader2, Tally1 } from "lucide-react";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -244,10 +244,16 @@ export default function SurveyResultPage() {
             },
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
-              value: filters.academicYear ?? new Date().getFullYear(),
-              onChange: handleYearChange,
+              value: filters.academicYear ?? new Date().getFullYear() ?? 0,
+              onChange: (v: unknown) => handleYearChange((v as number) || 0),
+              render: ({ value, onChange }: { value: unknown; onChange: (v: unknown) => void }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
             {
               id: "semester",
@@ -282,27 +288,7 @@ export default function SurveyResultPage() {
 
         <div className="flex justify-start lg:justify-end items-center gap-2 flex-shrink-0">
           <span className="text-sm whitespace-nowrap">Export Data by Class</span>
-          <Button
-            onClick={exportToExcel}
-            variant="outline"
-            size="sm"
-            className="h-8 px-2 border-gray-200 py-5 flex items-center gap-1"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">Exporting...</span>
-              </div>
-            ) : (
-              <>
-                <FileSpreadsheet className="h-4 w-4 text-green-500 flex-shrink-0" />
-                <span className="ml-1 text-xs font-medium">Excel</span>
-                <Tally1 className="-mr-[12px] text-gray-300 flex-shrink-0" />
-                <Download className="h-4 w-4 flex-shrink-0" />
-              </>
-            )}
-          </Button>
+          <ExcelDownloadButton onClick={exportToExcel} isLoading={isSubmitting} />
         </div>
       </div>
 

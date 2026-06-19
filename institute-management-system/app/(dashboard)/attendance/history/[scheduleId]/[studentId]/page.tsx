@@ -21,9 +21,7 @@ import { AllAttendanceHistoryModel } from "@/model/attendance/attendance-history
 import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { useParams, useSearchParams } from "next/navigation";
 import AttendanceHeader from "@/components/dashboard/attendance/header";
-import { Button } from "@/components/ui/button";
-import { AppIcons } from "@/constants/icons/icon";
-import { Download } from "lucide-react";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { Separator } from "@/components/ui/separator";
@@ -272,20 +270,7 @@ export default function HistoryRecordsPage() {
             </CardTitle>
           </div>
           <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 lg:gap-4">
-            <Button
-              onClick={exportToExcel}
-              variant="outline"
-              className="gap-2 text-sm sm:text-base lg:text-lg px-3 sm:px-4 lg:px-6 py-2 lg:py-3"
-              disabled={isSubmitting}
-            >
-              <img
-                src={AppIcons.Excel}
-                alt="excel Icon"
-                className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground flex-shrink-0"
-              />
-              <span>{isSubmitting ? "Exporting..." : "Excel"}</span>
-              <Download className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-            </Button>
+            <ExcelDownloadButton onClick={exportToExcel} isLoading={isSubmitting} />
           </div>
         </CardHeader>
         <div className="w-full px-4 mb-2">

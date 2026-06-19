@@ -37,6 +37,7 @@ export function ComboboxSelectCourse({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:course",
   });
 
   return (

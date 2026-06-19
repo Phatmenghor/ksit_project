@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Download, Loader2, Tally1 } from "lucide-react";
+import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { createAttendanceRecordsColumns } from "./columns";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -19,11 +18,11 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import { StudentListExcelTableHeader } from "@/constants/excel/student-header";
-import { AppIcons } from "@/constants/icons/icon";
 import { formatDate } from "@/utils/date/date";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -193,10 +192,16 @@ export default function AttendanceStudentsListPage() {
           filters: [
             {
               id: "year",
-              type: "year",
+              type: "custom",
               label: "Academic Year",
               value: selectedYear ?? 0,
-              onChange: handleYearChange,
+              onChange: (v) => handleYearChange((v as number) || 0),
+              render: ({ value, onChange }) => (
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                />
+              ),
             },
             {
               id: "class",
@@ -232,24 +237,7 @@ export default function AttendanceStudentsListPage() {
             setSelectedYear(undefined);
           },
           extraActions: (
-            <Button
-              onClick={exportToExcel}
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 border-gray-200 py-5"
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <img src={AppIcons.Excel} alt="excel" className="h-4 w-4 lg:h-5 lg:w-5" />
-                  <span className="ml-1 text-xs font-medium">Excel</span>
-                  <Tally1 className="-mr-[12px] text-gray-300" />
-                  <Download className="h-4 w-4" />
-                </>
-              )}
-            </Button>
+            <ExcelDownloadButton onClick={exportToExcel} isLoading={isExporting} />
           ),
         }}
         essentialFilterIds={["year", "class"]}

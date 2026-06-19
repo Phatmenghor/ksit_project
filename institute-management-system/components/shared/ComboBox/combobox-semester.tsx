@@ -37,6 +37,7 @@ export function ComboboxSelectSemester({
     fetcher,
     getId: (item) => item.id ?? 0,
     enabled: open,
+    cacheKey: academyYear ? `combobox:semester:${academyYear}` : "combobox:semester",
   });
 
   return (

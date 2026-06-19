@@ -20,7 +20,7 @@ import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
 import { DataTable } from "@/components/shared/data-table";
-import { AcademyYearPicker } from "@/components/shared/academy-year-picker";
+import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectClassData,
@@ -197,14 +197,12 @@ export default function ManageClassPage() {
               value: filters.academyYear ?? 0,
               onChange: (v) => dispatch(setAcademyYearFilter((v as number) || undefined)),
               render: ({ value, onChange }) => (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-foreground/80">Academy Year</label>
-                  <AcademyYearPicker
-                    value={(value as number) ?? 0}
-                    onChange={(y) => onChange(y)}
-                    disabled={operations.isDeleting}
-                  />
-                </div>
+                <AcademyYearFilter
+                  value={(value as number) ?? 0}
+                  onChange={(y) => onChange(y)}
+                  disabled={operations.isDeleting}
+                  label="Academy Year"
+                />
               ),
             },
           ],

@@ -35,6 +35,7 @@ export function ComboboxSelectRoom({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:room",
   });
 
   return (

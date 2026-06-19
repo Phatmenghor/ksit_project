@@ -12,6 +12,8 @@ export interface UseInfiniteComboboxOptions<T> {
   pageSize?: number;
   debounceMs?: number;
   getId: (item: T) => string | number;
+  /** Unique key to cache results in Redux — prevents re-fetching on re-open */
+  cacheKey?: string;
 }
 
 export interface UseInfiniteComboboxResult<T> {

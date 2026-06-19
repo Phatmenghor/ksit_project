@@ -35,6 +35,7 @@ export function ComboboxSelectDepartment({
     fetcher,
     getId: (item) => item.id,
     enabled: open,
+    cacheKey: "combobox:department",
   });
 
   return (
