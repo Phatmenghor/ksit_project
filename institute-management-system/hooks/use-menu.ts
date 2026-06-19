@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import {
   subscribeMenu,
   getMenuRoutes,
+  isMenuLoaded,
   loadMenu,
 } from "@/utils/stores/menu-store";
 import { SidebarRoute } from "@/model/menu/menu-respond";
@@ -21,5 +22,11 @@ export function useMenu() {
     () => EMPTY_ROUTES
   );
 
-  return { transformedRoutes };
+  const isLoaded = useSyncExternalStore(
+    subscribeMenu,
+    isMenuLoaded,
+    () => false
+  );
+
+  return { transformedRoutes, isLoading: !isLoaded };
 }

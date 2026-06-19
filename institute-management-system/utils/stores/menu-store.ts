@@ -89,6 +89,7 @@ function transformMenuToRoutes(menuData: AllMenuModel[]): SidebarRoute[] {
 // Module-level singleton — shared across all components, no provider needed
 let routes: SidebarRoute[] = [];
 let fetchStarted = false;
+let loaded = false;
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -106,6 +107,10 @@ export function getMenuRoutes(): SidebarRoute[] {
   return routes;
 }
 
+export function isMenuLoaded(): boolean {
+  return loaded;
+}
+
 export function loadMenu(): void {
   if (fetchStarted) return;
   fetchStarted = true;
@@ -113,9 +118,12 @@ export function loadMenu(): void {
     .then((response) => {
       const menuData = Array.isArray(response) ? response : response.data;
       routes = transformMenuToRoutes(menuData);
+      loaded = true;
       notify();
     })
     .catch(() => {
       fetchStarted = false; // allow retry on error
+      loaded = true;
+      notify();
     });
 }
