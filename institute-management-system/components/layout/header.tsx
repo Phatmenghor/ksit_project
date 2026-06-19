@@ -31,7 +31,6 @@ import { RoleEnum } from "@/constants/constant";
 import Image from "next/image";
 import { AppIcons, AppResource } from "@/constants/icons/icon";
 import { useCurrentUser } from "@/hooks/use-current-user";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function Header() {
   const isMobile = useIsMobile();
@@ -198,41 +197,43 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="flex items-center gap-3 cursor-pointer group hover:bg-white/10 rounded-lg p-2 transition-colors duration-200">
-                {isUserLoading ? (
-                  <Skeleton className="h-10 w-10 rounded-full bg-white/20" />
-                ) : (
-                  <Avatar className="h-10 w-10 border-2 cursor-pointer border-white/20 shadow-sm">
-                    <AvatarImage
-                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
-                      alt="User"
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-white/20 text-white font-semibold text-sm backdrop-blur-sm">
-                      {getAvatarFallback()}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
+                <Avatar
+                  className={`h-10 w-10 border-2 cursor-pointer border-white/20 shadow-sm ${
+                    isUserLoading ? "animate-pulse" : ""
+                  }`}
+                >
+                  <AvatarImage
+                    src={
+                      isUserLoading
+                        ? undefined
+                        : `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`
+                    }
+                    alt="User"
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-white/20 text-white font-semibold text-sm backdrop-blur-sm">
+                    {isUserLoading ? "" : getAvatarFallback()}
+                  </AvatarFallback>
+                </Avatar>
 
                 <div className="hidden md:flex flex-col items-start gap-1" suppressHydrationWarning>
-                  {isUserLoading ? (
-                    <>
-                      <Skeleton className="h-3.5 w-24 bg-white/20" />
-                      <Skeleton className="h-3 w-14 bg-white/20" />
-                    </>
-                  ) : (
-                    <>
-                      <span
-                        suppressHydrationWarning
-                        className="text-white text-sm font-medium leading-tight max-w-[150px] truncate"
-                        title={getDisplayName()}
-                      >
-                        {getTruncatedName(getDisplayName())}
-                      </span>
-                      <span suppressHydrationWarning className={`text-xs font-normal leading-tight ${roleDisplay?.color ?? ""}`}>
-                        {roleDisplay?.label ?? ""}
-                      </span>
-                    </>
-                  )}
+                  <span
+                    suppressHydrationWarning
+                    className={`text-white text-sm font-medium leading-tight max-w-[150px] truncate rounded ${
+                      isUserLoading ? "animate-pulse bg-white/20 h-3.5 w-24" : ""
+                    }`}
+                    title={isUserLoading ? undefined : getDisplayName()}
+                  >
+                    {isUserLoading ? "" : getTruncatedName(getDisplayName())}
+                  </span>
+                  <span
+                    suppressHydrationWarning
+                    className={`text-xs font-normal leading-tight rounded ${
+                      isUserLoading ? "animate-pulse bg-white/20 h-3 w-14" : roleDisplay?.color ?? ""
+                    }`}
+                  >
+                    {isUserLoading ? "" : roleDisplay?.label ?? ""}
+                  </span>
                 </div>
               </div>
             </DropdownMenuTrigger>
@@ -240,30 +241,36 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56 mt-2">
               {/* User info in dropdown */}
               <div className="px-3 py-3 border-b">
-                <div className="flex items-center gap-3">
-                  {isUserLoading ? (
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                  ) : (
-                    <Avatar className="h-10 w-10 border border-border">
-                      <AvatarImage
-                        src={`${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`}
-                        alt="User"
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                        {getAvatarFallback()}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
+                <div className="flex items-center gap-3" suppressHydrationWarning>
+                  <Avatar
+                    className={`h-10 w-10 border border-border ${isUserLoading ? "animate-pulse" : ""}`}
+                  >
+                    <AvatarImage
+                      src={
+                        isUserLoading
+                          ? undefined
+                          : `${process.env.NEXT_PUBLIC_API_BASE_URL_IMAGE}${user?.profileUrl}`
+                      }
+                      alt="User"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                      {isUserLoading ? "" : getAvatarFallback()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex flex-col min-w-0 gap-1.5">
+                    <span
+                      suppressHydrationWarning
+                      className={`text-sm font-semibold truncate rounded ${
+                        isUserLoading ? "animate-pulse bg-muted h-3.5 w-28" : ""
+                      }`}
+                    >
+                      {isUserLoading ? "" : getDisplayName()}
+                    </span>
                     {isUserLoading ? (
-                      <>
-                        <Skeleton className="h-3.5 w-28" />
-                        <Skeleton className="h-3 w-16" />
-                      </>
+                      <span className="animate-pulse bg-muted h-3 w-16 rounded" />
                     ) : (
                       <>
-                        <span className="text-sm font-semibold truncate">{getDisplayName()}</span>
                         {roleDisplay && (
                           <span className={`text-xs font-medium ${
                             roleDisplay.label === "Admin" ? "text-red-500" :
