@@ -15,17 +15,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { Input } from "@/components/ui/input";
-import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { z } from "zod";
-import {
-  configureScoreService,
-  getConfigurationScoreService,
-} from "@/service/score/score.service";
 import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Loading from "@/components/shared/loading";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectSubmittedScoreConfiguration,
+  selectSubmittedScoreIsLoading,
+  selectSubmittedScoreOperations,
+} from "@/features/scores/store/selectors/score-selectors";
+import {
+  getConfigurationScoreThunk,
+  configureScoreThunk,
+} from "@/features/scores/store/thunks/submitted-score-thunks";
 
 const ConfigureScoreSchema = z
   .object({
@@ -64,12 +69,12 @@ const ConfigureScoreSchema = z
 type ScoreFormData = z.infer<typeof ConfigureScoreSchema>;
 
 export default function ScoreSettingPage() {
+  const dispatch = useAppDispatch();
+  const scoreData = useAppSelector(selectSubmittedScoreConfiguration);
+  const isLoading = useAppSelector(selectSubmittedScoreIsLoading);
+  const operations = useAppSelector(selectSubmittedScoreOperations);
+
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [scoreData, setScoreData] = useState<ScoreConfigurationModel | null>(
-    null
-  );
   const [originalValues, setOriginalValues] = useState<ScoreFormData | null>(
     null
   );
@@ -80,7 +85,6 @@ export default function ScoreSettingPage() {
     reset,
     watch,
     formState: { errors },
-    setValue,
   } = useForm<ScoreFormData>({
     resolver: zodResolver(ConfigureScoreSchema),
     defaultValues: {
@@ -100,10 +104,7 @@ export default function ScoreSettingPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        setIsLoading(true);
-        const response = await getConfigurationScoreService();
-
-        setScoreData(response);
+        const response = await dispatch(getConfigurationScoreThunk()).unwrap();
 
         // Reset form with fetched data, ensuring we handle undefined/null values
         const formData = {
@@ -116,13 +117,11 @@ export default function ScoreSettingPage() {
         reset(formData);
       } catch (error) {
         toast.error("Failed to fetch score settings. Please try again.");
-      } finally {
-        setIsLoading(false);
       }
     };
 
     fetchConfig();
-  }, [reset]);
+  }, [reset, dispatch]);
 
   // Calculate total percentage from watched values
   const calculateTotal = useCallback(() => {
@@ -150,7 +149,6 @@ export default function ScoreSettingPage() {
   };
 
   const handleDiscard = () => {
-
     // Reset form to the captured original values
     if (originalValues) {
       reset(originalValues);
@@ -171,13 +169,10 @@ export default function ScoreSettingPage() {
 
   const onSubmit = async (data: ScoreFormData) => {
     try {
-      setIsSaving(true);
-      const response = await configureScoreService(data);
+      const response = await dispatch(configureScoreThunk(data)).unwrap();
 
       if (response) {
         toast.success("Score settings updated successfully!");
-        setScoreData(response);
-
         // Update form with new data
         reset({
           attendancePercentage: response.attendancePercentage || 0,
@@ -192,8 +187,6 @@ export default function ScoreSettingPage() {
       }
     } catch (error) {
       toast.error("Something went wrong while saving. Please try again.");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -456,7 +449,7 @@ export default function ScoreSettingPage() {
                 variant="outline"
                 onClick={handleDiscard}
                 className="px-6"
-                disabled={isSaving}
+                disabled={operations.isConfiguring}
               >
                 <X className="w-4 h-4 mr-1" />
                 Discard
@@ -465,9 +458,9 @@ export default function ScoreSettingPage() {
                 type="submit"
                 variant="default"
                 className="px-6"
-                disabled={isSaving}
+                disabled={operations.isConfiguring}
               >
-                {isSaving ? (
+                {operations.isConfiguring ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                     Saving...

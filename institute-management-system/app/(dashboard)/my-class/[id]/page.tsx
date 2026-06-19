@@ -15,19 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
-import { getAllMajorService } from "@/service/master-data/major.service";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import { AllMajorModel } from "@/model/master-data/major/all-major-model";
 import {
-  AllClassModel,
   ClassModel,
 } from "@/model/master-data/class/all-class-model";
-import { getMyClassService } from "@/service/master-data/class.service";
 import { ClassCard } from "@/components/dashboard/schedule/class/class-card";
 import Loading from "@/components/shared/loading";
 import { AppIcons } from "@/constants/icons/icon";
 import { useDebounce } from "@/utils/debounce/debounce";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchAllMajorService } from "@/features/master-data/store/thunks/major-thunks";
+import { fetchMyClassesThunk } from "@/features/master-data/store/thunks/class-thunks";
 
 // Empty state components
 const EmptyMajorsState = ({ searchQuery }: { searchQuery: string }) => (
@@ -72,11 +71,13 @@ const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
 );
 
 const MyClassPage = () => {
+  const dispatch = useAppDispatch();
+  const allMajorData = useAppSelector((state) => state.majors.data);
+  const allClassData = useAppSelector((state) => state.classes.data);
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [allMajorData, setAllMajorData] = useState<AllMajorModel | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<number | null>(null);
-  const [allClassData, setAllClassData] = useState<AllClassModel | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
@@ -99,15 +100,14 @@ const MyClassPage = () => {
           setIsInitialLoading(true);
         }
 
-        const response = await getAllMajorService({
+        const response = await dispatch(fetchAllMajorService({
           search: searchDebounce,
           status: Constants.ACTIVE,
           departmentId: depId || undefined,
           ...param,
-        });
+        })).unwrap();
 
         if (response) {
-          setAllMajorData(response);
           // Handle case where current page exceeds total pages
 
           if (
@@ -119,12 +119,11 @@ const MyClassPage = () => {
 
             setIsLoadingClasses(true);
             try {
-              const responseListClass = await getMyClassService({
+              await dispatch(fetchMyClassesThunk({
                 status: Constants.ACTIVE,
                 majorId: response.content[0].id || undefined,
                 pageSize: 30,
-              });
-              setAllClassData(responseListClass);
+              })).unwrap();
             } catch (error) {
               toast.error("Failed to load classes");
             } finally {
@@ -141,7 +140,7 @@ const MyClassPage = () => {
         setHasLoadedOnce(true);
       }
     },
-    [searchDebounce, selectedMajor, depId, hasLoadedOnce]
+    [searchDebounce, selectedMajor, depId, hasLoadedOnce, dispatch]
   );
 
   useEffect(() => {
@@ -165,11 +164,10 @@ const MyClassPage = () => {
 
     setIsLoadingClasses(true);
     try {
-      const responseListClass = await getMyClassService({
+      await dispatch(fetchMyClassesThunk({
         status: Constants.ACTIVE,
         majorId: majorId || undefined,
-      });
-      setAllClassData(responseListClass);
+      })).unwrap();
     } catch (error) {
       toast.error("Failed to load classes for selected major");
     } finally {

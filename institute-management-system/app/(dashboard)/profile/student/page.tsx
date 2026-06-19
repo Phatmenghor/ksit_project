@@ -9,9 +9,10 @@ import { CardHeaderSection } from "@/components/shared/layout/card-header-sectio
 import { ROUTE } from "@/constants/routes";
 import StudentDetails from "@/components/dashboard/users/student/view/tab/student-detail-tab";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
-import { getStudentByTokenService } from "@/service/user/user.service";
 import { TranscriptTabs } from "@/components/dashboard/users/student/view/tab/student-transcript-tab";
 import { StudentProfileSection } from "@/components/dashboard/users/student/view/student-profile";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStudentProfileThunk } from "@/store/slices/auth-slice";
 
 const tabs = [
   {
@@ -28,24 +29,16 @@ const tabs = [
 
 export default function StudentViewPage() {
   const [activeTab, setActiveTab] = useState("information");
-  const [isLoading, setIsLoading] = useState(false);
-  const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(
-    null
-  );
+  const dispatch = useAppDispatch();
+  const studentDetail = useAppSelector((state) => state.auth.studentProfile);
+  const isLoading = useAppSelector((state) => state.auth.isProfileLoading);
   const { type, id } = useParams<{ type: string; id: string }>();
 
   const loadInfo = async () => {
-    setIsLoading(true);
     try {
-      const response = await getStudentByTokenService();
-      if (response) {
-        setStudentDetail(response);
-      } else {
-        toast.error("Error getting student data");
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
+      await dispatch(fetchStudentProfileThunk()).unwrap();
+    } catch (error: any) {
+      toast.error(error || "Error getting student data");
     }
   };
 

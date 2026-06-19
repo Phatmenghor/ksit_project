@@ -4,27 +4,25 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { DetialCourseModel } from "@/model/master-data/course/type-course-model";
-import { DetailCourseService } from "@/service/master-data/course.service";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
 import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { Separator } from "@/components/ui/separator";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchCourseByIdService } from "@/features/school/store/thunks/course-thunks";
 
 export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [courseData, setCourseData] = useState<DetialCourseModel | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const courseData = useAppSelector((state) => state.courses.selectedCourse);
+  const isLoading = useAppSelector((state) => state.courses.isLoading);
   const courseId = params?.id ? Number(params.id) : null;
 
   useEffect(() => {
     if (!courseId) return;
-    setIsLoading(true);
-    DetailCourseService(courseId)
-      .then((data) => { if (data) setCourseData(data); })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, [courseId]);
+    dispatch(fetchCourseByIdService(courseId));
+  }, [courseId, dispatch]);
 
   if (isLoading) {
     return (

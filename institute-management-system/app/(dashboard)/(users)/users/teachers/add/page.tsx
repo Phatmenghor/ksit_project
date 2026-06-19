@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { addStaffService } from "@/service/user/user.service";
+import { addStaffService } from "@/features/users/store/thunks/staff-thunks";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
 import TeacherForm from "@/components/dashboard/users/teachers/form/teacher-form";
 import { useRouter } from "next/navigation";
@@ -11,8 +11,10 @@ import { ROUTE } from "@/constants/routes";
 import { AddStaffFormData } from "@/model/user/staff/staff.schema";
 import { AddStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField, cleanRequiredField, filterEmptyRows } from "@/utils/map-helper/student";
+import { useAppDispatch } from "@/store";
 
 export default function AddTeacherPage() {
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -148,7 +150,7 @@ export default function AddTeacherPage() {
         status: StatusEnum.ACTIVE,
       };
 
-      const response = await addStaffService(payload);
+      const response = await dispatch(addStaffService(payload)).unwrap();
       if (response) {
         toast.success("Teacher created successfully");
         router.push(ROUTE.USERS.TEACHERS);

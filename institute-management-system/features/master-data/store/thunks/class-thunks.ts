@@ -73,3 +73,14 @@ export const fetchClassComboboxService = createApiThunk<
   );
   return response.data.data;
 });
+
+export const fetchMyClassesThunk = createApiThunk<
+  AllClassModel,
+  AllClassFilterModel
+>("classes/fetchMyClasses", async (params) => {
+  const response = await axiosClientWithAuth.post<{ data: AllClassModel }>(
+    "/v1/classes/my-classes",
+    params
+  );
+  return response.data.data;
+});

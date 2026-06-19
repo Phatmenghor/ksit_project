@@ -11,6 +11,7 @@ import staffReducer from "@/features/users/store/slice/staff-slice";
 import studentReducer from "@/features/students/store/slice/student-slice";
 
 import scheduleReducer from "@/features/schedules/store/slice/schedule-slice";
+import attendanceReducer from "@/features/schedules/store/slice/attendance-slice";
 
 import submittedScoreReducer from "@/features/scores/store/slice/submitted-score-slice";
 
@@ -25,10 +26,14 @@ import permissionReducer from "@/features/permissions/store/slice/permission-sli
 
 import uiReducer from "./slices/ui-slice";
 import comboboxCacheReducer from "./slices/combobox-cache-slice";
+import authReducer from "./slices/auth-slice";
+import statisticReducer from "./slices/statistic-slice";
 
 export const reducers = {
   ui: uiReducer,
   comboboxCache: comboboxCacheReducer,
+  auth: authReducer,
+  statistic: statisticReducer,
 
   departments: departmentReducer,
   majors: majorReducer,
@@ -43,6 +48,7 @@ export const reducers = {
   studentList: studentReducer,
 
   scheduleList: scheduleReducer,
+  attendance: attendanceReducer,
 
   submittedScores: submittedScoreReducer,
 

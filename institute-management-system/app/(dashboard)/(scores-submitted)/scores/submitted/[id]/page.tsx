@@ -24,11 +24,6 @@ import {
   FileText,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  getConfigurationScoreService,
-  getSubmissionScoreByIdService,
-  submittedScoreService,
-} from "@/service/score/score.service";
 import { toast } from "sonner";
 import { SubmissionEnum } from "@/constants/constant";
 import { ScoreSubmitConfirmDialog } from "@/components/dashboard/student-scores/layout/submit-confirm-dialog";
@@ -37,16 +32,29 @@ import { SubmitScoreModel } from "@/model/score/student-score/student-score.requ
 import { formatDate } from "date-fns";
 import { ROUTE } from "@/constants/routes";
 import { useExportScoreHandlers } from "@/components/shared/export/score-export-handler";
-import { getDetailScheduleService } from "@/service/schedule/schedule.service";
-import { ScheduleModel } from "@/model/schedules/all-schedule-model";
-import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
 import { AppIcons } from "@/constants/icons/icon";
-import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { DataTable } from "@/components/shared/data-table";
 import { createSubmittedScoreDetailColumns } from "./columns";
 import { formatSemester, formatTime12h } from "@/utils/map-helper/schedule";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectSubmittedScoreConfiguration,
+  selectSelectedSubmission,
+  selectSubmittedScoreIsLoading,
+  selectSubmittedScoreOperations,
+} from "@/features/scores/store/selectors/score-selectors";
+import {
+  getConfigurationScoreThunk,
+  getSubmissionScoreByIdThunk,
+  submittedScoreThunk,
+} from "@/features/scores/store/thunks/submitted-score-thunks";
+import { fetchScheduleByIdService } from "@/features/schedules/store/thunks/schedule-thunks";
+import {
+  selectSelectedSchedule,
+  selectScheduleIsLoading,
+} from "@/features/schedules/store/selectors/schedule-selectors";
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -138,15 +146,17 @@ function HeaderSkeleton() {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ScoreSubmissionDetailPage() {
-  const [submission, setSubmission] = useState<SubmissionScoreModel | null>(null);
-  const [scheduleDetail, setScheduleDetail] = useState<ScheduleModel | null>(null);
-  const [scoreData, setScoreData] = useState<ScoreConfigurationModel | null>(null);
+  const dispatch = useAppDispatch();
+  const submission = useAppSelector(selectSelectedSubmission);
+  const scheduleDetail = useAppSelector(selectSelectedSchedule);
+  const scoreData = useAppSelector(selectSubmittedScoreConfiguration);
+  const isLoadingSubmission = useAppSelector(selectSubmittedScoreIsLoading);
+  const isLoadingSchedule = useAppSelector(selectScheduleIsLoading);
+  const operations = useAppSelector(selectSubmittedScoreOperations);
+
   const [approveDialog, setApproveDialog] = useState(false);
   const [returnDialog, setReturnDialog] = useState(false);
-  const [isLoadingSubmission, setIsLoadingSubmission] = useState(true);
-  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
-  const [isActioning, setIsActioning] = useState(false);
 
   const params = useParams();
   const id = params.id as string;
@@ -168,8 +178,7 @@ export default function ScoreSubmissionDetailPage() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await getConfigurationScoreService();
-        setScoreData(response);
+        await dispatch(getConfigurationScoreThunk()).unwrap();
       } catch {
         toast.error("Failed to load score configuration.");
       } finally {
@@ -177,35 +186,26 @@ export default function ScoreSubmissionDetailPage() {
       }
     };
     fetchConfig();
-  }, []);
+  }, [dispatch]);
 
   const loadSubmission = useCallback(async () => {
-    setIsLoadingSubmission(true);
     try {
-      const response = await getSubmissionScoreByIdService(Number(id));
-      if (response) setSubmission(response);
+      await dispatch(getSubmissionScoreByIdThunk(Number(id))).unwrap();
     } catch {
       toast.error("Failed to load submission.");
-    } finally {
-      setIsLoadingSubmission(false);
     }
-  }, [id]);
+  }, [id, dispatch]);
 
   const loadSchedule = useCallback(async () => {
     if (!submission?.scheduleId) {
-      setScheduleDetail(null);
       return;
     }
-    setIsLoadingSchedule(true);
     try {
-      const response = await getDetailScheduleService(submission.scheduleId);
-      setScheduleDetail(response);
+      await dispatch(fetchScheduleByIdService(submission.scheduleId)).unwrap();
     } catch {
-      setScheduleDetail(null);
-    } finally {
-      setIsLoadingSchedule(false);
+      // Ignore
     }
-  }, [submission?.scheduleId]);
+  }, [submission?.scheduleId, dispatch]);
 
   useEffect(() => { loadSubmission(); }, [loadSubmission]);
   useEffect(() => { loadSchedule(); }, [loadSchedule]);
@@ -213,10 +213,9 @@ export default function ScoreSubmissionDetailPage() {
   // ── Actions ─────────────────────────────────────────────────────────────────
 
   const handleApproval = async () => {
-    setIsActioning(true);
     try {
       const payload: SubmitScoreModel = { id: submission?.id ?? 0, status: SubmissionEnum.APPROVED };
-      const response = await submittedScoreService(payload);
+      const response = await dispatch(submittedScoreThunk(payload)).unwrap();
       if (response) {
         setApproveDialog(false);
         toast.success("Score approved successfully.", { icon: <CheckCircle className="h-4 w-4" /> });
@@ -226,15 +225,12 @@ export default function ScoreSubmissionDetailPage() {
       }
     } catch {
       toast.error("Failed to approve score.");
-    } finally {
-      setIsActioning(false);
     }
   };
 
   const handleReturn = async () => {
-    setIsActioning(true);
     try {
-      const response = await submittedScoreService({ id: submission?.id ?? 0, status: SubmissionEnum.DRAFT });
+      const response = await dispatch(submittedScoreThunk({ id: submission?.id ?? 0, status: SubmissionEnum.DRAFT })).unwrap();
       if (response) {
         setReturnDialog(false);
         toast.success("Score returned to teacher.", { icon: <CheckCircle className="h-4 w-4" /> });
@@ -244,8 +240,6 @@ export default function ScoreSubmissionDetailPage() {
       }
     } catch {
       toast.error("Failed to return score.");
-    } finally {
-      setIsActioning(false);
     }
   };
 
@@ -487,8 +481,8 @@ export default function ScoreSubmissionDetailPage() {
         onConfirm={handleApproval}
         cancelText="Cancel"
         confirmText="Approve"
-        isLoading={isActioning}
-        onOpenChange={(v) => { if (!isActioning) setApproveDialog(v); }}
+        isLoading={operations.isSubmitting}
+        onOpenChange={(v) => { if (!operations.isSubmitting) setApproveDialog(v); }}
       />
 
       <ReturnDialog
@@ -498,8 +492,8 @@ export default function ScoreSubmissionDetailPage() {
         onConfirm={handleReturn}
         confirmText="Return"
         cancelText="Cancel"
-        isLoading={isActioning}
-        onOpenChange={(v) => { if (!isActioning) setReturnDialog(v); }}
+        isLoading={operations.isSubmitting}
+        onOpenChange={(v) => { if (!operations.isSubmitting) setReturnDialog(v); }}
       />
     </div>
   );

@@ -3,20 +3,21 @@
 import { ROUTE } from "@/constants/routes";
 import { StatusEnum } from "@/constants/constant";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
-import { addStudentService } from "@/service/user/student.service";
 import StudentForm from "@/components/dashboard/users/student/form/student-form";
 import { cleanField } from "@/utils/map-helper/student";
 import { AddStudentFormData } from "@/model/user/student/student.schema";
 import { AddStudentModel } from "@/model/user/student/student.request.model";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { addStudentThunk } from "@/features/students/store/thunks/student-thunks";
+import { selectStudentOperations } from "@/features/students/store/selectors/student-selectors";
 
 export default function AddSingleStudentPage() {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const operations = useAppSelector(selectStudentOperations);
   const router = useRouter();
 
   const onSubmit = async (data: AddStudentFormData) => {
-    setLoading(true);
     try {
       const payload: AddStudentModel = {
         // required fields (we assume they passed validation)
@@ -72,16 +73,15 @@ export default function AddSingleStudentPage() {
         })),
       };
 
-      const response = await addStudentService(payload);
+      const response = await dispatch(addStudentThunk(payload)).unwrap();
       if (response) {
         toast.success("Student created successfully");
+        router.push(ROUTE.USERS.STUDENTS);
       } else {
         toast.error("Failed to create student");
       }
     } catch (error) {
       toast.error("Failed to create student");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -91,7 +91,7 @@ export default function AddSingleStudentPage() {
       showBackButton={false}
       title="Add Student"
       onSubmit={onSubmit}
-      loading={loading}
+      loading={operations.isCreating}
     />
   );
 }

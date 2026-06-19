@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import { ChangePasswordService } from "@/service/auth/auth.service";
+import { changePasswordThunk } from "@/store/slices/auth-slice";
+import { useAppDispatch } from "@/store";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -66,6 +67,7 @@ function PasswordField({
 }
 
 export default function ChangePasswordPage() {
+  const dispatch = useAppDispatch();
   const {
     register,
     handleSubmit,
@@ -77,10 +79,12 @@ export default function ChangePasswordPage() {
 
   const onSubmit = async (data: ChangePasswordForm) => {
     try {
-      const response = await ChangePasswordService(data);
-      if (response) {
+      const resultAction = await dispatch(changePasswordThunk(data));
+      if (changePasswordThunk.fulfilled.match(resultAction)) {
         toast.success("Password changed successfully");
         reset();
+      } else {
+        toast.error(resultAction.payload as string || "Failed to change password");
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to change password");

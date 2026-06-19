@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { CourseManagementState } from "../models/type/course-type";
-import { fetchAllCoursesService, deleteCourseService } from "../thunks/course-thunks";
+import { fetchAllCoursesService, deleteCourseService, fetchCourseByIdService } from "../thunks/course-thunks";
 
 const initialState: CourseManagementState = {
   data: null,
@@ -80,6 +80,21 @@ const courseSlice = createSlice({
           state.data = state.rollbackSnapshot;
           state.rollbackSnapshot = null;
         }
+      });
+
+    builder
+      .addCase(fetchCourseByIdService.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.selectedCourse = null;
+      })
+      .addCase(fetchCourseByIdService.fulfilled, (state, action) => {
+        state.selectedCourse = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(fetchCourseByIdService.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isLoading = false;
       });
   },
 });

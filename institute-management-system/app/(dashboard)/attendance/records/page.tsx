@@ -38,8 +38,7 @@ import {
   setPageNo,
   resetFilters,
 } from "@/features/students/store/slice/student-slice";
-import { fetchAllStudentsService } from "@/features/students/store/thunks/student-thunks";
-import { getAllStudentsListService } from "@/service/user/student.service";
+import { fetchAllStudentsService, fetchStudentsListThunk } from "@/features/students/store/thunks/student-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
 
 export default function AttendanceStudentsListPage() {
@@ -102,13 +101,13 @@ export default function AttendanceStudentsListPage() {
         toast.info(`Only ${Constants.EXCEL_LIMIT} items were exported.`); return;
       }
 
-      const allStudentsRes = await getAllStudentsListService({
+      const allStudentsRes = await dispatch(fetchStudentsListThunk({
         academicYear: filters.academicYear,
         classId: filters.classId,
         search: filters.search || undefined,
         status: StatusEnum.ACTIVE,
         scheduleId: filters.scheduleId,
-      });
+      })).unwrap();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Student list Data");

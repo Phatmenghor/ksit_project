@@ -8,29 +8,35 @@ import { ROUTE } from "@/constants/routes";
 import ScheduleForm, {
   ScheduleFormValues,
 } from "@/components/dashboard/manage-schedule/schedule-form";
-import { createScheduleService } from "@/service/schedule/schedule.service";
+import { createScheduleThunk } from "@/features/schedules/store/thunks/schedule-thunks";
+import { useAppDispatch } from "@/store";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 
 export default function AddSchedulePage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [formKey, setFormKey] = useState(0);
 
   const handleSubmit = async (values: ScheduleFormValues) => {
-    await createScheduleService({
-      startTime: values.startTime,
-      endTime: values.endTime,
-      day: values.day,
-      classId: values.classId,
-      teacherId: values.instructorId,
-      courseId: values.courseId,
-      roomId: values.roomId,
-      semesterId: values.semesterId,
-      status: Constants.ACTIVE,
-      yearLevel: values.yearLevel,
-    });
-    toast.success("Schedule created successfully");
-    setFormKey((k) => k + 1);
+    try {
+      await dispatch(createScheduleThunk({
+        startTime: values.startTime,
+        endTime: values.endTime,
+        day: values.day,
+        classId: values.classId,
+        teacherId: values.instructorId,
+        courseId: values.courseId,
+        roomId: values.roomId,
+        semesterId: values.semesterId,
+        status: Constants.ACTIVE,
+        yearLevel: values.yearLevel,
+      })).unwrap();
+      toast.success("Schedule created successfully");
+      setFormKey((k) => k + 1);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create schedule");
+    }
   };
 
   return (

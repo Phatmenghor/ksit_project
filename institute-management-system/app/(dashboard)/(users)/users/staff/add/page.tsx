@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { addStaffService } from "@/service/user/user.service";
+import { addStaffService } from "@/features/users/store/thunks/staff-thunks";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
 import { toast } from "sonner";
 import TeacherForm from "@/components/dashboard/users/teachers/form/teacher-form";
@@ -9,8 +9,10 @@ import { ROUTE } from "@/constants/routes";
 import { AddStaffFormData } from "@/model/user/staff/staff.schema";
 import { AddStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
+import { useAppDispatch } from "@/store";
 
 export default function AddStaffOfficerPage() {
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -149,7 +151,7 @@ export default function AddStaffOfficerPage() {
         status: StatusEnum.ACTIVE,
       };
 
-      const response = await addStaffService(payload);
+      const response = await dispatch(addStaffService(payload)).unwrap();
       if (response) {
         toast.success("Staff created successfully");
         router.push(ROUTE.USERS.STUFF_OFFICER);

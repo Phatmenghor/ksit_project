@@ -1,22 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import Loading from "@/components/shared/loading";
 import PaginationPage from "@/components/shared/pagination-page";
 import DepartmentCard from "@/components/dashboard/schedule/department/department-card";
-import { AllDepartmentModel } from "@/model/master-data/department/all-department-model";
 import { ROUTE } from "@/constants/routes";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AllDepartmentFilterModel } from "@/model/master-data/department/type-department-model";
-import { getMyDepartmentService } from "@/service/master-data/department.service";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import { getAllStatisticService } from "@/service/statistic/statistic.service";
-import { StatisticModel } from "@/model/statistic/statistic-model";
 import { Separator } from "@/components/ui/separator";
 import { usePagination } from "@/hooks/use-pagination";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchMyDepartmentsService } from "@/features/master-data/store/thunks/department-thunks";
+import { fetchAllStatisticThunk } from "@/store/slices/statistic-slice";
 
 interface MetricCardProps {
   title: string;
@@ -40,15 +39,18 @@ const MetricCard = ({
 );
 
 export default function ManageClassPage() {
-  const [allDepartmentData, setAllDepartmentData] =
-    useState<AllDepartmentModel | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [statisticsData, setStatisticsData] = useState<StatisticModel | null>(
-    null
-  );
+  const dispatch = useAppDispatch();
   const router = useRouter();
-
   const searchParams = useSearchParams();
+
+  const { data: allDepartmentData, isLoading: isDepartmentsLoading } = useAppSelector(
+    (state) => state.departments
+  );
+  const { data: statisticsData, isLoading: isStatisticLoading } = useAppSelector(
+    (state) => state.statistic
+  );
+
+  const isLoading = isDepartmentsLoading || isStatisticLoading;
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } =
     usePagination({
@@ -66,51 +68,41 @@ export default function ManageClassPage() {
 
   const loadDepartments = useCallback(
     async (param: AllDepartmentFilterModel) => {
-      setIsLoading(true);
       try {
-        const response = await getMyDepartmentService({
-          status: Constants.ACTIVE,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          ...param,
-        });
+        const response = await dispatch(
+          fetchMyDepartmentsService({
+            status: Constants.ACTIVE,
+            pageNo: currentPage,
+            pageSize: currentPageSize,
+            ...param,
+          })
+        ).unwrap();
 
         if (response) {
-          setAllDepartmentData(response);
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading departments");
-      } finally {
-        setIsLoading(false);
       }
     },
-    [currentPage]
+    [currentPage, currentPageSize, dispatch, updateUrlWithPage]
   );
 
   const loadStatistics = useCallback(async () => {
-    setIsLoading(true);
     try {
-      const response = await getAllStatisticService();
-      if (response) {
-        setStatisticsData(response);
-      } else {
-      }
+      await dispatch(fetchAllStatisticThunk()).unwrap();
     } catch (error) {
       toast.error("An error occurred while loading statistics");
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     loadDepartments({});
     loadStatistics();
-  }, [currentPage, loadStatistics]);
+  }, [currentPage, currentPageSize, loadDepartments, loadStatistics]);
 
   function onClickDepartmentCard(departmentId: number) {
     router.push(ROUTE.MY_CLASS.CLASS + `/${departmentId}`);

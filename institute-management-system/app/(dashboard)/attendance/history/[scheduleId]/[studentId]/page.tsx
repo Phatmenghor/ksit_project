@@ -8,16 +8,16 @@ import {
   AttendanceHistoryFilter,
   AttendanceHistoryModel,
 } from "@/model/attendance/attendance-history";
-import {
-  getAllAttedanceHistoryExcelService,
-  getAllAttendanceHistoryService,
-} from "@/service/schedule/attendance.service";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { createAttendanceStudentHistoryColumns } from "./columns";
-import { AllAttendanceHistoryModel } from "@/model/attendance/attendance-history";
-import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { useParams, useSearchParams } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchScheduleByIdService } from "@/features/schedules/store/thunks/schedule-thunks";
+import {
+  fetchAllAttendanceHistoryThunk,
+  fetchAttendanceHistoryExcelThunk,
+} from "@/features/schedules/store/thunks/attendance-thunks";
 import AttendanceHeader from "@/components/dashboard/attendance/header";
 import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,10 +32,12 @@ export default function HistoryRecordsPage() {
   const scheduleId = params?.scheduleId ? Number(params.scheduleId) : null;
   const studentId = params?.studentId ? Number(params.studentId) : null;
 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  const attendanceHistoryData = useAppSelector((state) => state.attendance.history);
+  const scheduleDetail = useAppSelector((state) => state.scheduleList.selectedSchedule);
+  const isLoading = useAppSelector((state) => state.attendance.isLoading);
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [scheduleDetail, setScheduleDetail] = useState<ScheduleModel | null>(null);
-  const [attendanceHistoryData, setAttendanceHistoryData] = useState<AllAttendanceHistoryModel | null>(null);
   const searchParams = useSearchParams();
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
@@ -49,26 +51,22 @@ export default function HistoryRecordsPage() {
   }, [searchParams, updateUrlWithPage]);
 
   const fetchAttendanceHistory = useCallback(async () => {
-    setIsLoading(true);
     try {
-      const response = await getAllAttendanceHistoryService({
+      const response = await dispatch(fetchAllAttendanceHistoryThunk({
         scheduleId: Number(scheduleId),
         studentId: Number(studentId),
         finalizationStatus: "FINAL",
         pageNo: currentPage || 1,
         pageSize: currentPageSize,
-      });
-      setAttendanceHistoryData(response);
-      if (response.totalPages > 0 && currentPage > response.totalPages) {
+      })).unwrap();
+
+      if (response && response.totalPages > 0 && currentPage > response.totalPages) {
         updateUrlWithPage(response.totalPages);
       }
     } catch {
       toast.error("An error occurred while loading attendance history");
-      setAttendanceHistoryData(null);
-    } finally {
-      setIsLoading(false);
     }
-  }, [studentId, scheduleId, currentPage, currentPageSize, updateUrlWithPage]);
+  }, [studentId, scheduleId, currentPage, currentPageSize, updateUrlWithPage, dispatch]);
 
   useEffect(() => {
     fetchAttendanceHistory();
@@ -77,12 +75,11 @@ export default function HistoryRecordsPage() {
   const loadScheduleData = useCallback(async () => {
     if (!scheduleId) return;
     try {
-      const response = await getDetailScheduleService(scheduleId);
-      setScheduleDetail(response);
+      await dispatch(fetchScheduleByIdService(scheduleId)).unwrap();
     } catch {
       toast.error("Error fetching schedule data");
     }
-  }, [scheduleId]);
+  }, [scheduleId, dispatch]);
 
   useEffect(() => {
     loadScheduleData();
@@ -92,11 +89,11 @@ export default function HistoryRecordsPage() {
     setIsSubmitting(true);
     try {
       setIsLoading(true);
-      const allDataResponse: AttendanceHistoryModel[] = await getAllAttedanceHistoryExcelService({
+      const allDataResponse: AttendanceHistoryModel[] = await dispatch(fetchAttendanceHistoryExcelThunk({
         scheduleId: Number(scheduleId),
         studentId: Number(studentId),
         finalizationStatus: "FINAL",
-      });
+      })).unwrap();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Attendance History Data");

@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import {
-  getStaffByTokenService,
-  updateStaffService,
-} from "@/service/user/user.service";
 import TeacherForm from "@/components/dashboard/users/teachers/form/teacher-form";
 import { ROUTE } from "@/constants/routes";
 import { EditStaffFormData } from "@/model/user/staff/staff.schema";
 import { EditStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStaffProfileThunk, updateStaffProfileThunk } from "@/store/slices/auth-slice";
 
 export default function EditAdminProfilePage() {
+  const dispatch = useAppDispatch();
+  const staffProfile = useAppSelector((state) => state.auth.staffProfile);
   const [loading, setLoading] = useState(false);
   const [initialValues, setInitialValues] = useState<EditStaffFormData>();
   const [staffId, setStaffId] = useState<number | null>(null);
@@ -23,7 +23,10 @@ export default function EditAdminProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await getStaffByTokenService();
+        let response = staffProfile;
+        if (!response) {
+          response = await dispatch(fetchStaffProfileThunk()).unwrap();
+        }
 
         setStaffId(response.id);
 
@@ -249,14 +252,9 @@ export default function EditAdminProfilePage() {
         ),
       };
 
-      const response = await updateStaffService(staffId, payload);
-
-      if (response) {
-        toast.success("Profile updated successfully");
-        router.push(ROUTE.PROFILE.ADMIN);
-      } else {
-        toast.error("Failed to update profile");
-      }
+      await dispatch(updateStaffProfileThunk({ id: staffId, data: payload })).unwrap();
+      toast.success("Profile updated successfully");
+      router.push(ROUTE.PROFILE.ADMIN);
     } catch (error) {
       toast.error("Failed to update profile");
     } finally {

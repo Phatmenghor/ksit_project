@@ -12,12 +12,13 @@ import {
   AttendanceHistoryFilter,
   AttendanceHistoryModel,
 } from "@/model/attendance/attendance-history";
-import {
-  getAllAttedanceHistoryCountService,
-  getAllAttedanceHistoryExcelService,
-  getAllAttendanceHistoryService,
-} from "@/service/schedule/attendance.service";
 import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  fetchAllAttendanceHistoryThunk,
+  fetchAttendanceHistoryExcelThunk,
+  fetchAttendanceHistoryCountThunk,
+} from "@/features/schedules/store/thunks/attendance-thunks";
 import { format } from "date-fns";
 import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 import { DateRangePicker } from "@/components/shared/start-end-date";
@@ -38,7 +39,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 
 export default function StudentAttendancePage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  const attendanceHistoryData = useAppSelector((state) => state.attendance.history);
+  const isLoading = useAppSelector((state) => state.attendance.isLoading);
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -48,7 +52,6 @@ export default function StudentAttendancePage() {
   const [selectedClass, setSelectedClass] = useState<ClassModel | undefined>(undefined);
   const [selectedCourse, setSelectedCourse] = useState<CourseModel | undefined>(undefined);
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleModel | undefined>(undefined);
-  const [attendanceHistoryData, setAttendanceHistoryData] = useState<AllAttendanceHistoryModel | null>(null);
 
   const params = useParams();
   const studentId = params.id as string;
@@ -82,9 +85,8 @@ export default function StudentAttendancePage() {
   const [initialScheduleId, setInitialScheduleId] = useState<number | undefined>(undefined);
 
   const fetchAttendanceHistory = useCallback(async () => {
-    setIsLoading(true);
     try {
-      const response = await getAllAttendanceHistoryService({
+      const response = await dispatch(fetchAllAttendanceHistoryThunk({
         search: debouncedSearchQuery,
         academyYear: selectAcademicYear || undefined,
         semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
@@ -97,17 +99,13 @@ export default function StudentAttendancePage() {
         finalizationStatus: "FINAL",
         startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-      });
+      })).unwrap();
 
-      setAttendanceHistoryData(response);
-      if (response.totalPages > 0 && currentPage > response.totalPages) {
+      if (response && response.totalPages > 0 && currentPage > response.totalPages) {
         updateUrlWithPage(response.totalPages);
       }
     } catch {
       toast.error("An error occurred while loading attendance history");
-      setAttendanceHistoryData(null);
-    } finally {
-      setIsLoading(false);
     }
   }, [
     debouncedSearchQuery,
@@ -146,7 +144,7 @@ export default function StudentAttendancePage() {
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
       };
 
-      const countFilter = await getAllAttedanceHistoryCountService(exportFilter);
+      const countFilter = await dispatch(fetchAttendanceHistoryCountThunk(exportFilter)).unwrap();
       if ((countFilter || 0) === 0) {
         toast.warning("No data available to export.");
         return;
@@ -156,7 +154,7 @@ export default function StudentAttendancePage() {
         return;
       }
 
-      const allDataResponse: AttendanceHistoryModel[] = await getAllAttedanceHistoryExcelService(exportFilter);
+      const allDataResponse: AttendanceHistoryModel[] = await dispatch(fetchAttendanceHistoryExcelThunk(exportFilter)).unwrap();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Attendance History Data");

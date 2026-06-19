@@ -6,33 +6,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import {
-  AllStudentModel,
-  RequestAllStudent,
-} from "@/model/user/student/student.respond.model";
-import { getAllStudentsService } from "@/service/user/student.service";
+import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Separator } from "@radix-ui/react-separator";
-import { getScheduleByIdService } from "@/service/schedule/schedule.service";
-import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constants/icons/icon";
 import { usePagination } from "@/hooks/use-pagination";
 import { Constants } from "@/constants/text-string";
 import { DataTable } from "@/components/shared/data-table";
-
-type StudentItem = AllStudentModel["content"][number];
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchAllStudentsService } from "@/features/students/store/thunks/student-thunks";
+import {
+  selectStudentData,
+  selectStudentIsLoading,
+} from "@/features/students/store/selectors/student-selectors";
+import { fetchScheduleByIdService } from "@/features/schedules/store/thunks/schedule-thunks";
+import { selectSelectedSchedule } from "@/features/schedules/store/selectors/schedule-selectors";
 
 export default function StudentListPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [students, setStudents] = useState<AllStudentModel | null>(null);
-  const [schedule, setSchedule] = useState<ScheduleModel | null>(null);
+  const dispatch = useAppDispatch();
+  const students = useAppSelector(selectStudentData);
+  const schedule = useAppSelector(selectSelectedSchedule);
+  const isStudentLoading = useAppSelector(selectStudentIsLoading);
 
   const params = useParams();
-
   const scheduleId = params?.id ? Number(params.id) : null;
-
   const searchParams = useSearchParams();
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
@@ -50,8 +48,7 @@ export default function StudentListPage() {
   }, [searchParams, updateUrlWithPage]);
 
   const fetchSchedule = useCallback(
-    async (filters: RequestAllStudent) => {
-      setIsLoading(true);
+    async (filters: any) => {
       try {
         const baseFilters = {
           scheduleId: scheduleId || 0,
@@ -62,9 +59,8 @@ export default function StudentListPage() {
           ...filters,
         };
 
-        const response = await getAllStudentsService(baseFilters);
+        const response = await dispatch(fetchAllStudentsService(baseFilters)).unwrap();
 
-        setStudents(response);
         // Handle case where current page exceeds total pages
         if (response.totalPages > 0 && currentPage > response.totalPages) {
           updateUrlWithPage(response.totalPages);
@@ -72,27 +68,18 @@ export default function StudentListPage() {
         }
       } catch (error) {
         toast.error("An error occurred while loading classes");
-        setStudents(null);
-      } finally {
-        setIsLoading(false);
       }
     },
-    [currentPage]
+    [currentPage, currentPageSize, scheduleId, dispatch, updateUrlWithPage]
   );
 
   const fetchClassDetail = useCallback(async () => {
-    setIsLoading(true);
     try {
-      const response = await getScheduleByIdService(scheduleId || 0);
-
-      setSchedule(response);
+      await dispatch(fetchScheduleByIdService(scheduleId || 0)).unwrap();
     } catch (error) {
       toast.error("An error occurred while loading classes");
-      setSchedule(null);
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+  }, [scheduleId, dispatch]);
 
   useEffect(() => {
     fetchSchedule({});
@@ -123,7 +110,7 @@ export default function StudentListPage() {
               />
             </Button>
             <h1 className="text-2xl font-bold text-foreground">
-              {schedule?.course?.subject.name || "---"}
+              {schedule?.course?.subject?.name || "---"}
             </h1>
           </div>
 
@@ -137,15 +124,15 @@ export default function StudentListPage() {
                     <div className="flex flex-col flex-1">
                       <div className="flex items-center gap-1 justify-between">
                         <div className="text-sm font-medium text-amber-500">
-                          {schedule?.course.code}
+                          {schedule?.course?.code}
                         </div>
                         <span className="text-sm font-medium text-muted-foreground">
                           {schedule?.day || "- - -"}
                         </span>
                       </div>
                       <div className="text-sm font-medium">
-                        {schedule?.course.nameKH ||
-                          schedule?.course.nameKH ||
+                        {schedule?.course?.nameKH ||
+                          schedule?.course?.nameEn ||
                           "- - -"}
                       </div>
                     </div>
@@ -181,7 +168,7 @@ export default function StudentListPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        <span>{schedule?.room.name || "- - -"}</span>
+                        <span>{schedule?.room?.name || "- - -"}</span>
                       </div>
                     </div>
                   </div>
@@ -195,7 +182,7 @@ export default function StudentListPage() {
       <DataTable
         data={students?.content ?? null}
         columns={tableColumns}
-        loading={isLoading}
+        loading={isStudentLoading}
         currentPage={currentPage}
         totalPages={students?.totalPages ?? 0}
         totalElements={students?.totalElements}

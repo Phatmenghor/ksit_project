@@ -14,10 +14,6 @@ import {
   SurveyReportHeader,
   SurveyResponseItem,
 } from "@/model/survey/survey-result-model";
-import {
-  getAllSurveyResultExcelService,
-  getSurveyReportHeadersService,
-} from "@/service/survey/survey.service";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
 import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
@@ -49,6 +45,7 @@ import {
 import {
   fetchSurveyResultsService,
   fetchSurveyHeadersService,
+  fetchSurveyExcelService,
 } from "@/features/survey/store/thunks/survey-thunks";
 
 const hiddenHeaders = [
@@ -141,8 +138,8 @@ export default function SurveyResultPage() {
         endDate: filters.endDate,
       };
 
-      const response: SurveyResponseItem[] = await getAllSurveyResultExcelService(filter);
-      const headersData = await getSurveyReportHeadersService({ hiddenHeaders });
+      const response: SurveyResponseItem[] = await dispatch(fetchSurveyExcelService(filter)).unwrap();
+      const headersData = await dispatch(fetchSurveyHeadersService({ hiddenHeaders })).unwrap();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Survey Result Data");

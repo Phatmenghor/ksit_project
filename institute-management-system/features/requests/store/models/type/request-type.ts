@@ -1,4 +1,4 @@
-import { AllRequestModel } from "@/model/request/request-model";
+import { AllRequestModel, RequestModel } from "@/model/request/request-model";
 
 export interface RequestFilters {
   search: string;
@@ -13,6 +13,9 @@ export interface RequestManagementState {
   error: string | null;
   filters: RequestFilters;
   isCreating: boolean;
+  selectedRequest: RequestModel | null;
+  isFetchingDetail: boolean;
+  isUpdating: boolean;
 }
 
 export interface MyRequestFilters {

@@ -15,4 +15,10 @@ export interface ScheduleManagementState {
   isLoading: boolean;
   error: string | null;
   filters: ScheduleFilters;
+  selectedSchedule: any | null;
+  operations: {
+    isCreating: boolean;
+    isUpdating: boolean;
+    isDeleting: boolean;
+  };
 }

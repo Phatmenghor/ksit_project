@@ -16,7 +16,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTE } from "@/constants/routes";
 import { FormField } from "@/components/ui/form";
-import { loginService } from "@/service/auth/auth.service";
+import { loginThunk } from "@/store/slices/auth-slice";
+import { useAppDispatch } from "@/store";
 import { ConfirmDialog } from "@/components/shared/custom-confirm-dialog";
 import { HelpDialog } from "@/components/shared/dialog/help-dialog";
 
@@ -31,6 +32,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const {
     control,
@@ -53,13 +55,13 @@ export default function LoginPage() {
         password: data.password,
       };
 
-      const response = await loginService(credentials);
+      const resultAction = await dispatch(loginThunk(credentials));
 
-      if (response) {
+      if (loginThunk.fulfilled.match(resultAction)) {
         toast("Login success");
         router.replace(ROUTE.DASHBOARD);
       } else {
-        toast("Fail to login");
+        toast.error(resultAction.payload as string || "Fail to login");
       }
     } catch (error) {
       if (error instanceof Error) {

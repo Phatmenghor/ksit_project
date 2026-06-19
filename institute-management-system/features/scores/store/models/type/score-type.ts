@@ -15,4 +15,12 @@ export interface SubmittedScoreState {
   isLoading: boolean;
   error: string | null;
   filters: SubmittedScoreFilters;
+  configuration: any | null;
+  selectedSubmission: any | null;
+  operations: {
+    isSubmitting: boolean;
+    isInitializing: boolean;
+    isUpdating: boolean;
+    isConfiguring: boolean;
+  };
 }

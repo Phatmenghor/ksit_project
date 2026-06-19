@@ -9,61 +9,47 @@ import Loading from "@/components/shared/loading";
 import ScheduleForm, {
   ScheduleFormValues,
 } from "@/components/dashboard/manage-schedule/schedule-form";
-import { createScheduleService } from "@/service/schedule/schedule.service";
-import { getClassByIdService } from "@/service/master-data/class.service";
-import { ClassModel } from "@/model/master-data/class/all-class-model";
+import { createScheduleThunk } from "@/features/schedules/store/thunks/schedule-thunks";
+import { fetchClassByIdService } from "@/features/master-data/store/thunks/class-thunks";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 
 export default function AddSchedulePage() {
   const params = useParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const classId = Number(params.classId);
 
-  const [lockedClass, setLockedClass] = useState<ClassModel | null>(null);
-  const [isLoadingClass, setIsLoadingClass] = useState(true);
+  const lockedClass = useAppSelector((state) => state.classes.selectedClass);
+  const isLoadingClass = useAppSelector((state) => state.classes.isLoading);
   const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
-    if (!classId) {
-      setIsLoadingClass(false);
-      return;
-    }
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const result = await getClassByIdService(classId);
-        if (!cancelled) setLockedClass(result ?? null);
-      } catch {
-        // non-fatal: form still works, class just won't be pre-selected
-      } finally {
-        if (!cancelled) setIsLoadingClass(false);
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [classId]);
+    if (!classId) return;
+    dispatch(fetchClassByIdService(classId));
+  }, [classId, dispatch]);
 
   const handleSubmit = async (values: ScheduleFormValues) => {
-    await createScheduleService({
-      startTime: values.startTime,
-      endTime: values.endTime,
-      day: values.day,
-      classId: values.classId,
-      teacherId: values.instructorId,
-      courseId: values.courseId,
-      roomId: values.roomId,
-      semesterId: values.semesterId,
-      status: Constants.ACTIVE,
-      yearLevel: values.yearLevel,
-    });
-    toast.success("Schedule created successfully");
-    // Remount form to reset all state while keeping the locked class
-    setFormKey((k) => k + 1);
+    try {
+      await dispatch(createScheduleThunk({
+        startTime: values.startTime,
+        endTime: values.endTime,
+        day: values.day,
+        classId: values.classId,
+        teacherId: values.instructorId,
+        courseId: values.courseId,
+        roomId: values.roomId,
+        semesterId: values.semesterId,
+        status: Constants.ACTIVE,
+        yearLevel: values.yearLevel,
+      })).unwrap();
+      toast.success("Schedule created successfully");
+      // Remount form to reset all state while keeping the locked class
+      setFormKey((k) => k + 1);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create schedule");
+    }
   };
 
   if (isLoadingClass) return <Loading />;

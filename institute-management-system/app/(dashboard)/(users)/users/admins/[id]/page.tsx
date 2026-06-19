@@ -2,11 +2,11 @@
 import { UserProfileSection } from "@/components/dashboard/users/shared/user-profile";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
-import { getStaffByIdService } from "@/service/user/user.service";
 import { useParams } from "next/navigation";
 import React, { useEffect } from "react";
-import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStaffByIdService } from "@/features/users/store/thunks/staff-thunks";
+import { selectSelectedStaff } from "@/features/users/store/selectors/staff-selectors";
 import TeacherPersonal from "@/components/dashboard/users/teachers/view/TeacherPersonalInfo";
 import TeacherProfessionalRank from "@/components/dashboard/users/teachers/view/TeacherProfessionalRank";
 import TeacherExperienceSection from "@/components/dashboard/users/teachers/view/TeacherExperience";
@@ -18,29 +18,16 @@ import TeacherLanguageSection from "@/components/dashboard/users/teachers/view/T
 import TeacherFamilySection from "@/components/dashboard/users/teachers/view/TeacherFamily";
 
 export default function AdminDetailPage() {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [admin, setAdmin] = React.useState<StaffRespondModel | null>(null);
+  const dispatch = useAppDispatch();
+  const admin = useAppSelector(selectSelectedStaff);
   const params = useParams();
   const adminId = params.id as string;
 
-  const loadAdmin = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getStaffByIdService(adminId);
-      if (response) {
-        setAdmin(response);
-      } else {
-        toast.error("Error getting admin data");
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadAdmin();
-  }, [adminId]);
+    if (adminId) {
+      dispatch(fetchStaffByIdService(adminId));
+    }
+  }, [adminId, dispatch]);
 
   return (
     <div>

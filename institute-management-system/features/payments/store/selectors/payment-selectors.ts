@@ -6,6 +6,7 @@ export const selectPaymentIsLoading = (state: RootState) => state.payments.isLoa
 export const selectPaymentError = (state: RootState) => state.payments.error;
 export const selectPaymentFilters = (state: RootState) => state.payments.filters;
 export const selectPaymentOperations = (state: RootState) => state.payments.operations;
+export const selectSelectedPayment = (state: RootState) => state.payments.selectedPayment;
 
 export const selectPaymentContent = createSelector(
   [selectPaymentData],

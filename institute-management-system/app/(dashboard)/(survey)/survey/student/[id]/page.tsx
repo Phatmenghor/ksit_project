@@ -2,46 +2,35 @@
 
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import React, { useCallback, useEffect, useState } from "react";
-import { StudentSurveyModel } from "@/model/survey/student-survey-model";
-import { getAllStudentSurveyService } from "@/service/survey/history-survey.service";
+import React, { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import { DataTable } from "@/components/shared/data-table";
 import { surveyStudentColumns } from "./columns";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStudentSurveyThunk } from "@/features/survey/store/thunks/survey-thunks";
+import { selectStudentProgress, selectSurveyIsLoading } from "@/features/survey/store/selectors/survey-selectors";
 
 const AllStduentView = () => {
   const params = useParams();
   const rawId = params?.id;
   const id = rawId && !isNaN(Number(rawId)) ? Number(rawId) : null;
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [studentData, setStudentData] = useState<StudentSurveyModel | null>(
-    null
-  );
+  const dispatch = useAppDispatch();
+  const studentData = useAppSelector(selectStudentProgress);
+  const isLoading = useAppSelector(selectSurveyIsLoading);
 
   // Fetch student data from server
   const loadStudents = useCallback(async () => {
-    setIsLoading(true);
-
     try {
       if (!id) {
         toast.error("Invalid schedule ID");
         return;
       }
-      const response = await getAllStudentSurveyService({
-        scheduleId: id,
-      });
-
-      if (response) {
-        setStudentData(response);
-      } else {
-      }
+      await dispatch(fetchStudentSurveyThunk({ scheduleId: id })).unwrap();
     } catch (error) {
       toast.error("An error occurred while loading student");
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+  }, [id, dispatch]);
 
   useEffect(() => {
     loadStudents();

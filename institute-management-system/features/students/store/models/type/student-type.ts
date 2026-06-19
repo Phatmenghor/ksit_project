@@ -11,6 +11,9 @@ export interface StudentFilters {
 
 export interface StudentOperations {
   isDeleting: boolean;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isFetchingDetail: boolean;
 }
 
 export interface StudentManagementState {
@@ -20,4 +23,5 @@ export interface StudentManagementState {
   error: string | null;
   filters: StudentFilters;
   operations: StudentOperations;
+  selectedStudent: any | null;
 }

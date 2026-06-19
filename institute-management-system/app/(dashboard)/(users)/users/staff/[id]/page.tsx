@@ -15,32 +15,22 @@ import TeacherShortCourseSection from "@/components/dashboard/users/teachers/vie
 import TeacherLanguageSection from "@/components/dashboard/users/teachers/view/TeacherLanguage";
 import TeacherFamilySection from "@/components/dashboard/users/teachers/view/TeacherFamily";
 import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
-import { getStaffByIdService } from "@/service/user/user.service";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStaffByIdService } from "@/features/users/store/thunks/staff-thunks";
+import { selectSelectedStaff } from "@/features/users/store/selectors/staff-selectors";
 
 export default function StaffViewPage() {
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [staff, setStaff] = React.useState<StaffRespondModel | null>(null);
+  const dispatch = useAppDispatch();
+  const staff = useAppSelector(selectSelectedStaff);
+  const isLoading = useAppSelector((state) => state.staff.operations.isFetchingDetail);
   const params = useParams();
   const staffId = params.id as string;
 
-  const loadStaff = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getStaffByIdService(staffId);
-      if (response) {
-        setStaff(response);
-      } else {
-        toast.error("Error getting staff data");
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadStaff();
-  }, [staffId]);
+    if (staffId) {
+      dispatch(fetchStaffByIdService(staffId));
+    }
+  }, [staffId, dispatch]);
 
   if (isLoading) {
     return (

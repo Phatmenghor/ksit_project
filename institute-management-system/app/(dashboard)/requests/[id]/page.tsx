@@ -15,11 +15,6 @@ import { REQUEST_DETAIL, RequestEnum, RequestType } from "@/constants/constant";
 import { formatDegree } from "@/constants/format-enum/format-degree";
 import { formatGender } from "@/constants/format-enum/formate-gender";
 import { ROUTE } from "@/constants/routes";
-import { RequestModel } from "@/model/request/request-model";
-import {
-  getDetailRequestService,
-  updateRequestService,
-} from "@/service/request/request.service";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import {
   Folder,
@@ -40,7 +35,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { use } from "react";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -50,10 +45,21 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useStudentExport } from "@/hooks/use-student-export";
-import { getStudentByIdService } from "@/service/user/student.service";
-import { StudentByIdModel } from "@/model/user/student/student.respond.model";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchRequestByIdThunk, updateRequestThunk } from "@/features/requests/store/thunks/request-thunks";
+import { selectSelectedRequest, selectRequestIsFetchingDetail, selectRequestIsUpdating } from "@/features/requests/store/selectors/request-selectors";
+import { fetchStudentByIdThunk } from "@/features/students/store/thunks/student-thunks";
+import { selectSelectedStudent } from "@/features/students/store/selectors/student-selectors";
 
 export default function StudentDetail() {
+  const dispatch = useAppDispatch();
+  const requestData = useAppSelector(selectSelectedRequest);
+  const student = useAppSelector(selectSelectedStudent);
+  const isRequestLoading = useAppSelector(selectRequestIsFetchingDetail);
+  const isRequestUpdating = useAppSelector(selectRequestIsUpdating);
+  const isStudentLoading = useAppSelector((state) => state.studentList.isLoading);
+  const isLoading = isRequestLoading || isRequestUpdating || isStudentLoading;
+
   // modal
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
@@ -66,11 +72,6 @@ export default function StudentDetail() {
 
   // API
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [requestData, setRequestData] = React.useState<RequestModel | null>(
-    null
-  );
-  const [student, setStudent] = React.useState<StudentByIdModel | null>(null);
   const params = useParams();
   const requestId = params.id as string;
 
@@ -90,44 +91,35 @@ export default function StudentDetail() {
   const hasSiblingInfo =
     student?.studentSibling && student.studentSibling.length > 0;
 
-  const loadRequest = async () => {
-    setIsLoading(true);
+  const loadRequest = useCallback(async () => {
     try {
-      const response = await getDetailRequestService(requestId);
+      const response = await dispatch(fetchRequestByIdThunk(requestId)).unwrap();
       if (response) {
-        setRequestData(response);
-        // Set the request status from the API response
         setRequestStatus(response.status as RequestEnum);
-      } else {
       }
     } catch (error) {
-    } finally {
-      setIsLoading(false);
+      toast.error("Failed to load request details");
     }
-  };
+  }, [requestId, dispatch]);
 
-  const loadStudent = async () => {
-    if (!requestData?.user.id) return;
-
-    setIsLoading(true);
+  const loadStudent = useCallback(async () => {
+    if (!requestData?.user?.id) return;
     try {
-      const response = await getStudentByIdService(
-        requestData?.user?.id?.toString()
-      );
-      if (response) {
-        setStudent(response);
-      } else {
-      }
+      await dispatch(fetchStudentByIdThunk(requestData.user.id.toString())).unwrap();
     } catch (error) {
-    } finally {
-      setIsLoading(false);
+      toast.error("Failed to load student details");
     }
-  };
+  }, [requestData?.user?.id, dispatch]);
 
   useEffect(() => {
     loadRequest();
-    loadStudent();
-  }, [requestId, requestData?.user.id]);
+  }, [requestId, loadRequest]);
+
+  useEffect(() => {
+    if (requestData?.user?.id) {
+      loadStudent();
+    }
+  }, [requestData?.user?.id, loadStudent]);
 
   // label and value in request detail
   const leftColumnData = [
@@ -160,7 +152,7 @@ export default function StudentDetail() {
     },
     {
       label: "Date of Birth",
-      value: requestData?.user.dateOfBirth
+      value: requestData?.user?.dateOfBirth
         ? formatDate(requestData.user.dateOfBirth)
         : "---",
     },
@@ -208,64 +200,60 @@ export default function StudentDetail() {
 
   const handleReturn = async (message: string) => {
     try {
-      setIsLoading(true);
+      await dispatch(
+        updateRequestThunk({
+          id: parseInt(requestId),
+          data: {
+            status: RequestEnum.RETURN,
+            staffComment: message,
+          },
+        })
+      ).unwrap();
 
-      // Call the API to update the request status
-      await updateRequestService(parseInt(requestId), {
-        status: RequestEnum.RETURN,
-        staffComment: message,
-      });
-
-      // Update local state only after successful API call
       setRequestStatus(RequestEnum.RETURN);
       toast.success("Request updated to return successfully");
-
-      // Optionally reload the request data to ensure consistency
       await loadRequest();
-
     } catch (error) {
-      toast.error("An error occurred while update return request");
-    } finally {
-      setIsLoading(false);
+      toast.error("An error occurred while updating return request");
     }
   };
 
   const handleAccept = async () => {
     try {
-      setIsLoading(true);
-
-      await updateRequestService(parseInt(requestId), {
-        status: RequestEnum.ACCEPTED,
-      });
+      await dispatch(
+        updateRequestThunk({
+          id: parseInt(requestId),
+          data: {
+            status: RequestEnum.ACCEPTED,
+          },
+        })
+      ).unwrap();
 
       setRequestStatus(RequestEnum.ACCEPTED);
       toast.success("Request updated to accept successfully");
-
       await loadRequest();
     } catch (error) {
-      toast.error("An error occurred while update accept request");
-    } finally {
-      setIsLoading(false);
+      toast.error("An error occurred while updating accept request");
     }
   };
 
   const handleReject = async (message: string) => {
     try {
-      setIsLoading(true);
-
-      await updateRequestService(parseInt(requestId), {
-        status: RequestEnum.REJECTED,
-        staffComment: message,
-      });
+      await dispatch(
+        updateRequestThunk({
+          id: parseInt(requestId),
+          data: {
+            status: RequestEnum.REJECTED,
+            staffComment: message,
+          },
+        })
+      ).unwrap();
 
       setRequestStatus(RequestEnum.REJECTED);
       toast.success("Request updated to reject successfully");
-
       await loadRequest();
     } catch (error) {
-      toast.error("An error occurred while update reject request");
-    } finally {
-      setIsLoading(false);
+      toast.error("An error occurred while updating reject request");
     }
   };
 
@@ -275,20 +263,20 @@ export default function StudentDetail() {
 
   const handleRequestCompleted = async () => {
     try {
-      setIsLoading(true);
-
-      await updateRequestService(parseInt(requestId), {
-        status: RequestEnum.DONE,
-      });
+      await dispatch(
+        updateRequestThunk({
+          id: parseInt(requestId),
+          data: {
+            status: RequestEnum.DONE,
+          },
+        })
+      ).unwrap();
 
       setRequestStatus(RequestEnum.DONE);
       toast.success("Request updated to done successfully");
-
       await loadRequest();
     } catch (error) {
-      toast.error("An error occurred while update complete request");
-    } finally {
-      setIsLoading(false);
+      toast.error("An error occurred while updating complete request");
     }
   };
 

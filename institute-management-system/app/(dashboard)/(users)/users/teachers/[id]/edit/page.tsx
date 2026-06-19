@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import {
-  getStaffByIdService,
+  fetchStaffByIdService,
   updateStaffService,
-} from "@/service/user/user.service";
+} from "@/features/users/store/thunks/staff-thunks";
 import TeacherForm from "@/components/dashboard/users/teachers/form/teacher-form";
 import { ROUTE } from "@/constants/routes";
 import { EditStaffFormData } from "@/model/user/staff/staff.schema";
 import { EditStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
 import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
+import { useAppDispatch } from "@/store";
 
 // // Helper function to check if all values in an object are undefined
 // const isAllUndefined = (obj: Record<string, any>): boolean => {
@@ -27,6 +28,7 @@ import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
 // };
 
 export default function EditTeacherPage() {
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [initialValues, setInitialValues] = useState<EditStaffFormData>();
 
@@ -37,9 +39,9 @@ export default function EditTeacherPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response: StaffRespondModel = await getStaffByIdService(
+        const response: StaffRespondModel = await dispatch(fetchStaffByIdService(
           teacherId
-        );
+        )).unwrap();
 
         const payload: EditStaffFormData = {
           email: response?.email ?? "",
@@ -254,7 +256,7 @@ export default function EditTeacherPage() {
         })),
       };
 
-      const response = await updateStaffService(Number(teacherId), payload);
+      const response = await dispatch(updateStaffService({ id: Number(teacherId), data: payload })).unwrap();
 
       if (response) {
         toast.success("Teacher updated successfully");

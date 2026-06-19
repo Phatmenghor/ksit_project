@@ -1,6 +1,6 @@
 import { createApiThunk } from "@/utils/axios/api-wrapper";
 import { axiosClientWithAuth } from "@/utils/axios";
-import { AllRequestModel, CreateRequestModel, RequestModel } from "@/model/request/request-model";
+import { AllRequestModel, CreateRequestModel, RequestModel, UpdateRequestModel } from "@/model/request/request-model";
 import { RequestFilterModel } from "@/model/request/request-filter";
 
 export const fetchAllRequestsService = createApiThunk<
@@ -24,3 +24,24 @@ export const createRequestThunk = createApiThunk<RequestModel, CreateRequestMode
     return response.data.data;
   }
 );
+
+export const fetchRequestByIdThunk = createApiThunk<RequestModel, string>(
+  "requests/fetchById",
+  async (id) => {
+    const response = await axiosClientWithAuth.get<{ data: RequestModel }>(
+      `/v1/requests/${id}`
+    );
+    return response.data.data;
+  }
+);
+
+export const updateRequestThunk = createApiThunk<
+  RequestModel,
+  { id: number; data: UpdateRequestModel }
+>("requests/update", async ({ id, data }) => {
+  const response = await axiosClientWithAuth.put<{ data: RequestModel }>(
+    `/v1/requests/${id}`,
+    data
+  );
+  return response.data.data;
+});

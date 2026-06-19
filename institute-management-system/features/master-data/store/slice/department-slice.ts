@@ -6,6 +6,7 @@ import {
   updateDepartmentService,
   deleteDepartmentService,
   fetchDepartmentByIdService,
+  fetchMyDepartmentsService,
 } from "../thunks/department-thunks";
 
 const initialState: DepartmentManagementState = {
@@ -61,6 +62,20 @@ const departmentSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(fetchAllDepartmentService.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isLoading = false;
+      });
+
+    builder
+      .addCase(fetchMyDepartmentsService.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyDepartmentsService.fulfilled, (state, action) => {
+        state.data = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(fetchMyDepartmentsService.rejected, (state, action) => {
         state.error = action.payload as string;
         state.isLoading = false;
       });

@@ -32,3 +32,32 @@ export const deleteScheduleService = createApiThunk<number, number>(
     return scheduleId;
   }
 );
+
+export const fetchScheduleByIdService = createApiThunk<any, number>(
+  "schedules/fetchById",
+  async (id) => {
+    const response = await axiosClientWithAuth.get<{ data: any }>(
+      `/v1/schedules/${id}`
+    );
+    return response.data.data;
+  }
+);
+
+export const createScheduleThunk = createApiThunk<any, any>(
+  "schedules/create",
+  async (data) => {
+    const response = await axiosClientWithAuth.post<{ data: any }>(`/v1/schedules`, data);
+    return response.data.data;
+  }
+);
+
+export const updateScheduleThunk = createApiThunk<any, { id: number; data: any }>(
+  "schedules/update",
+  async ({ id, data }) => {
+    const response = await axiosClientWithAuth.post<{ data: any }>(
+      `/v1/schedules/updateById/${id}`,
+      data
+    );
+    return response.data.data;
+  }
+);

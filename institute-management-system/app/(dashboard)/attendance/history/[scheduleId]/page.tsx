@@ -1,17 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { createAttendanceHistoryColumns } from "./columns";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import {
-  editStudentService,
-  getAllStudentsListService,
-  getAllStudentsService,
-} from "@/service/user/student.service";
 import { StatusEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchAllStudentsService, fetchStudentsListThunk } from "@/features/students/store/thunks/student-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
@@ -39,8 +32,11 @@ import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
 
 export default function StudentsListPage() {
+  const dispatch = useAppDispatch();
+  const allStudentData = useAppSelector((state) => state.studentList.data);
+  const isLoading = useAppSelector((state) => state.studentList.isLoading);
+
   // Core state
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectAcademicYear, setSelectAcademicYear] = useState<
@@ -52,11 +48,6 @@ export default function StudentsListPage() {
   const [selectedSchedule, setSelectedSchedule] = useState<
     ScheduleModel | undefined
   >(undefined);
-
-  // Main student data from API
-  const [allStudentData, setAllStudentData] = useState<AllStudentModel | null>(
-    null
-  );
 
   // Dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -99,10 +90,8 @@ export default function StudentsListPage() {
   // Fetch student data from server
   const loadStudents = useCallback(
     async (param: RequestAllStudent) => {
-      setIsLoading(true);
-
       try {
-        const response = await getAllStudentsService({
+        const response = await dispatch(fetchAllStudentsService({
           ...param,
           pageNo: currentPage,
           pageSize: currentPageSize,
@@ -111,29 +100,29 @@ export default function StudentsListPage() {
           search: debouncedSearchQuery,
           status: StatusEnum.ACTIVE,
           classId: selectedClass?.id,
-        });
+        })).unwrap();
 
         if (response) {
-          setAllStudentData(response);
           // Handle case where current page exceeds total pages
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading student");
-      } finally {
-        setIsLoading(false);
       }
     },
     [
       debouncedSearchQuery,
       currentPage,
+      currentPageSize,
       selectedClass,
       selectedSchedule,
       selectAcademicYear,
+      scheduleId,
+      updateUrlWithPage,
+      dispatch,
     ]
   );
 
@@ -235,13 +224,13 @@ export default function StudentsListPage() {
         return;
       }
 
-      const allStudentsRes = await getAllStudentsListService({
+      const allStudentsRes = await dispatch(fetchStudentsListThunk({
         academicYear: selectAcademicYear || undefined,
         classId: selectedClass?.id || undefined,
         search: debouncedSearchQuery || undefined,
         status: StatusEnum.ACTIVE || undefined,
         scheduleId: selectedSchedule?.id || undefined,
-      });
+      })).unwrap();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Student list Data");

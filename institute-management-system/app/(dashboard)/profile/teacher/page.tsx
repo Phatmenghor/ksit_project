@@ -15,28 +15,23 @@ import TeacherShortCourseSection from "@/components/dashboard/users/teachers/vie
 import TeacherLanguageSection from "@/components/dashboard/users/teachers/view/TeacherLanguage";
 import TeacherFamilySection from "@/components/dashboard/users/teachers/view/TeacherFamily";
 import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
-import { getStaffByTokenService } from "@/service/user/user.service";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStaffProfileThunk } from "@/store/slices/auth-slice";
 import { useIsMobile } from "@/components/ui/use-mobile";
 
 export default function TeacherViewPage() {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [teacher, setTeacher] = React.useState<StaffRespondModel | null>(null);
+  const dispatch = useAppDispatch();
+  const teacher = useAppSelector((state) => state.auth.staffProfile);
+  const isLoading = useAppSelector((state) => state.auth.isProfileLoading);
   const params = useParams();
   const teacherId = params.id as string;
   const isMobile = useIsMobile();
 
   const loadTeacher = async () => {
-    setIsLoading(true);
     try {
-      const response = await getStaffByTokenService();
-      if (response) {
-        setTeacher(response);
-      } else {
-        toast.error("Error getting teacher data");
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
+      await dispatch(fetchStaffProfileThunk()).unwrap();
+    } catch (error: any) {
+      toast.error(error || "Error getting teacher data");
     }
   };
 

@@ -13,11 +13,18 @@ import {
   SurveyResponseData,
   SurveyResponseItem,
 } from "@/model/survey/survey-result-model";
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
-  getAllSurveyResultExcelService,
-  getAllSurveyResultService,
-  getSurveyReportHeadersService,
-} from "@/service/survey/survey.service";
+  fetchSurveyResultsService,
+  fetchSurveyHeadersService,
+  fetchSurveyExcelService,
+} from "@/features/survey/store/thunks/survey-thunks";
+import {
+  selectSurveyData,
+  selectSurveyHeaders,
+  selectSurveyIsLoading,
+  selectSurveyIsLoadingHeaders,
+} from "@/features/survey/store/selectors/survey-selectors";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
 import {
@@ -41,14 +48,17 @@ export default function AllStudentResultPage() {
   const params = useParams();
   const rawId = params?.id;
   const id = rawId && !isNaN(Number(rawId)) ? Number(rawId) : null;
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  const surveyHeaders = useAppSelector(selectSurveyHeaders);
+  const surveyData = useAppSelector(selectSurveyData);
+  const isSurveyLoading = useAppSelector(selectSurveyIsLoading);
+  const isHeadersLoading = useAppSelector(selectSurveyIsLoadingHeaders);
+  const isLoading = isSurveyLoading || isHeadersLoading;
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-
-  const [surveyHeaders, setSurveyHeaders] = useState<SurveyReportHeader[]>([]);
-  const [surveyData, setSurveyData] = useState<SurveyResponseData | null>(null);
   const searchParams = useSearchParams();
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
@@ -98,7 +108,6 @@ export default function AllStudentResultPage() {
 
   const fetchSurveyResults = useCallback(
     async (filter: AllSurveyFilterModel = {}) => {
-      setIsLoading(true);
       try {
         if (!id) {
           toast.error("Invalid schedule ID");
@@ -119,16 +128,11 @@ export default function AllStudentResultPage() {
 
         // Fetch both headers and data simultaneously
         const [headersData, previewData] = await Promise.all([
-          getSurveyReportHeadersService(headersRequestBody),
-          getAllSurveyResultService(surveyFilter),
+          dispatch(fetchSurveyHeadersService(headersRequestBody)).unwrap(),
+          dispatch(fetchSurveyResultsService(surveyFilter)).unwrap(),
         ]);
 
-        if (headersData) {
-          setSurveyHeaders(headersData);
-        }
-
         if (previewData) {
-          setSurveyData(previewData);
           if (
             previewData.totalPages > 0 &&
             currentPage > previewData.totalPages
@@ -138,16 +142,15 @@ export default function AllStudentResultPage() {
           }
         }
       } catch (error) {
-      } finally {
-        setIsLoading(false);
+        toast.error("Failed to load survey results");
       }
     },
-    [debouncedSearchQuery, currentPage]
+    [id, debouncedSearchQuery, currentPage, currentPageSize, dispatch, updateUrlWithPage]
   );
 
   useEffect(() => {
     fetchSurveyResults({ pageNo: currentPage });
-  }, [debouncedSearchQuery, currentPage]);
+  }, [debouncedSearchQuery, currentPage, fetchSurveyResults]);
 
   const columns = useMemo(
     () => createSurveyRecordDetailColumns({ getDisplayIndex, surveyHeaders }),
@@ -162,16 +165,18 @@ export default function AllStudentResultPage() {
 
       // Call the service to export data
       const response: SurveyResponseItem[] =
-        await getAllSurveyResultExcelService(filter);
+        await dispatch(fetchSurveyExcelService(filter)).unwrap();
 
       // Use API data if available, otherwise use current data
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Survey Result Data");
 
       // Header table excel
-      const headersData = await getSurveyReportHeadersService({
-        hiddenHeaders,
-      });
+      const headersData = await dispatch(
+        fetchSurveyHeadersService({
+          hiddenHeaders,
+        })
+      ).unwrap();
       const headers: SurveyReportHeader[] = [
         { key: "no", label: "No." }, // Inject static "No." column
         ...(headersData && Array.isArray(headersData)

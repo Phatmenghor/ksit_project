@@ -20,3 +20,7 @@ export const selectRequestPagination = createSelector(
     pageSize: data?.pageSize || 10,
   })
 );
+
+export const selectSelectedRequest = (state: RootState) => state.requests.selectedRequest;
+export const selectRequestIsFetchingDetail = (state: RootState) => state.requests.isFetchingDetail;
+export const selectRequestIsUpdating = (state: RootState) => state.requests.isUpdating;

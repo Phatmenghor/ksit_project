@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   SurveyFormDataModel,
-  SurveyMainModel,
 } from "@/model/survey/survey-main-model";
-import {
-  getAllSurveySectionService,
-  submitSurveyService,
-} from "@/service/survey/survey.service";
 import Loading from "@/components/shared/loading";
 import SurveyFormHeader from "@/components/dashboard/survey/form/survey-form-header";
 import { useParams, useRouter } from "next/navigation";
@@ -22,11 +17,18 @@ import { toast } from "sonner";
 import { QuestionTypeEnum } from "@/constants/constant";
 import SurveySuccessDialog from "@/components/dashboard/survey/form/survey-success-dialog";
 import { SurveyResponseModel } from "@/model/survey/survey-response-model";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { selectSurveyQAData, selectSurveyQAIsLoading } from "@/features/survey/store/selectors/survey-qa-selectors";
+import { selectSurveyOperations } from "@/features/survey/store/selectors/survey-selectors";
+import { fetchSurveyQAThunk } from "@/features/survey/store/thunks/survey-qa-thunks";
+import { submitSurveyThunk } from "@/features/survey/store/thunks/survey-thunks";
 
 export default function SurveyFormPage() {
-  const [surveyData, setSurveyData] = useState<SurveyMainModel | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useAppDispatch();
+  const surveyData = useAppSelector(selectSurveyQAData);
+  const isLoading = useAppSelector(selectSurveyQAIsLoading);
+  const operations = useAppSelector(selectSurveyOperations);
+
   const [cancelSurveyDialog, setCancelSurveyDialog] = useState(false);
   const [surveySuccessDialogOpen, setSurveySuccessDialogOpen] = useState(false);
   const [surveyInfo, setSurveyInfo] = useState<SurveyResponseModel | null>(
@@ -52,20 +54,11 @@ export default function SurveyFormPage() {
 
   const fetchSurveyData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const response = await getAllSurveySectionService();
-
-      if (!response) {
-        throw new Error("Failed to fetch survey data");
-      }
-
-      setSurveyData(response);
+      await dispatch(fetchSurveyQAThunk()).unwrap();
     } catch (error) {
       toast.error("Failed to load survey data. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     fetchSurveyData();
@@ -126,18 +119,18 @@ export default function SurveyFormPage() {
     }
 
     try {
-      setIsSubmitting(true);
-
       const transformedData = {
         answers: transformFormDataToApiFormat(formData),
         overallComment: formData.overallComment,
         overallRating: formData.overallRating,
       };
 
-      const response = await submitSurveyService(
-        Number(scheduleId),
-        transformedData
-      );
+      const response = await dispatch(
+        submitSurveyThunk({
+          scheduleId: Number(scheduleId),
+          data: transformedData,
+        })
+      ).unwrap();
 
       setSurveyInfo(response);
       setSurveySuccessDialogOpen(true);
@@ -146,8 +139,6 @@ export default function SurveyFormPage() {
       toast.error(
         error.message || "Failed to submit survey. Please try again."
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -269,10 +260,10 @@ export default function SurveyFormPage() {
               <div className="flex gap-2 items-center">
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={operations.isSubmitting}
                   className="bg-teal-900 hover:bg-teal-950"
                 >
-                  {isSubmitting ? "Submitting..." : "Submit Survey"}
+                  {operations.isSubmitting ? "Submitting..." : "Submit Survey"}
                 </Button>
               </div>
             </div>

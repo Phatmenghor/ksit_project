@@ -34,3 +34,13 @@ export const deleteCourseService = createApiThunk<CourseModel, number>(
     return response.data.data;
   }
 );
+
+export const fetchCourseByIdService = createApiThunk<any, number>(
+  "courses/fetchById",
+  async (id) => {
+    const response = await axiosClientWithAuth.get<{ data: any }>(
+      `/v1/courses/${id}`
+    );
+    return response.data.data;
+  }
+);

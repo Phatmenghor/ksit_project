@@ -26,25 +26,15 @@ import {
 import { DataTable } from "@/components/shared/data-table";
 import { createAttendanceCheckColumns } from "./columns";
 import { useParams } from "next/navigation";
-import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { QRCodeSection } from "@/components/dashboard/attendance/qr-code-section";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchScheduleByIdService } from "@/features/schedules/store/thunks/schedule-thunks";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-  getAllAttendanceGenerateService,
-  submitAttendanceSessionService,
-  updateAttendanceSessionService,
-} from "@/service/schedule/attendance.service";
+  fetchAllAttendanceGenerateThunk,
+  updateAttendanceSessionThunk,
+  submitAttendanceSessionThunk,
+} from "@/features/schedules/store/thunks/attendance-thunks";
 import { AttendanceGenerateModel } from "@/model/attendance/attendance-generate";
 import {
   attendanceStatusOptions,
@@ -56,6 +46,7 @@ import AttendanceCheckHeader from "@/components/dashboard/attendance/schedule/at
 const AttendanceCheckPage = () => {
   const params = useParams();
   const id = params?.id ? Number(params.id) : null;
+  const dispatch = useAppDispatch();
 
   // Core state
   const [scheduleDetail, setScheduleDetail] = useState<ScheduleModel | null>(
@@ -104,14 +95,14 @@ const AttendanceCheckPage = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await getDetailScheduleService(id);
+      const response = await dispatch(fetchScheduleByIdService(id)).unwrap();
       setScheduleDetail(response);
     } catch (error) {
       toast.error("Error fetching schedule data");
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, dispatch]);
 
   const HandleInitAttendance = useCallback(
     async (forceRefresh = false, showLoader = true) => {
@@ -126,9 +117,9 @@ const AttendanceCheckPage = () => {
       }
 
       try {
-        const response = await getAllAttendanceGenerateService({
+        const response = await dispatch(fetchAllAttendanceGenerateThunk({
           scheduleId: scheduleDetail.id,
-        });
+        })).unwrap();
 
         setAttendanceGenerate(response);
         setLastUpdated(new Date());
@@ -317,12 +308,12 @@ const AttendanceCheckPage = () => {
       // Perform bulk update
       await Promise.all(
         changedAttendances.map((attendance) =>
-          updateAttendanceSessionService({
+          dispatch(updateAttendanceSessionThunk({
             id: attendance.id,
             status: attendance.status,
             attendanceType: attendance.attendanceType,
             comment: attendance.comment || "",
-          })
+          })).unwrap()
         )
       );
 
@@ -363,9 +354,9 @@ const AttendanceCheckPage = () => {
 
     setIsSubmittingToStaff(true);
     try {
-      const response = await submitAttendanceSessionService(
+      const response = await dispatch(submitAttendanceSessionThunk(
         attendanceGenerate?.id
-      );
+      )).unwrap();
       setIsSubmitted(true);
       setSubmissionTime(new Date());
 

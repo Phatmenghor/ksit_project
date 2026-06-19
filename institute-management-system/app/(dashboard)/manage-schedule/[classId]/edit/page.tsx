@@ -10,69 +10,48 @@ import ScheduleForm, {
   ScheduleFormValues,
   ScheduleFormSelections,
 } from "@/components/dashboard/manage-schedule/schedule-form";
-import {
-  getDetailScheduleService,
-  updateScheduleService,
-} from "@/service/schedule/schedule.service";
-import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchScheduleByIdService, updateScheduleThunk } from "@/features/schedules/store/thunks/schedule-thunks";
 
 export default function EditSchedulePage() {
   const params = useParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   // The [classId] segment holds the schedule ID in the edit route
   const scheduleId = Number(params.classId);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [schedule, setSchedule] = useState<ScheduleModel | null>(null);
+  const schedule = useAppSelector((state) => state.scheduleList.selectedSchedule);
+  const isLoading = useAppSelector((state) => state.scheduleList.isLoading);
 
   useEffect(() => {
     if (!scheduleId) return;
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const data = await getDetailScheduleService(scheduleId);
-        if (!cancelled) {
-          if (data) {
-            setSchedule(data);
-          } else {
-            toast.error("Schedule not found");
-            router.back();
-          }
-        }
-      } catch (error: any) {
-        if (!cancelled) {
-          toast.error(error.message || "Failed to load schedule");
-          router.back();
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [scheduleId, router]);
+    dispatch(fetchScheduleByIdService(scheduleId));
+  }, [scheduleId, dispatch]);
 
   const handleSubmit = async (values: ScheduleFormValues) => {
-    await updateScheduleService(scheduleId, {
-      startTime: values.startTime,
-      endTime: values.endTime,
-      day: values.day,
-      classId: values.classId,
-      teacherId: values.instructorId,
-      courseId: values.courseId,
-      roomId: values.roomId,
-      semesterId: values.semesterId,
-      status: Constants.ACTIVE,
-      yearLevel: values.yearLevel,
-    });
-    toast.success("Schedule updated successfully");
-    router.back();
+    try {
+      await dispatch(updateScheduleThunk({
+        id: scheduleId,
+        data: {
+          startTime: values.startTime,
+          endTime: values.endTime,
+          day: values.day,
+          classId: values.classId,
+          teacherId: values.instructorId,
+          courseId: values.courseId,
+          roomId: values.roomId,
+          semesterId: values.semesterId,
+          status: Constants.ACTIVE,
+          yearLevel: values.yearLevel,
+        }
+      })).unwrap();
+      toast.success("Schedule updated successfully");
+      router.back();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update schedule");
+    }
   };
 
   if (isLoading) return <Loading />;

@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import {
-  getStaffByIdService,
+  fetchStaffByIdService,
   updateStaffService,
-} from "@/service/user/user.service";
+} from "@/features/users/store/thunks/staff-thunks";
 import TeacherForm from "@/components/dashboard/users/teachers/form/teacher-form";
 import { ROUTE } from "@/constants/routes";
 import { EditStaffFormData } from "@/model/user/staff/staff.schema";
 import { EditStaffModel } from "@/model/user/staff/staff.request.model";
 import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
+import { useAppDispatch } from "@/store";
 
 export default function EditAdminPage() {
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
 
   const [initialValues, setInitialValues] = useState<EditStaffFormData>();
@@ -25,7 +27,7 @@ export default function EditAdminPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await getStaffByIdService(adminId);
+        const response = await dispatch(fetchStaffByIdService(adminId)).unwrap();
 
         const payload: EditStaffFormData = {
           email: response?.email ?? "",
@@ -243,7 +245,7 @@ export default function EditAdminPage() {
           })
         ),
       };
-      const response = await updateStaffService(Number(adminId), payload);
+      const response = await dispatch(updateStaffService({ id: Number(adminId), data: payload })).unwrap();
 
       if (response) {
         toast.success("Admin information updated successfully");

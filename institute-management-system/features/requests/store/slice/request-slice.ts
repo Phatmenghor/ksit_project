@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RequestManagementState } from "../models/type/request-type";
-import { fetchAllRequestsService, createRequestThunk } from "../thunks/request-thunks";
+import { fetchAllRequestsService, createRequestThunk, fetchRequestByIdThunk, updateRequestThunk } from "../thunks/request-thunks";
 
 const initialState: RequestManagementState = {
   data: null,
@@ -13,6 +13,9 @@ const initialState: RequestManagementState = {
     userId: undefined,
     pageNo: 1,
   },
+  selectedRequest: null,
+  isFetchingDetail: false,
+  isUpdating: false,
 };
 
 const requestSlice = createSlice({
@@ -71,6 +74,40 @@ const requestSlice = createSlice({
       .addCase(createRequestThunk.rejected, (state, action) => {
         state.error = action.payload as string;
         state.isCreating = false;
+      });
+
+    builder
+      .addCase(fetchRequestByIdThunk.pending, (state) => {
+        state.isFetchingDetail = true;
+        state.error = null;
+        state.selectedRequest = null;
+      })
+      .addCase(fetchRequestByIdThunk.fulfilled, (state, action) => {
+        state.selectedRequest = action.payload;
+        state.isFetchingDetail = false;
+      })
+      .addCase(fetchRequestByIdThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isFetchingDetail = false;
+      });
+
+    builder
+      .addCase(updateRequestThunk.pending, (state) => {
+        state.isUpdating = true;
+        state.error = null;
+      })
+      .addCase(updateRequestThunk.fulfilled, (state, action) => {
+        state.selectedRequest = action.payload;
+        state.isUpdating = false;
+        if (state.data?.content) {
+          state.data.content = state.data.content.map((req) =>
+            req.id === action.payload.id ? action.payload : req
+          );
+        }
+      })
+      .addCase(updateRequestThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isUpdating = false;
       });
   },
 });

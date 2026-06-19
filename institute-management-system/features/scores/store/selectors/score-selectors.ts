@@ -5,6 +5,9 @@ export const selectSubmittedScoreData = (state: RootState) => state.submittedSco
 export const selectSubmittedScoreIsLoading = (state: RootState) => state.submittedScores.isLoading;
 export const selectSubmittedScoreError = (state: RootState) => state.submittedScores.error;
 export const selectSubmittedScoreFilters = (state: RootState) => state.submittedScores.filters;
+export const selectSubmittedScoreConfiguration = (state: RootState) => state.submittedScores.configuration;
+export const selectSelectedSubmission = (state: RootState) => state.submittedScores.selectedSubmission;
+export const selectSubmittedScoreOperations = (state: RootState) => state.submittedScores.operations;
 
 export const selectSubmittedScoreContent = createSelector(
   [selectSubmittedScoreData],

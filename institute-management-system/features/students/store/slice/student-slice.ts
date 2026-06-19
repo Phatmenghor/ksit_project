@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { StudentManagementState } from "../models/type/student-type";
-import { fetchAllStudentsService, deleteStudentService } from "../thunks/student-thunks";
+import { fetchAllStudentsService, deleteStudentService, fetchStudentByIdThunk, addStudentThunk, updateStudentThunk, fetchStudentsListThunk } from "../thunks/student-thunks";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 
@@ -19,7 +19,11 @@ const initialState: StudentManagementState = {
   },
   operations: {
     isDeleting: false,
+    isCreating: false,
+    isUpdating: false,
+    isFetchingDetail: false,
   },
+  selectedStudent: null,
 };
 
 const studentSlice = createSlice({
@@ -94,6 +98,62 @@ const studentSlice = createSlice({
           state.data = state.rollbackSnapshot;
           state.rollbackSnapshot = null;
         }
+      });
+
+    builder
+      .addCase(fetchStudentByIdThunk.pending, (state) => {
+        state.operations.isFetchingDetail = true;
+        state.error = null;
+        state.selectedStudent = null;
+      })
+      .addCase(fetchStudentByIdThunk.fulfilled, (state, action) => {
+        state.selectedStudent = action.payload;
+        state.operations.isFetchingDetail = false;
+      })
+      .addCase(fetchStudentByIdThunk.rejected, (state, action) => {
+        state.operations.isFetchingDetail = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(addStudentThunk.pending, (state) => {
+        state.operations.isCreating = true;
+        state.error = null;
+      })
+      .addCase(addStudentThunk.fulfilled, (state) => {
+        state.operations.isCreating = false;
+      })
+      .addCase(addStudentThunk.rejected, (state, action) => {
+        state.operations.isCreating = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(updateStudentThunk.pending, (state) => {
+        state.operations.isUpdating = true;
+        state.error = null;
+      })
+      .addCase(updateStudentThunk.fulfilled, (state, action) => {
+        state.operations.isUpdating = false;
+        state.selectedStudent = action.payload;
+      })
+      .addCase(updateStudentThunk.rejected, (state, action) => {
+        state.operations.isUpdating = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(fetchStudentsListThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchStudentsListThunk.fulfilled, (state, action) => {
+        state.data = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(fetchStudentsListThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

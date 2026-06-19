@@ -19,4 +19,5 @@ export interface PaymentManagementState {
   error: string | null;
   filters: PaymentFilters;
   operations: PaymentOperations;
+  selectedPayment: PaymentModel | null;
 }

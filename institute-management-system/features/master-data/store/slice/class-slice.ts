@@ -6,6 +6,7 @@ import {
   updateClassService,
   deleteClassService,
   fetchClassByIdService,
+  fetchMyClassesThunk,
 } from "../thunks/class-thunks";
 
 const initialState: ClassManagementState = {
@@ -166,6 +167,20 @@ const classSlice = createSlice({
           state.data = state.rollbackSnapshot;
           state.rollbackSnapshot = null;
         }
+      });
+
+    builder
+      .addCase(fetchMyClassesThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyClassesThunk.fulfilled, (state, action) => {
+        state.data = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(fetchMyClassesThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isLoading = false;
       });
   },
 });

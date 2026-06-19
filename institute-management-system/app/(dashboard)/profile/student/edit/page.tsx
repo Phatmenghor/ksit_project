@@ -4,7 +4,6 @@ import { ROUTE } from "@/constants/routes";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { editStudentService } from "@/service/user/student.service";
 import StudentForm from "@/components/dashboard/users/student/form/student-form";
 import {
   EditStudentFormData,
@@ -12,9 +11,13 @@ import {
 } from "@/model/user/student/student.schema";
 import { EditStudentModel } from "@/model/user/student/student.request.model";
 import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
-import { getStudentByTokenService } from "@/service/user/user.service";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStudentProfileThunk, updateStudentProfileThunk } from "@/store/slices/auth-slice";
 
 export default function EditStudentProfilePage() {
+  const dispatch = useAppDispatch();
+  const studentProfile = useAppSelector((state) => state.auth.studentProfile);
+  const isProfileLoading = useAppSelector((state) => state.auth.isProfileLoading);
   const [loading, setLoading] = useState(false);
   const [initialValues, setInitialValues] = useState<EditStudentFormData>();
   const [studentId, setStudentId] = useState<number | null>(null);
@@ -24,7 +27,10 @@ export default function EditStudentProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await getStudentByTokenService();
+        let response = studentProfile;
+        if (!response) {
+          response = await dispatch(fetchStudentProfileThunk()).unwrap();
+        }
 
         setStudentId(response.id);
         setInitialValues({
@@ -41,7 +47,7 @@ export default function EditStudentProfilePage() {
     };
 
     fetchData();
-  }, [studentId]);
+  }, [studentId, studentProfile, dispatch]);
 
   const onSubmit = async (data: EditStudentFormData) => {
     if (studentId == null) {
@@ -119,13 +125,9 @@ export default function EditStudentProfilePage() {
         status: cleanField(formData.status),
       };
 
-      const response = await editStudentService(studentId, payload);
-      if (response) {
-        toast.success("Profile updated successfully");
-        router.push(ROUTE.PROFILE.STUDENT);
-      } else {
-        toast.error("Failed to update profile");
-      }
+      await dispatch(updateStudentProfileThunk({ id: studentId, data: payload })).unwrap();
+      toast.success("Profile updated successfully");
+      router.push(ROUTE.PROFILE.STUDENT);
     } catch (error) {
       toast.error("Failed to update profile");
     } finally {

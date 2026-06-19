@@ -6,17 +6,11 @@ import { ROUTE } from "@/constants/routes";
 import { Users } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AllMajorFilterModel } from "@/model/master-data/major/type-major-model";
-import { getAllMajorService } from "@/service/master-data/major.service";
-import { getDepartmentByIdService } from "@/service/master-data/department.service";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import { AllMajorModel } from "@/model/master-data/major/all-major-model";
-import { DepartmentModel } from "@/model/master-data/department/all-department-model";
 import {
-  AllClassModel,
   ClassModel,
 } from "@/model/master-data/class/all-class-model";
-import { getAllClassService } from "@/service/master-data/class.service";
 import { ClassCard } from "@/components/dashboard/schedule/class/class-card";
 import Loading from "@/components/shared/loading";
 import { useDebounce } from "@/utils/debounce/debounce";
@@ -24,6 +18,10 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchAllMajorService } from "@/features/master-data/store/thunks/major-thunks";
+import { fetchDepartmentByIdService } from "@/features/master-data/store/thunks/department-thunks";
+import { fetchAllClassService } from "@/features/master-data/store/thunks/class-thunks";
 
 const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
   <div className="text-center py-12 space-y-4">
@@ -42,11 +40,13 @@ const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
 );
 
 const ClassSchedulePage = () => {
+  const dispatch = useAppDispatch();
+  const allMajorData = useAppSelector((state) => state.majors.data);
+  const department = useAppSelector((state) => state.departments.selectedDepartment);
+  const allClassData = useAppSelector((state) => state.classes.data);
+
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [allMajorData, setAllMajorData] = useState<AllMajorModel | null>(null);
-  const [department, setDepartment] = useState<DepartmentModel | null>(null);
   const [selectedMajor, setSelectedMajor] = useState<number | null>(null);
-  const [allClassData, setAllClassData] = useState<AllClassModel | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
   const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
@@ -83,19 +83,17 @@ const ClassSchedulePage = () => {
           setIsInitialLoading(true);
         }
 
-        const response = await getAllMajorService({
+        const response = await dispatch(fetchAllMajorService({
           status: Constants.ACTIVE,
           departmentId: depId || undefined,
           ...param,
-        });
+        })).unwrap();
 
         if (response) {
-          setAllMajorData(response);
           if (!selectedMajor && response.content.length > 0) {
             setSelectedMajor(response.content[0].id);
           } else if (selectedMajor && response.content.length === 0) {
             setSelectedMajor(null);
-            setAllClassData(null);
           }
         } else {
           toast.error("Failed to load majors");
@@ -107,7 +105,7 @@ const ClassSchedulePage = () => {
         setHasLoadedOnce(true);
       }
     },
-    [depId, hasLoadedOnce, selectedMajor]
+    [depId, hasLoadedOnce, selectedMajor, dispatch]
   );
 
   const loadClasses = useCallback(
@@ -116,15 +114,13 @@ const ClassSchedulePage = () => {
 
       setIsLoadingClasses(true);
       try {
-        const responseListClass = await getAllClassService({
+        const responseListClass = await dispatch(fetchAllClassService({
           status: Constants.ACTIVE,
           search: search || undefined,
           majorId: majorId,
           pageNo: page || currentPage,
           pageSize: currentPageSize,
-        });
-
-        setAllClassData(responseListClass);
+        })).unwrap();
 
         if (
           responseListClass &&
@@ -140,17 +136,13 @@ const ClassSchedulePage = () => {
         setIsLoadingClasses(false);
       }
     },
-    [currentPage, updateUrlWithPage]
+    [currentPage, currentPageSize, updateUrlWithPage, dispatch]
   );
 
   useEffect(() => {
     if (!depId) return;
-    getDepartmentByIdService(depId).then((response) => {
-      if (response) {
-        setDepartment(response);
-      }
-    });
-  }, [depId]);
+    dispatch(fetchDepartmentByIdService(depId));
+  }, [depId, dispatch]);
 
   useEffect(() => {
     loadMajors({});

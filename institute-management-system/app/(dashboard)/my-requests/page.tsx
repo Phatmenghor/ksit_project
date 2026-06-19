@@ -9,7 +9,6 @@ import { RequestModel } from "@/model/request/request-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
 import { getUserId } from "@/utils/local-storage/user-info/userId";
-import { getAllRequestService } from "@/service/request/request.service";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -31,6 +30,7 @@ import {
   resetFilters,
 } from "@/features/requests/store/slice/my-request-slice";
 import { fetchMyRequestsService } from "@/features/requests/store/thunks/my-request-thunks";
+import { fetchAllRequestsService } from "@/features/requests/store/thunks/request-thunks";
 
 export default function MyRequestsPage() {
   const router = useRouter();
@@ -75,7 +75,14 @@ export default function MyRequestsPage() {
         const counts: Record<string, number> = {};
         for (const type of REQUEST_TYPES) {
           try {
-            const r = await getAllRequestService({ status: type.value, userId: currentUserId, pageNo: 1, pageSize: 1 });
+            const r = await dispatch(
+              fetchAllRequestsService({
+                status: type.value,
+                userId: currentUserId,
+                pageNo: 1,
+                pageSize: 1,
+              })
+            ).unwrap();
             counts[type.value] = r?.totalElements || 0;
           } catch {
             counts[type.value] = 0;
@@ -89,7 +96,7 @@ export default function MyRequestsPage() {
       }
     };
     fetchCounts();
-  }, [currentUserId]);
+  }, [currentUserId, dispatch]);
 
   const handleTypeSelect = (type: RequestType) => {
     setSelectedType(type);

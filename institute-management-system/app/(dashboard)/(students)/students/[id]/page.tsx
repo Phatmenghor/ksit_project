@@ -7,11 +7,15 @@ import { useParams } from "next/navigation";
 import { CircleAlert, FileText } from "lucide-react";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
 import { ROUTE } from "@/constants/routes";
-import { getStudentByIdService } from "@/service/user/student.service";
 import StudentDetails from "@/components/dashboard/users/student/view/tab/student-detail-tab";
-import { StudentByIdModel } from "@/model/user/student/student.respond.model";
 import { TranscriptTabs } from "@/components/dashboard/users/student/view/tab/student-transcript-tab";
 import { StudentProfileSection } from "@/components/dashboard/users/student/view/student-profile";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStudentByIdThunk } from "@/features/students/store/thunks/student-thunks";
+import {
+  selectSelectedStudent,
+  selectStudentOperations,
+} from "@/features/students/store/selectors/student-selectors";
 
 const tabs = [
   {
@@ -27,25 +31,18 @@ const tabs = [
 ];
 
 export default function StudentViewPage() {
+  const dispatch = useAppDispatch();
+  const studentDetail = useAppSelector(selectSelectedStudent);
+  const operations = useAppSelector(selectStudentOperations);
+
   const [activeTab, setActiveTab] = useState("information");
-  const [isLoading, setIsLoading] = useState(true);
-  const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(
-    null
-  );
   const { type, id } = useParams<{ type: string; id: string }>();
 
   const loadInfo = async () => {
-    setIsLoading(true);
     try {
-      const response = await getStudentByIdService(id);
-      if (response) {
-        setStudentDetail(response);
-      } else {
-        toast.error("Error getting student data");
-      }
+      await dispatch(fetchStudentByIdThunk(id)).unwrap();
     } catch (error) {
-    } finally {
-      setIsLoading(false);
+      toast.error("Error getting student data");
     }
   };
 
@@ -64,7 +61,7 @@ export default function StudentViewPage() {
     loadInfo();
   }, [id]);
 
-  if (isLoading) {
+  if (operations.isFetchingDetail) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />

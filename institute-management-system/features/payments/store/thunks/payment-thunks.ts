@@ -46,3 +46,36 @@ export const deletePaymentService = createApiThunk<PaymentModel, number>(
     return response.data.data;
   }
 );
+
+export const fetchPaymentByIdService = createApiThunk<PaymentModel, number>(
+  "payments/fetchById",
+  async (id) => {
+    const response = await axiosClientWithAuth.get<{ data: PaymentModel }>(
+      `/v1/payments/${id}`
+    );
+    return response.data.data;
+  }
+);
+
+export const createPaymentServiceThunk = createApiThunk<
+  PaymentModel,
+  PaymentRequest
+>("payments/create", async (data) => {
+  const response = await axiosClientWithAuth.post<{ data: PaymentModel }>(
+    "/v1/payments",
+    data
+  );
+  return response.data.data;
+});
+
+export const updatePaymentServiceThunk = createApiThunk<
+  PaymentModel,
+  { id: number; data: PaymentRequest }
+>("payments/update", async ({ id, data }) => {
+  const response = await axiosClientWithAuth.put<{ data: PaymentModel }>(
+    `/v1/payments/${id}`,
+    data
+  );
+  return response.data.data;
+});
+

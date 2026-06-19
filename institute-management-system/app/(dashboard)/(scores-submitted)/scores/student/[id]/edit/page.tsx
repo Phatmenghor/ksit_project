@@ -11,24 +11,28 @@ import {
   StudentScoreModel,
   SubmissionScoreModel,
 } from "@/model/score/student-score/student-score.response";
-import {
-  getConfigurationScoreService,
-  intiStudentsScoreService,
-  submittedScoreService,
-  updateStudentsScoreService,
-} from "@/service/score/score.service";
 import { toast } from "sonner";
-import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { ScoreSubmitConfirmDialog } from "@/components/dashboard/student-scores/layout/submit-confirm-dialog";
 import { SubmissionEnum } from "@/constants/constant";
 import { formatDate } from "date-fns";
-import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import StudentScoresTable from "@/components/dashboard/student-scores/student-scores-table";
 import StudentScoresQuickAction from "@/components/dashboard/student-scores/student-scores-quick-action";
 import StudentScoreAlert from "@/components/dashboard/student-scores/student-scores-alert";
 import RenderModeBasedContent from "@/components/dashboard/student-scores/student-scores-mode-based-content";
 import Loading from "@/components/shared/loading";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectSubmittedScoreConfiguration,
+} from "@/features/scores/store/selectors/score-selectors";
+import {
+  getConfigurationScoreThunk,
+  intiStudentsScoreThunk,
+  updateStudentsScoreThunk,
+  submittedScoreThunk,
+} from "@/features/scores/store/thunks/submitted-score-thunks";
+import { fetchScheduleByIdService } from "@/features/schedules/store/thunks/schedule-thunks";
+import { selectSelectedSchedule } from "@/features/schedules/store/selectors/schedule-selectors";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -82,7 +86,7 @@ const calcLocalGrade = (total: number): string => {
 
 // ─── Score config summary card ────────────────────────────────────────────────
 
-function ScoreConfigBadges({ config }: { config: ScoreConfigurationModel | null }) {
+function ScoreConfigBadges({ config }: { config: any | null }) {
   if (!config) return null;
   const items = [
     { label: "Attendance", value: config.attendancePercentage },
@@ -111,8 +115,10 @@ export default function StudentScoreDetailsPage() {
   const params = useParams();
   const id = params?.id ? Number(params.id) : null;
 
-  const [scheduleDetail, setScheduleDetail] = useState<ScheduleModel | null>(null);
-  const [configureScore, setConfigureScore] = useState<ScoreConfigurationModel | null>(null);
+  const dispatch = useAppDispatch();
+  const scheduleDetail = useAppSelector(selectSelectedSchedule);
+  const configureScore = useAppSelector(selectSubmittedScoreConfiguration);
+
   const [score, setScore] = useState<SubmissionScoreModel | null>(null);
   const [originalData, setOriginalData] = useState<Map<number, OriginalSnapshot>>(new Map());
 
@@ -148,31 +154,29 @@ export default function StudentScoreDetailsPage() {
 
   const loadConfig = useCallback(async () => {
     try {
-      const res = await getConfigurationScoreService();
-      setConfigureScore(res);
+      await dispatch(getConfigurationScoreThunk()).unwrap();
     } catch {
       toast.error("Failed to load score configuration");
     }
-  }, []);
+  }, [dispatch]);
 
   const loadSchedule = useCallback(async () => {
     if (!id) return;
     setIsLoading(true);
     try {
-      const res = await getDetailScheduleService(id);
-      setScheduleDetail(res);
+      await dispatch(fetchScheduleByIdService(id)).unwrap();
     } catch {
       toast.error("Failed to load schedule details");
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, dispatch]);
 
   const initializeSession = useCallback(
     async (scheduleId: number, silent = false) => {
       if (!silent) setIsRefreshing(true);
       try {
-        const res = await intiStudentsScoreService({ scheduleId });
+        const res = await dispatch(intiStudentsScoreThunk({ scheduleId })).unwrap();
         applySession(res);
       } catch (err: any) {
         toast.error(err?.message || "Failed to load student scores");
@@ -180,7 +184,7 @@ export default function StudentScoreDetailsPage() {
         if (!silent) setIsRefreshing(false);
       }
     },
-    [applySession]
+    [applySession, dispatch]
   );
 
   // ─── Effects ─────────────────────────────────────────────────────────────
@@ -255,14 +259,16 @@ export default function StudentScoreDetailsPage() {
       const changed = score.studentScores.filter((s) => unsavedChanges.has(s.id));
       const responses = await Promise.all(
         changed.map((item) =>
-          updateStudentsScoreService({
-            id: item.id,
-            attendanceScore: toNum(item.attendanceScore),
-            assignmentScore: toNum(item.assignmentScore),
-            midtermScore: toNum(item.midtermScore),
-            finalScore: toNum(item.finalScore),
-            comments: item.comments || "",
-          })
+          dispatch(
+            updateStudentsScoreThunk({
+              id: item.id,
+              attendanceScore: toNum(item.attendanceScore),
+              assignmentScore: toNum(item.assignmentScore),
+              midtermScore: toNum(item.midtermScore),
+              finalScore: toNum(item.finalScore),
+              comments: item.comments || "",
+            })
+          ).unwrap()
         )
       );
 
@@ -291,7 +297,7 @@ export default function StudentScoreDetailsPage() {
     } finally {
       setIsSavingAll(false);
     }
-  }, [score, unsavedChanges, originalData, isSubmitted]);
+  }, [score, unsavedChanges, originalData, isSubmitted, dispatch]);
 
   // ─── Reset ────────────────────────────────────────────────────────────────
 
@@ -363,10 +369,12 @@ export default function StudentScoreDetailsPage() {
     }
     setIsSubmitting(true);
     try {
-      await submittedScoreService({
-        id: score.id ?? 0,
-        status: SubmissionEnum.SUBMITTED,
-      });
+      await dispatch(
+        submittedScoreThunk({
+          id: score.id ?? 0,
+          status: SubmissionEnum.SUBMITTED,
+        })
+      ).unwrap();
       setScore((prev) => prev ? { ...prev, status: SubmissionEnum.SUBMITTED } : prev);
       setMode("view");
       setIsSubmitted(true);
@@ -380,7 +388,7 @@ export default function StudentScoreDetailsPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [score, unsavedChanges.size]);
+  }, [score, unsavedChanges.size, dispatch]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
 

@@ -73,3 +73,14 @@ export const fetchDepartmentComboboxService = createApiThunk<
   );
   return response.data.data;
 });
+
+export const fetchMyDepartmentsService = createApiThunk<
+  AllDepartmentModel,
+  AllDepartmentFilterModel
+>("departments/fetchMyDepartments", async (params) => {
+  const response = await axiosClientWithAuth.post<{ data: AllDepartmentModel }>(
+    "/v1/departments/my-departments",
+    params
+  );
+  return response.data.data;
+});

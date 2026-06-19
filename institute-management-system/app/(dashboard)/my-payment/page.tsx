@@ -20,7 +20,7 @@ import { StudentByIdModel } from "@/model/user/student/student.respond.model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { PaymentRequest } from "@/model/payment/payment-request-model";
-import { getStudentByTokenService } from "@/service/user/user.service";
+import { fetchStudentProfileThunk } from "@/store/slices/auth-slice";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -45,13 +45,21 @@ export default function PaymentPage() {
   const data = useAppSelector(selectPaymentData);
   const isLoading = useAppSelector(selectPaymentIsLoading);
   const operations = useAppSelector(selectPaymentOperations);
+  const rawStudentDetail = useAppSelector((state) => state.auth.studentProfile);
+  const studentDetail = rawStudentDetail ? {
+    ...rawStudentDetail,
+    classId: rawStudentDetail.studentClass?.id,
+    studentParent: rawStudentDetail.studentParent,
+    studentStudiesHistory: rawStudentDetail.studentStudiesHistory,
+    studentSibling: rawStudentDetail.studentSibling,
+    nationality: rawStudentDetail.nationality,
+  } : null;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<PaymentModel | null>(null);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [initialData, setInitialData] = useState<PaymentFormData | undefined>(undefined);
-  const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(null);
 
   const params = useParams();
   const id = params?.id ? Number(params.id) : 0;
@@ -60,23 +68,8 @@ export default function PaymentPage() {
     usePagination({ baseRoute: ROUTE.PAYMENT.MY_PAYMENT });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await getStudentByTokenService();
-        setStudentDetail({
-          ...response,
-          classId: response.studentClass.id,
-          studentParent: response.studentParent,
-          studentStudiesHistory: response.studentStudiesHistory,
-          studentSibling: response.studentSibling,
-          nationality: response.nationality,
-        });
-      } catch {
-        toast.error("Failed to load profile data");
-      }
-    };
-    fetchProfile();
-  }, []);
+    dispatch(fetchStudentProfileThunk());
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(

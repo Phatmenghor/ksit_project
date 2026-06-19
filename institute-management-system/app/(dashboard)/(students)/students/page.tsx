@@ -45,8 +45,8 @@ import {
 import {
   fetchAllStudentsService,
   deleteStudentService,
+  fetchStudentsListThunk,
 } from "@/features/students/store/thunks/student-thunks";
-import { getAllStudentsListService as getAllStudentsListApi } from "@/service/user/student.service";
 import { useDebounce } from "@/utils/debounce/debounce";
 
 export default function StudentsListPage() {
@@ -133,13 +133,15 @@ export default function StudentsListPage() {
         return;
       }
 
-      const allStudentsRes = await getAllStudentsListApi({
-        academicYear: filters.academicYear,
-        classId: filters.classId,
-        search: filters.search || undefined,
-        status: StatusEnum.ACTIVE,
-        scheduleId: filters.scheduleId,
-      });
+      const allStudentsRes = await dispatch(
+        fetchStudentsListThunk({
+          academicYear: filters.academicYear,
+          classId: filters.classId,
+          search: filters.search || undefined,
+          status: StatusEnum.ACTIVE,
+          scheduleId: filters.scheduleId,
+        })
+      ).unwrap();
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Student list Data");

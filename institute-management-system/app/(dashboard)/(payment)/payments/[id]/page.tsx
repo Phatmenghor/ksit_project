@@ -7,18 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ROUTE } from "@/constants/routes";
 import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
-import { PaymentTableHeader } from "@/constants/payment/payment";
-import {
-  createPaymentService,
-  deletedPaymentService,
-  getAllPaymentService,
-  updatePaymentService,
-} from "@/service/payment/payment.service";
-import {
-  AllPaymentFilterModel,
-  AllPaymentModel,
-  PaymentModel,
-} from "@/model/payment/payment-model";
+import { PaymentModel } from "@/model/payment/payment-model";
+import { PaymentRequest } from "@/model/payment/payment-request-model";
 import {
   PaymentFormData,
   PaymentFormModal,
@@ -26,29 +16,39 @@ import {
 import { useParams, useSearchParams } from "next/navigation";
 import { UserProfileSection } from "@/components/dashboard/users/shared/user-profile";
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
-import { StudentByIdModel } from "@/model/user/student/student.respond.model";
-import { getStudentByIdService } from "@/service/user/student.service";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { DataTable } from "@/components/shared/data-table";
+import { useAppDispatch, useAppSelector } from "@/store";
+import {
+  selectPaymentData,
+  selectPaymentIsLoading,
+  selectPaymentOperations,
+} from "@/features/payments/store/selectors/payment-selectors";
+import {
+  fetchAllPaymentsService,
+  createPaymentServiceThunk,
+  updatePaymentServiceThunk,
+  deletePaymentService,
+} from "@/features/payments/store/thunks/payment-thunks";
+import { fetchStudentByIdThunk } from "@/features/students/store/thunks/student-thunks";
+import { selectSelectedStudent } from "@/features/students/store/selectors/student-selectors";
 
 export default function PaymentPage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const allPaymentData = useAppSelector(selectPaymentData);
+  const isLoading = useAppSelector(selectPaymentIsLoading);
+  const operations = useAppSelector(selectPaymentOperations);
+  const studentDetail = useAppSelector(selectSelectedStudent);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<PaymentModel | null>(
-    null
-  );
-  const [allPaymentData, setAllPaymentData] = useState<AllPaymentModel | null>(
     null
   );
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [initialData, setInitialData] = useState<PaymentFormData | undefined>(
     undefined
-  );
-  const [studentDetail, setStudentDetail] = useState<StudentByIdModel | null>(
-    null
   );
 
   const params = useParams();
@@ -91,116 +91,65 @@ export default function PaymentPage() {
   };
 
   async function handleSubmit(formData: PaymentFormData) {
-    setIsSubmitting(true);
-    let response: any;
+    const payload: PaymentRequest = {
+      item: formData.item,
+      type: formData.type,
+      amount: formData.amount,
+      percentage: formData.percentage,
+      date: new Date().toISOString().split("T")[0],
+      status: "ACTIVE",
+      commend: formData.comment,
+      userId: id,
+    };
 
     try {
       if (modalMode === "add") {
-        const payload = {
-          item: formData.item,
-          type: formData.type,
-          amount: formData.amount,
-          percentage: formData.percentage,
-          date: new Date().toISOString().split("T")[0],
-          status: "ACTIVE",
-          commend: formData.comment,
-          userId: id,
-        };
-
-        response = await createPaymentService(payload);
-        if (response) {
-          setAllPaymentData((prevData) => {
-            if (!prevData) return null;
-            const updatedContent = [response, ...prevData.content];
-            return {
-              ...prevData,
-              content: updatedContent,
-              totalElements: prevData.totalElements + 1,
-            } as AllPaymentModel;
-          });
-
-          toast.success("Payment added successfully");
-          setIsModalOpen(false);
-        }
+        await dispatch(createPaymentServiceThunk(payload)).unwrap();
+        toast.success("Payment added successfully");
+        setIsModalOpen(false);
       } else if (modalMode === "edit" && formData.id) {
-        const payload = {
-          item: formData.item,
-          type: formData.type,
-          amount: formData.amount,
-          percentage: formData.percentage,
-          date: new Date().toISOString().split("T")[0],
-          status: "ACTIVE",
-          commend: formData.comment,
-          userId: id,
-        };
-
-        response = await updatePaymentService(formData.id, payload);
-        if (response) {
-          setAllPaymentData((prevData) => {
-            if (!prevData) return null;
-            const updatedContent = prevData.content.map((dept) =>
-              dept.id === formData.id && response ? response : dept
-            );
-            return {
-              ...prevData,
-              content: updatedContent,
-            } as AllPaymentModel;
-          });
-
-          toast.success("Payment updated successfully");
-          setIsModalOpen(false);
-        }
+        await dispatch(updatePaymentServiceThunk({ id: formData.id, data: payload })).unwrap();
+        toast.success("Payment updated successfully");
+        setIsModalOpen(false);
       }
     } catch (error: any) {
       toast.error(error.message || "An unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
   const loadInfo = async () => {
-    setIsLoading(true);
     try {
-      const response = await getStudentByIdService(id.toString());
-      if (response) {
-        setStudentDetail(response);
-      } else {
-        toast.error("Error getting student data");
-      }
+      await dispatch(fetchStudentByIdThunk(id.toString())).unwrap();
     } catch (error) {
-    } finally {
-      setIsLoading(false);
+      toast.error("Error getting student data");
     }
   };
 
   const payment = useCallback(
-    async (param: AllPaymentFilterModel) => {
-      setIsLoading(true);
+    async (param: any) => {
       try {
-        const response = await getAllPaymentService({
-          status: Constants.ACTIVE,
-          userId: id,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          ...param,
-        });
+        const response = await dispatch(
+          fetchAllPaymentsService({
+            status: Constants.ACTIVE,
+            userId: id,
+            pageNo: currentPage,
+            pageSize: currentPageSize,
+            ...param,
+          })
+        ).unwrap();
 
         if (response) {
-          setAllPaymentData(response);
           // Handle case where current page exceeds total pages
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading payments");
-      } finally {
-        setIsLoading(false);
       }
     },
-    [id, currentPage]
+    [id, currentPage, currentPageSize, dispatch, updateUrlWithPage]
   );
 
   useEffect(() => {
@@ -213,56 +162,39 @@ export default function PaymentPage() {
 
   async function handleDeletePayment() {
     if (!selectedPayment) return;
-    setIsSubmitting(true);
 
     try {
-      const response = await deletedPaymentService(selectedPayment.id);
-      if (response) {
-        setAllPaymentData((prevData) => {
-          if (!prevData) return null;
-          const updatedContent = prevData.content.filter(
-            (item) => item.id !== selectedPayment.id
-          );
-          return {
-            ...prevData,
-            content: updatedContent,
-            totalElements: prevData.totalElements - 1,
-          };
-        });
-
-        toast.success("Payment deleted successfully");
-        if (
-          allPaymentData &&
-          allPaymentData.content.length === 1 &&
-          currentPage > 1
-        ) {
-          updateUrlWithPage(currentPage - 1);
-        } else {
-          await payment({});
-        }
+      await dispatch(deletePaymentService(selectedPayment.id)).unwrap();
+      toast.success("Payment deleted successfully");
+      if (
+        allPaymentData &&
+        allPaymentData.content.length === 1 &&
+        currentPage > 1
+      ) {
+        updateUrlWithPage(currentPage - 1);
       } else {
-        toast.error("Failed to delete payment");
+        await payment({});
       }
     } catch (error) {
       toast.error("An error occurred while deleting the payment.");
     } finally {
-      setIsSubmitting(false);
       setIsDeleteDialogOpen(false);
     }
   }
+
   const getStudentName = () => {
     if (studentDetail?.englishFirstName && studentDetail?.englishLastName) {
       return `${studentDetail.englishFirstName} ${studentDetail.englishLastName}`;
     } else if (studentDetail?.khmerFirstName && studentDetail?.khmerLastName) {
       return `${studentDetail.khmerFirstName} ${studentDetail.khmerLastName}`;
     } else {
-      return `${studentDetail?.username}`;
+      return `${studentDetail?.username || ""}`;
     }
   };
 
   const columns = createPaymentDetailColumns({
     getDisplayIndex,
-    isSubmitting,
+    isSubmitting: operations.isCreating || operations.isUpdating || operations.isDeleting,
     onEdit: handleOpenEditModal,
     onDelete: (pay) => { setSelectedPayment(pay); setIsDeleteDialogOpen(true); },
   });
@@ -325,7 +257,7 @@ export default function PaymentPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
         initialData={initialData}
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isCreating || operations.isUpdating}
       />
 
       <DeleteConfirmationDialog
@@ -334,7 +266,7 @@ export default function PaymentPage() {
         onDelete={handleDeletePayment}
         title="Delete payment"
         description="Are you sure you want to delete the payment : "
-        isSubmitting={isSubmitting}
+        isSubmitting={operations.isDeleting}
       />
     </div>
   );

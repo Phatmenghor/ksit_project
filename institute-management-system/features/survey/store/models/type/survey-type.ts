@@ -17,4 +17,8 @@ export interface SurveyResultState {
   isLoadingHeaders: boolean;
   error: string | null;
   filters: SurveyResultFilters;
+  studentProgress: any | null;
+  operations: {
+    isSubmitting: boolean;
+  };
 }

@@ -9,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { REQUEST_TYPES, RequestType } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { getAllRequestService } from "@/service/request/request.service";
 import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import { StudentModel } from "@/model/user/student/student.request.model";
@@ -76,13 +75,15 @@ export default function RequestPage() {
         const counts: Record<string, number> = {};
         for (const type of REQUEST_TYPES) {
           try {
-            const response = await getAllRequestService({
-              status: type.value,
-              userId: filters.userId,
-              search: searchDebounce,
-              pageNo: 1,
-              pageSize: 1,
-            });
+            const response = await dispatch(
+              fetchAllRequestsService({
+                status: type.value,
+                userId: filters.userId,
+                search: searchDebounce,
+                pageNo: 1,
+                pageSize: 1,
+              })
+            ).unwrap();
             counts[type.value] = response?.totalElements || 0;
           } catch {
             counts[type.value] = 0;
@@ -94,7 +95,7 @@ export default function RequestPage() {
       }
     };
     fetchCounts();
-  }, [filters.userId, searchDebounce]);
+  }, [filters.userId, searchDebounce, dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));

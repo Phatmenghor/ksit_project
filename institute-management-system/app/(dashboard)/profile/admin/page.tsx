@@ -15,26 +15,21 @@ import TeacherShortCourseSection from "@/components/dashboard/users/teachers/vie
 import TeacherLanguageSection from "@/components/dashboard/users/teachers/view/TeacherLanguage";
 import TeacherFamilySection from "@/components/dashboard/users/teachers/view/TeacherFamily";
 import { StaffRespondModel } from "@/model/user/staff/staff.respond.model";
-import { getStaffByTokenService } from "@/service/user/user.service";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStaffProfileThunk } from "@/store/slices/auth-slice";
 
 export default function AdminProfilePage() {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [admin, setAdmin] = React.useState<StaffRespondModel | null>(null);
+  const dispatch = useAppDispatch();
+  const admin = useAppSelector((state) => state.auth.staffProfile);
+  const isLoading = useAppSelector((state) => state.auth.isProfileLoading);
   const params = useParams();
   const adminId = params.id as string;
 
   const loadAdmin = async () => {
-    setIsLoading(true);
     try {
-      const response = await getStaffByTokenService();
-      if (response) {
-        setAdmin(response);
-      } else {
-        toast.error("Error getting admin data");
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
+      await dispatch(fetchStaffProfileThunk()).unwrap();
+    } catch (error: any) {
+      toast.error(error || "Error getting admin data");
     }
   };
 

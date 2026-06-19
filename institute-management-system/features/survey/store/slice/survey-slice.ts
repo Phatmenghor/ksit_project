@@ -1,6 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SurveyResultState } from "../models/type/survey-type";
-import { fetchSurveyResultsService, fetchSurveyHeadersService } from "../thunks/survey-thunks";
+import {
+  fetchSurveyResultsService,
+  fetchSurveyHeadersService,
+  submitSurveyThunk,
+  fetchSurveyExcelService,
+  fetchStudentSurveyThunk,
+} from "../thunks/survey-thunks";
 
 const initialState: SurveyResultState = {
   data: null,
@@ -16,6 +22,10 @@ const initialState: SurveyResultState = {
     startDate: undefined,
     endDate: undefined,
     pageNo: 1,
+  },
+  studentProgress: null,
+  operations: {
+    isSubmitting: false,
   },
 };
 
@@ -82,6 +92,33 @@ const surveySlice = createSlice({
       })
       .addCase(fetchSurveyHeadersService.rejected, (state) => {
         state.isLoadingHeaders = false;
+      });
+
+    builder
+      .addCase(submitSurveyThunk.pending, (state) => {
+        state.operations.isSubmitting = true;
+      })
+      .addCase(submitSurveyThunk.fulfilled, (state) => {
+        state.operations.isSubmitting = false;
+      })
+      .addCase(submitSurveyThunk.rejected, (state, action) => {
+        state.operations.isSubmitting = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(fetchStudentSurveyThunk.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.studentProgress = null;
+      })
+      .addCase(fetchStudentSurveyThunk.fulfilled, (state, action) => {
+        state.studentProgress = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(fetchStudentSurveyThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isLoading = false;
       });
   },
 });

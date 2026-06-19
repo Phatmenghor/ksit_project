@@ -29,3 +29,35 @@ export const fetchSurveyHeadersService = createApiThunk<
   );
   return response.data.data;
 });
+
+export const submitSurveyThunk = createApiThunk<
+  any,
+  { scheduleId: number; data: any }
+>("survey/submit", async ({ scheduleId, data }) => {
+  const response = await axiosClientWithAuth.post<{ data: any }>(
+    `/v1/surveys/schedule/${scheduleId}/submit`,
+    data
+  );
+  return response.data.data;
+});
+
+export const fetchSurveyExcelService = createApiThunk<
+  any,
+  AllSurveyFilterModel
+>("survey/fetchExcel", async (params) => {
+  const response = await axiosClientWithAuth.post<{ data: any }>(
+    "/v1/surveys/reports/active/export",
+    params
+  );
+  return response.data.data;
+});
+
+export const fetchStudentSurveyThunk = createApiThunk<
+  any,
+  { scheduleId: number }
+>("survey/fetchStudentSurvey", async ({ scheduleId }) => {
+  const response = await axiosClientWithAuth.get<{ data: any }>(
+    `/v1/surveys/schedule/${scheduleId}/students-progress`
+  );
+  return response.data.data;
+});

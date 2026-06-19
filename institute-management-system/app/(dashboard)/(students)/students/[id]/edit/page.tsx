@@ -4,91 +4,94 @@ import { ROUTE } from "@/constants/routes";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  editStudentService,
-  getStudentByIdService,
-} from "@/service/user/student.service";
 import StudentForm from "@/components/dashboard/users/student/form/student-form";
 import {
   EditStudentFormData,
   StudentFormSchema,
 } from "@/model/user/student/student.schema";
 import { EditStudentModel } from "@/model/user/student/student.request.model";
-import { cleanField, filterEmptyRows } from "@/utils/map-helper/student";
+import { cleanField } from "@/utils/map-helper/student";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { fetchStudentByIdThunk, updateStudentThunk } from "@/features/students/store/thunks/student-thunks";
+import {
+  selectSelectedStudent,
+  selectStudentOperations,
+} from "@/features/students/store/selectors/student-selectors";
+
 export default function EditSingleStudentPage() {
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const selectedStudent = useAppSelector(selectSelectedStudent);
+  const operations = useAppSelector(selectStudentOperations);
+
   const [initialValues, setInitialValues] = useState<EditStudentFormData>();
   const router = useRouter();
 
   const params = useParams();
   const studentId = params.id as string;
 
-  // 1. Fetch teacher data
+  // 1. Fetch student data
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await getStudentByIdService(studentId);
+    dispatch(fetchStudentByIdThunk(studentId));
+  }, [studentId, dispatch]);
 
-        // Only process studentParent if parentType is missing or array is incomplete
-        let processedStudentParent = response.studentParent || [];
+  // 2. Map student data to form initial values
+  useEffect(() => {
+    if (!selectedStudent) return;
 
-        // Check if we need to fix parentType values
-        const needsTypeAssignment = processedStudentParent.some(
-          (parent: any) => !parent.parentType
-        );
+    const response = selectedStudent;
+    // Only process studentParent if parentType is missing or array is incomplete
+    let processedStudentParent = response.studentParent || [];
 
-        if (needsTypeAssignment || processedStudentParent.length < 2) {
-          // Assign parentType only when missing and ensure we have 2 parents
-          processedStudentParent = [
-            processedStudentParent[0]
-              ? {
-                  ...processedStudentParent[0],
-                  parentType: processedStudentParent[0].parentType || "FATHER",
-                }
-              : {
-                  parentType: "FATHER",
-                  name: "",
-                  phone: "",
-                  job: "",
-                  address: "",
-                  age: "",
-                },
+    // Check if we need to fix parentType values
+    const needsTypeAssignment = processedStudentParent.some(
+      (parent: any) => !parent.parentType
+    );
 
-            processedStudentParent[1]
-              ? {
-                  ...processedStudentParent[1],
-                  parentType: processedStudentParent[1].parentType || "MOTHER",
-                }
-              : {
-                  parentType: "MOTHER",
-                  name: "",
-                  phone: "",
-                  job: "",
-                  address: "",
-                  age: "",
-                },
-          ];
-        }
+    if (needsTypeAssignment || processedStudentParent.length < 2) {
+      // Assign parentType only when missing and ensure we have 2 parents
+      processedStudentParent = [
+        processedStudentParent[0]
+          ? {
+              ...processedStudentParent[0],
+              parentType: processedStudentParent[0].parentType || "FATHER",
+            }
+          : {
+              parentType: "FATHER",
+              name: "",
+              phone: "",
+              job: "",
+              address: "",
+              age: "",
+            },
 
-        setInitialValues({
-          ...response,
-          id: response.id,
-          classId: response.studentClass.id,
-          studentParent: processedStudentParent,
-          studentStudiesHistory: response.studentStudiesHistory,
-          studentSibling: response.studentSibling,
-          nationality: response.nationality,
-        });
-      } catch (error) {
-        toast.error("Failed to load student data");
-      }
-    };
+        processedStudentParent[1]
+          ? {
+              ...processedStudentParent[1],
+              parentType: processedStudentParent[1].parentType || "MOTHER",
+            }
+          : {
+              parentType: "MOTHER",
+              name: "",
+              phone: "",
+              job: "",
+              address: "",
+              age: "",
+            },
+      ];
+    }
 
-    fetchData();
-  }, [studentId]);
+    setInitialValues({
+      ...response,
+      id: response.id,
+      classId: response.studentClass?.id || response.classId,
+      studentParent: processedStudentParent,
+      studentStudiesHistory: response.studentStudiesHistory,
+      studentSibling: response.studentSibling,
+      nationality: response.nationality,
+    });
+  }, [selectedStudent]);
 
   const onSubmit = async (data: EditStudentFormData) => {
-    setLoading(true);
     try {
       // Validate using Zod and get parsed data
       const parsed = StudentFormSchema.safeParse(data);
@@ -159,7 +162,7 @@ export default function EditSingleStudentPage() {
         status: cleanField(formData.status),
       };
 
-      const response = await editStudentService(Number(studentId), payload);
+      const response = await dispatch(updateStudentThunk({ id: Number(studentId), data: payload })).unwrap();
       if (response) {
         toast.success("Student updated successfully");
         router.push(ROUTE.STUDENTS.VIEW(studentId));
@@ -168,8 +171,6 @@ export default function EditSingleStudentPage() {
       }
     } catch (error) {
       toast.error("Failed to update student");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -179,7 +180,7 @@ export default function EditSingleStudentPage() {
       mode="Edit"
       title="Edit Student"
       onSubmit={onSubmit}
-      loading={loading}
+      loading={operations.isUpdating}
       back={ROUTE.STUDENTS.LIST}
       parentLabel="Students"
       onDiscard={() => router.push(ROUTE.STUDENTS.LIST)}

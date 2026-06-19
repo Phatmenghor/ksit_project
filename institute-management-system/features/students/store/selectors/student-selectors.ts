@@ -6,6 +6,7 @@ export const selectStudentIsLoading = (state: RootState) => state.studentList.is
 export const selectStudentError = (state: RootState) => state.studentList.error;
 export const selectStudentFilters = (state: RootState) => state.studentList.filters;
 export const selectStudentOperations = (state: RootState) => state.studentList.operations;
+export const selectSelectedStudent = (state: RootState) => state.studentList.selectedStudent;
 
 export const selectStudentContent = createSelector(
   [selectStudentData],

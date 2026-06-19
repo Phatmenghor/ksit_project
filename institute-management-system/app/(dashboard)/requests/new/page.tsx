@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ROUTE } from "@/constants/routes";
-import { createRequestService } from "@/service/request/request.service";
+import { createRequestThunk } from "@/features/requests/store/thunks/request-thunks";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Send } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store";
 
 export default function CreateRequestPage() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useAppDispatch();
+  const isSubmitting = useAppSelector((state) => state.requests.isCreating);
   const [title, setTitle] = useState("");
   const [requestComment, setRequestComment] = useState("");
 
@@ -27,16 +29,13 @@ export default function CreateRequestPage() {
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      await createRequestService({ title: title.trim(), requestComment: requestComment.trim() || undefined });
+      await dispatch(createRequestThunk({ title: title.trim(), requestComment: requestComment.trim() || undefined })).unwrap();
       toast.success("Request submitted successfully.");
       router.push(ROUTE.REQUESTS);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to submit request. Please try again.";
       toast.error(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

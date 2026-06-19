@@ -5,6 +5,9 @@ import {
   createPaymentByTokenService,
   updatePaymentByTokenService,
   deletePaymentService,
+  fetchPaymentByIdService,
+  createPaymentServiceThunk,
+  updatePaymentServiceThunk,
 } from "../thunks/payment-thunks";
 import { PaymentModel } from "@/model/payment/payment-model";
 
@@ -23,6 +26,7 @@ const initialState: PaymentManagementState = {
     isUpdating: false,
     isDeleting: false,
   },
+  selectedPayment: null,
 };
 
 const paymentSlice = createSlice({
@@ -114,6 +118,57 @@ const paymentSlice = createSlice({
           state.data = state.rollbackSnapshot;
           state.rollbackSnapshot = null;
         }
+      });
+
+    builder
+      .addCase(fetchPaymentByIdService.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.selectedPayment = null;
+      })
+      .addCase(fetchPaymentByIdService.fulfilled, (state, action) => {
+        state.selectedPayment = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(fetchPaymentByIdService.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isLoading = false;
+      });
+
+    builder
+      .addCase(createPaymentServiceThunk.pending, (state) => {
+        state.operations.isCreating = true;
+        state.error = null;
+      })
+      .addCase(createPaymentServiceThunk.fulfilled, (state, action) => {
+        if (state.data) {
+          state.data.content = [action.payload, ...state.data.content];
+          state.data.totalElements += 1;
+          state.data.totalPages = Math.ceil(state.data.totalElements / state.data.pageSize);
+        }
+        state.operations.isCreating = false;
+      })
+      .addCase(createPaymentServiceThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.operations.isCreating = false;
+      });
+
+    builder
+      .addCase(updatePaymentServiceThunk.pending, (state) => {
+        state.operations.isUpdating = true;
+        state.error = null;
+      })
+      .addCase(updatePaymentServiceThunk.fulfilled, (state, action) => {
+        if (state.data) {
+          state.data.content = state.data.content.map((p) =>
+            p.id === action.payload.id ? action.payload : p
+          );
+        }
+        state.operations.isUpdating = false;
+      })
+      .addCase(updatePaymentServiceThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.operations.isUpdating = false;
       });
   },
 });
