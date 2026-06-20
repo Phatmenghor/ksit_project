@@ -2,8 +2,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { TranscriptModel } from "@/model/request/request-transcript";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
-import { exportTranscriptToPDF } from "@/utils/pdf/transcript-pdf-exporter";
-import { exportTranscriptToWord } from "@/utils/word/transcript-word-exporter";
 
 interface UseStudentExportProps {
   transcriptData?: TranscriptModel | null;
@@ -23,16 +21,29 @@ export const useStudentExport = ({
     }
     setIsExporting(true);
     setExportType("word");
+    const loadingToast = toast.loading("Generating Word transcript...");
     try {
-      const loadingToast = toast.loading("Generating Word transcript...");
       const filename =
         (typeof customFilename === "string" ? customFilename : undefined) ||
         `${transcriptData.studentCode}_transcript_${new Date().toISOString().split("T")[0]}.docx`;
-      await exportTranscriptToWord(transcriptData, {}, filename);
+      const res = await fetch("/api/export/transcript/word", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: transcriptData, extra: {}, filename }),
+      });
+      if (!res.ok) throw new Error("Server error");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
       toast.dismiss(loadingToast);
       toast.success("Word transcript exported successfully!");
     } catch (error) {
       console.error("Word export error:", error);
+      toast.dismiss(loadingToast);
       toast.error("Failed to export Word transcript");
     } finally {
       setIsExporting(false);
@@ -52,6 +63,7 @@ export const useStudentExport = ({
       const filename =
         (typeof customFilename === "string" ? customFilename : undefined) ||
         `${transcriptData.studentCode}_transcript_${new Date().toISOString().split("T")[0]}.pdf`;
+      const { exportTranscriptToPDF } = await import("@/utils/pdf/transcript-pdf-exporter");
       await exportTranscriptToPDF(transcriptData, {}, filename);
       toast.dismiss(loadingToast);
       toast.success("PDF transcript exported successfully!");
