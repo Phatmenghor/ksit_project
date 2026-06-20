@@ -22,6 +22,7 @@ import {
   GraduationCap,
   Users,
   FileText,
+  Loader2,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -36,7 +37,7 @@ import { AppIcons } from "@/constants/icons/icon";
 import { DataTable } from "@/components/shared/data-table";
 import { createSubmittedScoreDetailColumns } from "./columns";
 import { formatSemester, formatTime12h } from "@/utils/map-helper/schedule";
-import Link from "next/link";
+import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -93,10 +94,14 @@ function MetaItem({
   value?: string | null;
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-      <span className="text-muted-foreground">{label}:</span>
-      <span className="font-medium text-foreground truncate">{value || "---"}</span>
+    <div className="flex items-start gap-2.5 rounded-lg bg-muted/40 border border-border/50 px-3 py-2.5">
+      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10">
+        <Icon className="h-3.5 w-3.5 text-primary" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-sm font-semibold text-foreground truncate">{value || "—"}</p>
+      </div>
     </div>
   );
 }
@@ -104,39 +109,34 @@ function MetaItem({
 function HeaderSkeleton() {
   return (
     <Card className="border border-border/60 shadow-sm">
-      <CardContent className="p-6 space-y-4">
+      <CardContent className="p-6 space-y-5">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3.5 w-20" />
+          <Skeleton className="h-3.5 w-3" />
+          <Skeleton className="h-3.5 w-28" />
+          <Skeleton className="h-3.5 w-3" />
+          <Skeleton className="h-3.5 w-14" />
         </div>
         <div className="flex items-center gap-3">
           <Skeleton className="h-9 w-9 rounded-full shrink-0" />
-          <Skeleton className="h-7 w-56" />
-          <Skeleton className="h-6 w-20 rounded-full ml-2" />
+          <div className="flex-1 space-y-1.5">
+            <Skeleton className="h-6 w-64" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <Skeleton className="h-6 w-20 rounded-full" />
         </div>
         <Separator />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Skeleton className="h-4 w-4 rounded" />
-              <div className="space-y-1 flex-1">
-                <Skeleton className="h-3 w-14" />
-                <Skeleton className="h-4 w-24" />
-              </div>
+            <div key={i} className="rounded-lg bg-muted/40 border border-border/50 px-3 py-2.5 space-y-1.5">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-4 w-24" />
             </div>
           ))}
         </div>
-        <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-40" />
-          </div>
-          <div className="flex gap-6">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-20" />
-          </div>
+        <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-64" />
         </div>
       </CardContent>
     </Card>
@@ -162,8 +162,12 @@ export default function ScoreSubmissionDetailPage() {
   const id = params.id as string;
   const router = useRouter();
 
-  const { handleExportToPDF, handleExportToExcelWithSchedule } =
-    useExportScoreHandlers(submission, scheduleDetail);
+  const {
+    handleExportToPDF,
+    handleExportToExcelWithSchedule,
+    isExporting,
+    exportType,
+  } = useExportScoreHandlers(submission, scheduleDetail);
 
   const status = submission?.status as SubmissionEnum | undefined;
   const isSubmitted = status === SubmissionEnum.SUBMITTED;
@@ -171,7 +175,7 @@ export default function ScoreSubmissionDetailPage() {
   const isRejected = status === SubmissionEnum.REJECTED;
   const statusCfg = status ? STATUS_CONFIG[status] ?? null : null;
   const totalStudents = submission?.studentScores?.length ?? 0;
-  const isHeaderLoading = isLoadingSubmission;
+  const isActioning = operations.isSubmitting;
 
   // ── Data loading ────────────────────────────────────────────────────────────
 
@@ -197,9 +201,7 @@ export default function ScoreSubmissionDetailPage() {
   }, [id, dispatch]);
 
   const loadSchedule = useCallback(async () => {
-    if (!submission?.scheduleId) {
-      return;
-    }
+    if (!submission?.scheduleId) return;
     try {
       await dispatch(fetchScheduleByIdService(submission.scheduleId)).unwrap();
     } catch {
@@ -252,46 +254,54 @@ export default function ScoreSubmissionDetailPage() {
   return (
     <div className="space-y-4">
 
-      {/* ── Header ── */}
-      {isHeaderLoading ? (
+      {/* ── Header card ── */}
+      {isLoadingSubmission ? (
         <HeaderSkeleton />
       ) : (
-        <Card className="border border-border/60 shadow-sm">
-          <CardContent className="p-6 space-y-4">
+        <Card className="border border-border/60 shadow-sm overflow-hidden">
+          {/* Teal top accent */}
+          <div className="h-1 w-full bg-gradient-to-r from-teal-900 via-teal-700 to-teal-500" />
 
+          <CardContent className="p-6 space-y-5">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
-              <span>/</span>
-              <Link href={ROUTE.SCORES.SUBMITTED} className="hover:text-foreground transition-colors">Score Submitted</Link>
-              <span>/</span>
-              <span className="text-foreground font-medium">Detail</span>
-            </nav>
+            <PageBreadcrumb
+              items={[
+                { label: "Score Submitted", href: ROUTE.SCORES.SUBMITTED },
+                { label: submission?.courseName || "Detail" },
+              ]}
+            />
 
             {/* Title row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-start gap-3 flex-wrap">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full shrink-0"
+                className="h-9 w-9 rounded-full shrink-0 mt-0.5"
                 onClick={() => router.back()}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h1 className="text-xl font-bold text-foreground">
-                {submission?.courseName || "Score Submission Detail"}
-              </h1>
-              {statusCfg && (
-                <Badge variant="outline" className={cn("text-xs font-semibold", statusCfg.className)}>
-                  {statusCfg.label}
-                </Badge>
-              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-xl font-bold text-foreground leading-tight">
+                    {submission?.courseName || "Score Submission Detail"}
+                  </h1>
+                  {statusCfg && (
+                    <Badge variant="outline" className={cn("text-xs font-semibold shrink-0", statusCfg.className)}>
+                      {statusCfg.label}
+                    </Badge>
+                  )}
+                </div>
+                {submission?.classCode && (
+                  <p className="mt-0.5 text-sm text-muted-foreground">Class: {submission.classCode}</p>
+                )}
+              </div>
             </div>
 
             <Separator />
 
-            {/* Submission meta grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Meta grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <MetaItem icon={User} label="Teacher" value={submission?.teacherName} />
               <MetaItem icon={GraduationCap} label="Class" value={submission?.classCode} />
               <MetaItem icon={BookOpen} label="Semester" value={formatSemester(submission?.semester)} />
@@ -304,64 +314,54 @@ export default function ScoreSubmissionDetailPage() {
 
             {/* Schedule detail panel */}
             {(scheduleDetail || isLoadingSchedule) && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="h-3.5 w-1 rounded-full bg-primary" />
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wide">Schedule Info</span>
+                </div>
                 {isLoadingSchedule ? (
-                  <div className="flex gap-6">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-20" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-56" />
+                    <Skeleton className="h-4 w-72" />
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                      <span className="text-sm font-semibold text-amber-700">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <span className="text-sm font-bold text-foreground">
                         {scheduleDetail?.course?.code}
                       </span>
-                      <span className="text-sm text-amber-800">
+                      <span className="text-muted-foreground text-xs">·</span>
+                      <span className="text-sm text-foreground">
                         {scheduleDetail?.course?.nameEn || scheduleDetail?.course?.nameKH}
                       </span>
-                      <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 bg-white">
+                      <Badge variant="outline" className="text-xs border-primary/30 text-primary bg-primary/5">
                         {scheduleDetail?.day}
                       </Badge>
                     </div>
                     <div className="flex flex-wrap gap-x-5 gap-y-2">
-                      <span className="flex items-center gap-1.5 text-sm text-amber-700">
-                        <Clock className="h-3.5 w-3.5" />
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5 text-primary" />
                         {formatTime12h(scheduleDetail?.startTime)} – {formatTime12h(scheduleDetail?.endTime)}
                       </span>
-                      <span className="flex items-center gap-1.5 text-sm text-amber-700">
-                        <Users className="h-3.5 w-3.5" />
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Users className="h-3.5 w-3.5 text-primary" />
                         {[scheduleDetail?.teacher?.khmerFirstName, scheduleDetail?.teacher?.khmerLastName].filter(Boolean).join(" ") ||
                           [scheduleDetail?.teacher?.englishFirstName, scheduleDetail?.teacher?.englishLastName].filter(Boolean).join(" ") ||
-                          "---"}
+                          "—"}
                       </span>
-                      <span className="flex items-center gap-1.5 text-sm text-amber-700">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {scheduleDetail?.room?.name || "---"}
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5 text-primary" />
+                        {scheduleDetail?.room?.name || "—"}
                       </span>
                     </div>
                   </>
                 )}
               </div>
             )}
-
           </CardContent>
         </Card>
       )}
 
-      {/* ── Status banner ── */}
-      {isApproved && (
-        <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          <span>This submission has been <strong>approved</strong> and scores have been recorded in the system.</span>
-        </div>
-      )}
-      {isRejected && (
-        <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>This submission has been <strong>rejected</strong>. Please contact the administrator for more information.</span>
-        </div>
-      )}
 
       {/* ── Approval actions ── */}
       {isSubmitted && (
@@ -381,7 +381,11 @@ export default function ScoreSubmissionDetailPage() {
                 disabled={isActioning}
                 onClick={() => setReturnDialog(true)}
               >
-                <RotateCcw className="h-4 w-4" />
+                {isActioning ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="h-4 w-4" />
+                )}
                 Return
               </Button>
               <Button
@@ -390,7 +394,11 @@ export default function ScoreSubmissionDetailPage() {
                 disabled={isActioning}
                 onClick={() => setApproveDialog(true)}
               >
-                <Check className="h-4 w-4" />
+                {isActioning ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
                 Approve
               </Button>
             </div>
@@ -398,40 +406,54 @@ export default function ScoreSubmissionDetailPage() {
         </Card>
       )}
 
-      {/* ── Student scores ── */}
+      {/* ── Student scores card ── */}
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="px-6 pt-5 pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-7 h-7 rounded-md bg-primary/10">
-                <FileText className="w-4 h-4 text-primary" />
+            {/* Title with teal accent */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-full self-stretch w-1 rounded-full bg-teal-900 shrink-0" />
+              <div>
+                <CardTitle className="text-base font-semibold text-foreground">Student Scores</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {totalStudents} student{totalStudents !== 1 ? "s" : ""} enrolled
+                </p>
               </div>
-              <CardTitle className="text-base font-semibold">Student Scores</CardTitle>
             </div>
 
             {/* Export buttons */}
             {(isApproved || !isSubmitted) && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-muted-foreground hidden sm:inline">Export:</span>
                 <Button
                   size="sm"
                   variant="outline"
                   className="gap-1.5 h-8 text-xs"
+                  disabled={isExporting}
                   onClick={() => handleExportToExcelWithSchedule({ includeComments: false, includeCreatedAt: true })}
                 >
-                  <img src={AppIcons.Excel} alt="Excel" className="h-3.5 w-3.5" />
+                  {isExporting && exportType === "excel" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <img src={AppIcons.Excel} alt="Excel" className="h-3.5 w-3.5" />
+                  )}
                   Excel
-                  <Download className="h-3 w-3" />
+                  {!(isExporting && exportType === "excel") && <Download className="h-3 w-3" />}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   className="gap-1.5 h-8 text-xs"
+                  disabled={isExporting}
                   onClick={() => handleExportToPDF({ includeComments: false })}
                 >
-                  <img src={AppIcons.Pdf} alt="PDF" className="h-3.5 w-3.5" />
+                  {isExporting && exportType === "pdf" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <img src={AppIcons.Pdf} alt="PDF" className="h-3.5 w-3.5" />
+                  )}
                   PDF
-                  <Download className="h-3 w-3" />
+                  {!(isExporting && exportType === "pdf") && <Download className="h-3 w-3" />}
                 </Button>
               </div>
             )}
@@ -440,25 +462,7 @@ export default function ScoreSubmissionDetailPage() {
 
         <Separator />
 
-        {/* Stats row */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm">
-          <span className="text-muted-foreground">
-            Total students: <strong className="text-foreground">{totalStudents}</strong>
-          </span>
-          {submission?.submissionDate && (
-            <>
-              <span className="text-border">|</span>
-              <span className="text-muted-foreground">
-                Submitted:{" "}
-                <strong className="text-foreground">
-                  {formatDate(new Date(submission.submissionDate), "PP")}
-                </strong>
-              </span>
-            </>
-          )}
-        </div>
-
-        <CardContent className="px-6 pb-6 pt-0">
+        <CardContent className="px-6 pb-6 pt-4">
           <DataTable
             data={submission?.studentScores ?? null}
             columns={columns}

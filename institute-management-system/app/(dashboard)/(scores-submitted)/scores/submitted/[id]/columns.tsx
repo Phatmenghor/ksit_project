@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { TableColumn } from "@/components/shared/data-table";
-import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
+import { StudentScoreModel } from "@/model/score/student-score/student-score.response";
 import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
 
-type StudentScore = NonNullable<SubmissionScoreModel["studentScores"]>[number];
+type StudentScore = StudentScoreModel;
 
 export const GRADE_CONFIG: Record<string, string> = {
   A: "bg-green-100 text-green-800 border-green-200",

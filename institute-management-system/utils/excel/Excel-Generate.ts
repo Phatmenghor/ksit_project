@@ -14,7 +14,7 @@ export const exportStudentsToExcel = async (
   worksheet.columns = [
     { header: "Id", key: "id", width: 10 },
     { header: "Username", key: "username", width: 30 },
-    { header: "Identify Number", key: "identifyNumber", width: 30 },
+    { header: "Student ID", key: "identifyNumber", width: 30 },
     { header: "Password", key: "password", width: 30 },
     { header: "classCode", key: "classCode", width: 30 },
     { header: "createdAt", key: "createdAt", width: 40 },

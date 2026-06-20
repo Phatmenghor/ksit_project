@@ -48,6 +48,7 @@ import {
 import { AppIcons } from "@/constants/icons/icon";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
+import { EmptyState } from "@/components/shared/empty-state";
 
 const MySchedulePage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -293,9 +294,11 @@ const MySchedulePage = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No classes scheduled for {selectedDay?.label || "this day"}.
-              </div>
+              <EmptyState
+                icon={Clock}
+                message={`No classes scheduled for ${selectedDay?.label || "this day"}`}
+                description="Try selecting a different day or check back later"
+              />
             )}
           </div>
         )}

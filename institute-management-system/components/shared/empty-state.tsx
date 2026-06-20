@@ -23,8 +23,8 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center", className)}>
-      <div className={cn("mb-4 rounded-full bg-muted p-4", iconClassName)}>
-        <Icon className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
+      <div className={cn("mb-4 rounded-full bg-primary/10 p-4", iconClassName)}>
+        <Icon className="h-8 w-8 text-primary" strokeWidth={1.5} />
       </div>
       <p className="text-sm font-medium text-foreground">{message}</p>
       {description && (

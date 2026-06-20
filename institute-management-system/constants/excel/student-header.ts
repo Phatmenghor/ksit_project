@@ -2,7 +2,7 @@ export const StudentListExcelTableHeader = [
   "ID",
   "Username",
   "Email",
-  "Identify Number",
+  "Student ID",
   "Khmer Full Name",
   "English Full Name",
   "Gender",

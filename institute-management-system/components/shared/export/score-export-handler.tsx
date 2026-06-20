@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { exportSubmissionStudentsToPDF } from "@/utils/generate-file/score/pdf-submission-score";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
-import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
+import { ScoreSubmittedModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { exportApprovedStudentsToExcelWithSchedule } from "@/utils/generate-file/score/excel-submission-score";
 
 // Enhanced export handlers with improved functionality
 export const useExportScoreHandlers = (
-  submission: SubmissionScoreModel | null,
+  submission: ScoreSubmittedModel | null,
   schedule: ScheduleModel | null
 ) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -234,7 +234,7 @@ export const ExportButtonGroup = ({
   submission,
   schedule,
 }: {
-  submission: SubmissionScoreModel;
+  submission: ScoreSubmittedModel;
   schedule: ScheduleModel;
 }) => {
   const {
@@ -348,7 +348,7 @@ export const SimpleExportButtons = ({
   submission,
   schedule,
 }: {
-  submission: SubmissionScoreModel;
+  submission: ScoreSubmittedModel;
   schedule: ScheduleModel;
 }) => {
   const {

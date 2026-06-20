@@ -2,12 +2,12 @@ import { useExportScoreHandlers } from "@/components/shared/export/score-export-
 import { Button } from "@/components/ui/button";
 import { AppIcons } from "@/constants/icons/icon";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
-import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
-import { Download, Edit, Eye } from "lucide-react";
+import { ScoreSubmittedModel } from "@/model/score/submitted-score/submitted-score.response.model";
+import { Download, Edit, Eye, Loader2 } from "lucide-react";
 
 interface ModeBasedContentProps {
   mode: "view" | "edit-score";
-  score: SubmissionScoreModel | null;
+  score: ScoreSubmittedModel | null;
   scheduleDetail: ScheduleModel | null;
   setMode: (mode: "view" | "edit-score") => void;
   isSubmittingToStaff: boolean;
@@ -22,14 +22,12 @@ export default function RenderModeBasedContent({
   scheduleDetail,
   setIsSubmittedDialogOpen,
 }: ModeBasedContentProps) {
-  const { handleExportToExcel, handleExportToPDF } = useExportScoreHandlers(
-    score,
-    scheduleDetail
-  );
+  const { handleExportToExcel, handleExportToPDF, isExporting, exportType } =
+    useExportScoreHandlers(score, scheduleDetail);
 
   if (isSubmittingToStaff) {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 flex-wrap">
         <span className="text-muted-foreground text-sm font-medium">Export:</span>
         <Button
           onClick={() =>
@@ -37,10 +35,15 @@ export default function RenderModeBasedContent({
           }
           variant="outline"
           className="gap-2"
+          disabled={isExporting}
         >
-          <img src={AppIcons.Excel} alt="Excel" className="h-4 w-4" />
+          {isExporting && exportType === "excel" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <img src={AppIcons.Excel} alt="Excel" className="h-4 w-4" />
+          )}
           <span>Excel</span>
-          <Download className="w-4 h-4" />
+          {!(isExporting && exportType === "excel") && <Download className="w-4 h-4" />}
         </Button>
         <Button
           onClick={() =>
@@ -48,10 +51,15 @@ export default function RenderModeBasedContent({
           }
           variant="outline"
           className="gap-2"
+          disabled={isExporting}
         >
-          <img src={AppIcons.Pdf} alt="PDF" className="h-4 w-4" />
+          {isExporting && exportType === "pdf" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <img src={AppIcons.Pdf} alt="PDF" className="h-4 w-4" />
+          )}
           <span>PDF</span>
-          <Download className="w-4 h-4" />
+          {!(isExporting && exportType === "pdf") && <Download className="w-4 h-4" />}
         </Button>
       </div>
     );
@@ -71,11 +79,7 @@ export default function RenderModeBasedContent({
         </Button>
       )}
       <Button onClick={() => setIsSubmittedDialogOpen(true)} className="gap-2">
-        <img
-          src={AppIcons.score_submit}
-          alt="Submit"
-          className="h-4 w-4"
-        />
+        <img src={AppIcons.score_submit} alt="Submit" className="h-4 w-4" />
         Submit Score
       </Button>
     </div>

@@ -41,7 +41,7 @@ export function createAttendanceRecordDetailColumns({
 }: AttendanceRecordDetailColumnsProps): TableColumn<AttendanceHistoryModel>[] {
   return [
     { key: "no", label: "#", render: (_, index) => getDisplayIndex(index) },
-    { key: "identifyNumber", label: "Identify Number", render: (h) => h.identifyNumber || "---" },
+    { key: "identifyNumber", label: "Student ID", render: (h) => h.identifyNumber || "---" },
     { key: "studentName", label: "Student Name", render: (h) => h.studentName || "---" },
     { key: "teacherName", label: "Teacher Name", render: (h) => h.teacherName || "---" },
     { key: "courseName", label: "Course Name", render: (h) => h.courseName || "---" },

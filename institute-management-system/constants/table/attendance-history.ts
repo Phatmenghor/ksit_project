@@ -1,6 +1,6 @@
 export const AttendanceHistoryTableHeader = [
   { label: "#", className: "w-[5%]" },
-  { label: "identifyNumber", className: "w-[15%]" },
+  { label: "Student ID", className: "w-[15%]" },
   { label: "Student Name", className: "w-[20%]" },
   { label: "Teacher Name", className: "w-[20%]" },
   { label: "Course", className: "w-20%" },

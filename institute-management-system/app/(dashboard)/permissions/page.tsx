@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MenuModel } from "@/model/menu/menu-respond";
 import { StaffModel } from "@/model/user/staff/staff.respond.model";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, ShieldAlert } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { UserPermissionRequest } from "@/model/permission/permission-request-model";
@@ -14,6 +14,7 @@ import MenuPermissionItem from "@/components/dashboard/Role&Permission/sections/
 import UserRoleManagement from "@/components/dashboard/Role&Permission/sections/user-roles";
 import { Separator } from "@/components/ui/separator";
 import Loading from "@/components/shared/loading";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectPermissionMenuData,
@@ -229,15 +230,11 @@ export default function Permissions() {
                       />
                     ))
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center h-full">
-                      <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        No menu items available to configure permissions.
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Please check your menu data or contact support if this persists.
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={ShieldAlert}
+                      message="No menu items available"
+                      description="No menu items available to configure permissions. Please check your menu data or contact support."
+                    />
                   )}
                 </div>
               </div>

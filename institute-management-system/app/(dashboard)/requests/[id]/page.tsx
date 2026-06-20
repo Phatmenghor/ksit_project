@@ -24,7 +24,7 @@ import {
   Check,
   Info,
   FileText,
-  Download,
+  FileType2,
   User,
   GraduationCap,
   ChevronDown,
@@ -81,9 +81,11 @@ export default function StudentDetail() {
   const transcriptReqData = useAppSelector(selectRequestTranscript);
 
   const {
-    exportAcademicTranscript,
+    exportTranscriptAsWord,
+    exportTranscriptAsPDF,
     isExporting,
-    canExportAcademic,
+    exportType,
+    canExport,
   } = useStudentExport({
     studentDetail: student,
     transcriptData: transcriptReqData,
@@ -458,23 +460,43 @@ export default function StudentDetail() {
         <Card className="bg-white shadow-sm border border-gray-100 p-6 space-y-4 mt-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <h3 className="text-sm font-semibold text-gray-800">Student Transcript</h3>
-            <Button
-              disabled={!canExportAcademic || isExporting}
-              onClick={() => exportAcademicTranscript()}
-              className="flex items-center gap-2 rounded-full px-4 shadow-sm bg-primary hover:bg-primary/95 text-white h-9 text-xs"
-            >
-              {isExporting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <Download className="h-3.5 w-3.5" />
-                  Export Transcript
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={!canExport || isExporting}
+                onClick={() => exportTranscriptAsWord()}
+                className="flex items-center gap-2 rounded-full px-4 shadow-sm bg-primary hover:bg-primary/95 text-white h-9 text-xs"
+              >
+                {isExporting && exportType === "word" ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <FileType2 className="h-3.5 w-3.5" />
+                    Export Word
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!canExport || isExporting}
+                onClick={() => exportTranscriptAsPDF()}
+                className="flex items-center gap-2 rounded-full px-4 shadow-sm h-9 text-xs"
+              >
+                {isExporting && exportType === "pdf" ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-3.5 w-3.5" />
+                    Export PDF
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           <RequestTranscript studentId={requestData.user?.id} />
         </Card>

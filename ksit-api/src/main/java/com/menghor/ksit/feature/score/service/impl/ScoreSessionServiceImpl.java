@@ -21,6 +21,7 @@ import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import com.menghor.ksit.feature.school.repository.ScheduleRepository;
+import com.menghor.ksit.feature.score.dto.response.ScoreSessionSummaryDto;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
@@ -151,7 +152,7 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     }
 
     @Override
-    public CustomPaginationResponseDto<ScoreSessionResponseDto> getAllScoreSessions(ScoreSessionFilterDto filterDto) {
+    public CustomPaginationResponseDto<ScoreSessionSummaryDto> getAllScoreSessions(ScoreSessionFilterDto filterDto) {
         log.info("Fetching all score sessions, page={}, size={}", filterDto.getPageNo(), filterDto.getPageSize());
 
         Pageable pageable = PaginationUtils.createPageable(
@@ -174,13 +175,13 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
                 ? List.of()
                 : scoreSessionRepository.findByIdInWithDetails(ids);
 
-        // Preserve ordering from Phase 1
+        // Preserve ordering from Phase 1 and use summary mapper (no studentScores in response)
         Map<Long, ScoreSessionEntity> sessionMap = sessions.stream()
                 .collect(Collectors.toMap(ScoreSessionEntity::getId, s -> s));
-        List<ScoreSessionResponseDto> content = ids.stream()
+        List<ScoreSessionSummaryDto> content = ids.stream()
                 .map(id -> sessionMap.getOrDefault(id, idPage.getContent().stream()
                         .filter(s -> s.getId().equals(id)).findFirst().orElseThrow()))
-                .map(scoreSessionMapper::toDto)
+                .map(scoreSessionMapper::toSummaryDto)
                 .collect(Collectors.toList());
 
         return new CustomPaginationResponseDto<>(

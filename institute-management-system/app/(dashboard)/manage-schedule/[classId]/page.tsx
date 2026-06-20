@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
-import { Copy } from "lucide-react";
+import { Copy, CalendarX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DAYS_OF_WEEK, DayType, SemesterFilter, StatusEnum } from "@/constants/constant";
 import Loading from "@/components/shared/loading";
@@ -24,6 +24,7 @@ import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
 import DuplicateScheduleModal from "@/components/dashboard/manage-schedule/duplicate-schedule-modal";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
+import { EmptyState } from "@/components/shared/empty-state";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
@@ -317,9 +318,11 @@ const AllSchedulePage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No classes scheduled for {selectedDay?.label || "this day"}.
-                </div>
+                <EmptyState
+                  icon={CalendarX}
+                  message={`No classes scheduled for ${selectedDay?.label || "this day"}`}
+                  description="Try selecting a different day or check back later"
+                />
               )}
             </div>
           )}

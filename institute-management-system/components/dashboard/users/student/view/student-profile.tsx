@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
 import { getInitials } from "@/lib/utils";
-import { Download } from "lucide-react";
+import { FileText, FileType2, Loader2 } from "lucide-react";
 import { getDetailRequestTranscriptService } from "@/service/request/request.service";
 import { TranscriptModel } from "@/model/request/request-transcript";
 import { useStudentExport } from "@/hooks/use-student-export";
@@ -68,7 +68,7 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
     fetchTranscriptData();
   }, [fetchTranscriptData]);
 
-  const { exportAcademicTranscript, isExporting, canExportAcademic } = useStudentExport({
+  const { exportTranscriptAsWord, exportTranscriptAsPDF, isExporting, exportType, canExport } = useStudentExport({
     transcriptData,
     studentDetail: param || undefined,
   });
@@ -107,21 +107,39 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
           </Badge>
         </div>
 
-        <div className="pt-3">
+        <div className="pt-3 flex flex-col gap-2 w-full items-center">
           <Button
-            disabled={!canExportAcademic || isExporting}
-            onClick={() => exportAcademicTranscript()}
-            className="flex items-center gap-2 rounded-full px-4 shadow-md"
+            disabled={!canExport || isExporting}
+            onClick={() => exportTranscriptAsWord()}
+            className="flex items-center gap-2 rounded-full px-4 shadow-md w-full justify-center"
           >
-            {isExporting ? (
+            {isExporting && exportType === "word" ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Exporting...
               </>
             ) : (
               <>
-                <Download className="h-4 w-4" />
-                Export Transcript
+                <FileType2 className="h-4 w-4" />
+                Export Word
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={!canExport || isExporting}
+            onClick={() => exportTranscriptAsPDF()}
+            className="flex items-center gap-2 rounded-full px-4 shadow-md w-full justify-center"
+          >
+            {isExporting && exportType === "pdf" ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4" />
+                Export PDF
               </>
             )}
           </Button>

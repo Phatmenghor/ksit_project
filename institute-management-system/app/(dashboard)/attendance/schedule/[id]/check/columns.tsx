@@ -65,7 +65,7 @@ export function createAttendanceCheckColumns({
     },
     {
       key: "identifyNumber",
-      label: "Student IdentifyNumber",
+      label: "Student ID",
       render: (student) => student.identifyNumber,
     },
     {

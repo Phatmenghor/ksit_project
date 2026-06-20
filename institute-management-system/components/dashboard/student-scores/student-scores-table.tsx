@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
+import { ScoreSubmittedModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { useRouter } from "next/navigation";
 import { ROUTE } from "@/constants/routes";
@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 interface TableProps {
   mode: string;
-  score: SubmissionScoreModel | null;
+  score: ScoreSubmittedModel | null;
   isSubmitting: boolean;
   unsavedChanges: Set<number>;
   isSubmitted: boolean;

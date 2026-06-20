@@ -2,21 +2,22 @@
 
 import StudentScoreHeader from "@/components/dashboard/student-scores/layout/header-section";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle, Users } from "lucide-react";
+import { CheckCircle, Users, UserX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import {
   StudentScoreModel,
-  SubmissionScoreModel,
 } from "@/model/score/student-score/student-score.response";
+import { ScoreSubmittedModel } from "@/model/score/submitted-score/submitted-score.response.model";
 import { toast } from "sonner";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { ScoreSubmitConfirmDialog } from "@/components/dashboard/student-scores/layout/submit-confirm-dialog";
 import { SubmissionEnum } from "@/constants/constant";
 import { formatDate } from "date-fns";
 import StudentScoresTable from "@/components/dashboard/student-scores/student-scores-table";
+import { EmptyState } from "@/components/shared/empty-state";
 import StudentScoresQuickAction from "@/components/dashboard/student-scores/student-scores-quick-action";
 import StudentScoreAlert from "@/components/dashboard/student-scores/student-scores-alert";
 import RenderModeBasedContent from "@/components/dashboard/student-scores/student-scores-mode-based-content";
@@ -119,7 +120,7 @@ export default function StudentScoreDetailsPage() {
   const scheduleDetail = useAppSelector(selectSelectedSchedule);
   const configureScore = useAppSelector(selectSubmittedScoreConfiguration);
 
-  const [score, setScore] = useState<SubmissionScoreModel | null>(null);
+  const [score, setScore] = useState<ScoreSubmittedModel | null>(null);
   const [originalData, setOriginalData] = useState<Map<number, OriginalSnapshot>>(new Map());
 
   const [mode, setMode] = useState<"view" | "edit-score">("view");
@@ -137,7 +138,7 @@ export default function StudentScoreDetailsPage() {
 
   // ─── Apply session ────────────────────────────────────────────────────────
 
-  const applySession = useCallback((response: SubmissionScoreModel) => {
+  const applySession = useCallback((response: ScoreSubmittedModel) => {
     setScore(response);
     setIsInitialized(true);
     setMode(getModeFromStatus(response.status));
@@ -474,9 +475,11 @@ export default function StudentScoreDetailsPage() {
             />
 
             {isInitialized && totalStudents === 0 && (
-              <div className="text-center py-14 text-muted-foreground text-sm">
-                No students are enrolled in this class yet.
-              </div>
+              <EmptyState
+                icon={UserX}
+                message="No students enrolled"
+                description="No students are enrolled in this class yet."
+              />
             )}
           </CardContent>
         </Card>

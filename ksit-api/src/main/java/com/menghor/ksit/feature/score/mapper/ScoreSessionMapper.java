@@ -1,15 +1,17 @@
 package com.menghor.ksit.feature.score.mapper;
 
 import com.menghor.ksit.feature.score.dto.response.ScoreSessionResponseDto;
+import com.menghor.ksit.feature.score.dto.response.ScoreSessionSummaryDto;
 import com.menghor.ksit.feature.score.models.ScoreSessionEntity;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.master.model.ClassEntity;
 import com.menghor.ksit.feature.school.model.CourseEntity;
-import com.menghor.ksit.feature.school.model.ScheduleEntity;
+import com.menghor.ksit.feature.score.models.StudentScoreEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
+import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {StudentScoreMapper.class})
 public interface ScoreSessionMapper {
@@ -26,6 +28,18 @@ public interface ScoreSessionMapper {
     @Mapping(source = "schedule.course", target = "courseName", qualifiedByName = "mapCourseName")
     @Mapping(source = "studentScores", target = "studentScores")
     ScoreSessionResponseDto toDto(ScoreSessionEntity entity);
+
+    /** Lightweight mapping for list views — omits studentScores, includes count only. */
+    @Mapping(source = "schedule.id", target = "scheduleId")
+    @Mapping(source = "teacher.id", target = "teacherId")
+    @Mapping(source = "teacher", target = "teacherName", qualifiedByName = "mapTeacherName")
+    @Mapping(source = "schedule.classes.id", target = "classId")
+    @Mapping(source = "schedule.classes", target = "classCode", qualifiedByName = "mapClassCode")
+    @Mapping(source = "schedule.course.id", target = "courseId")
+    @Mapping(source = "schedule.semester.semester", target = "semester")
+    @Mapping(source = "schedule.course", target = "courseName", qualifiedByName = "mapCourseName")
+    @Mapping(source = "studentScores", target = "studentCount", qualifiedByName = "mapStudentCount")
+    ScoreSessionSummaryDto toSummaryDto(ScoreSessionEntity entity);
 
     @Named("mapTeacherName")
     default String mapTeacherName(UserEntity teacher) {
@@ -59,5 +73,10 @@ public interface ScoreSessionMapper {
         }
         return course.getNameEn() != null ? course.getNameEn() :
                 course.getNameKH() != null ? course.getNameKH() : "Course #" + course.getId();
+    }
+
+    @Named("mapStudentCount")
+    default Integer mapStudentCount(List<StudentScoreEntity> studentScores) {
+        return studentScores != null ? studentScores.size() : 0;
     }
 }

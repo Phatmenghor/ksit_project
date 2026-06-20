@@ -6,6 +6,7 @@ import com.menghor.ksit.feature.score.dto.request.ScoreConfigurationRequestDto;
 import com.menghor.ksit.feature.score.dto.request.ScoreSessionRequestDto;
 import com.menghor.ksit.feature.score.dto.response.ScoreConfigurationResponseDto;
 import com.menghor.ksit.feature.score.dto.response.ScoreSessionResponseDto;
+import com.menghor.ksit.feature.score.dto.response.ScoreSessionSummaryDto;
 import com.menghor.ksit.feature.score.dto.response.StudentScoreResponseDto;
 import com.menghor.ksit.feature.score.dto.update.ScoreSessionUpdateDto;
 import com.menghor.ksit.feature.score.dto.update.StudentScoreUpdateDto;
@@ -71,10 +72,10 @@ public class ScoreController {
     }
 
     @PostMapping("/all")
-    public ApiResponse<CustomPaginationResponseDto<ScoreSessionResponseDto>> getAllScoreSessions(
+    public ApiResponse<CustomPaginationResponseDto<ScoreSessionSummaryDto>> getAllScoreSessions(
             @Valid @RequestBody ScoreSessionFilterDto filterDto) {
         log.info("Get all score sessions request received");
-        CustomPaginationResponseDto<ScoreSessionResponseDto> response = scoreSessionService.getAllScoreSessions(filterDto);
+        CustomPaginationResponseDto<ScoreSessionSummaryDto> response = scoreSessionService.getAllScoreSessions(filterDto);
         return new ApiResponse<>("success", "Score sessions retrieved successfully", response);
     }
 

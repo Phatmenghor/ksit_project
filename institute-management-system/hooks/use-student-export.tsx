@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { TranscriptModel } from "@/model/request/request-transcript";
-import { AcademicTranscriptExporter } from "@/utils/excel/academic-transcript-exporter";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
+import { exportTranscriptToPDF } from "@/utils/pdf/transcript-pdf-exporter";
+import { exportTranscriptToWord } from "@/utils/word/transcript-word-exporter";
 
 interface UseStudentExportProps {
   transcriptData?: TranscriptModel | null;
@@ -11,50 +12,63 @@ interface UseStudentExportProps {
 
 export const useStudentExport = ({
   transcriptData,
-  studentDetail,
 }: UseStudentExportProps) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [exportType, setExportType] = useState<"word" | "pdf" | null>(null);
 
-  // ========== ACADEMIC TRANSCRIPT EXPORT ==========
-  const exportAcademicTranscript = async (customFilename?: string) => {
+  const exportTranscriptAsWord = async (customFilename?: string) => {
     if (!transcriptData) {
       toast.error("No academic data available for export");
       return;
     }
-
     setIsExporting(true);
+    setExportType("word");
     try {
-      const loadingToast = toast.loading("Generating academic transcript...");
-
+      const loadingToast = toast.loading("Generating Word transcript...");
       const filename =
         (typeof customFilename === "string" ? customFilename : undefined) ||
-        `${transcriptData.studentCode}_academic_transcript_${
-          new Date().toISOString().split("T")[0]
-        }.xlsx`;
-
-      await AcademicTranscriptExporter.exportToExcel(
-        transcriptData,
-        studentDetail,
-        filename
-      );
-
+        `${transcriptData.studentCode}_transcript_${new Date().toISOString().split("T")[0]}.docx`;
+      await exportTranscriptToWord(transcriptData, {}, filename);
       toast.dismiss(loadingToast);
-      toast.success("Academic transcript exported successfully!");
+      toast.success("Word transcript exported successfully!");
     } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Failed to export academic transcript");
+      console.error("Word export error:", error);
+      toast.error("Failed to export Word transcript");
     } finally {
       setIsExporting(false);
+      setExportType(null);
     }
   };
 
-  // ========== RETURN VALUES ==========
-  return {
-    // Academic exports
-    exportAcademicTranscript,
+  const exportTranscriptAsPDF = async (customFilename?: string) => {
+    if (!transcriptData) {
+      toast.error("No academic data available for export");
+      return;
+    }
+    setIsExporting(true);
+    setExportType("pdf");
+    try {
+      const loadingToast = toast.loading("Generating PDF transcript...");
+      const filename =
+        (typeof customFilename === "string" ? customFilename : undefined) ||
+        `${transcriptData.studentCode}_transcript_${new Date().toISOString().split("T")[0]}.pdf`;
+      await exportTranscriptToPDF(transcriptData, {}, filename);
+      toast.dismiss(loadingToast);
+      toast.success("PDF transcript exported successfully!");
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast.error("Failed to export PDF transcript");
+    } finally {
+      setIsExporting(false);
+      setExportType(null);
+    }
+  };
 
-    // Status flags
+  return {
+    exportTranscriptAsWord,
+    exportTranscriptAsPDF,
     isExporting,
-    canExportAcademic: !!transcriptData,
+    exportType,
+    canExport: !!transcriptData,
   };
 };

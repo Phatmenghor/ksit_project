@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
-import { Clock } from "lucide-react";
+import { Clock, CalendarX } from "lucide-react";
 import { DAYS_OF_WEEK, DayType, SemesterFilter } from "@/constants/constant";
 import Loading from "@/components/shared/loading";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
@@ -32,6 +32,7 @@ import {
 import { fetchMySchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { StatusEnum } from "@/constants/constant";
+import { EmptyState } from "@/components/shared/empty-state";
 
 const WEEKDAY_VALUES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
@@ -198,15 +199,11 @@ const ScheduleAllPage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <div className="mb-4">
-                    <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-                      <Clock className="h-8 w-8 text-amber-500" />
-                    </div>
-                  </div>
-                  <p className="text-lg font-medium">No classes scheduled for {selectedDay?.label}</p>
-                  <p className="text-sm mt-2 opacity-60">Try selecting a different day or check back later</p>
-                </div>
+                <EmptyState
+                  icon={CalendarX}
+                  message={`No classes scheduled for ${selectedDay?.label}`}
+                  description="Try selecting a different day or check back later"
+                />
               )}
             </div>
           )}

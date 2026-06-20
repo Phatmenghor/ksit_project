@@ -20,7 +20,7 @@ export const TeacherTableHeader = [
   { label: "Username", className: "max-w-[20%]" },
   { label: "Fullname (KH)", className: "max-w-[20%]" },
   { label: "Fullname (EN)", className: "max-w-[20%]" },
-  { label: "Teacher Identifier", className: "max-w-[20%]" },
+  { label: "Teacher ID", className: "max-w-[20%]" },
   { label: "Gender", className: "max-w-[20%]" },
   { label: "Date Of Birth", className: "max-w-[20%]" },
   { label: "Phone Number", className: "max-w-[20%]" },

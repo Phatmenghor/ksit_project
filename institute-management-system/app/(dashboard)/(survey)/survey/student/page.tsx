@@ -4,13 +4,14 @@ import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
-import { Clock } from "lucide-react";
+import { Clock, CalendarX } from "lucide-react";
 import { DAYS_OF_WEEK, DayType, SemesterFilter, StatusEnum } from "@/constants/constant";
 import Loading from "@/components/shared/loading";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
+import { EmptyState } from "@/components/shared/empty-state";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
@@ -210,15 +211,11 @@ const ScheduleAllPage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <div className="mb-4">
-                    <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
-                      <Clock className="h-8 w-8 text-amber-500" />
-                    </div>
-                  </div>
-                  <p className="text-lg font-medium">No classes scheduled for {selectedDay?.label}</p>
-                  <p className="text-sm mt-2 opacity-60">Try selecting a different day or check back later</p>
-                </div>
+                <EmptyState
+                  icon={CalendarX}
+                  message={`No classes scheduled for ${selectedDay?.label}`}
+                  description="Try selecting a different day or check back later"
+                />
               )}
             </div>
           )}
