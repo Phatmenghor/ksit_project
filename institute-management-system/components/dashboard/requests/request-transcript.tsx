@@ -13,48 +13,28 @@ import { formatSemester } from "@/constants/format-enum/format-semester";
 import { formatYearLevel } from "@/constants/format-enum/format-year-level";
 import { RequestTranscriptTableHeader } from "@/constants/table/request";
 import { TranscriptModel } from "@/model/request/request-transcript";
-import { getDetailRequestTranscriptService } from "@/service/request/request.service";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { selectRequestTranscript, selectRequestIsFetchingTranscript } from "@/features/requests/store/selectors/request-selectors";
+import { fetchRequestTranscriptThunk } from "@/features/requests/store/thunks/request-thunks";
 
 interface RequestParam {
   studentId?: number;
 }
 
 export function RequestTranscript(param: RequestParam) {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [transcriptReqData, setTranscriptReqData] =
-    useState<TranscriptModel | null>(null);
-
-  const fetchTranscriptReq = useCallback(async () => {
-    // Check if studentId exists and is valid
-    if (!param.studentId || param.studentId <= 0) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await getDetailRequestTranscriptService(param.studentId);
-
-      // Check if response is valid
-      if (!response) {
-        toast.error("No transcript data found");
-        return;
-      }
-
-      setTranscriptReqData(response);
-    } catch (error: any) {
-      toast.error("Error occurred while loading transcript");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [param.studentId]);
+  const dispatch = useAppDispatch();
+  const transcriptReqData = useAppSelector(selectRequestTranscript);
+  const isFetching = useAppSelector(selectRequestIsFetchingTranscript);
 
   useEffect(() => {
-    fetchTranscriptReq();
-  }, [fetchTranscriptReq]);
+    if (param.studentId && param.studentId > 0 && !transcriptReqData && !isFetching) {
+      dispatch(fetchRequestTranscriptThunk(param.studentId));
+    }
+  }, [param.studentId, transcriptReqData, isFetching, dispatch]);
+
+  const isLoading = isFetching && !transcriptReqData;
 
   const leftColumnData = [
     { label: "Student ID", value: transcriptReqData?.studentCode || "---" },

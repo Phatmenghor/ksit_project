@@ -22,53 +22,13 @@ import {
 } from "@/model/master-data/class/all-class-model";
 import { ClassCard } from "@/components/dashboard/schedule/class/class-card";
 import Loading from "@/components/shared/loading";
+import { EmptyState } from "@/components/shared/empty-state";
 import { AppIcons } from "@/constants/icons/icon";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchAllMajorService } from "@/features/master-data/store/thunks/major-thunks";
 import { fetchMyClassesThunk } from "@/features/master-data/store/thunks/class-thunks";
 
-// Empty state components
-const EmptyMajorsState = ({ searchQuery }: { searchQuery: string }) => (
-  <Card className="mt-6">
-    <CardContent className="p-12">
-      <div className="text-center space-y-4">
-        <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-          <BookOpen className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">No Majors Found</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            {searchQuery
-              ? `No majors match your search "${searchQuery}". Try adjusting your search criteria.`
-              : "No majors are available for this department at the moment."}
-          </p>
-        </div>
-        {searchQuery && (
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Clear Search
-          </Button>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const EmptyClassesState = ({ majorName }: { majorName?: string }) => (
-  <div className="text-center py-12 space-y-4">
-    <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-      <Users className="h-8 w-8 text-muted-foreground" />
-    </div>
-    <div className="space-y-2">
-      <h3 className="text-lg font-semibold">No Classes Available</h3>
-      <p className="text-muted-foreground max-w-md mx-auto">
-        {majorName
-          ? `No classes are currently available for ${majorName}. Classes may be added later.`
-          : "No classes are available for the selected major at this time."}
-      </p>
-    </div>
-  </div>
-);
 
 const MyClassPage = () => {
   const dispatch = useAppDispatch();
@@ -273,8 +233,28 @@ const MyClassPage = () => {
           </Button>
         </div>
       ) : (
-        // Only show empty state if we've loaded at least once and there's actually no data
-        hasLoadedOnce && <EmptyMajorsState searchQuery={searchQuery} />
+        hasLoadedOnce && (
+          <Card className="mt-6">
+            <CardContent className="p-0">
+              <EmptyState
+                icon={BookOpen}
+                message="No Majors Found"
+                description={
+                  searchQuery
+                    ? `No majors match your search "${searchQuery}". Try adjusting your search criteria.`
+                    : "No majors are available for this department at the moment."
+                }
+                action={
+                  searchQuery ? (
+                    <Button variant="outline" onClick={() => window.location.reload()}>
+                      Clear Search
+                    </Button>
+                  ) : undefined
+                }
+              />
+            </CardContent>
+          </Card>
+        )
       )}
 
       {/* Display Classes */}
@@ -305,10 +285,16 @@ const MyClassPage = () => {
                   ))}
                 </div>
               ) : (
-                <EmptyClassesState
-                  majorName={
-                    allMajorData?.content?.find((m) => m.id === selectedMajor)
-                      ?.name
+                <EmptyState
+                  icon={Users}
+                  message="No Classes Available"
+                  description={
+                    (() => {
+                      const majorName = allMajorData?.content?.find((m) => m.id === selectedMajor)?.name;
+                      return majorName
+                        ? `No classes are currently available for ${majorName}.`
+                        : "No classes are available for the selected major at this time.";
+                    })()
                   }
                 />
               )}

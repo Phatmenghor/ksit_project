@@ -33,7 +33,7 @@ export function ComboboxSelectUser({
           pageNo,
           pageSize,
           status: StatusEnum.ACTIVE,
-          roles: [RoleEnum.STAFF, RoleEnum.TEACHER],
+          roles: [RoleEnum.STAFF, RoleEnum.DEVELOPER, RoleEnum.TEACHER],
         })
       ).unwrap(),
     [dispatch]
@@ -52,7 +52,14 @@ export function ComboboxSelectUser({
       onChange={(item) => item && onChangeSelected(item)}
       controller={controller}
       getId={(item) => item.id}
-      getLabel={(item) => item.username}
+      getLabel={(item) => {
+        const fullName = item.englishFirstName && item.englishLastName
+          ? `${item.englishFirstName} ${item.englishLastName}`
+          : (item.khmerFirstName && item.khmerLastName
+            ? `${item.khmerLastName} ${item.khmerFirstName}`
+            : item.username);
+        return item.identifyNumber ? `${fullName} (${item.identifyNumber})` : fullName;
+      }}
       label={label}
       placeholder={placeholder}
       searchPlaceholder="Search user..."

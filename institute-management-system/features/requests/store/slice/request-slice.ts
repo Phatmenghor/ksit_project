@@ -1,6 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RequestManagementState } from "../models/type/request-type";
-import { fetchAllRequestsService, createRequestThunk, fetchRequestByIdThunk, updateRequestThunk } from "../thunks/request-thunks";
+import {
+  fetchAllRequestsService,
+  createRequestThunk,
+  fetchRequestByIdThunk,
+  updateRequestThunk,
+  deleteRequestThunk,
+  fetchRequestTranscriptThunk,
+  fetchRequestHistoryThunk,
+} from "../thunks/request-thunks";
 
 const initialState: RequestManagementState = {
   data: null,
@@ -16,6 +24,10 @@ const initialState: RequestManagementState = {
   selectedRequest: null,
   isFetchingDetail: false,
   isUpdating: false,
+  transcript: null,
+  isFetchingTranscript: false,
+  history: null,
+  isFetchingHistory: false,
 };
 
 const requestSlice = createSlice({
@@ -81,6 +93,8 @@ const requestSlice = createSlice({
         state.isFetchingDetail = true;
         state.error = null;
         state.selectedRequest = null;
+        state.transcript = null;
+        state.history = null;
       })
       .addCase(fetchRequestByIdThunk.fulfilled, (state, action) => {
         state.selectedRequest = action.payload;
@@ -108,6 +122,51 @@ const requestSlice = createSlice({
       .addCase(updateRequestThunk.rejected, (state, action) => {
         state.error = action.payload as string;
         state.isUpdating = false;
+      });
+
+    builder
+      .addCase(deleteRequestThunk.pending, (state) => {
+        state.isUpdating = true;
+        state.error = null;
+      })
+      .addCase(deleteRequestThunk.fulfilled, (state, action) => {
+        state.isUpdating = false;
+        if (state.data?.content) {
+          state.data.content = state.data.content.filter((req) => req.id !== action.payload.id);
+          state.data.totalElements = Math.max(0, state.data.totalElements - 1);
+        }
+      })
+      .addCase(deleteRequestThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isUpdating = false;
+      });
+
+    builder
+      .addCase(fetchRequestTranscriptThunk.pending, (state) => {
+        state.isFetchingTranscript = true;
+        state.error = null;
+      })
+      .addCase(fetchRequestTranscriptThunk.fulfilled, (state, action) => {
+        state.transcript = action.payload;
+        state.isFetchingTranscript = false;
+      })
+      .addCase(fetchRequestTranscriptThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isFetchingTranscript = false;
+      });
+
+    builder
+      .addCase(fetchRequestHistoryThunk.pending, (state) => {
+        state.isFetchingHistory = true;
+        state.error = null;
+      })
+      .addCase(fetchRequestHistoryThunk.fulfilled, (state, action) => {
+        state.history = action.payload;
+        state.isFetchingHistory = false;
+      })
+      .addCase(fetchRequestHistoryThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+        state.isFetchingHistory = false;
       });
   },
 });

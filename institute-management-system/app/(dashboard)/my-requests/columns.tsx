@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import { truncateText } from "@/utils/format/format-width-text";
@@ -11,11 +11,15 @@ import { getRequestStatusBadge } from "../requests/columns";
 export interface MyRequestColumnsProps {
   getDisplayIndex: (index: number) => number;
   router: AppRouterInstance;
+  onViewDetail: (req: RequestModel) => void;
+  onDelete: (req: RequestModel) => void;
 }
 
 export function createMyRequestColumns({
   getDisplayIndex,
   router,
+  onViewDetail,
+  onDelete,
 }: MyRequestColumnsProps): TableColumn<RequestModel>[] {
   return [
     {
@@ -49,15 +53,30 @@ export function createMyRequestColumns({
       label: "Action",
       width: "100px",
       render: (req) => (
-        <Button
-          onClick={() => router.push(ROUTE.REQUEST_DETAIL(String(req.id)))}
-          variant="outline"
-          className="flex items-center gap-2 border-none bg-transparent transition-all duration-200 hover:bg-muted hover:scale-105"
-        >
-          <Eye className="h-4 w-4" />
-          <span className="border-b-2 transition-all duration-200 hover:border-primary">Detail</span>
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            onClick={() => onViewDetail(req)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+            title="Detail"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+          {req.status === "PENDING" && (
+            <Button
+              onClick={() => onDelete(req)}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+              title="Cancel Request"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
 }
+

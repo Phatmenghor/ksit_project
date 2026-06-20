@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { createPaymentListColumns } from "./columns";
 import { RoleEnum, StatusEnum } from "@/constants/constant";
@@ -58,7 +58,16 @@ export default function PaymentStudentListPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
+  const isMounted = useRef(false);
+
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      if (data) {
+        return;
+      }
+    }
+
     dispatch(
       fetchAllStudentsService({
         search: searchDebounce,

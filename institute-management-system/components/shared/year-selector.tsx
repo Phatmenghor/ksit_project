@@ -133,7 +133,7 @@ export function YearSelector({
         >
           <GraduationCap className="mr-2 h-4 w-4 shrink-0 opacity-60" />
           <span className="flex-1 truncate text-sm">
-            {value === 0 ? placeholder : `${title}: ${value}`}
+            {value === 0 ? placeholder : title ? `${title}: ${value}` : String(value)}
           </span>
           {value !== 0 && !disabled && (
             <div

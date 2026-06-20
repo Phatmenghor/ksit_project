@@ -163,19 +163,33 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
 
         Specification<ScoreSessionEntity> spec = buildScoreSessionSpecification(filterDto);
 
-        Page<ScoreSessionEntity> scoreSessionPage = scoreSessionRepository.findAll(spec, pageable);
+        // Phase 1: paginated ID query (fast — no heavy joins on rows, just filters + pagination)
+        Page<ScoreSessionEntity> idPage = scoreSessionRepository.findAll(spec, pageable);
+        List<Long> ids = idPage.getContent().stream()
+                .map(ScoreSessionEntity::getId)
+                .collect(Collectors.toList());
 
-        List<ScoreSessionResponseDto> content = scoreSessionPage.getContent().stream()
+        // Phase 2: fetch full entities with joined relations to avoid N+1 on mapper
+        List<ScoreSessionEntity> sessions = ids.isEmpty()
+                ? List.of()
+                : scoreSessionRepository.findByIdInWithDetails(ids);
+
+        // Preserve ordering from Phase 1
+        Map<Long, ScoreSessionEntity> sessionMap = sessions.stream()
+                .collect(Collectors.toMap(ScoreSessionEntity::getId, s -> s));
+        List<ScoreSessionResponseDto> content = ids.stream()
+                .map(id -> sessionMap.getOrDefault(id, idPage.getContent().stream()
+                        .filter(s -> s.getId().equals(id)).findFirst().orElseThrow()))
                 .map(scoreSessionMapper::toDto)
                 .collect(Collectors.toList());
 
         return new CustomPaginationResponseDto<>(
                 content,
-                scoreSessionPage.getNumber() + 1,
-                scoreSessionPage.getSize(),
-                scoreSessionPage.getTotalElements(),
-                scoreSessionPage.getTotalPages(),
-                scoreSessionPage.isLast()
+                idPage.getNumber() + 1,
+                idPage.getSize(),
+                idPage.getTotalElements(),
+                idPage.getTotalPages(),
+                idPage.isLast()
         );
     }
 
@@ -268,7 +282,7 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
                 .and(ScoreSessionSpecification.hasClassId(filterDto.getClassId()))
                 .and(ScoreSessionSpecification.hasCourseId(filterDto.getCourseId()))
                 .and(ScoreSessionSpecification.hasStudentId(filterDto.getStudentId()))
-                .and(ScoreSessionSpecification.hasSemester(filterDto.getSemester()))
-                .and(ScoreSessionSpecification.hasAcademyYear(filterDto.getAcademyYear()));
+                // Combined to use a single schedule->semester join path
+                .and(ScoreSessionSpecification.hasSemesterAndYear(filterDto.getSemester(), filterDto.getAcademyYear()));
     }
 }

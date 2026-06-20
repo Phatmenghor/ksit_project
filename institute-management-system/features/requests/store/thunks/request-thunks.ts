@@ -1,7 +1,8 @@
 import { createApiThunk } from "@/utils/axios/api-wrapper";
 import { axiosClientWithAuth } from "@/utils/axios";
-import { AllRequestModel, CreateRequestModel, RequestModel, UpdateRequestModel } from "@/model/request/request-model";
-import { RequestFilterModel } from "@/model/request/request-filter";
+import { AllRequestModel, CreateRequestModel, RequestModel, UpdateRequestModel, AllHistoryReqModel } from "@/model/request/request-model";
+import { RequestFilterModel, HistoryReqFilterModel } from "@/model/request/request-filter";
+import { TranscriptModel } from "@/model/request/request-transcript";
 
 export const fetchAllRequestsService = createApiThunk<
   AllRequestModel,
@@ -45,3 +46,35 @@ export const updateRequestThunk = createApiThunk<
   );
   return response.data.data;
 });
+
+export const deleteRequestThunk = createApiThunk<
+  RequestModel,
+  number
+>("requests/delete", async (id) => {
+  const response = await axiosClientWithAuth.delete<{ data: RequestModel }>(
+    `/v1/requests/${id}`
+  );
+  return response.data.data;
+});
+
+export const fetchRequestTranscriptThunk = createApiThunk<TranscriptModel, number>(
+  "requests/fetchTranscript",
+  async (studentId) => {
+    const response = await axiosClientWithAuth.get(
+      `/v1/transcript/student/${studentId}`
+    );
+    return response.data.data;
+  }
+);
+
+export const fetchRequestHistoryThunk = createApiThunk<AllHistoryReqModel, HistoryReqFilterModel>(
+  "requests/fetchHistory",
+  async (filters) => {
+    const response = await axiosClientWithAuth.post(
+      `/v1/requests/history`,
+      filters
+    );
+    return response.data.data;
+  }
+);
+

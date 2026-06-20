@@ -11,49 +11,33 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/shared/loading";
 import { RequestHistoryTableHeader } from "@/constants/table/request";
-import { useCallback, useEffect, useState } from "react";
-import { AllHistoryReqModel } from "@/model/request/request-model";
-import { HistoryReqFilterModel } from "@/model/request/request-filter";
-import { getAllHistoryReqService } from "@/service/request/request.service";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import PaginationPage from "@/components/shared/pagination-page";
 import { truncateText } from "@/utils/format/format-width-text";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { selectRequestHistory, selectRequestIsFetchingHistory } from "@/features/requests/store/selectors/request-selectors";
+import { fetchRequestHistoryThunk } from "@/features/requests/store/thunks/request-thunks";
 
 interface RequestParam {
   userId?: number;
 }
 
 export function RequestHistory(param: RequestParam) {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [historyReqData, setHistoryReqData] =
-    useState<AllHistoryReqModel | null>(null);
+  const dispatch = useAppDispatch();
+  const historyReqData = useAppSelector(selectRequestHistory);
+  const isFetching = useAppSelector(selectRequestIsFetchingHistory);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-
-  const fetchHistoryReq = useCallback(
-    async (filters: HistoryReqFilterModel = {}) => {
-      if (!param.userId) return;
-      setIsLoading(true);
-      try {
-        const response = await getAllHistoryReqService({
-          userId: param.userId ? param.userId : undefined,
-          ...filters,
-        });
-        setHistoryReqData(response);
-      } catch (error: any) {
-        toast.error("error occurred while loading classes");
-        setHistoryReqData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [param.userId]
-  );
-
   useEffect(() => {
-    fetchHistoryReq({ pageNo: currentPage });
-  }, [currentPage, fetchHistoryReq, param.userId]);
+    if (param.userId && param.userId > 0) {
+      if (!historyReqData || historyReqData.pageNo !== currentPage) {
+        dispatch(fetchRequestHistoryThunk({ userId: param.userId, pageNo: currentPage }));
+      }
+    }
+  }, [currentPage, param.userId, historyReqData, dispatch]);
+
+  const isLoading = isFetching && (!historyReqData || historyReqData.pageNo !== currentPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

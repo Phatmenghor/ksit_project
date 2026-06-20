@@ -2,13 +2,18 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ScheduleManagementState } from "../models/type/schedule-type";
 import { fetchMySchedulesService, deleteScheduleService, fetchScheduleByIdService, createScheduleThunk, updateScheduleThunk, fetchAllSchedulesService } from "../thunks/schedule-thunks";
 
+const WEEKDAY_VALUES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+const getCurrentDay = (): string => {
+  return WEEKDAY_VALUES[new Date().getDay()];
+};
+
 const initialState: ScheduleManagementState = {
   data: null,
   isLoading: true,
   error: null,
   filters: {
     search: "",
-    dayOfWeek: "ALL",
+    dayOfWeek: getCurrentDay(),
     semester: "ALL",
     academicYear: new Date().getFullYear(),
     courseId: undefined,

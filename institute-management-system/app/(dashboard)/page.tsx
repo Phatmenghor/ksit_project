@@ -13,6 +13,7 @@ import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { usePagination } from "@/hooks/use-pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchMyDepartmentsService } from "@/features/master-data/store/thunks/department-thunks";
 import { fetchAllStatisticThunk } from "@/store/slices/statistic-slice";
@@ -178,7 +179,9 @@ export default function ManageClassPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allDepartmentData?.content?.length === 0 ? (
-                <p>No Department found</p>
+                <div className="col-span-full">
+                  <EmptyState message="No departments found" />
+                </div>
               ) : (
                 allDepartmentData?.content?.map((department) => (
                   <DepartmentCard

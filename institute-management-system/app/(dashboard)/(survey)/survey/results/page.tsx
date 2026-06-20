@@ -17,7 +17,7 @@ import {
 import { useDebounce } from "@/utils/debounce/debounce";
 import { format } from "date-fns";
 import { ExcelDownloadButton } from "@/components/shared/excel-download-button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -145,7 +145,7 @@ export default function SurveyResultPage() {
       const worksheet = workbook.addWorksheet("Survey Result Data");
 
       const headers: SurveyReportHeader[] = [
-        { key: "no", label: "No." },
+        { key: "no", label: "No.", type: "STATIC", category: "STATIC", questionId: 0, displayOrder: 0 },
         ...(headersData && Array.isArray(headersData) ? headersData : surveyHeaders),
       ];
 
@@ -204,7 +204,10 @@ export default function SurveyResultPage() {
     }
   };
 
-  const columns = createSurveyResultsColumns({ getDisplayIndex, surveyHeaders });
+  const columns = useMemo(
+    () => createSurveyResultsColumns({ getDisplayIndex, surveyHeaders }),
+    [surveyHeaders, getDisplayIndex]
+  );
 
   return (
     <div className="space-y-4">
@@ -234,7 +237,6 @@ export default function SurveyResultPage() {
                   <ComboboxSelectClass
                     dataSelect={value ?? null}
                     onChangeSelected={(e) => onChange(e ?? undefined)}
-                    disabled={isLoading}
                   />
                 </div>
               ),

@@ -178,7 +178,7 @@ export default function AllStudentResultPage() {
         })
       ).unwrap();
       const headers: SurveyReportHeader[] = [
-        { key: "no", label: "No." }, // Inject static "No." column
+        { key: "no", label: "No.", type: "STATIC", category: "STATIC", questionId: 0, displayOrder: 0 }, // Inject static "No." column
         ...(headersData && Array.isArray(headersData)
           ? headersData
           : surveyHeaders),
@@ -314,12 +314,10 @@ export default function AllStudentResultPage() {
       toast.success(
         `Excel file exported successfully! Total records: ${response.length}`
       );
-      setIsSubmitting(false);
     } catch (error: unknown) {
       toast.error("Failed to export data to Excel.");
-      setIsSubmitting(false);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 

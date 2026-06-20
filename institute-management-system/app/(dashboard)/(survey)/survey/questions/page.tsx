@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Copy, Minus } from "lucide-react";
+import { Plus, Trash2, Copy, Minus, ArrowUp, ArrowDown, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +60,6 @@ const QuestionSchema = z.object({
   leftLabel: z.string().nullable().optional(),
   rightLabel: z.string().nullable().optional(),
   ratingOptions: z.array(RatingOptionSchema).nullable().optional(),
-  // Internal tracking properties
   isNew: z.boolean().nullable().optional(),
   tempId: z.string().nullable().optional(),
 });
@@ -69,7 +70,6 @@ const SectionSchema = z.object({
   description: z.string().nullable().optional(),
   displayOrder: z.number().nullable().optional(),
   questions: z.array(QuestionSchema).nullable().optional(),
-  // Internal tracking properties
   isNew: z.boolean().nullable().optional(),
   tempId: z.string().nullable().optional(),
 });
@@ -86,122 +86,114 @@ const SurveySchema = z.object({
 
 interface QuestionProps {
   question: Question;
+  questionNumber: string;
   onUpdate: (question: Question) => void;
-  onDelete: (id: number | string) => void;
-  onDuplicate: (question: Question) => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 // Question Component for TEXT type
 const ParagraphQuestion: React.FC<QuestionProps> = ({
   question,
+  questionNumber,
   onUpdate,
   onDelete,
   onDuplicate,
+  onMoveUp,
+  onMoveDown,
+  isFirst = false,
+  isLast = false,
 }) => {
-  const [questionText, setQuestionText] = useState<string>(
-    question.questionText || ""
-  );
-  const [displayOrder, setDisplayOrder] = useState<number | string>(
-    question.displayOrder !== undefined ? question.displayOrder : ""
-  );
-
-  // Sync local state with prop changes (crucial for duplicated questions)
-  useEffect(() => {
-    setQuestionText(question.questionText || "");
-    // Only update displayOrder if it's actually different to prevent input field flickering
-    const newDisplayOrder =
-      question.displayOrder !== undefined ? question.displayOrder : "";
-    if (displayOrder !== newDisplayOrder) {
-      setDisplayOrder(newDisplayOrder);
-    }
-  }, [
-    question.questionText,
-    question.displayOrder,
-    question.tempId,
-    question.id,
-  ]);
-
-  const handleQuestionTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newText = e.target.value;
-    setQuestionText(newText);
-
-    const updatedQuestion = {
-      ...question,
-      questionText: newText,
-    };
-    onUpdate(updatedQuestion);
-  };
-
-  const handleDisplayOrderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    setDisplayOrder(inputValue);
-
-    // Allow empty string but don't update the question object until we have a valid number
-    if (inputValue === "") {
-      return;
-    }
-
-    const newOrder = parseInt(inputValue);
-    if (!isNaN(newOrder) && newOrder >= 1) {
-      const updatedQuestion = {
-        ...question,
-        displayOrder: newOrder,
-      };
-      onUpdate(updatedQuestion);
-    }
-  };
-
-  const getQuestionId = () => {
-    return question.tempId || question.id;
-  };
-
   return (
-    <Card className="mb-4">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <div className="space-y-3">
-              <div className="flex gap-3 items-center">
-                <Input
-                  type="text"
-                  value={displayOrder}
-                  onChange={handleDisplayOrderChange}
-                  placeholder="#"
-                  className="w-16 text-center"
+    <Card className="mb-4 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 relative group overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-600"></div>
+
+      <CardContent className="p-5">
+        <div className="flex gap-4 items-start">
+          <div className="flex items-center justify-center bg-teal-50 text-teal-800 border border-teal-200 rounded-lg h-9 w-12 font-semibold text-sm shrink-0">
+            {questionNumber}
+          </div>
+
+          <div className="flex-1 space-y-4">
+            <div className="flex gap-3 items-center">
+              <Input
+                type="text"
+                value={question.questionText || ""}
+                onChange={(e) => onUpdate({ ...question, questionText: e.target.value })}
+                placeholder="Enter your question..."
+                className="flex-1 h-10 font-medium text-gray-800"
+              />
+            </div>
+
+            <div className="p-3 bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+              <p className="text-gray-400 text-sm">Long text answer input placeholder</p>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id={`required-${question.tempId || question.id}`}
+                  checked={question.required ?? true}
+                  onCheckedChange={(checked) => onUpdate({ ...question, required: checked })}
                 />
-                <Input
-                  type="text"
-                  value={questionText}
-                  onChange={handleQuestionTextChange}
-                  placeholder="Enter your question..."
-                  className="flex-1"
-                />
+                <Label
+                  htmlFor={`required-${question.tempId || question.id}`}
+                  className="text-xs font-semibold text-gray-600 cursor-pointer"
+                >
+                  Required Question
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {onMoveUp && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isFirst}
+                    onClick={onMoveUp}
+                    className="p-1.5 h-8 w-8 hover:bg-teal-50 text-teal-800 disabled:opacity-30"
+                    title="Move Question Up"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                )}
+                {onMoveDown && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isLast}
+                    onClick={onMoveDown}
+                    className="p-1.5 h-8 w-8 hover:bg-teal-50 text-teal-800 disabled:opacity-30"
+                    title="Move Question Down"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                )}
+                <Separator orientation="vertical" className="mx-1 h-5 bg-gray-250" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDuplicate}
+                  className="p-1.5 h-8 w-8 hover:bg-teal-50 text-teal-800"
+                  title="Duplicate Question"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDelete}
+                  className="p-1.5 h-8 w-8 hover:bg-red-50 text-red-600 hover:text-red-700"
+                  title="Delete Question"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 ml-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDuplicate(question)}
-              className="p-2"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(getQuestionId()!)}
-              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-3">
-          <div className="p-3 bg-gray-50 rounded border-dashed border-2 border-gray-200">
-            <p className="text-gray-500 text-sm">Answer Text Input</p>
           </div>
         </div>
       </CardContent>
@@ -212,177 +204,129 @@ const ParagraphQuestion: React.FC<QuestionProps> = ({
 // Question Component for RATING type
 const LinearQuestion: React.FC<QuestionProps> = ({
   question,
+  questionNumber,
   onUpdate,
   onDelete,
   onDuplicate,
+  onMoveUp,
+  onMoveDown,
+  isFirst = false,
+  isLast = false,
 }) => {
-  const [questionText, setQuestionText] = useState<string>(
-    question.questionText || ""
-  );
-  const [leftLabel, setLeftLabel] = useState<string>(question.leftLabel || "");
-  const [rightLabel, setRightLabel] = useState<string>(
-    question.rightLabel || ""
-  );
-  const [displayOrder, setDisplayOrder] = useState<number | string>(
-    question.displayOrder !== undefined ? question.displayOrder : ""
-  );
-
-  // Sync local state with prop changes (crucial for duplicated questions)
-  useEffect(() => {
-    setQuestionText(question.questionText || "");
-    setLeftLabel(question.leftLabel || "");
-    setRightLabel(question.rightLabel || "");
-    // Only update displayOrder if it's actually different to prevent input field flickering
-    const newDisplayOrder =
-      question.displayOrder !== undefined ? question.displayOrder : "";
-    if (displayOrder !== newDisplayOrder) {
-      setDisplayOrder(newDisplayOrder);
-    }
-  }, [
-    question.questionText,
-    question.leftLabel,
-    question.rightLabel,
-    question.displayOrder,
-    question.tempId,
-    question.id,
-  ]);
-
-  const updateQuestion = useCallback(
-    (updates: Partial<Question>) => {
-      const updatedQuestion: Question = {
-        ...question,
-        ...updates,
-        minRating: 1,
-        maxRating: 5,
-        ratingOptions: [
-          {
-            value: 1,
-            label:
-              updates.leftLabel !== undefined
-                ? updates.leftLabel
-                : leftLabel || "1",
-          },
-          { value: 2, label: "2" },
-          { value: 3, label: "3" },
-          { value: 4, label: "4" },
-          {
-            value: 5,
-            label:
-              updates.rightLabel !== undefined
-                ? updates.rightLabel
-                : rightLabel || "5",
-          },
-        ],
-      };
-      onUpdate(updatedQuestion);
-    },
-    [question, leftLabel, rightLabel, onUpdate]
-  );
-
-  const handleQuestionTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newText = e.target.value;
-    setQuestionText(newText);
-    updateQuestion({ questionText: newText });
-  };
-
-  const handleLeftLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newLabel = e.target.value;
-    setLeftLabel(newLabel);
-    updateQuestion({ leftLabel: newLabel });
-  };
-
-  const handleRightLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newLabel = e.target.value;
-    setRightLabel(newLabel);
-    updateQuestion({ rightLabel: newLabel });
-  };
-
-  const handleDisplayOrderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    setDisplayOrder(inputValue);
-
-    // Allow empty string but don't update the question object until we have a valid number
-    if (inputValue === "") {
-      return;
-    }
-
-    const newOrder = parseInt(inputValue);
-    if (!isNaN(newOrder) && newOrder >= 1) {
-      updateQuestion({ displayOrder: newOrder });
-    }
-  };
-
-  const getQuestionId = () => {
-    return question.tempId || question.id;
-  };
-
   return (
-    <Card className="mb-4">
-      <CardContent className="p-4">
-        {/* First Row: Question Number, Text, and Action Buttons */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-3 items-center flex-1">
-            <Input
-              type="text"
-              value={displayOrder}
-              onChange={handleDisplayOrderChange}
-              placeholder="#"
-              className="w-16 text-center"
-            />
-            <Input
-              type="text"
-              value={questionText}
-              onChange={handleQuestionTextChange}
-              placeholder="Enter your question..."
-              className="flex-1"
-            />
-          </div>
-          <div className="flex items-center gap-2 ml-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDuplicate(question)}
-              className="p-2"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(getQuestionId()!)}
-              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+    <Card className="mb-4 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 relative group overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
 
-        {/* Second Row: Left Label, Minus Icon, Right Label */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 flex-1">
-            <Label className="text-sm font-medium text-gray-700">(1)</Label>
-            <Input
-              type="text"
-              value={leftLabel}
-              onChange={handleLeftLabelChange}
-              placeholder="e.g., Very Disagree"
-              className="flex-1"
-            />
+      <CardContent className="p-5">
+        <div className="flex gap-4 items-start">
+          <div className="flex items-center justify-center bg-amber-50 text-amber-800 border border-amber-200 rounded-lg h-9 w-12 font-semibold text-sm shrink-0">
+            {questionNumber}
           </div>
 
-          <div className="flex items-center justify-center">
-            <Minus className="w-5 h-5 text-gray-500" />
-          </div>
+          <div className="flex-1 space-y-4">
+            <div className="flex gap-3 items-center">
+              <Input
+                type="text"
+                value={question.questionText || ""}
+                onChange={(e) => onUpdate({ ...question, questionText: e.target.value })}
+                placeholder="Enter your question..."
+                className="flex-1 h-10 font-medium text-gray-800"
+              />
+            </div>
 
-          <div className="flex items-center gap-2 flex-1">
-            <Input
-              type="text"
-              value={rightLabel}
-              onChange={handleRightLabelChange}
-              placeholder="e.g., Strongly Agree"
-              className="flex-1"
-            />
-            <Label className="text-sm font-medium text-gray-700">(5)</Label>
+            <div className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 flex-1">
+                <Label className="text-xs font-semibold text-amber-800 whitespace-nowrap bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                  Min Label (1)
+                </Label>
+                <Input
+                  type="text"
+                  value={question.leftLabel || ""}
+                  onChange={(e) => onUpdate({ ...question, leftLabel: e.target.value })}
+                  placeholder="e.g., Strongly Disagree"
+                  className="flex-1 h-9 bg-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-center text-gray-400">
+                <Minus className="w-5 h-5" />
+              </div>
+
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  type="text"
+                  value={question.rightLabel || ""}
+                  onChange={(e) => onUpdate({ ...question, rightLabel: e.target.value })}
+                  placeholder="e.g., Strongly Agree"
+                  className="flex-1 h-9 bg-white"
+                />
+                <Label className="text-xs font-semibold text-amber-800 whitespace-nowrap bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                  Max Label (5)
+                </Label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id={`required-${question.tempId || question.id}`}
+                  checked={question.required ?? true}
+                  onCheckedChange={(checked) => onUpdate({ ...question, required: checked })}
+                />
+                <Label
+                  htmlFor={`required-${question.tempId || question.id}`}
+                  className="text-xs font-semibold text-gray-600 cursor-pointer"
+                >
+                  Required Question
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {onMoveUp && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isFirst}
+                    onClick={onMoveUp}
+                    className="p-1.5 h-8 w-8 hover:bg-amber-50 text-amber-800 disabled:opacity-30"
+                    title="Move Question Up"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                )}
+                {onMoveDown && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isLast}
+                    onClick={onMoveDown}
+                    className="p-1.5 h-8 w-8 hover:bg-amber-50 text-amber-800 disabled:opacity-30"
+                    title="Move Question Down"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                )}
+                <Separator orientation="vertical" className="mx-1 h-5 bg-gray-250" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDuplicate}
+                  className="p-1.5 h-8 w-8 hover:bg-amber-50 text-amber-800"
+                  title="Duplicate Question"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDelete}
+                  className="p-1.5 h-8 w-8 hover:bg-red-50 text-red-600 hover:text-red-700"
+                  title="Delete Question"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -397,6 +341,10 @@ interface SectionProps {
   totalSections: number;
   onUpdate: (section: Section) => void;
   onRemove: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 // Section Component
@@ -406,84 +354,15 @@ const SectionComponent: React.FC<SectionProps> = ({
   totalSections,
   onUpdate,
   onRemove,
+  onMoveUp,
+  onMoveDown,
+  isFirst = false,
+  isLast = false,
 }) => {
-  const [sectionTitle, setSectionTitle] = useState<string>(section.title || "");
-  const [sectionDisplayOrder, setSectionDisplayOrder] = useState<
-    number | string
-  >(section.displayOrder !== undefined ? section.displayOrder : "");
-  const [questions, setQuestions] = useState<Question[]>(
-    section.questions || []
-  );
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
 
-  // Track if this is the initial mount to prevent unnecessary updates
-  const isInitialMount = React.useRef(true);
-
-  // Sync section questions when section prop changes
-  useEffect(() => {
-    setQuestions(section.questions || []);
-    setSectionTitle(section.title || "");
-    // Only update displayOrder if it's actually different to prevent input field flickering
-    const newDisplayOrder =
-      section.displayOrder !== undefined ? section.displayOrder : "";
-    if (sectionDisplayOrder !== newDisplayOrder) {
-      setSectionDisplayOrder(newDisplayOrder);
-    }
-  }, [
-    section.questions,
-    section.title,
-    section.displayOrder,
-    section.tempId,
-    section.id,
-  ]);
-
-  // Debounced update function to prevent excessive updates
-  const debouncedUpdate = useCallback(
-    (updatedSection: Section) => {
-      // Use setTimeout to defer the update and prevent infinite loops
-      const timeoutId = setTimeout(() => {
-        onUpdate(updatedSection);
-      }, 0);
-
-      return () => clearTimeout(timeoutId);
-    },
-    [onUpdate]
-  );
-
-  const handleSectionTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
-    setSectionTitle(newTitle);
-
-    const updatedSection = {
-      ...section,
-      title: newTitle,
-      questions: questions,
-    };
-    debouncedUpdate(updatedSection);
-  };
-
-  const handleSectionDisplayOrderChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const inputValue = e.target.value;
-    setSectionDisplayOrder(inputValue);
-
-    // Allow empty string but don't update the section object until we have a valid number
-    if (inputValue === "") {
-      return;
-    }
-
-    const newOrder = parseInt(inputValue);
-    if (!isNaN(newOrder) && newOrder >= 1) {
-      const updatedSection = {
-        ...section,
-        displayOrder: newOrder,
-        questions: questions,
-      };
-      debouncedUpdate(updatedSection);
-    }
-  };
+  const questions = section.questions || [];
 
   const handleAddQuestion = (type: "TEXT" | "RATING") => {
     const tempId = `temp-question-${Date.now()}-${Math.random()}`;
@@ -491,7 +370,7 @@ const SectionComponent: React.FC<SectionProps> = ({
       questionText: "",
       questionType: type,
       required: true,
-      displayOrder: undefined, // Let user set the display order
+      displayOrder: questions.length + 1,
       minRating: 1,
       maxRating: 5,
       leftLabel: type === "RATING" ? "" : undefined,
@@ -501,197 +380,198 @@ const SectionComponent: React.FC<SectionProps> = ({
       tempId,
     };
 
-    const updatedQuestions = [...questions, newQuestion];
-    setQuestions(updatedQuestions);
-
-    const updatedSection = {
+    onUpdate({
       ...section,
-      questions: updatedQuestions,
-    };
-    debouncedUpdate(updatedSection);
-
+      questions: [...questions, newQuestion],
+    });
     setShowDropdown(false);
   };
 
-  const handleUpdateQuestion = useCallback(
-    (updatedQuestion: Question) => {
-      const updatedQuestions = questions.map((q) => {
-        // Check for temp ID first, then regular ID
-        if (q.tempId && q.tempId === updatedQuestion.tempId) {
-          return updatedQuestion;
-        }
-        if (q.id && q.id === updatedQuestion.id) {
-          return updatedQuestion;
-        }
-        return q;
-      });
-
-      setQuestions(updatedQuestions);
-
-      const updatedSection = {
-        ...section,
-        questions: updatedQuestions,
-      };
-      debouncedUpdate(updatedSection);
-    },
-    [questions, section, debouncedUpdate]
-  );
-
-  const handleDeleteQuestion = (questionId: number | string) => {
-    const updatedQuestions = questions.filter((q) => {
-      // Handle both temp IDs (string) and regular IDs (number)
-      if (typeof questionId === "string") {
-        return q.tempId !== questionId;
-      } else {
-        return q.id !== questionId;
-      }
+  const handleUpdateQuestion = (updatedQuestion: Question) => {
+    const updatedQuestions = questions.map((q) => {
+      if (q.tempId && q.tempId === updatedQuestion.tempId) return updatedQuestion;
+      if (q.id && q.id === updatedQuestion.id) return updatedQuestion;
+      return q;
     });
 
-    setQuestions(updatedQuestions);
-
-    const updatedSection = {
+    onUpdate({
       ...section,
       questions: updatedQuestions,
-    };
-    debouncedUpdate(updatedSection);
+    });
   };
 
-  const handleDuplicateQuestion = (questionToDuplicate: Question) => {
+  const handleDeleteQuestion = (qIndex: number) => {
+    const updatedQuestions = questions.filter((_, idx) => idx !== qIndex);
+    onUpdate({
+      ...section,
+      questions: updatedQuestions,
+    });
+  };
+
+  const handleDuplicateQuestion = (questionToDuplicate: Question, qIndex: number) => {
     const tempId = `temp-question-${Date.now()}-${Math.random()}`;
     const duplicated: Question = {
       ...questionToDuplicate,
-      id: undefined, // Remove ID so backend assigns new one
-      displayOrder: undefined, // Let user set the display order
+      id: undefined,
       isNew: true,
       tempId,
     };
 
-    const updatedQuestions = [...questions, duplicated];
-    setQuestions(updatedQuestions);
+    const updatedQuestions = [...questions];
+    updatedQuestions.splice(qIndex + 1, 0, duplicated);
 
-    const updatedSection = {
+    onUpdate({
       ...section,
       questions: updatedQuestions,
-    };
-    debouncedUpdate(updatedSection);
+    });
+  };
+
+  const handleMoveQuestion = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= questions.length) return;
+    const updatedQuestions = [...questions];
+    const [moved] = updatedQuestions.splice(fromIndex, 1);
+    updatedQuestions.splice(toIndex, 0, moved);
+
+    onUpdate({
+      ...section,
+      questions: updatedQuestions,
+    });
   };
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 relative">
+      <div id={`section-anchor-${sectionNumber}`} className="absolute -top-24"></div>
+
       <CardContent className="p-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Section {sectionNumber} of {totalSections}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded">
+              Section {sectionNumber} of {totalSections}
+            </span>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2">
+            {onMoveUp && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isFirst}
+                onClick={onMoveUp}
+                className="h-8 px-2 text-[#024D3E] hover:text-teal-700 hover:bg-teal-50 disabled:opacity-30"
+                title="Move Section Up"
+              >
+                <ArrowUp className="w-4 h-4 mr-1" />
+                Up
+              </Button>
+            )}
+            {onMoveDown && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isLast}
+                onClick={onMoveDown}
+                className="h-8 px-2 text-[#024D3E] hover:text-teal-700 hover:bg-teal-50 disabled:opacity-30"
+                title="Move Section Down"
+              >
+                <ArrowDown className="w-4 h-4 mr-1" />
+                Down
+              </Button>
+            )}
+            <Separator orientation="vertical" className="mx-1 h-5 bg-gray-250" />
             <DropdownMenu open={showDropdown} onOpenChange={setShowDropdown}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-[#024D3E] hover:text-teal-700 hover:underline"
+                  className="text-[#024D3E] hover:text-teal-700 hover:bg-teal-50 font-semibold"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-1.5" />
                   Add Question
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
+              <DropdownMenuContent className="w-56" align="end">
                 <div className="p-2">
-                  <div className="text-sm font-medium text-gray-600 mb-2 px-2">
+                  <div className="text-xs font-bold text-gray-500 mb-2 px-2 uppercase tracking-wider">
                     Select Question Type
                   </div>
                   <div className="border-b mb-2"></div>
                   <DropdownMenuItem
                     onClick={() => handleAddQuestion("TEXT")}
-                    className="cursor-pointer"
+                    className="cursor-pointer font-medium"
                   >
-                    <span className="w-2 h-2 bg-black rounded-full mr-3"></span>
+                    <span className="w-2.5 h-2.5 bg-teal-600 rounded-full mr-3 shrink-0"></span>
                     Paragraph
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleAddQuestion("RATING")}
-                    className="cursor-pointer"
+                    className="cursor-pointer font-medium"
                   >
-                    <span className="w-2 h-2 bg-black rounded-full mr-3"></span>
-                    Linear Scale
+                    <span className="w-2.5 h-2.5 bg-amber-500 rounded-full mr-3 shrink-0"></span>
+                    Linear Scale (1-5)
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
+
             <Button
               variant="ghost"
               size="sm"
-              className="text-red-600 hover:text-red-700 hover:underline"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 font-semibold"
               onClick={() => setShowDeleteDialog(true)}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-4 h-4 mr-1.5" />
               Delete Section
             </Button>
           </div>
         </div>
 
-        <Separator className="mt-2 mb-4" />
+        <Separator className="mt-3 mb-4" />
 
-        {/* Section Title */}
         <div className="mb-6">
           <div className="flex gap-4 items-center">
-            <div className="border-l-4 border-[#024D3E] rounded-lg h-12"></div>
-            <Input
-              type="text"
-              value={sectionDisplayOrder}
-              onChange={handleSectionDisplayOrderChange}
-              placeholder="#"
-              className="w-16 text-center"
-            />
+            <div className="border-l-4 border-[#024D3E] rounded-lg h-10"></div>
             <Input
               type="text"
               placeholder="Name Section..."
-              className="flex-1"
-              value={sectionTitle}
-              onChange={handleSectionTitleChange}
+              className="flex-1 h-11 text-lg font-bold text-gray-900 border-none bg-gray-50/50 focus-visible:ring-0 focus-visible:bg-white focus-visible:border-gray-300 border-b border-dashed border-gray-300 rounded-none px-2 transition-all"
+              value={section.title || ""}
+              onChange={(e) => onUpdate({ ...section, title: e.target.value })}
             />
           </div>
         </div>
 
-        {/* Questions */}
         <div className="space-y-4">
-          {questions.map((question) => {
-            // Use tempId for new questions, id for existing ones
-            const key = question.tempId || question.id || `q-${Math.random()}`;
+          {questions.map((question, index) => {
+            const key = question.tempId || question.id || `q-${index}-${Math.random()}`;
+            const questionNumber = `${sectionNumber}.${index + 1}`;
+
+            const qProps: QuestionProps = {
+              question,
+              questionNumber,
+              onUpdate: handleUpdateQuestion,
+              onDelete: () => handleDeleteQuestion(index),
+              onDuplicate: () => handleDuplicateQuestion(question, index),
+              onMoveUp: () => handleMoveQuestion(index, index - 1),
+              onMoveDown: () => handleMoveQuestion(index, index + 1),
+              isFirst: index === 0,
+              isLast: index === questions.length - 1,
+            };
 
             if (question.questionType === "TEXT") {
-              return (
-                <ParagraphQuestion
-                  key={key}
-                  question={question}
-                  onUpdate={handleUpdateQuestion}
-                  onDelete={handleDeleteQuestion}
-                  onDuplicate={handleDuplicateQuestion}
-                />
-              );
+              return <ParagraphQuestion key={key} {...qProps} />;
             } else if (question.questionType === "RATING") {
-              return (
-                <LinearQuestion
-                  key={key}
-                  question={question}
-                  onUpdate={handleUpdateQuestion}
-                  onDelete={handleDeleteQuestion}
-                  onDuplicate={handleDuplicateQuestion}
-                />
-              );
+              return <LinearQuestion key={key} {...qProps} />;
             }
             return null;
           })}
         </div>
 
-        {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Delete!</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this section?
+              <AlertDialogTitle className="text-red-600 font-bold">Delete Section?</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-600">
+                Are you sure you want to delete this section? All questions inside this section will be permanently deleted.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -737,7 +617,7 @@ const SurveyManager: React.FC = () => {
     const newSection: Section = {
       title: "",
       description: "",
-      displayOrder: undefined, // Let user set the display order
+      displayOrder: sections.length + 1,
       questions: [],
       isNew: true,
       tempId,
@@ -748,13 +628,8 @@ const SurveyManager: React.FC = () => {
   const handleUpdateSection = useCallback((updatedSection: Section) => {
     setSections((prevSections) =>
       prevSections.map((section) => {
-        // Check for temp ID first, then regular ID
-        if (section.tempId && section.tempId === updatedSection.tempId) {
-          return updatedSection;
-        }
-        if (section.id && section.id === updatedSection.id) {
-          return updatedSection;
-        }
+        if (section.tempId && section.tempId === updatedSection.tempId) return updatedSection;
+        if (section.id && section.id === updatedSection.id) return updatedSection;
         return section;
       })
     );
@@ -763,16 +638,20 @@ const SurveyManager: React.FC = () => {
   const handleRemoveSection = (sectionToRemove: Section) => {
     setSections((prevSections) =>
       prevSections.filter((section) => {
-        // Handle both temp IDs and regular IDs
-        if (sectionToRemove.tempId) {
-          return section.tempId !== sectionToRemove.tempId;
-        }
+        if (sectionToRemove.tempId) return section.tempId !== sectionToRemove.tempId;
         return section.id !== sectionToRemove.id;
       })
     );
   };
 
-  // Clean data before sending to API - preserves user's displayOrder input
+  const handleMoveSection = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= sections.length) return;
+    const updatedSections = [...sections];
+    const [moved] = updatedSections.splice(fromIndex, 1);
+    updatedSections.splice(toIndex, 0, moved);
+    setSections(updatedSections);
+  };
+
   const cleanDataForApi = (data: SurveyMainModel): SurveyMainModel => {
     return {
       id: data.id,
@@ -781,17 +660,17 @@ const SurveyManager: React.FC = () => {
       status: data.status,
       createdBy: data.createdBy,
       createdAt: data.createdAt,
-      sections: data.sections?.map((section) => ({
-        ...(section.id && { id: section.id }), // Only include ID if it exists
+      sections: data.sections?.map((section, sIdx) => ({
+        ...(section.id && { id: section.id }),
         title: section.title,
         description: section.description,
-        displayOrder: section.displayOrder || 0, // Keep user's input exactly as they entered it
-        questions: section.questions?.map((question) => ({
-          ...(question.id && { id: question.id }), // Only include ID if it exists
+        displayOrder: sIdx + 1,
+        questions: section.questions?.map((question, qIdx) => ({
+          ...(question.id && { id: question.id }),
           questionText: question.questionText,
           questionType: question.questionType,
-          required: question.required,
-          displayOrder: question.displayOrder || 0, // Keep user's input exactly as they entered it
+          required: question.required !== undefined ? question.required : true,
+          displayOrder: qIdx + 1,
           minRating: question.minRating,
           maxRating: question.maxRating,
           leftLabel: question.leftLabel,
@@ -832,58 +711,118 @@ const SurveyManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 py-8 px-4">
+    <div className="space-y-6 py-6 px-4 max-w-6xl mx-auto">
       <CardHeaderSection
-        title=" User and Role permission"
+        title="Survey Questions Builder"
         breadcrumbs={[
           { label: "Dashboard", href: ROUTE.DASHBOARD },
-          { label: "manage Q&As", href: "" },
+          { label: "Manage Q&As", href: "" },
         ]}
-      >
-        <div className="-mt-4">
-          {surveyData?.description && (
-            <p className="text-gray-600 mt-1">{surveyData.description}</p>
-          )}
+      />
+
+      <Card className="relative overflow-hidden border border-gray-250 shadow-sm bg-gradient-to-r from-emerald-950 via-teal-900 to-emerald-800 text-white rounded-xl">
+        <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center justify-center p-8">
+          <GraduationCap size={180} />
         </div>
-      </CardHeaderSection>
-      <div className="space-y-4">
-        {/* Sections */}
-        {sections.map((section, index) => {
-          // Use tempId for new sections, id for existing ones
-          const key = section.tempId || section.id || `s-${Math.random()}`;
-          return (
-            <SectionComponent
-              key={key}
-              section={section}
-              sectionNumber={index + 1}
-              totalSections={sections.length}
-              onUpdate={handleUpdateSection}
-              onRemove={() => handleRemoveSection(section)}
-            />
-          );
-        })}
+        <CardContent className="p-6 relative z-10">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span className="bg-teal-500/20 text-teal-200 border border-teal-500/30 text-xs uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full">
+                Survey Template Details
+              </span>
+              <h2 className="text-2xl font-bold mt-2">{surveyData?.title || "Survey Template"}</h2>
+              {surveyData?.description && (
+                <p className="text-teal-100/80 text-sm mt-1 max-w-xl">{surveyData.description}</p>
+              )}
+            </div>
+            <div>
+              <Badge className="bg-teal-600 border border-teal-500 text-white text-xs uppercase tracking-wider font-bold px-3 py-1">
+                {surveyData?.status || "DRAFT"}
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Add New Section Button */}
-        <Card>
-          <CardContent className="p-4">
-            <Button
-              variant="ghost"
-              onClick={handleAddSection}
-              className="text-[#024D3E] hover:text-teal-700 underline"
-            >
-              + Add New Section
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="hidden lg:block w-64 shrink-0">
+          <Card className="sticky top-24 border border-gray-200 shadow-sm">
+            <CardContent className="p-4 space-y-4">
+              <h3 className="font-bold text-gray-800 text-xs uppercase tracking-wider">Sections</h3>
+              <div className="space-y-1.5">
+                {sections.map((section, index) => (
+                  <button
+                    key={section.tempId || section.id || index}
+                    onClick={() => {
+                      const element = document.getElementById(`section-anchor-${index + 1}`);
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:bg-teal-50 hover:text-[#024D3E] flex items-center justify-between text-gray-600"
+                  >
+                    <span className="truncate max-w-[140px]">
+                      {index + 1}. {section.title || "Untitled Section"}
+                    </span>
+                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px] border">
+                      {section.questions?.length || 0} Qs
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <Separator />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddSection}
+                className="w-full text-xs border-dashed text-[#024D3E] hover:text-[#024D3E]/80"
+              >
+                + Add Section
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Save Button */}
-        <Card>
-          <CardContent>
-            <div className="mt-6 flex justify-end">
+        <div className="flex-1 space-y-4">
+          {sections.map((section, index) => {
+            const key = section.tempId || section.id || `s-${index}-${Math.random()}`;
+            return (
+              <SectionComponent
+                key={key}
+                section={section}
+                sectionNumber={index + 1}
+                totalSections={sections.length}
+                onUpdate={handleUpdateSection}
+                onRemove={() => handleRemoveSection(section)}
+                onMoveUp={() => handleMoveSection(index, index - 1)}
+                onMoveDown={() => handleMoveSection(index, index + 1)}
+                isFirst={index === 0}
+                isLast={index === sections.length - 1}
+              />
+            );
+          })}
+
+          <Card className="border border-dashed border-gray-300 hover:border-teal-500 transition-colors">
+            <CardContent className="p-4 flex justify-center">
+              <Button
+                variant="ghost"
+                onClick={handleAddSection}
+                className="text-[#024D3E] hover:text-teal-700 font-semibold"
+              >
+                + Add New Section
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-none border border-gray-200">
+            <CardContent className="p-4 flex justify-between items-center bg-gray-50/50">
+              <span className="text-xs font-semibold text-gray-500">
+                Ensure all sections and questions are correctly named before saving.
+              </span>
               <Button
                 type="submit"
                 onClick={handleSave}
-                className="bg-[#024D3E] hover:bg-teal-700"
+                className="bg-[#024D3E] hover:bg-teal-700 font-semibold text-white px-6"
                 disabled={!surveyData || isSaving}
               >
                 {isSaving ? (
@@ -895,9 +834,9 @@ const SurveyManager: React.FC = () => {
                   "Save Survey"
                 )}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

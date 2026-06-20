@@ -85,7 +85,7 @@ const MenuPermissionItem: React.FC<MenuPermissionItemProps> = ({
       {/* Children/Subroutes */}
       {hasChildren && isExpanded && (
         <div className="bg-gray-50">
-          {menu.children
+          {[...menu.children]
             .sort(
               (a: MenuModel, b: MenuModel) => a.displayOrder - b.displayOrder
             )

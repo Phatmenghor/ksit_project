@@ -100,6 +100,7 @@ export const ROUTE = {
   REQUEST_CREATE: "/requests/new",
   MY_REQUESTS: "/my-requests",
   REQUEST_DETAIL: (id: string) => `/requests/${id}`,
+  MY_REQUESTS_DETAIL: (id: string) => `/my-requests/${id}`,
   REQUEST_UPDATE: (id: string) => `/requests/${id}`,
 
   MY_CLASS: {

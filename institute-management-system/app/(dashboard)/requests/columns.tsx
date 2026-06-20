@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { ROUTE } from "@/constants/routes";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import { truncateText } from "@/utils/format/format-width-text";
@@ -36,11 +36,13 @@ export function getRequestStatusBadge(status: string): React.ReactNode {
 export interface RequestColumnsProps {
   getDisplayIndex: (index: number) => number;
   router: AppRouterInstance;
+  onDelete: (req: RequestModel) => void;
 }
 
 export function createRequestColumns({
   getDisplayIndex,
   router,
+  onDelete,
 }: RequestColumnsProps): TableColumn<RequestModel>[] {
   return [
     { key: "no", label: "#", width: "50px", render: (_, index) => getDisplayIndex(index) },
@@ -70,14 +72,26 @@ export function createRequestColumns({
       label: "Action",
       width: "100px",
       render: (req) => (
-        <Button
-          onClick={() => router.push(ROUTE.REQUEST_DETAIL(String(req.id)))}
-          variant="outline"
-          className="flex items-center gap-2 border-none bg-transparent transition-all duration-200 hover:bg-muted hover:scale-105"
-        >
-          <Eye className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-          <span className="border-b-2 transition-all duration-200 hover:border-primary">Detail</span>
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            onClick={() => router.push(ROUTE.REQUEST_DETAIL(String(req.id)))}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+            title="Detail"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            onClick={() => onDelete(req)}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+            title="Delete Request"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       ),
     },
   ];

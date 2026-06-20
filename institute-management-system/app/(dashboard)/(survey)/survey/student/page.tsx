@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
@@ -56,7 +56,16 @@ const ScheduleAllPage = () => {
 
   const selectedDay = DAYS_OF_WEEK.find((d) => d.value === filters.dayOfWeek) ?? getCurrentDay();
 
+  const isMounted = useRef(false);
+
   useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      if (data) {
+        return;
+      }
+    }
+
     dispatch(
       fetchMySchedulesService({
         search: searchDebounce,
@@ -69,11 +78,8 @@ const ScheduleAllPage = () => {
         courseId: filters.courseId,
       })
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, searchDebounce, filters.dayOfWeek, filters.academicYear, filters.semester, filters.courseId, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    dispatch(setDayFilter(getCurrentDay().value));
-  }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
@@ -111,13 +117,13 @@ const ScheduleAllPage = () => {
     <div className="space-y-4">
       <Card className="border-0 shadow-none bg-transparent p-0">
         <CardContent className="p-0 space-y-2">
-          <PageBreadcrumb items={[{ label: "All Schedule" }]} />
+          <PageBreadcrumb items={[{ label: "Student Survey Status" }]} />
         </CardContent>
       </Card>
 
       <CollapsibleFilterPanel
         config={{
-          title: "All Schedule",
+          title: "Student Survey Status",
           totalCount: data?.totalElements,
           searchValue: filters.search,
           searchPlaceholder: "Search room, instructor...",
@@ -182,11 +188,13 @@ const ScheduleAllPage = () => {
       <Card>
         <CardContent className="p-4 sm:p-6">
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-            <h2 className="text-lg font-bold">{selectedDay.label}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold">{selectedDay.label}</h2>
+            </div>
             <p className="text-sm text-muted-foreground">Total Schedule: {data?.totalElements || 0}</p>
           </div>
 
-          {isLoading && !data ? (
+          {isLoading ? (
             <Loading />
           ) : (
             <div>
@@ -197,10 +205,7 @@ const ScheduleAllPage = () => {
                       key={schedule.id}
                       schedule={schedule}
                       onClick={handleCardClick}
-                      showSurvey={true}
-                      onSurveyClick={(scheduleId) => {
-                        router.push(ROUTE.SURVEY.SURVEY_FORM(String(scheduleId)));
-                      }}
+                      showSurvey={false}
                     />
                   ))}
                 </div>

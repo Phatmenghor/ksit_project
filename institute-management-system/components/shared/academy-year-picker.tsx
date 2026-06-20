@@ -1,7 +1,6 @@
 "use client";
 
-import { CustomDateTimePicker } from "./common/custom-date-picker";
-import { cn } from "@/lib/utils";
+import { YearSelector } from "./year-selector";
 
 interface AcademyYearPickerProps {
   value: number;
@@ -19,13 +18,13 @@ export function AcademyYearPicker({
   disabled = false,
 }: AcademyYearPickerProps) {
   return (
-    <CustomDateTimePicker
-      mode="academyYear"
-      value={value !== 0 ? String(value) : ""}
-      onChange={(v) => onChange(v ? parseInt(v) : 0)}
+    <YearSelector
+      value={value}
+      onChange={onChange}
       placeholder={placeholder}
       className={className}
       disabled={disabled}
+      title=""
     />
   );
 }

@@ -42,10 +42,12 @@ public interface MenuItemRepository extends JpaRepository<MenuItemEntity, Long> 
     List<MenuItemEntity> findChildMenusByParentIdAndStatus(@Param("parentId") Long parentId,
                                                           @Param("status") Status status);
 
-    /**
-     * Find menu by code
-     */
     Optional<MenuItemEntity> findByCodeAndStatus(String code, Status status);
+
+    /**
+     * Find menu by code regardless of status
+     */
+    Optional<MenuItemEntity> findByCode(String code);
 
     /**
      * Check if menu code exists

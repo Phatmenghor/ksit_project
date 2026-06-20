@@ -1,4 +1,5 @@
-import { AllRequestModel, RequestModel } from "@/model/request/request-model";
+import { AllRequestModel, RequestModel, AllHistoryReqModel } from "@/model/request/request-model";
+import { TranscriptModel } from "@/model/request/request-transcript";
 
 export interface RequestFilters {
   search: string;
@@ -16,6 +17,10 @@ export interface RequestManagementState {
   selectedRequest: RequestModel | null;
   isFetchingDetail: boolean;
   isUpdating: boolean;
+  transcript: TranscriptModel | null;
+  isFetchingTranscript: boolean;
+  history: AllHistoryReqModel | null;
+  isFetchingHistory: boolean;
 }
 
 export interface MyRequestFilters {

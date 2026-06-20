@@ -3,6 +3,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./data-table-pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export interface TableColumn<T = unknown> {
   key: string;
@@ -96,8 +97,8 @@ export function DataTable<T = unknown>({
               ))
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                  {emptyMessage}
+                <td colSpan={columns.length}>
+                  <EmptyState message={emptyMessage} />
                 </td>
               </tr>
             ) : (

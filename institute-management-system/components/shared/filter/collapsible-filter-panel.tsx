@@ -172,7 +172,7 @@ interface CollapsibleFilterPanelProps {
 export function CollapsibleFilterPanel({
   config,
 }: CollapsibleFilterPanelProps) {
-  const anyFilterActive = config.filters.some(isFilterActive);
+  const anyFilterActive = config.filters?.some(isFilterActive) ?? false;
 
   return (
     <Card className="border border-gray-100 shadow-sm">
@@ -243,7 +243,7 @@ export function CollapsibleFilterPanel({
           </div>
 
           {/* Each filter: grows to fill row, wraps when below min-width */}
-          {config.filters.map((filter) => (
+          {config.filters?.map((filter) => (
             <div key={filter.id} className="flex-1 min-w-[150px] max-w-[200px]">
               {renderFilter(filter)}
             </div>

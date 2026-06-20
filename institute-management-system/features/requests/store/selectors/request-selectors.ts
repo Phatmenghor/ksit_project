@@ -24,3 +24,8 @@ export const selectRequestPagination = createSelector(
 export const selectSelectedRequest = (state: RootState) => state.requests.selectedRequest;
 export const selectRequestIsFetchingDetail = (state: RootState) => state.requests.isFetchingDetail;
 export const selectRequestIsUpdating = (state: RootState) => state.requests.isUpdating;
+
+export const selectRequestTranscript = (state: RootState) => state.requests.transcript;
+export const selectRequestIsFetchingTranscript = (state: RootState) => state.requests.isFetchingTranscript;
+export const selectRequestHistory = (state: RootState) => state.requests.history;
+export const selectRequestIsFetchingHistory = (state: RootState) => state.requests.isFetchingHistory;

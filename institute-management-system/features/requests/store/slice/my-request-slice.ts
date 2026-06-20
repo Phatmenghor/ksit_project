@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MyRequestState } from "../models/type/request-type";
 import { fetchMyRequestsService } from "../thunks/my-request-thunks";
-import { createRequestThunk } from "../thunks/request-thunks";
+import { createRequestThunk, deleteRequestThunk } from "../thunks/request-thunks";
 
 const initialState: MyRequestState = {
   data: null,
@@ -65,6 +65,14 @@ const myRequestSlice = createSlice({
       .addCase(createRequestThunk.rejected, (state, action) => {
         state.error = action.payload as string;
         state.isCreating = false;
+      });
+
+    builder
+      .addCase(deleteRequestThunk.fulfilled, (state, action) => {
+        if (state.data?.content) {
+          state.data.content = state.data.content.filter((req) => req.id !== action.payload.id);
+          state.data.totalElements = Math.max(0, state.data.totalElements - 1);
+        }
       });
   },
 });

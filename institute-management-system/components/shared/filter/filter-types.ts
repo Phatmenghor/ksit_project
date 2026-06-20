@@ -82,7 +82,7 @@ export interface FilterPanelConfig {
   searchValue: string;
   searchPlaceholder: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  filters: FilterConfig[];
+  filters?: FilterConfig[];
   buttonText?: string;
   buttonDisabled?: boolean;
   buttonTooltip?: string;

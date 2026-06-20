@@ -19,6 +19,7 @@ import { CardHeaderSection } from "@/components/shared/layout/card-header-sectio
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
 import { DataTable } from "@/components/shared/data-table";
+import Loading from "@/components/shared/loading";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectPaymentData,
@@ -198,6 +199,10 @@ export default function PaymentPage() {
     onEdit: handleOpenEditModal,
     onDelete: (pay) => { setSelectedPayment(pay); setIsDeleteDialogOpen(true); },
   });
+
+  if (!studentDetail || (isLoading && !allPaymentData)) {
+    return <Loading />;
+  }
 
   return (
     <div className="space-y-4">

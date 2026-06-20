@@ -12,6 +12,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { EmptyState } from "@/components/shared/empty-state";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   selectDepartmentData,
@@ -88,7 +89,7 @@ export default function DepartmentListPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allDepartmentData?.content?.length === 0 ? (
                 <div className="col-span-full">
-                  <p className="text-center text-muted-foreground py-8">No Department found</p>
+                  <EmptyState message="No departments found" />
                 </div>
               ) : (
                 allDepartmentData?.content?.map((department) => (

@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { BreadcrumbLink } from "@/components/ui/breadcrumb";
+import Link from "next/link";
 import { ROUTE } from "@/constants/routes";
 import { TableColumn } from "@/components/shared/data-table";
 import { StudentModel } from "@/model/user/student/student.request.model";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface PaymentListColumnsProps {
   currentPage: number;
@@ -39,16 +40,22 @@ export function createPaymentListColumns({
       label: "Action",
       width: "100px",
       render: (s) => (
-        <BreadcrumbLink href={ROUTE.PAYMENT.VIEW_PAYMENT(String(s.id))}>
-          <Button
-            variant="link"
-            size="icon"
-            className="text-black underline hover:text-blue-600 flex items-center"
-          >
-            <Eye className="h-4 w-4" />
-            <span className="text-sm"> Detail</span>
-          </Button>
-        </BreadcrumbLink>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href={ROUTE.PAYMENT.VIEW_PAYMENT(String(s.id))}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>View Payment Detail</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ),
     },
   ];

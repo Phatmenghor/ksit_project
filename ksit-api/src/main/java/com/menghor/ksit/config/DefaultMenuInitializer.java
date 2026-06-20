@@ -290,13 +290,13 @@ public class DefaultMenuInitializer implements CommandLineRunner {
             MenuItemEntity parent, String icon,
             boolean isParent, int displayOrder) {
 
-        MenuItemEntity item = menuItemRepository.findByCodeAndStatus(code, Status.ACTIVE)
+        MenuItemEntity item = menuItemRepository.findByCode(code)
                 .orElse(null);
 
         if (item == null) {
             item = new MenuItemEntity();
             menuDataChanged = true;
-        } else if (!Objects.equals(item.getRoute(), route) || !Objects.equals(item.getTitle(), title)) {
+        } else if (!Objects.equals(item.getRoute(), route) || !Objects.equals(item.getTitle(), title) || item.getStatus() != Status.ACTIVE) {
             menuDataChanged = true;
         }
 
