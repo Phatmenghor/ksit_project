@@ -6,6 +6,7 @@ import { ROUTE } from "@/constants/routes";
 import { REQUEST_TYPES } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { StudentModel } from "@/model/user/student/student.request.model";
 import { ComboboxSelectStudent } from "@/components/shared/ComboBox/combobox-student";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
@@ -51,7 +52,7 @@ export default function RequestPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("requests", () => {
     dispatch(
       fetchAllRequestsService({
         search: searchDebounce,

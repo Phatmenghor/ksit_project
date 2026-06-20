@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import Loading from "@/components/shared/loading";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -38,7 +39,7 @@ export default function DepartmentListPage() {
 
   const debouncedSearchQuery = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("manage-schedule-dept", () => {
     dispatch(
       fetchAllDepartmentService({
         search: debouncedSearchQuery,
@@ -83,7 +84,7 @@ export default function DepartmentListPage() {
             </p>
           </div>
 
-          {isLoading && !allDepartmentData ? (
+          {isLoading ? (
             <Loading />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

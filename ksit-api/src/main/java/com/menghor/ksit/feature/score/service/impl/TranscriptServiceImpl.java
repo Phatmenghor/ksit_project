@@ -115,6 +115,7 @@ public class TranscriptServiceImpl implements TranscriptService {
         // Running totals for cumulative calculation
         int totalCreditsStudied = 0;
         int totalCreditsEarned = 0;
+        int totalCompletedCredits = 0; // graded credits — denominator for GPA/GPAX
         BigDecimal cumulativeGradePoints = BigDecimal.ZERO;
 
         // Sort semesters chronologically
@@ -139,17 +140,25 @@ public class TranscriptServiceImpl implements TranscriptService {
 
             totalCreditsEarned += semesterCreditsEarned;
 
-            // Calculate cumulative grade points for completed courses only
-            BigDecimal semesterGradePoints = calculateSemesterGradePoints(
-                    semesterDto.getCourses().stream()
-                            .filter(course -> course.getStatus() == CourseStatusEnum.COMPLETED)
-                            .collect(Collectors.toList())
-            );
+            // Only completed & graded courses contribute to GPA (numerator and denominator)
+            List<TranscriptCourseDto> gradedCourses = semesterDto.getCourses().stream()
+                    .filter(course -> course.getStatus() == CourseStatusEnum.COMPLETED &&
+                            course.getLetterGrade() != null)
+                    .collect(Collectors.toList());
+
+            // Calculate cumulative grade points for graded courses only
+            BigDecimal semesterGradePoints = calculateSemesterGradePoints(gradedCourses);
             cumulativeGradePoints = cumulativeGradePoints.add(semesterGradePoints);
 
-            // Calculate cumulative GPA (GPAX)
-            BigDecimal cumulativeGPA = totalCreditsStudied > 0 ?
-                    cumulativeGradePoints.divide(BigDecimal.valueOf(totalCreditsStudied), 2, RoundingMode.HALF_UP) :
+            // Accumulate graded credits (the correct GPA denominator)
+            int semesterCompletedCredits = gradedCourses.stream()
+                    .mapToInt(course -> course.getCredit() != null ? course.getCredit() : 0)
+                    .sum();
+            totalCompletedCredits += semesterCompletedCredits;
+
+            // Calculate cumulative GPA (GPAX) over graded credits only
+            BigDecimal cumulativeGPA = totalCompletedCredits > 0 ?
+                    cumulativeGradePoints.divide(BigDecimal.valueOf(totalCompletedCredits), 2, RoundingMode.HALF_UP) :
                     BigDecimal.ZERO;
 
             // Set GPAX
@@ -164,14 +173,42 @@ public class TranscriptServiceImpl implements TranscriptService {
         transcript.setNumberOfCreditsStudied(totalCreditsStudied);
         transcript.setNumberOfCreditsTransferred(0); // Default to 0, can be configured later
         transcript.setTotalNumberOfCreditsEarned(totalCreditsEarned);
-        transcript.setCumulativeGradePointAverage(totalCreditsStudied > 0 ?
-                cumulativeGradePoints.divide(BigDecimal.valueOf(totalCreditsStudied), 2, RoundingMode.HALF_UP) :
+        transcript.setCumulativeGradePointAverage(totalCompletedCredits > 0 ?
+                cumulativeGradePoints.divide(BigDecimal.valueOf(totalCompletedCredits), 2, RoundingMode.HALF_UP) :
                 BigDecimal.ZERO);
         transcript.setAcademicStatus(gradeUtilityService.getAcademicStanding(
                 transcript.getCumulativeGradePointAverage().doubleValue()));
+
+        // Derive admission / graduation from the span of academic years
+        applyAdmissionAndGraduation(transcript, semesters);
+
         transcript.setGeneratedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         return transcript;
+    }
+
+    /**
+     * Derive admission and graduation from the academic-year span of the
+     * student's semesters. Admission = earliest academy year; graduation =
+     * latest academy year + 1 (the academic year completes the following year).
+     */
+    private void applyAdmissionAndGraduation(TranscriptResponseDto transcript,
+                                             List<TranscriptSemesterDto> semesters) {
+        List<Integer> years = semesters.stream()
+                .map(TranscriptSemesterDto::getAcademyYear)
+                .filter(Objects::nonNull)
+                .sorted()
+                .toList();
+
+        if (years.isEmpty()) {
+            return;
+        }
+
+        int admissionYear = years.get(0);
+        int graduationYear = years.get(years.size() - 1) + 1;
+
+        transcript.setDateOfAdmission(String.valueOf(admissionYear));
+        transcript.setDateOfGraduation(String.valueOf(graduationYear));
     }
 
     private TranscriptSemesterDto buildSemesterDto(UserEntity student, List<ScheduleEntity> schedules) {

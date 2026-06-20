@@ -16,6 +16,8 @@ import Loading from "@/components/shared/loading";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -31,16 +33,22 @@ const ClassSchedulePage = () => {
   const department = useAppSelector((state) => state.departments.selectedDepartment);
   const allClassData = useAppSelector((state) => state.classes.data);
 
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedMajor, setSelectedMajor] = useState<number | null>(null);
-  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
-  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
   const params = useParams();
   const depId = params?.depId ? Number(params.depId) : null;
   const router = useRouter();
 
+  // Filters persist across navigation (keyed per department) so returning from
+  // the schedule detail keeps the same major/search instead of resetting.
+  const [searchQuery, setSearchQuery] = usePersistentState<string>(`mscls-search-${depId}`, "");
+  const [selectedMajor, setSelectedMajor] = usePersistentState<number | null>(`mscls-major-${depId}`, null);
+  // Only show the full-page loader before any data exists (not on cached return).
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(!allMajorData);
+  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState<boolean>(false);
+
   const searchParams = useSearchParams();
+  // View-only entry (e.g. from the dashboard): hide the "Add Schedule" action.
+  const viewOnly = searchParams.get("view") === "1";
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MANAGE_SCHEDULE.CLASS(String(depId)),
@@ -125,20 +133,22 @@ const ClassSchedulePage = () => {
     [currentPage, currentPageSize, updateUrlWithPage, dispatch]
   );
 
-  useEffect(() => {
+  // Department + majors load once per department (cached across navigation).
+  useCachedEffect(`mscls-dept-${depId}`, () => {
     if (!depId) return;
     dispatch(fetchDepartmentByIdService(depId));
-  }, [depId, dispatch]);
+  }, [depId]);
 
-  useEffect(() => {
+  useCachedEffect(`mscls-majors-${depId}`, () => {
     loadMajors({});
-  }, [loadMajors]);
+  }, [depId]);
 
-  useEffect(() => {
+  // Classes refetch only when the department/major/search/page actually change.
+  useCachedEffect(`mscls-classes-${depId}`, () => {
     if (selectedMajor) {
       loadClasses(selectedMajor, searchDebounce, currentPage);
     }
-  }, [selectedMajor, searchDebounce, currentPage, loadClasses]);
+  }, [depId, selectedMajor, searchDebounce, currentPage, currentPageSize]);
 
   const handleMajorSelect = (majorId: string) => {
     setSelectedMajor(Number(majorId));
@@ -204,6 +214,18 @@ const ClassSchedulePage = () => {
         }}
       />
 
+      {!selectedMajor && !isInitialLoading && (
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <EmptyState
+              icon={Users}
+              message="No Majors Available"
+              description="There are no active majors for this department."
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {selectedMajor && (
         <Card>
           <CardContent className="p-4 sm:p-6">
@@ -221,7 +243,7 @@ const ClassSchedulePage = () => {
               <div className="space-y-4">
                 {allClassData.content.map((classItem: ClassModel) => (
                   <ClassCard
-                    IsAdd={true}
+                    IsAdd={!viewOnly}
                     key={classItem.id}
                     classData={classItem}
                     onViewSchedule={() => handleViewSchedule(classItem)}

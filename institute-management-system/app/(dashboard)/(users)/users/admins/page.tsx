@@ -14,6 +14,7 @@ import { StaffModel } from "@/model/user/staff/staff.respond.model";
 import { useRouter } from "next/navigation";
 import ResetPasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -51,7 +52,7 @@ export default function AdminsListPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("users-admins", () => {
     dispatch(
       fetchAllStaffService({
         roles: [RoleEnum.ADMIN],

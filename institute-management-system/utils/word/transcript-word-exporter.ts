@@ -2,6 +2,7 @@ import {
   Document, Packer, Paragraph, Table, TableRow, TableCell,
   TextRun, WidthType, AlignmentType, BorderStyle,
   HeightRule, ShadingType, VerticalAlignTable, UnderlineType,
+  VerticalMergeType,
 } from "docx";
 import { TranscriptModel, Semester } from "@/model/request/request-transcript";
 
@@ -312,53 +313,6 @@ function buildSectionRows(
   return rows;
 }
 
-// ── Grade legend table (inline, matches textbox table) ────────────────────────
-function gradeLegendTable(): Table {
-  // Column widths from template: 655, 508, 704, 965, 1728
-  const cw = [655, 508, 704, 965, 1728] as const;
-  const totalW = cw[0]+cw[1]+cw[2]+cw[3]+cw[4]; // 4560
-
-  const bTop4 = { top: T, bottom: T, left: T, right: T };
-  const bBot4 = { top: N, bottom: T, left: T, right: T };
-
-  const hdrRow = new TableRow({
-    children: [
-      tc(cw[0], 1, [p("Grade",   AlignmentType.CENTER, true)], bTop4),
-      tc(cw[1]+cw[2]+cw[3]+cw[4], 4, [p("Mention", AlignmentType.CENTER, true)], bTop4),
-    ],
-    height: { value: 300, rule: HeightRule.ATLEAST },
-  });
-
-  const gradeData: [string, string, string, string, string][] = [
-    ["A",  "4.00", "85-100", "Excellent",   "S = SATISFACTORY"],
-    ["B+", "3.50", "80-84",  "Very Good",   "U = UNSATISFACTORY"],
-    ["B",  "3.00", "70-79",  "Good",        "I = INCOMPLETE"],
-    ["C+", "2.50", "65-69",  "Fairly Good", ""],
-    ["C",  "2.00", "60-64",  "Fair",        ""],
-    ["D",  "1.50", "50-59",  "Poor",        ""],
-    ["E",  "1.00", "40-49",  "Very Poor",   ""],
-    ["F",  "0.00", "<40",    "Fail",        ""],
-  ];
-
-  const dataRows = gradeData.map(([grade, pts, pct, mention, extra]) =>
-    new TableRow({
-      children: [
-        tc(cw[0], 1, [p(grade,   AlignmentType.CENTER)], bBot4),
-        tc(cw[1], 1, [p(pts,     AlignmentType.CENTER)], bBot4),
-        tc(cw[2], 1, [p(pct,     AlignmentType.CENTER)], bBot4),
-        tc(cw[3], 1, [p(mention)],                        bBot4),
-        tc(cw[4], 1, [p(extra)],                          bBot4),
-      ],
-      height: { value: 220, rule: HeightRule.ATLEAST },
-    })
-  );
-
-  return new Table({
-    width: { size: totalW, type: WidthType.DXA },
-    rows: [hdrRow, ...dataRows],
-  });
-}
-
 // ── Student info table (borderless, 4 columns) ────────────────────────────────
 function infoTable(data: TranscriptModel, extra: ExtraInfo): Table {
   const NONE4 = { top: N, bottom: N, left: N, right: N } as Borders;
@@ -386,6 +340,7 @@ function infoTable(data: TranscriptModel, extra: ExtraInfo): Table {
   }
 
   return new Table({
+    columnWidths: [labelW, valueW, rLabelW, rValueW],
     width: { size: W_TOTAL, type: WidthType.DXA },
     rows: [
       infoRow("Name",           data.studentName  ?? "",      "Department",        data.departmentName ?? ""),
@@ -397,55 +352,91 @@ function infoTable(data: TranscriptModel, extra: ExtraInfo): Table {
   });
 }
 
-// ── Bottom section: grade legend + signature side by side ─────────────────────
+// ── Bottom section: grade legend rows + signature (vertical merge) ────────────
 function bottomTable(extra: ExtraInfo): Table {
   const NONE4 = { top: N, bottom: N, left: N, right: N } as Borders;
+  const bTop4 = { top: T, bottom: T, left: T, right: T };
+  const bBot4 = { top: N, bottom: T, left: T, right: T };
 
-  const today = new Date();
-  const city  = extra.issueCity ?? "Kampong Speu";
+  const gcw = [794, 616, 854, 1170, 2096] as const; // sum = W_LEFT = 5530
+  const mentionW = gcw[1] + gcw[2] + gcw[3] + gcw[4]; // 4736
+
+  const today   = new Date();
+  const city    = extra.issueCity ?? "Kampong Speu";
   const dateStr = `${city}, ${today.getDate()} ${MONTHS[today.getMonth()]} ${today.getFullYear()}`;
 
-  const sigCell = new TableCell({
+  const gradeData: [string, string, string, string, string][] = [
+    ["A",  "4.00", "85-100", "Excellent",   "S = SATISFACTORY"],
+    ["B+", "3.50", "80-84",  "Very Good",   "U = UNSATISFACTORY"],
+    ["B",  "3.00", "70-79",  "Good",        "I = INCOMPLETE"],
+    ["C+", "2.50", "65-69",  "Fairly Good", ""],
+    ["C",  "2.00", "60-64",  "Fair",        ""],
+    ["D",  "1.50", "50-59",  "Poor",        ""],
+    ["E",  "1.00", "40-49",  "Very Poor",   ""],
+    ["F",  "0.00", "<40",    "Fail",        ""],
+  ];
+
+  // Signature spans all rows via verticalMerge; content pushed to bottom
+  const sigStartCell = new TableCell({
     children: [
-      new Paragraph({ children: [], spacing: { before: 0, after: 280 } }),
       new Paragraph({
         children: [tr(dateStr)],
         alignment: AlignmentType.CENTER,
         spacing: { before: 0, after: 0 },
       }),
       new Paragraph({
-        children: [tr("Director")],
+        children: [tr("Director", true)],
         alignment: AlignmentType.CENTER,
         spacing: { before: 560, after: 0 },
       }),
       new Paragraph({
-        children: [tr(extra.directorName ?? "HONG Kimcheang, Ph.D")],
+        children: [tr(extra.directorName ?? "HONG Kimcheang, Ph.D", true)],
         alignment: AlignmentType.CENTER,
         spacing: { before: 0, after: 0 },
       }),
     ],
     width: { size: W_RIGHT, type: WidthType.DXA },
     borders: NONE4,
+    verticalMerge: VerticalMergeType.RESTART,
     verticalAlign: VerticalAlignTable.BOTTOM,
     margins: { top: 0, bottom: 0, left: 80, right: 80 },
   });
 
-  const legendCell = new TableCell({
-    children: [gradeLegendTable()],
-    width: { size: W_LEFT, type: WidthType.DXA },
+  const sigContCell = () => new TableCell({
+    children: [new Paragraph({ children: [] })],
+    width: { size: W_RIGHT, type: WidthType.DXA },
     borders: NONE4,
-    verticalAlign: VerticalAlignTable.TOP,
-    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+    verticalMerge: VerticalMergeType.CONTINUE,
   });
 
-  return new Table({
-    width: { size: W_TOTAL, type: WidthType.DXA },
-    rows: [
-      new TableRow({
-        children: [legendCell, sigCell],
-        height: { value: 2800, rule: HeightRule.ATLEAST },
-      }),
+  // Header row: Grade | Mention (span 4) | sig (merge start)
+  const hdrRow = new TableRow({
+    children: [
+      tc(gcw[0],    1, [p("Grade",   AlignmentType.CENTER, true)], bTop4),
+      tc(mentionW,  4, [p("Mention", AlignmentType.CENTER, true)], bTop4),
+      sigStartCell,
     ],
+    height: { value: 300, rule: HeightRule.ATLEAST },
+  });
+
+  const dataRows = gradeData.map(([grade, pts, pct, mention, sui]) =>
+    new TableRow({
+      children: [
+        tc(gcw[0], 1, [p(grade,   AlignmentType.CENTER)], bBot4),
+        tc(gcw[1], 1, [p(pts,     AlignmentType.CENTER)], bBot4),
+        tc(gcw[2], 1, [p(pct,     AlignmentType.CENTER)], bBot4),
+        tc(gcw[3], 1, [p(mention)],                       bBot4),
+        tc(gcw[4], 1, [p(sui)],                           bBot4),
+        sigContCell(),
+      ],
+      height: { value: 220, rule: HeightRule.ATLEAST },
+    })
+  );
+
+  return new Table({
+    columnWidths: [...gcw, W_RIGHT],
+    width: { size: W_TOTAL, type: WidthType.DXA },
+    rows: [hdrRow, ...dataRows],
   });
 }
 
@@ -499,6 +490,7 @@ function buildDoc(data: TranscriptModel, extra: ExtraInfo = {}): Document {
   tableRows.push(lastGpaRow(lastLeftGpa));
 
   const courseTable = new Table({
+    columnWidths: [L1, L2, L3, L4, L5, R1, R2, R3, R4, R5],
     width: { size: W_TOTAL, type: WidthType.DXA },
     rows: tableRows,
   });
@@ -508,13 +500,13 @@ function buildDoc(data: TranscriptModel, extra: ExtraInfo = {}): Document {
       properties: {
         page: {
           size:   { width: 11907, height: 16840 },   // A4
-          margin: { top: 3261, bottom: 1440, left: 993, right: 1275 },
+          margin: { top: 720, bottom: 720, left: 494, right: 493 },
         },
       },
       children: [
         // Title
         new Paragraph({
-          children: [tr("OFFICIAL TRANSCRIPT", true, false, SZ_T)],
+          children: [tr("OFFICIAL ACADEMIC TRANSCRIPT", true, false, SZ_T)],
           alignment: AlignmentType.CENTER,
           spacing: { before: 0, after: 120 },
         }),

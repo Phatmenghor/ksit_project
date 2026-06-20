@@ -13,6 +13,7 @@ import {
 } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
@@ -55,7 +56,7 @@ export default function ManageRoomPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("md-rooms", () => {
     dispatch(
       fetchAllRoomService({
         search: searchDebounce,

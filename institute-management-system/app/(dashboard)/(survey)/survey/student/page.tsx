@@ -10,6 +10,7 @@ import Loading from "@/components/shared/loading";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import ScheduleCard from "@/components/shared/schedule-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
@@ -59,14 +60,7 @@ const ScheduleAllPage = () => {
 
   const isMounted = useRef(false);
 
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      if (data) {
-        return;
-      }
-    }
-
+  useCachedEffect("survey-student", () => {
     dispatch(
       fetchMySchedulesService({
         search: searchDebounce,

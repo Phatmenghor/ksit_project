@@ -10,6 +10,7 @@ import { StudentModel } from "@/model/user/student/student.request.model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { useRouter } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { getRoles } from "@/utils/local-storage/user-info/roles";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-course";
@@ -60,14 +61,7 @@ export default function PaymentStudentListPage() {
 
   const isMounted = useRef(false);
 
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      if (data) {
-        return;
-      }
-    }
-
+  useCachedEffect("payments", () => {
     dispatch(
       fetchAllStudentsService({
         search: searchDebounce,

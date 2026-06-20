@@ -9,6 +9,7 @@ import { SemesterFilter, SubmissionEnum, tabs } from "@/constants/constant";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
@@ -69,7 +70,7 @@ export default function ScoreSubmittedPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
+  useCachedEffect("scores-submitted", () => {
     dispatch(
       fetchAllSubmittedScoresService({
         search: searchDebounce,

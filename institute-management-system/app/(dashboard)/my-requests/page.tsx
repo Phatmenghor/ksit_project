@@ -7,6 +7,7 @@ import { REQUEST_TYPES } from "@/constants/constant";
 import { RequestModel } from "@/model/request/request-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { getUserId } from "@/utils/local-storage/user-info/userId";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -53,7 +54,7 @@ export default function MyRequestsPage() {
 
   const currentUserId = typeof window !== "undefined" ? Number(getUserId()) || undefined : undefined;
 
-  useEffect(() => {
+  useCachedEffect("my-requests", () => {
     dispatch(
       fetchMyRequestsService({
         search: debouncedSearch || undefined,

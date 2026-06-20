@@ -14,6 +14,7 @@ import { StaffModel } from "@/model/user/staff/staff.respond.model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -51,7 +52,7 @@ export default function TeachersListPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("users-teachers", () => {
     dispatch(
       fetchAllStaffService({
         roles: [RoleEnum.TEACHER],

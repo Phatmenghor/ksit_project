@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
@@ -32,6 +32,7 @@ import {
 } from "@/features/schedules/store/slice/schedule-slice";
 import { fetchMySchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
+import { useCachedList } from "@/hooks/use-cached-list";
 
 const WEEKDAY_VALUES = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
@@ -57,7 +58,17 @@ export default function AllSchedulePage() {
 
   const selectedDay = DAYS_OF_WEEK.find((d) => d.value === filters.dayOfWeek) ?? getCurrentDay();
 
-  useEffect(() => {
+  const queryKey = JSON.stringify({
+    search: searchDebounce,
+    day: filters.dayOfWeek,
+    year: filters.academicYear,
+    semester: filters.semester,
+    classId: filters.classId,
+    page: currentPage,
+    size: currentPageSize,
+  });
+
+  useCachedList("scores-student", queryKey, () => {
     dispatch(
       fetchMySchedulesService({
         search: searchDebounce,
@@ -70,11 +81,7 @@ export default function AllSchedulePage() {
         classId: filters.classId,
       })
     );
-  }, [dispatch, searchDebounce, filters.dayOfWeek, filters.academicYear, filters.semester, filters.classId, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    dispatch(setDayFilter(getCurrentDay().value));
-  }, [dispatch]);
+  });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
@@ -187,7 +194,7 @@ export default function AllSchedulePage() {
             <p className="text-sm text-muted-foreground">Total Schedule: {data?.totalElements || 0}</p>
           </div>
 
-          {isLoading && !data ? (
+          {isLoading ? (
             <Loading />
           ) : (
             <div>

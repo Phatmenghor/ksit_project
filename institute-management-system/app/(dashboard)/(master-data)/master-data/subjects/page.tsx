@@ -11,6 +11,7 @@ import { RoomFormData as SubjectFormData } from "@/components/dashboard/master-d
 import { SubjectModal } from "@/components/dashboard/master-data/manage-subject/subject-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable } from "@/components/shared/data-table";
 import { toast } from "sonner";
@@ -53,7 +54,7 @@ export default function ManageSubjectPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("md-subjects", () => {
     dispatch(
       fetchAllSubjectService({
         search: searchDebounce,

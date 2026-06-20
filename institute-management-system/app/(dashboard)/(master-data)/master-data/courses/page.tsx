@@ -14,6 +14,7 @@ import { ComboboxSelectDepartment } from "@/components/shared/ComboBox/combobox-
 import { DepartmentModel } from "@/model/master-data/department/all-department-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -52,7 +53,7 @@ export default function CoursesPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("md-courses", () => {
     dispatch(
       fetchAllCoursesService({
         search: searchDebounce,

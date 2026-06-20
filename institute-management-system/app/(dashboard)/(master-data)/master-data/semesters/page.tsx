@@ -10,6 +10,7 @@ import { SemesterFormModal } from "@/components/dashboard/master-data/manage-sem
 import { SemesterModel } from "@/model/master-data/semester/semester-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
@@ -54,7 +55,7 @@ export default function ManageSemester() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("md-semesters", () => {
     dispatch(
       fetchAllSemesterService({
         search: searchDebounce,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
 import { Copy, CalendarX } from "lucide-react";
@@ -12,15 +12,14 @@ import {
   deleteScheduleService,
   fetchAllSchedulesService,
 } from "@/features/schedules/store/thunks/schedule-thunks";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
-  AllScheduleModel,
-  ScheduleModel,
-} from "@/model/attendance/schedule/schedule-model";
+  selectScheduleData,
+  selectScheduleIsLoading,
+} from "@/features/schedules/store/selectors/schedule-selectors";
+import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-
-import { AllScheduleFilterModel } from "@/model/schedules/type-schedule-model";
+import { useParams, useRouter } from "next/navigation";
 import DuplicateScheduleModal from "@/components/dashboard/manage-schedule/duplicate-schedule-modal";
 import { usePagination } from "@/hooks/use-pagination";
 import ScheduleCard from "@/components/shared/schedule-card";
@@ -30,142 +29,84 @@ import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTablePagination } from "@/components/shared/data-table/data-table-pagination";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
+import { usePersistentState } from "@/hooks/use-persistent-state";
+import { useCachedList } from "@/hooks/use-cached-list";
 
 const ALL_DAY: DayType = { label: "All", value: "ALL" };
 
 const AllSchedulePage = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedDay, setSelectedDay] = useState<DayType>(ALL_DAY);
-  const [scheduleData, setScheduleData] = useState<AllScheduleModel | null>(
-    null
-  );
-  const [selectedSchedule, setSelectedSchedule] =
-    useState<ScheduleModel | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [isDuplicateScheduleModalOpen, setIsDuplicateScheduleModalOpen] =
-    useState(false);
-  const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
-
-  const [selectedYear, setSelectedYear] = useState<number>(2024);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [classId, setClassId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const dispatch = useAppDispatch();
+  // Read data directly from Redux — the singleton store persists it across navigation.
+  const scheduleData = useAppSelector(selectScheduleData);
+  const isLoading = useAppSelector(selectScheduleIsLoading);
 
   const params = useParams();
+  const classId = params?.classId ? Number(params.classId) : null;
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    setSelectedYear(new Date().getFullYear());
+  // Filters persist per-classId across navigation via module-level storage.
+  const [searchQuery, setSearchQuery] = usePersistentState<string>(`ms-cls-search-${classId}`, "");
+  const [selectedDay, setSelectedDay] = usePersistentState<DayType>(`ms-cls-day-${classId}`, ALL_DAY);
+  const [selectedSemester, setSelectedSemester] = usePersistentState<string>(`ms-cls-semester-${classId}`, "ALL");
+  const [selectedYear, setSelectedYear] = usePersistentState<number>(`ms-cls-year-${classId}`, new Date().getFullYear());
 
-    if (params?.classId) {
-      setClassId(Number(params.classId));
-    }
-
-    setIsHydrated(true);
-  }, [params?.classId]);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleModel | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDuplicateScheduleModalOpen, setIsDuplicateScheduleModalOpen] = useState(false);
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange } = usePagination({
     baseRoute: ROUTE.MANAGE_SCHEDULE.All_SCHEDULE_DETAIL(String(classId)),
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    if (currentPage !== 1) {
-      updateUrlWithPage(1);
-    }
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
-  useEffect(() => {
-    if (!isHydrated) return;
+  const queryKey = JSON.stringify({
+    classId,
+    search: debouncedSearchQuery,
+    day: selectedDay?.value,
+    year: selectedYear,
+    semester: selectedSemester,
+    page: currentPage,
+    size: currentPageSize,
+  });
 
-    const timer = setTimeout(() => {
-      const pageParam = searchParams.get("pageNo");
-      if (!pageParam) {
-        updateUrlWithPage(1, true);
-      }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [searchParams, updateUrlWithPage, isHydrated]);
-
-  const fetchSchedule = useCallback(
-    async (filters: AllScheduleFilterModel) => {
-      if (!classId || !isHydrated) return;
-
-      setIsLoading(true);
-      try {
-        const baseFilters = {
-          classId: classId,
-          search: debouncedSearchQuery,
-          status: StatusEnum.ACTIVE,
-          pageNo: currentPage,
-          pageSize: currentPageSize,
-          academyYear: selectedYear,
-          semester: selectedSemester != "ALL" ? selectedSemester : undefined,
-          dayOfWeek:
-            selectedDay?.value !== "ALL" ? selectedDay?.value : undefined,
-          ...filters,
-        };
-
-        const response = await dispatch(fetchAllSchedulesService(baseFilters)).unwrap();
-
-        setScheduleData(response);
-        if (response.totalPages > 0 && currentPage > response.totalPages) {
-          updateUrlWithPage(response.totalPages);
-          return;
-        }
-      } catch (error) {
-        toast.error("An error occurred while loading classes");
-        setScheduleData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
+  const doFetch = () => {
+    if (!classId) return;
+    dispatch(fetchAllSchedulesService({
       classId,
-      debouncedSearchQuery,
-      selectedDay,
-      selectedYear,
-      currentPage,
-      selectedSemester,
-      isHydrated,
-      dispatch,
-    ]
-  );
+      search: debouncedSearchQuery,
+      status: StatusEnum.ACTIVE,
+      pageNo: currentPage,
+      pageSize: currentPageSize,
+      academyYear: selectedYear,
+      semester: selectedSemester !== "ALL" ? selectedSemester : undefined,
+      dayOfWeek: selectedDay?.value !== "ALL" ? selectedDay?.value : undefined,
+    }));
+  };
 
-  useEffect(() => {
-    if (selectedDay && isHydrated && classId) {
-      fetchSchedule({ pageNo: currentPage });
-    }
-  }, [
-    selectedDay,
-    debouncedSearchQuery,
-    currentPage,
-    selectedSemester,
-    fetchSchedule,
-  ]);
+  // Only fetches when classId/filters/page actually change; cache hit on back-nav.
+  useCachedList(`ms-cls-${classId}`, queryKey, doFetch);
 
   const handleDaySelect = (value: string | number | null | undefined) => {
     const day = DAYS_OF_WEEK.find((d) => d.value === value) ?? ALL_DAY;
     setSelectedDay(day);
-    updateUrlWithPage(1);
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
-    updateUrlWithPage(1);
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
-  const handleSemesterChange = (
-    semester: string | number | null | undefined
-  ) => {
+  const handleSemesterChange = (semester: string | number | null | undefined) => {
     setSelectedSemester(semester ? String(semester) : "ALL");
-    updateUrlWithPage(1);
+    if (currentPage !== 1) updateUrlWithPage(1);
   };
 
   const handleEditClick = (scheduleId: number) => {
@@ -175,29 +116,12 @@ const AllSchedulePage = () => {
   const handleDelete = async () => {
     if (!selectedSchedule?.id) return;
     setIsSubmitting(true);
-
     try {
       await dispatch(deleteScheduleService(selectedSchedule.id)).unwrap();
-
       toast.success("Schedule deleted successfully");
-
-      setScheduleData((prevData) => {
-        if (!prevData) return null;
-
-        const updatedContent = prevData.content.filter(
-          (schedule) => schedule.id !== selectedSchedule.id
-        );
-
-        return {
-          ...prevData,
-          content: updatedContent,
-          totalElements: prevData.totalElements - 1,
-        };
-      });
-
       setSelectedSchedule(null);
       setIsDeleteDialogOpen(false);
-    } catch (error) {
+    } catch {
       toast.error("An error occurred while deleting the schedule");
     } finally {
       setIsSubmitting(false);
@@ -212,10 +136,6 @@ const AllSchedulePage = () => {
   const handleCardClick = (scheduleId: number) => {
     router.push(ROUTE.STUDENT_LIST(String(scheduleId)));
   };
-
-  if (!isHydrated) {
-    return <Loading />;
-  }
 
   return (
     <div className="space-y-4">
@@ -311,9 +231,7 @@ const AllSchedulePage = () => {
                       showEditButton={true}
                       showDeleteButton={true}
                       onDeleteClick={() => handleDeleteClick(schedule)}
-                      onEditClick={(scheduleId) => {
-                        handleEditClick(scheduleId);
-                      }}
+                      onEditClick={(scheduleId) => handleEditClick(scheduleId)}
                     />
                   ))}
                 </div>
@@ -346,8 +264,9 @@ const AllSchedulePage = () => {
             }
             isOpen={isDuplicateScheduleModalOpen}
             onOpenChange={() => setIsDuplicateScheduleModalOpen(false)}
-            onSuccess={() => fetchSchedule({ pageNo: currentPage })}
+            onSuccess={() => doFetch()}
           />
+
           <DeleteConfirmationDialog
             isOpen={isDeleteDialogOpen}
             onClose={() => {
@@ -360,19 +279,14 @@ const AllSchedulePage = () => {
               selectedSchedule && (
                 <>
                   Are you sure you want to delete this schedule?
-                  <br />
-                  <br />
-                  <strong>Class:</strong> {selectedSchedule.classes.code} <br />
-                  <strong>Course:</strong> {selectedSchedule.course.nameEn} <br />
-                  <strong>Teacher:</strong>{" "}
-                  {selectedSchedule.teacher.englishFirstName}{" "}
-                  {selectedSchedule.teacher.englishLastName} <br />
-                  <strong>Day:</strong> {selectedSchedule.day} <br />
-                  <strong>Time:</strong> {selectedSchedule.startTime} -{" "}
-                  {selectedSchedule.endTime} <br />
-                  <strong>Room:</strong> {selectedSchedule.room.name} <br />
-                  <strong>Semester:</strong> {selectedSchedule.semester.semester}{" "}
-                  ({selectedSchedule.semester.academyYear})
+                  <br /><br />
+                  <strong>Class:</strong> {selectedSchedule.classes.code}<br />
+                  <strong>Course:</strong> {selectedSchedule.course.nameEn}<br />
+                  <strong>Teacher:</strong> {selectedSchedule.teacher.englishFirstName} {selectedSchedule.teacher.englishLastName}<br />
+                  <strong>Day:</strong> {selectedSchedule.day}<br />
+                  <strong>Time:</strong> {selectedSchedule.startTime} - {selectedSchedule.endTime}<br />
+                  <strong>Room:</strong> {selectedSchedule.room.name}<br />
+                  <strong>Semester:</strong> {selectedSchedule.semester.semester} ({selectedSchedule.semester.academyYear})
                 </>
               )
             }

@@ -18,8 +18,14 @@ public class TranscriptResponseDto {
     
     // Student personal information
     private LocalDate dateOfBirth;
+    private String nationality;
+    private String placeOfBirth;
     private DegreeEnum degree;
-    
+
+    // Admission / graduation (derived from academic years)
+    private String dateOfAdmission;
+    private String dateOfGraduation;
+
     // Credit summary
     private Integer numberOfCreditsStudied;
     private Integer numberOfCreditsTransferred;

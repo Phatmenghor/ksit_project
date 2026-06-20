@@ -14,6 +14,7 @@ import { RoleEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import { StaffModel } from "@/model/user/staff/staff.respond.model";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { DataTable } from "@/components/shared/data-table";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -51,7 +52,7 @@ export default function StuffOfficerListPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("users-staff", () => {
     dispatch(
       fetchAllStaffService({
         roles: [RoleEnum.STAFF],

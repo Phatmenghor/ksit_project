@@ -6,7 +6,11 @@ export interface TranscriptModel {
   majorName: string;
   departmentName: string;
   dateOfBirth: any;
+  nationality: string;
+  placeOfBirth: string;
   degree: string;
+  dateOfAdmission: string;
+  dateOfGraduation: string;
   numberOfCreditsStudied: number;
   numberOfCreditsTransferred: number;
   totalNumberOfCreditsEarned: number;

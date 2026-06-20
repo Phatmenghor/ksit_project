@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { AcademyYearFilter } from "@/components/shared/academy-year-filter";
 import { DataTable } from "@/components/shared/data-table";
@@ -77,7 +78,7 @@ export default function SurveyResultPage() {
     dispatch(fetchSurveyHeadersService({ hiddenHeaders }));
   }, [dispatch]);
 
-  useEffect(() => {
+  useCachedEffect("survey-results", () => {
     dispatch(
       fetchSurveyResultsService({
         search: searchDebounce,

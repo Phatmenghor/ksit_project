@@ -26,12 +26,14 @@ import permissionReducer from "@/features/permissions/store/slice/permission-sli
 
 import uiReducer from "./slices/ui-slice";
 import comboboxCacheReducer from "./slices/combobox-cache-slice";
+import listCacheReducer from "./slices/list-cache-slice";
 import authReducer from "./slices/auth-slice";
 import statisticReducer from "./slices/statistic-slice";
 
 export const reducers = {
   ui: uiReducer,
   comboboxCache: comboboxCacheReducer,
+  listCache: listCacheReducer,
   auth: authReducer,
   statistic: statisticReducer,
 

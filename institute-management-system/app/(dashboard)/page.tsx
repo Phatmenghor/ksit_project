@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import Loading from "@/components/shared/loading";
@@ -100,13 +101,18 @@ export default function ManageClassPage() {
     }
   }, [dispatch]);
 
-  useEffect(() => {
-    loadDepartments({});
-    loadStatistics();
-  }, [currentPage, currentPageSize, loadDepartments, loadStatistics]);
+  useCachedEffect(
+    "dashboard-dept",
+    () => {
+      loadDepartments({});
+      loadStatistics();
+    },
+    [currentPage, currentPageSize]
+  );
 
   function onClickDepartmentCard(departmentId: number) {
-    router.push(ROUTE.MY_CLASS.CLASS + `/${departmentId}`);
+    // View-only entry from the dashboard (no "Add Schedule" action).
+    router.push(`${ROUTE.MANAGE_SCHEDULE.CLASS(String(departmentId))}?view=1`);
   }
   return (
     <div>

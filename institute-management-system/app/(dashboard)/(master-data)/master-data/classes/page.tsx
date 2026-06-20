@@ -16,6 +16,7 @@ import {
 import { DegreeEnum } from "@/constants/constant";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { MajorModel } from "@/model/master-data/major/all-major-model";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { ComboboxSelectMajor } from "@/components/shared/ComboBox/combobox-major";
@@ -61,7 +62,7 @@ export default function ManageClassPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("md-classes", () => {
     dispatch(
       fetchAllClassService({
         search: searchDebounce,

@@ -24,7 +24,6 @@ import {
   Check,
   Info,
   FileText,
-  FileType2,
   User,
   GraduationCap,
   ChevronDown,
@@ -81,13 +80,11 @@ export default function StudentDetail() {
   const transcriptReqData = useAppSelector(selectRequestTranscript);
 
   const {
-    exportTranscriptAsWord,
     exportTranscriptAsPDF,
     isExporting,
     exportType,
     canExport,
   } = useStudentExport({
-    studentDetail: student,
     transcriptData: transcriptReqData,
   });
 
@@ -463,26 +460,8 @@ export default function StudentDetail() {
             <div className="flex items-center gap-2">
               <Button
                 disabled={!canExport || isExporting}
-                onClick={() => exportTranscriptAsWord()}
-                className="flex items-center gap-2 rounded-full px-4 shadow-sm bg-primary hover:bg-primary/95 text-white h-9 text-xs"
-              >
-                {isExporting && exportType === "word" ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <FileType2 className="h-3.5 w-3.5" />
-                    Export Word
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                disabled={!canExport || isExporting}
                 onClick={() => exportTranscriptAsPDF()}
-                className="flex items-center gap-2 rounded-full px-4 shadow-sm h-9 text-xs"
+                className="flex items-center gap-2 rounded-full px-4 shadow-sm bg-primary hover:bg-primary/95 text-white h-9 text-xs"
               >
                 {isExporting && exportType === "pdf" ? (
                   <>

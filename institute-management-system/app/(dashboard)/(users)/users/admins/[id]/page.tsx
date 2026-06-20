@@ -20,6 +20,7 @@ import TeacherFamilySection from "@/components/dashboard/users/teachers/view/Tea
 export default function AdminDetailPage() {
   const dispatch = useAppDispatch();
   const admin = useAppSelector(selectSelectedStaff);
+  const isLoading = useAppSelector((state) => state.staff.operations.isFetchingDetail);
   const params = useParams();
   const adminId = params.id as string;
 
@@ -28,6 +29,22 @@ export default function AdminDetailPage() {
       dispatch(fetchStaffByIdService(adminId));
     }
   }, [adminId, dispatch]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!admin) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground">Admin not found.</p>
+      </div>
+    );
+  }
 
   return (
     <div>

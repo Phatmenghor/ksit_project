@@ -121,9 +121,9 @@ export function TranscriptLayout({ data }: TranscriptLayoutProps) {
           {([
             ["Name",          data?.studentName || "---"],
             ["Student ID",    data?.studentCode || "---"],
-            ["Nationality",   "---"],
+            ["Nationality",   data?.nationality || "---"],
             ["Date of Birth", data?.dateOfBirth ? formatDate(data.dateOfBirth) : "---"],
-            ["Place of Birth","---"],
+            ["Place of Birth",data?.placeOfBirth || "---"],
           ] as [string, string][]).map(([label, value]) => (
             <div key={label} className="flex items-center px-3 py-[3px] text-[10px]">
               <span className="w-24 shrink-0 text-[#4472C4]">{label}</span>
@@ -136,8 +136,8 @@ export function TranscriptLayout({ data }: TranscriptLayoutProps) {
             ["Department",        data?.departmentName || "---"],
             ["Degree",            data?.degree ? formatDegree(data.degree) : "---"],
             ["Major",             data?.majorName || "---"],
-            ["Date of Admission", "---"],
-            ["Date of Graduation","---"],
+            ["Date of Admission", data?.dateOfAdmission || "---"],
+            ["Date of Graduation",data?.dateOfGraduation || "---"],
           ] as [string, string][]).map(([label, value]) => (
             <div key={label} className="flex items-center px-3 py-[3px] text-[10px]">
               <span className="w-28 shrink-0 text-[#4472C4]">{label}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { ROUTE } from "@/constants/routes";
@@ -31,6 +31,7 @@ import {
 } from "@/features/schedules/store/slice/schedule-slice";
 import { fetchMySchedulesService } from "@/features/schedules/store/thunks/schedule-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
+import { useCachedList } from "@/hooks/use-cached-list";
 import { StatusEnum } from "@/constants/constant";
 import { EmptyState } from "@/components/shared/empty-state";
 
@@ -58,7 +59,17 @@ const ScheduleAllPage = () => {
 
   const selectedDay = DAYS_OF_WEEK.find((d) => d.value === filters.dayOfWeek) ?? getCurrentDay();
 
-  useEffect(() => {
+  const queryKey = JSON.stringify({
+    search: searchDebounce,
+    day: filters.dayOfWeek,
+    year: filters.academicYear,
+    semester: filters.semester,
+    courseId: filters.courseId,
+    page: currentPage,
+    size: currentPageSize,
+  });
+
+  useCachedList("schedule", queryKey, () => {
     dispatch(
       fetchMySchedulesService({
         search: searchDebounce,
@@ -71,11 +82,7 @@ const ScheduleAllPage = () => {
         courseId: filters.courseId,
       })
     );
-  }, [dispatch, searchDebounce, filters.dayOfWeek, filters.academicYear, filters.semester, filters.courseId, currentPage, currentPageSize]);
-
-  useEffect(() => {
-    dispatch(setDayFilter(getCurrentDay().value));
-  }, [dispatch]);
+  });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchFilter(e.target.value));
@@ -188,7 +195,7 @@ const ScheduleAllPage = () => {
             <p className="text-sm text-muted-foreground">Total Schedule: {data?.totalElements || 0}</p>
           </div>
 
-          {isLoading && !data ? (
+          {isLoading ? (
             <Loading />
           ) : (
             <div>

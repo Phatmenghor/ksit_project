@@ -7,6 +7,7 @@ import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { toast } from "sonner";
 import { Separator } from "@radix-ui/react-separator";
 import { Button } from "@/components/ui/button";
@@ -81,10 +82,10 @@ export default function StudentListPage() {
     }
   }, [scheduleId, dispatch]);
 
-  useEffect(() => {
+  useCachedEffect(`students-class-${scheduleId}`, () => {
     fetchSchedule({});
-    fetchClassDetail(); // Call with empty filters or your default filters
-  }, [currentPage, fetchClassDetail]);
+    fetchClassDetail();
+  }, [scheduleId, currentPage, currentPageSize]);
   const router = useRouter();
 
   const tableColumns = createStudentClassColumns({ getDisplayIndex, router });

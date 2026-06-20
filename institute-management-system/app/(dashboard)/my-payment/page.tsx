@@ -19,6 +19,7 @@ import { CardHeaderSection } from "@/components/shared/layout/card-header-sectio
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { PaymentRequest } from "@/model/payment/payment-request-model";
 import { fetchStudentProfileThunk } from "@/store/slices/auth-slice";
 import { DataTable } from "@/components/shared/data-table";
@@ -71,7 +72,7 @@ export default function PaymentPage() {
     dispatch(fetchStudentProfileThunk());
   }, [dispatch]);
 
-  useEffect(() => {
+  useCachedEffect("my-payment", () => {
     dispatch(
       fetchAllPaymentsService({
         status: Constants.ACTIVE,

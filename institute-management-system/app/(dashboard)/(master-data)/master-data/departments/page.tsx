@@ -38,6 +38,7 @@ import {
   deleteDepartmentService,
 } from "@/features/master-data/store/thunks/department-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { useState } from "react";
 
 export default function ManageDepartmentPage() {
@@ -63,7 +64,7 @@ export default function ManageDepartmentPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("master-data-departments", () => {
     dispatch(
       fetchAllDepartmentService({
         search: searchDebounce,

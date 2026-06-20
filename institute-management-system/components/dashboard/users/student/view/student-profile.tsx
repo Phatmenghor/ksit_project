@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StudentByIdModel } from "@/model/user/student/student.respond.model";
 import { getInitials } from "@/lib/utils";
-import { FileText, FileType2, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { getDetailRequestTranscriptService } from "@/service/request/request.service";
 import { TranscriptModel } from "@/model/request/request-transcript";
 import { useStudentExport } from "@/hooks/use-student-export";
@@ -68,9 +68,8 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
     fetchTranscriptData();
   }, [fetchTranscriptData]);
 
-  const { exportTranscriptAsWord, exportTranscriptAsPDF, isExporting, exportType, canExport } = useStudentExport({
+  const { exportTranscriptAsPDF, isExporting, exportType, canExport } = useStudentExport({
     transcriptData,
-    studentDetail: param || undefined,
   });
 
   const profileUrl = param?.profileUrl
@@ -110,31 +109,13 @@ export const StudentProfileSection: React.FC<ProfileProps> = ({ param, className
         <div className="pt-3 flex flex-col gap-2 w-full items-center">
           <Button
             disabled={!canExport || isExporting}
-            onClick={() => exportTranscriptAsWord()}
-            className="flex items-center gap-2 rounded-full px-4 shadow-md w-full justify-center"
-          >
-            {isExporting && exportType === "word" ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <FileType2 className="h-4 w-4" />
-                Export Word
-              </>
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            disabled={!canExport || isExporting}
             onClick={() => exportTranscriptAsPDF()}
             className="flex items-center gap-2 rounded-full px-4 shadow-md w-full justify-center"
           >
             {isExporting && exportType === "pdf" ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating PDF...
+                Exporting...
               </>
             ) : (
               <>

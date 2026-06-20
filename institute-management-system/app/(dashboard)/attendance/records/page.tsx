@@ -13,6 +13,7 @@ import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { StudentModel } from "@/model/user/student/student.request.model";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCachedEffect } from "@/hooks/use-cached-list";
 import { Constants } from "@/constants/text-string";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -59,7 +60,7 @@ export default function AttendanceStudentsListPage() {
 
   const searchDebounce = useDebounce(filters.search, 500);
 
-  useEffect(() => {
+  useCachedEffect("attendance-records", () => {
     dispatch(
       fetchAllStudentsService({
         search: searchDebounce,
