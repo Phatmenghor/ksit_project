@@ -46,7 +46,7 @@ class ConfigurationDangerousSettingItem extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppColors.textPrimary.withOpacity(0.5),
+                        color: AppColors.textPrimary.withValues(alpha: 0.5),
                       ),
                     ),
                   ],

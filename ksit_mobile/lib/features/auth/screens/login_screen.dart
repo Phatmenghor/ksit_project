@@ -47,7 +47,7 @@ class LoginScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 30,
                               offset: const Offset(0, 15),
                             ),
@@ -173,7 +173,7 @@ class LoginScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(

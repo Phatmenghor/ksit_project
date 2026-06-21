@@ -34,7 +34,7 @@ class DisplayRowWidget extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textPrimary.withOpacity(0.5),
+                color: AppColors.textPrimary.withValues(alpha: 0.5),
               ),
             ),
           ),

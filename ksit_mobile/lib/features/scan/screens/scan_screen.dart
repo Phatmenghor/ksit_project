@@ -149,7 +149,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
         scanAreaWidth: 280,
         scanAreaHeight: 280,
         borderRadius: 24,
-        borderColor: AppColors.primary.withOpacity(0.3),
+        borderColor: AppColors.primary.withValues(alpha: 0.3),
         cornerColor: AppColors.primary,
       ),
       child: Center(
@@ -178,7 +178,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.8),
+                            color: AppColors.primary.withValues(alpha: 0.8),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -197,7 +197,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
 
   Widget _buildDetectionCountdown() {
     return Container(
-      color: Colors.black.withOpacity(0.8),
+      color: Colors.black.withValues(alpha: 0.8),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -268,7 +268,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
 
   Widget _buildProcessingOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.8),
+      color: Colors.black.withValues(alpha: 0.8),
       child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -298,7 +298,7 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
 
   Widget _buildCooldownOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.8),
+      color: Colors.black.withValues(alpha: 0.8),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -352,8 +352,8 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
             end: Alignment.bottomCenter,
             colors: [
               Colors.transparent,
-              Colors.black.withOpacity(0.3),
-              Colors.black.withOpacity(0.7),
+              Colors.black.withValues(alpha: 0.3),
+              Colors.black.withValues(alpha: 0.7),
             ],
           ),
         ),
@@ -418,7 +418,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // 1. Draw background mask
     final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(0.65)
+      ..color = Colors.black.withValues(alpha: 0.65)
       ..style = PaintingStyle.fill;
 
     final backgroundPath = Path()
@@ -442,7 +442,7 @@ class ScannerOverlayPainter extends CustomPainter {
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round;
 
-    final double cornerLength = 20.0;
+    const double cornerLength = 20.0;
     
     // Top Left Corner
     final topLeftPath = Path()

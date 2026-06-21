@@ -76,12 +76,12 @@ class AttendanceDetailsWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: controller
                           .getStatusColor(attendance.statusColor)
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: controller
                             .getStatusColor(attendance.statusColor)
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(

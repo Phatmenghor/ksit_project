@@ -62,7 +62,7 @@ void showModalLogout(BuildContext context, VoidCallback onLogoutConfirmed) {
                   'Are you sure you want to logout?',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary.withOpacity(0.5),
+                    color: AppColors.textPrimary.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -87,7 +87,7 @@ void showModalLogout(BuildContext context, VoidCallback onLogoutConfirmed) {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: AppColors.textPrimary.withOpacity(0.15),
+                              color: AppColors.textPrimary.withValues(alpha: 0.15),
                             ),
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -180,7 +180,7 @@ void showModalLogoutCustom(
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -209,7 +209,7 @@ void showModalLogoutCustom(
                   'Are you sure you want to logout account?',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary.withOpacity(0.5),
+                    color: AppColors.textPrimary.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -231,7 +231,7 @@ void showModalLogoutCustom(
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: AppColors.textPrimary.withOpacity(0.15),
+                                color: AppColors.textPrimary.withValues(alpha: 0.15),
                               ),
                               borderRadius: BorderRadius.circular(4),
                             ),

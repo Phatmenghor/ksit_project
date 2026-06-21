@@ -77,8 +77,9 @@ class EditStudentProfileFullScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   FocusScope.of(context).unfocus();
+                  final navigator = GoRouter.of(context);
                   Future.delayed(const Duration(milliseconds: 100), () {
-                    context.pop();
+                    navigator.pop();
                   });
                 },
                 style: ElevatedButton.styleFrom(
@@ -136,7 +137,7 @@ class EditStudentProfileFullScreen extends StatelessWidget {
 
   double _getContentBottomPadding(BuildContext context) {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final buttonBarHeight = 80;
+    const buttonBarHeight = 80;
     if (keyboardHeight > 0) {
       return keyboardHeight + buttonBarHeight + 16;
     } else {
@@ -226,7 +227,7 @@ class EditStudentProfileFullScreen extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

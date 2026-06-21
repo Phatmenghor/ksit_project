@@ -74,7 +74,6 @@ class FirebaseService extends GetxService {
         _fcmToken = newToken;
         _storageService.setString(AppConfig.fcmTokenKey, newToken);
         LoggerUtils.info('FCM Token refreshed: $newToken');
-        // TODO: Send new token to backend
       });
     } catch (e) {
       LoggerUtils.error('Error getting FCM token', e);

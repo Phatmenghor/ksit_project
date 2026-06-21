@@ -251,7 +251,7 @@ class SurveyController extends GetxController {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

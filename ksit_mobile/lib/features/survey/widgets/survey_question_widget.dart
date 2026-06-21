@@ -69,7 +69,7 @@ class SurveyQuestionWidget extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red, width: 1),
               ),
@@ -172,7 +172,7 @@ class SurveyQuestionWidget extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(8),
               color: isSelected
-                  ? const Color(0xFF024D3E).withOpacity(0.05)
+                  ? const Color(0xFF024D3E).withValues(alpha: 0.05)
                   : Colors.transparent,
             ),
             child: Row(

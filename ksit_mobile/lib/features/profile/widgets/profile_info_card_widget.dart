@@ -147,7 +147,7 @@ class ProfileInfoCardWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: (item.color ?? AppColors.primary).withOpacity(0.1),
+              color: (item.color ?? AppColors.primary).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(

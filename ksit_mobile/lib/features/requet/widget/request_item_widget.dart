@@ -60,7 +60,7 @@ class RequestItemWidget extends StatelessWidget {
                             DateTimeFormatter.formatDateTime(request.createdAt),
                             style: TextStyle(
                               fontSize: 10,
-                              color: AppColors.textPrimary.withOpacity(0.5),
+                              color: AppColors.textPrimary.withValues(alpha: 0.5),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -133,7 +133,7 @@ class RequestItemWidget extends StatelessWidget {
         Icon(
           Icons.arrow_forward_ios,
           size: 12,
-          color: AppColors.textPrimary.withOpacity(0.5),
+          color: AppColors.textPrimary.withValues(alpha: 0.5),
         ),
       ],
     );

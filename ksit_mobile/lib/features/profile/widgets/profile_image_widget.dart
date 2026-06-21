@@ -24,7 +24,7 @@ class ProfileImageWidget extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: radius,
-          backgroundColor: AppColors.primary.withOpacity(0.1),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
           backgroundImage: _getImageProvider(),
           child: _buildPlaceholder(),
         ),

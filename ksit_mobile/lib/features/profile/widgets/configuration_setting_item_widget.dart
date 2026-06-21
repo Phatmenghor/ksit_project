@@ -44,7 +44,7 @@ class ConfigurationSettingItem extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 10,
-                    color: AppColors.textPrimary.withOpacity(0.5),
+                    color: AppColors.textPrimary.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -56,7 +56,7 @@ class ConfigurationSettingItem extends StatelessWidget {
               value: value,
               onChanged: onChanged,
               activeThumbColor: AppColors.primary,
-              activeTrackColor: AppColors.primary.withOpacity(0.3),
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
               inactiveThumbColor: Colors.grey[400],
               inactiveTrackColor: Colors.grey[300],
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

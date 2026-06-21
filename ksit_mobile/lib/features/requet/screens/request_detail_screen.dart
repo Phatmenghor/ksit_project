@@ -185,7 +185,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           child: Column(
             children: [
               Divider(
-                color: AppColors.white.withOpacity(0.25),
+                color: AppColors.white.withValues(alpha: 0.25),
                 thickness: 1,
               ),
               const SizedBox(height: 8),
@@ -193,7 +193,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.15),
+                  color: AppColors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -203,7 +203,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.white.withOpacity(0.5),
+                        color: AppColors.white.withValues(alpha: 0.5),
                       ),
                     ),
                     const Spacer(),

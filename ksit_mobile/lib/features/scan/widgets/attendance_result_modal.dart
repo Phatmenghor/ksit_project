@@ -44,7 +44,7 @@ class AttendanceResultModal {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -69,7 +69,7 @@ class AttendanceResultModal {
                           DateTime.now().toIso8601String()),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -89,10 +89,10 @@ class AttendanceResultModal {
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.success.withOpacity(0.3),
+                            color: AppColors.success.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -229,7 +229,7 @@ class AttendanceResultModal {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -254,7 +254,7 @@ class AttendanceResultModal {
                         DateTime.now().toIso8601String()),
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -271,10 +271,10 @@ class AttendanceResultModal {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.error.withOpacity(0.3),
+                        color: AppColors.error.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(
@@ -358,7 +358,7 @@ class AttendanceResultModal {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -385,7 +385,7 @@ class AttendanceResultModal {
           decoration: BoxDecoration(
             color: Colors.grey[50],
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border.withOpacity(0.5)),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
           ),
           child: Column(
             children: children,
@@ -427,106 +427,6 @@ class AttendanceResultModal {
     );
   }
 
-  static Widget _buildStatsSection(AttendanceSessionData data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.info.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.analytics,
-                size: 16,
-                color: AppColors.info,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Attendance Statistics',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                'Total Students',
-                '${data.totalStudents}',
-                Icons.group,
-                AppColors.info,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Present',
-                '${data.totalPresent}',
-                Icons.check_circle,
-                AppColors.success,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                'Absent',
-                '${data.totalAbsent}',
-                Icons.cancel,
-                AppColors.error,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  static Widget _buildStatCard(
-      String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   static String _formatDay(String? day) {
     if (day == null) return 'N/A';
     switch (day.toUpperCase()) {
@@ -549,25 +449,4 @@ class AttendanceResultModal {
     }
   }
 
-  static String _formatDate(String? date) {
-    if (date == null) return 'N/A';
-    try {
-      final dateTime = DateTime.parse(date);
-      return DateTimeFormatter.formatDateTime(dateTime.toIso8601String());
-    } catch (e) {
-      return date;
-    }
-  }
-
-  static String _formatStatus(String? status) {
-    if (status == null) return 'N/A';
-    switch (status.toUpperCase()) {
-      case 'DRAFT':
-        return 'Draft';
-      case 'FINAL':
-        return 'Final';
-      default:
-        return status;
-    }
-  }
 }

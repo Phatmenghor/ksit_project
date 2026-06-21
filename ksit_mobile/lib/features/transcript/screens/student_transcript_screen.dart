@@ -114,7 +114,7 @@ class StudentTranscriptScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.1),
+                color: AppColors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Column(

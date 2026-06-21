@@ -175,7 +175,7 @@ class AttendanceItemWidget extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.border.withOpacity(0.3),
+                    color: AppColors.border.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -226,27 +226,27 @@ class AttendanceItemWidget extends StatelessWidget {
 
     switch (attendance.statusColor) {
       case 'success':
-        backgroundColor = AppColors.success.withOpacity(0.1);
+        backgroundColor = AppColors.success.withValues(alpha: 0.1);
         textColor = AppColors.success;
         icon = Icons.check_circle;
         break;
       case 'error':
-        backgroundColor = AppColors.error.withOpacity(0.1);
+        backgroundColor = AppColors.error.withValues(alpha: 0.1);
         textColor = AppColors.error;
         icon = Icons.cancel;
         break;
       case 'warning':
-        backgroundColor = AppColors.warning.withOpacity(0.1);
+        backgroundColor = AppColors.warning.withValues(alpha: 0.1);
         textColor = AppColors.warning;
         icon = Icons.warning;
         break;
       case 'info':
-        backgroundColor = AppColors.info.withOpacity(0.1);
+        backgroundColor = AppColors.info.withValues(alpha: 0.1);
         textColor = AppColors.info;
         icon = Icons.info;
         break;
       default:
-        backgroundColor = AppColors.textSecondary.withOpacity(0.1);
+        backgroundColor = AppColors.textSecondary.withValues(alpha: 0.1);
         textColor = AppColors.textSecondary;
         icon = Icons.help;
     }
@@ -257,7 +257,7 @@ class AttendanceItemWidget extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: textColor.withOpacity(0.3),
+          color: textColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

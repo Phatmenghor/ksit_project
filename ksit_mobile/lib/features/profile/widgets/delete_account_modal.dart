@@ -63,7 +63,7 @@ void showDeleteAccountModal(
                   'Are you sure you want to delete user account?',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textPrimary.withOpacity(0.5),
+                    color: AppColors.textPrimary.withValues(alpha: 0.5),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -75,7 +75,7 @@ void showDeleteAccountModal(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                     border: const Border(
                       left: BorderSide(
@@ -115,7 +115,7 @@ void showDeleteAccountModal(
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: AppColors.textPrimary.withOpacity(0.15),
+                              color: AppColors.textPrimary.withValues(alpha: 0.15),
                             ),
                             borderRadius: BorderRadius.circular(4),
                           ),

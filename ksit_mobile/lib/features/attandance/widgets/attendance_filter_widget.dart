@@ -124,7 +124,7 @@ class AttendanceFilterWidget extends StatelessWidget {
                       text: value,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textPrimary.withOpacity(0.8),
+                        color: AppColors.textPrimary.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.underline,
                       ),

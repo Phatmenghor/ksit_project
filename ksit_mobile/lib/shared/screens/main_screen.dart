@@ -128,7 +128,7 @@ class _MainScreenState extends State<MainScreen> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.primary.withOpacity(0.1)
+                      ? AppColors.primary.withValues(alpha: 0.1)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),

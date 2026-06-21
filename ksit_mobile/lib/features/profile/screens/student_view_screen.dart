@@ -95,7 +95,7 @@ class StudentViewScreen extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               AppColors.primary,
-              AppColors.primary.withOpacity(0.8),
+              AppColors.primary.withValues(alpha: 0.8),
             ],
           ),
         ),
@@ -110,7 +110,7 @@ class StudentViewScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -120,7 +120,7 @@ class StudentViewScreen extends StatelessWidget {
                     radius: 48,
                     backgroundColor: Colors.white,
                     backgroundImage: hasImage
-                        ? NetworkImage(AppConfig.baseImageUrl + imageUrl!)
+                        ? NetworkImage(AppConfig.baseImageUrl + imageUrl)
                         : null,
                     onBackgroundImageError: hasImage
                         ? (exception, stackTrace) {
@@ -131,7 +131,7 @@ class StudentViewScreen extends StatelessWidget {
                         ? Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.primary.withOpacity(0.2),
+                              color: AppColors.primary.withValues(alpha: 0.2),
                             ),
                             child: const Icon(
                               Icons.person,
@@ -161,10 +161,10 @@ class StudentViewScreen extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       width: 1,
                     ),
                   ),
@@ -196,7 +196,7 @@ class StudentViewScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -208,21 +208,21 @@ class StudentViewScreen extends StatelessWidget {
             // Card Header
             Container(
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.08),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12)),
               ),
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(
                     Icons.person_outline,
                     color: AppColors.primary,
                     size: 20,
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
+                  SizedBox(width: 10),
+                  Text(
                     'ព័ត៌មានផ្ទាល់ខ្លួន',
                     style: TextStyle(
                       fontSize: 14,
@@ -292,7 +292,7 @@ class StudentViewScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -304,21 +304,21 @@ class StudentViewScreen extends StatelessWidget {
             // Card Header
             Container(
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.08),
+                color: AppColors.primary.withValues(alpha: 0.08),
                 borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12)),
               ),
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(
                     Icons.school_outlined,
                     color: AppColors.primary,
                     size: 20,
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
+                  SizedBox(width: 10),
+                  Text(
                     'ព័ត៌មានសិក្សា',
                     style: TextStyle(
                       fontSize: 14,
@@ -475,7 +475,7 @@ class StudentViewScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -487,7 +487,7 @@ class StudentViewScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -516,12 +516,12 @@ class StudentViewScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.border.withOpacity(0.5),
+          color: AppColors.border.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -569,7 +569,7 @@ class StudentViewScreen extends StatelessWidget {
             padding: const EdgeInsets.only(top: 12, bottom: 12),
             child: Divider(
               height: 1,
-              color: AppColors.border.withOpacity(0.3),
+              color: AppColors.border.withValues(alpha: 0.3),
             ),
           ),
       ],

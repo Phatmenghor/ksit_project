@@ -83,7 +83,7 @@ class SurveyScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Divider(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             thickness: 1,
           ),
         ),
@@ -186,7 +186,7 @@ class SurveyScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF2196F3).withOpacity(0.1),
+              color: const Color(0xFF2196F3).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: const Color(0xFF2196F3),

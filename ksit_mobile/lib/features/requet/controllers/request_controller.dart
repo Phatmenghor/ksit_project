@@ -181,7 +181,9 @@ class RequestController extends GetxController {
             Obx(() => RadioListTile<RequestStatus?>(
                   title: const Text('All'),
                   value: null,
+                  // ignore: deprecated_member_use
                   groupValue: selectedStatus.value,
+                  // ignore: deprecated_member_use
                   onChanged: (value) => selectedStatus.value = value,
                 )),
 
@@ -190,7 +192,9 @@ class RequestController extends GetxController {
               return Obx(() => RadioListTile<RequestStatus?>(
                     title: Text(status.displayName),
                     value: status,
+                    // ignore: deprecated_member_use
                     groupValue: selectedStatus.value,
+                    // ignore: deprecated_member_use
                     onChanged: (value) => selectedStatus.value = value,
                   ));
             }),

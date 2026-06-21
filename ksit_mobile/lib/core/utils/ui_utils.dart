@@ -185,7 +185,7 @@ class UIUtils {
         selected: isSelected,
         onSelected: (_) => onTap(),
         backgroundColor: unselectedColor ?? Colors.white,
-        selectedColor: (selectedColor ?? AppColors.primary).withOpacity(0.2),
+        selectedColor: (selectedColor ?? AppColors.primary).withValues(alpha: 0.2),
         labelStyle: TextStyle(
           color: isSelected
               ? (selectedColor ?? AppColors.primary)
@@ -221,7 +221,7 @@ class UIUtils {
               : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: AppColors.textPrimary.withOpacity(0.1),
+            color: AppColors.textPrimary.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -230,7 +230,7 @@ class UIUtils {
           style: TextStyle(
             color: isSelected
                 ? (unselectedColor ?? AppColors.white)
-                : AppColors.textPrimary.withOpacity(0.5),
+                : AppColors.textPrimary.withValues(alpha: 0.5),
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -355,7 +355,9 @@ class UIUtils {
                   title: Text(nullLabel ?? 'None'),
                   leading: Radio<T?>(
                     value: null,
+                    // ignore: deprecated_member_use
                     groupValue: selectedItem,
+                    // ignore: deprecated_member_use
                     onChanged: (value) => Get.back(result: value),
                   ),
                   onTap: () => Get.back(result: null),
@@ -364,7 +366,9 @@ class UIUtils {
                     title: Text(itemBuilder(item)),
                     leading: Radio<T>(
                       value: item,
+                      // ignore: deprecated_member_use
                       groupValue: selectedItem,
+                      // ignore: deprecated_member_use
                       onChanged: (value) => Get.back(result: value),
                     ),
                     onTap: () => Get.back(result: item),

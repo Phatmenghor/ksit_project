@@ -47,7 +47,7 @@ class RequestScreen extends StatelessWidget {
               child: Text(
                 'Students can send item requests to the admin',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
                 ),
@@ -109,7 +109,7 @@ class RequestScreen extends StatelessWidget {
                             width: 120,
                             height: 120,
                             decoration: BoxDecoration(
-                              color: AppColors.iconSecondary.withOpacity(0.1),
+                              color: AppColors.iconSecondary.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -206,13 +206,13 @@ class RequestScreen extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
-                : AppColors.primary.withOpacity(0.3),
+                : AppColors.primary.withValues(alpha: 0.3),
             width: 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),

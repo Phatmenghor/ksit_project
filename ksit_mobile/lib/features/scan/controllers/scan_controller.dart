@@ -212,7 +212,7 @@ class ScanController extends GetxController {
       }
     });
 
-    _detectionTimer = Timer(Duration(seconds: detectionDelayDuration), () {
+    _detectionTimer = Timer(const Duration(seconds: detectionDelayDuration), () {
       if (isDetecting.value && _pendingQrCode == qrCode) {
         _processScanResult();
       }
@@ -230,7 +230,9 @@ class ScanController extends GetxController {
   void _processScanResult() {
     if (_pendingQrCode == null ||
         isScanning.value ||
-        isSubmittingAttendance.value) return;
+        isSubmittingAttendance.value) {
+      return;
+    }
 
     _detectionTimer?.cancel();
     _detectionCountdownTimer?.cancel();
@@ -362,10 +364,12 @@ class ScanController extends GetxController {
   String get scanStatus {
     if (isSubmittingAttendance.value) return 'Processing...';
     if (isScanning.value) return 'Scanning...';
-    if (isDetecting.value)
+    if (isDetecting.value) {
       return 'Detected! Scanning in ${detectionCountdown.value}s';
-    if (scanCooldownSeconds.value > 0)
+    }
+    if (scanCooldownSeconds.value > 0) {
       return 'Wait ${scanCooldownSeconds.value}s';
+    }
     if (!canScan.value) return 'Ready';
     return 'Position QR Code';
   }
