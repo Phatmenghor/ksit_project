@@ -29,4 +29,7 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, Lo
             @Param("finalizationStatus") AttendanceFinalizationStatus finalizationStatus,
             @Param("status") AttendanceStatus status);
 
+    long countByStudentIdAndAttendanceSessionScheduleIdAndStatusAndFinalizationStatus(
+            Long studentId, Long scheduleId, AttendanceStatus status, AttendanceFinalizationStatus finalizationStatus
+    );
 }

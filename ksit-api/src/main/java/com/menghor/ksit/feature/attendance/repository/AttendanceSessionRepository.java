@@ -30,4 +30,6 @@ public interface AttendanceSessionRepository extends JpaRepository<AttendanceSes
     List<Object[]> countFinalizedGroupedByScheduleId(
             @Param("scheduleIds") List<Long> scheduleIds,
             @Param("finalizationStatus") AttendanceFinalizationStatus finalizationStatus);
+
+    long countByScheduleIdAndFinalizationStatus(Long scheduleId, AttendanceFinalizationStatus finalizationStatus);
 }

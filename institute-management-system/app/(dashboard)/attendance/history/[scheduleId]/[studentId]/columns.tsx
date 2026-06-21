@@ -21,7 +21,6 @@ export function createAttendanceStudentHistoryColumns({
     { key: "attendanceType", label: "Type", render: (h) => formatType(h.attendanceType) || "---" },
     { key: "createdAt", label: "Date", render: (h) => formatDate(h.createdAt) || "---" },
     { key: "attendanceScore", label: "Score", render: (h) => h?.attendanceScore || "---" },
-    { key: "maxAttendanceScore", label: "Max Score", render: (h) => h.maxAttendanceScore || "---" },
     { key: "comment", label: "Comment", render: (h) => h.comment || "---" },
   ];
 }

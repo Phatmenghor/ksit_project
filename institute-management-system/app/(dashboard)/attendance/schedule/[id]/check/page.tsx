@@ -42,6 +42,7 @@ import {
 } from "@/constants/filter/filter-page";
 import { Badge } from "@/components/ui/badge";
 import AttendanceCheckHeader from "@/components/dashboard/attendance/schedule/attendance-check-header";
+import { QRCodeSection } from "@/components/dashboard/attendance/qr-code-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -81,9 +82,7 @@ const AttendanceCheckPage = () => {
   const [typeFilter, setTypeFilter] = useState("all");
 
   // Settings state
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [refreshProgress, setRefreshProgress] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Submission state
@@ -93,12 +92,6 @@ const AttendanceCheckPage = () => {
   // Refs for smooth scrolling and focus management
   const tableRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-refresh timing constants
-  const REFRESH_INTERVAL = 30; // 30 seconds
-  const PROGRESS_UPDATE_INTERVAL = 100; // Update progress every 100ms
 
   // Enhanced data loading functions with better error handling
   const loadScheduleData = useCallback(async () => {
@@ -107,8 +100,9 @@ const AttendanceCheckPage = () => {
     try {
       const response = await dispatch(fetchScheduleByIdService(id)).unwrap();
       setScheduleDetail(response);
-    } catch (error) {
-      toast.error("Error fetching schedule data");
+    } catch (error: any) {
+      const errorMessage = typeof error === "string" ? error : (error?.message || "Error fetching schedule data");
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -154,8 +148,9 @@ const AttendanceCheckPage = () => {
         if (response.submissionTime) {
           setSubmissionTime(new Date(response.submissionTime));
         }
-      } catch (error) {
-        toast.error("Error fetching attendance data");
+      } catch (error: any) {
+        const errorMessage = typeof error === "string" ? error : (error?.message || "Error fetching attendance data");
+        toast.error(errorMessage);
       } finally {
         if (showLoader) {
           // Add a small delay for smooth animation
@@ -168,67 +163,6 @@ const AttendanceCheckPage = () => {
     [scheduleDetail, unsavedChanges.size]
   );
 
-  // Smooth progress animation for auto-refresh
-  const startRefreshProgress = useCallback(() => {
-    setRefreshProgress(0);
-
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-    }
-
-    const startTime = Date.now();
-    progressIntervalRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / REFRESH_INTERVAL) * 100, 100);
-
-      setRefreshProgress(progress);
-
-      if (progress >= 100) {
-        if (progressIntervalRef.current) {
-          clearInterval(progressIntervalRef.current);
-        }
-      }
-    }, PROGRESS_UPDATE_INTERVAL);
-  }, []);
-
-  // Smart auto-refresh with smooth progress animation
-  useEffect(() => {
-    if (autoRefresh && isInitialized && !isSubmitted) {
-      startRefreshProgress();
-
-      refreshIntervalRef.current = setInterval(() => {
-        if (unsavedChanges.size === 0) {
-          HandleInitAttendance(false, false); // Silent refresh
-          startRefreshProgress(); // Restart progress
-        }
-      }, REFRESH_INTERVAL);
-
-      return () => {
-        if (refreshIntervalRef.current) {
-          clearInterval(refreshIntervalRef.current);
-        }
-        if (progressIntervalRef.current) {
-          clearInterval(progressIntervalRef.current);
-        }
-      };
-    } else {
-      // Clean up intervals when auto-refresh is disabled
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-      }
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-      setRefreshProgress(0);
-    }
-  }, [
-    autoRefresh,
-    isInitialized,
-    unsavedChanges.size,
-    HandleInitAttendance,
-    startRefreshProgress,
-    isSubmitted,
-  ]);
 
   // Optimized field change handler with Set
   const handleFieldChange = useCallback(
@@ -346,8 +280,9 @@ const AttendanceCheckPage = () => {
         `Successfully updated ${changedAttendances.length} attendance records`,
         { duration: 2000 }
       );
-    } catch (error) {
-      toast.error("Failed to save attendance records");
+    } catch (error: any) {
+      const errorMessage = typeof error === "string" ? error : (error?.message || "Failed to save attendance records");
+      toast.error(errorMessage);
     } finally {
       setIsSavingAll(false);
     }
@@ -370,15 +305,13 @@ const AttendanceCheckPage = () => {
       setIsSubmitted(true);
       setSubmissionTime(new Date());
 
-      // Disable auto-refresh after submission
-      setAutoRefresh(false);
-
       toast.success("Attendance successfully submitted to staff!", {
         duration: 3000,
         icon: <CheckCircle className="h-4 w-4" />,
       });
-    } catch (error) {
-      toast.error("Failed to submit attendance to staff");
+    } catch (error: any) {
+      const errorMessage = typeof error === "string" ? error : (error?.message || "Failed to submit attendance to staff");
+      toast.error(errorMessage);
     } finally {
       setIsSubmittingToStaff(false);
     }
@@ -408,26 +341,18 @@ const AttendanceCheckPage = () => {
     });
   }, []);
 
-  // Toggle auto-refresh with smooth animation
-  const handleToggleAutoRefresh = useCallback(() => {
-    if (isSubmitted) {
-      toast.error("Auto-refresh is disabled after submission");
-      return;
-    }
-
-    setAutoRefresh((prev) => {
-      const newValue = !prev;
-      toast.success(`Auto-refresh ${newValue ? "enabled" : "disabled"}`, {
-        duration: 1500,
-      });
-      return newValue;
-    });
-  }, [isSubmitted]);
 
   // Initial load
   useEffect(() => {
     loadScheduleData();
   }, [loadScheduleData]);
+
+  // Auto-initialize attendance session once schedule detail is loaded
+  useEffect(() => {
+    if (scheduleDetail?.id && !isInitialized && !isRefreshing && !loading) {
+      HandleInitAttendance();
+    }
+  }, [scheduleDetail, isInitialized, isRefreshing, loading, HandleInitAttendance]);
 
   // WebSocket subscription for real-time updates
   useEffect(() => {
@@ -440,9 +365,16 @@ const AttendanceCheckPage = () => {
     const connectWebSocket = () => {
       try {
         const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api';
-        let wsUrl = apiBase.replace(/^http/, 'ws');
-        wsUrl = wsUrl.replace(/\/api(\/v1)?\/?$/, '');
-        wsUrl = `${wsUrl}/ws-attendance?sessionId=${attendanceGenerate.id}`;
+        let wsUrl = '';
+        if (apiBase.includes('localhost') && typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+          // If apiBase points to localhost, but we are accessing the page from a LAN IP (like 192.168.x.x),
+          // resolve the WebSocket to use the actual hostname (so connection goes to backend on the same machine)
+          wsUrl = `ws://${window.location.hostname}:8080/ws-attendance?sessionId=${attendanceGenerate.id}`;
+        } else {
+          let base = apiBase.replace(/^http/, 'ws');
+          base = base.replace(/\/api(\/v1)?\/?$/, '');
+          wsUrl = `${base}/ws-attendance?sessionId=${attendanceGenerate.id}`;
+        }
 
         console.log("Connecting web socket to:", wsUrl);
         socket = new WebSocket(wsUrl);
@@ -506,7 +438,6 @@ const AttendanceCheckPage = () => {
             } else if (payload.event === "SESSION_FINALIZED") {
               setIsSubmitted(true);
               setSubmissionTime(new Date());
-              setAutoRefresh(false);
               toast.success("Attendance has been finalized");
               if (socket) socket.close();
             }
@@ -591,28 +522,18 @@ const AttendanceCheckPage = () => {
   return (
     <div className="space-y-4">
       <AttendanceCheckHeader
-        autoRefresh={autoRefresh}
         isSubmitted={isSubmitted}
         lastUpdated={lastUpdated}
-        refreshProgress={refreshProgress}
         scheduleDetail={scheduleDetail}
         submissionTime={submissionTime}
         unsavedChanges={unsavedChanges}
       />
 
       {!isInitialized ? (
-        <Card className="flex justify-center">
-          <CardContent className="p-4">
-            <Button
-              variant="outline"
-              onClick={() => HandleInitAttendance()}
-              disabled={isRefreshing}
-            >
-              <Plus />
-              {isRefreshing ? "Initializing..." : "Initialize Attendance"}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground font-medium">Initializing Attendance Session...</span>
+        </div>
       ) : (
         <div className="space-y-4">
           {/* QR Code Section */}
@@ -632,31 +553,8 @@ const AttendanceCheckPage = () => {
                 </div>
 
                 {/* Right Button Actions Section */}
-                <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:justify-end">
-                  {/* Auto-refresh Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleToggleAutoRefresh}
-                    disabled={isSubmitted}
-                    className={`transition-all duration-200 hover:scale-105 ${
-                      autoRefresh
-                        ? "bg-blue-100 text-blue-700 border-blue-300"
-                        : ""
-                    } ${isSubmitted ? "opacity-50 cursor-not-allowed" : ""}`}
-                    title={`Click to ${
-                      autoRefresh ? "disable" : "enable"
-                    } auto-refresh`}
-                  >
-                    <RefreshCcw
-                      className={`h-4 w-4 mr-2 transition-transform duration-200 ${
-                        autoRefresh && !isSubmitted ? "animate-pulse" : ""
-                      }`}
-                    />
-                    Auto {autoRefresh ? "ON" : "OFF"}
-                  </Button>
-
-                  {/* Manual Refresh Button */}
+                 <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:justify-end">
+                   {/* Manual Refresh Button */}
                   <Button
                     variant="outline"
                     size="sm"

@@ -26,8 +26,8 @@ import java.util.Objects;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(NotFoundException ex, HttpServletRequest request) {
+    @ExceptionHandler({NotFoundException.class, jakarta.persistence.EntityNotFoundException.class})
+    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(Exception ex, HttpServletRequest request) {
         log.warn("Resource not found: {} - Path: {}", ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiResponse<>(
@@ -95,6 +95,17 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(
                         "error",
                         message,
+                        null
+                ));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
+        log.warn("Illegal state: {} - Path: {}", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(
+                        "error",
+                        ex.getMessage(),
                         null
                 ));
     }

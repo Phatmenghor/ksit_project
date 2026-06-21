@@ -31,8 +31,6 @@ interface AttendanceCheckProps {
   isSubmitted: boolean;
   submissionTime: Date | null;
   unsavedChanges: Set<number>;
-  autoRefresh: boolean;
-  refreshProgress: number;
   lastUpdated: Date | null;
 }
 export default function AttendanceCheckHeader({
@@ -40,9 +38,7 @@ export default function AttendanceCheckHeader({
   isSubmitted,
   submissionTime,
   unsavedChanges,
-  autoRefresh,
   lastUpdated,
-  refreshProgress,
 }: AttendanceCheckProps) {
   const router = useRouter();
   return (
@@ -114,22 +110,6 @@ export default function AttendanceCheckHeader({
               </Badge>
             )}
 
-            {/* Auto-refresh Status */}
-            {autoRefresh && (
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  <Timer className="h-3 w-3 mr-1" />
-                  Auto-refresh: ON
-                </Badge>
-                {/* Progress bar for auto-refresh */}
-                <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 transition-all duration-100 ease-linear"
-                    style={{ width: `${refreshProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Last Updated */}
             {lastUpdated && (

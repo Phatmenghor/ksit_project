@@ -284,6 +284,7 @@ class HomeScreen extends StatelessWidget {
       key: const ValueKey('today_schedules'),
       pagingController: controller.todaySchedulesPagingController,
       builderDelegate: PaginationUtils.getCommonBuilderDelegate<ScheduleModel>(
+        pagingController: controller.todaySchedulesPagingController,
         itemBuilder: (context, schedule, index) => Padding(
           padding: EdgeInsets.fromLTRB(16, index == 0 ? 16 : 0, 16, 12),
           child: ScheduleClassWidget(
@@ -310,6 +311,7 @@ class HomeScreen extends StatelessWidget {
       key: const ValueKey('all_schedules'),
       pagingController: controller.allSchedulesPagingController,
       builderDelegate: PaginationUtils.getCommonBuilderDelegate<ScheduleModel>(
+        pagingController: controller.allSchedulesPagingController,
         itemBuilder: (context, schedule, index) => Padding(
           padding: EdgeInsets.fromLTRB(16, index == 0 ? 16 : 0, 16, 12),
           child: ScheduleClassWidget(

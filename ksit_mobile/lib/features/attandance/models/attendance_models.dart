@@ -42,6 +42,14 @@ class AttendanceHistoryModel {
   final int? academyYear;
   final String? createdAt;
 
+  // Score fields
+  final double? attendanceScore;
+  final double? attendancePercentage;
+  final int? totalSessionsConducted;
+  final int? sessionsAttended;
+  final int? maxAttendanceScore;
+  final String? attendanceScoreDescription;
+
   const AttendanceHistoryModel({
     this.id,
     this.status,
@@ -81,6 +89,12 @@ class AttendanceHistoryModel {
     this.semesterName,
     this.academyYear,
     this.createdAt,
+    this.attendanceScore,
+    this.attendancePercentage,
+    this.totalSessionsConducted,
+    this.sessionsAttended,
+    this.maxAttendanceScore,
+    this.attendanceScoreDescription,
   });
 
   factory AttendanceHistoryModel.fromJson(Map<String, dynamic> json) {
@@ -123,6 +137,12 @@ class AttendanceHistoryModel {
       semesterName: json['semesterName'] as String?,
       academyYear: json['academyYear'] as int?,
       createdAt: json['createdAt'] as String?,
+      attendanceScore: (json['attendanceScore'] as num?)?.toDouble(),
+      attendancePercentage: (json['attendancePercentage'] as num?)?.toDouble(),
+      totalSessionsConducted: json['totalSessionsConducted'] as int?,
+      sessionsAttended: json['sessionsAttended'] as int?,
+      maxAttendanceScore: json['maxAttendanceScore'] as int?,
+      attendanceScoreDescription: json['attendanceScoreDescription'] as String?,
     );
   }
 
@@ -166,6 +186,12 @@ class AttendanceHistoryModel {
       'semesterName': semesterName,
       'academyYear': academyYear,
       'createdAt': createdAt,
+      'attendanceScore': attendanceScore,
+      'attendancePercentage': attendancePercentage,
+      'totalSessionsConducted': totalSessionsConducted,
+      'sessionsAttended': sessionsAttended,
+      'maxAttendanceScore': maxAttendanceScore,
+      'attendanceScoreDescription': attendanceScoreDescription,
     };
   }
 

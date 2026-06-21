@@ -3,6 +3,7 @@ package com.menghor.ksit.feature.attendance.dto.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.menghor.ksit.enumations.AttendanceFinalizationStatus;
 import com.menghor.ksit.enumations.Status;
+import com.menghor.ksit.feature.score.dto.response.StudentScoreResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,4 +46,7 @@ public class AttendanceSessionDto {
 
     // Whether this session counts towards scores (only if FINAL)
     private Boolean countsTowardsScore;
+
+    // Current persisted score for the student who just checked in (null if not applicable)
+    private StudentScoreResponseDto studentScore;
 }

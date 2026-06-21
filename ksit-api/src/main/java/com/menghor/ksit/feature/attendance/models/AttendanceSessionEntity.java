@@ -32,9 +32,6 @@ public class AttendanceSessionEntity extends BaseEntity {
     
     @Column(name = "qr_code", nullable = false)
     private String qrCode;
-    
-    @Column(name = "qr_expiry_time", nullable = false)
-    private LocalDateTime qrExpiryTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "finalization_status")
@@ -58,6 +55,5 @@ public class AttendanceSessionEntity extends BaseEntity {
     @PrePersist
     public void generateQrCode() {
         this.qrCode = UUID.randomUUID().toString();
-        this.qrExpiryTime = this.sessionDate.plusMinutes(15);
     }
 }

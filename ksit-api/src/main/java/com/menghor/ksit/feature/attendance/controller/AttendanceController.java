@@ -1,5 +1,6 @@
 package com.menghor.ksit.feature.attendance.controller;
 
+import com.menghor.ksit.enumations.AttendanceFinalizationStatus;
 import com.menghor.ksit.enumations.RoleEnum;
 import com.menghor.ksit.exceptoins.response.ApiResponse;
 import com.menghor.ksit.feature.attendance.dto.request.AttendanceHistoryFilterDto;
@@ -60,6 +61,11 @@ public class AttendanceController {
     public ApiResponse<CustomPaginationResponseDto<AttendanceDto>> getAttendanceHistory(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
         log.info("Get attendance history request received");
+        UserEntity currentUser = securityUtils.getCurrentUser();
+        if (currentUser.isStudent()) {
+            filterDto.setStudentId(currentUser.getId());
+            filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
+        }
         CustomPaginationResponseDto<AttendanceDto> response = attendanceService.findAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "Attendance history retrieved successfully", response);
     }
@@ -68,6 +74,11 @@ public class AttendanceController {
     public ApiResponse<List<AttendanceDto>> getAllAttendanceHistory(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
         log.info("Get all attendance history request received");
+        UserEntity currentUser = securityUtils.getCurrentUser();
+        if (currentUser.isStudent()) {
+            filterDto.setStudentId(currentUser.getId());
+            filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
+        }
         List<AttendanceDto> response = attendanceService.findAllAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "All attendance history retrieved successfully", response);
     }
@@ -76,6 +87,11 @@ public class AttendanceController {
     public ApiResponse<Long> getAttendanceHistoryCount(
             @RequestBody AttendanceHistoryFilterDto filterDto) {
         log.info("Count attendance history request received");
+        UserEntity currentUser = securityUtils.getCurrentUser();
+        if (currentUser.isStudent()) {
+            filterDto.setStudentId(currentUser.getId());
+            filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
+        }
         Long count = attendanceService.countAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "Attendance history count retrieved successfully", count);
     }
@@ -86,11 +102,7 @@ public class AttendanceController {
         UserEntity currentUser = securityUtils.getCurrentUser();
         log.info("Get my attendance history request received. userId={}", currentUser.getId());
 
-        boolean isStudent = currentUser.getRoles().stream()
-                .map(Role::getName)
-                .anyMatch(role -> role == RoleEnum.STUDENT);
-
-        if (!isStudent) {
+        if (!currentUser.isStudent()) {
             log.warn("Non-student user attempted to access student attendance history. userId={}", currentUser.getId());
             CustomPaginationResponseDto<AttendanceDto> emptyResponse = new CustomPaginationResponseDto<>(
                     Collections.emptyList(),
@@ -104,6 +116,7 @@ public class AttendanceController {
         }
 
         filterDto.setStudentId(currentUser.getId());
+        filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         CustomPaginationResponseDto<AttendanceDto> response = attendanceService.findAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "My attendance history retrieved successfully", response);
     }

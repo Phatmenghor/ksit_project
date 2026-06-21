@@ -40,7 +40,13 @@ class PaginationUtils {
     required PagingController<int, T> controller,
     required dynamic error,
   }) {
-    controller.error = error.toString();
+    String errorMsg = error.toString();
+    if (errorMsg.startsWith('Exception: ')) {
+      errorMsg = errorMsg.replaceFirst('Exception: ', '');
+    } else if (errorMsg.startsWith('Error: ')) {
+      errorMsg = errorMsg.replaceFirst('Error: ', '');
+    }
+    controller.error = errorMsg;
   }
 
   /// Build common error indicator
@@ -255,6 +261,7 @@ class PaginationUtils {
   /// Get common paginated builder delegate
   static PagedChildBuilderDelegate<T> getCommonBuilderDelegate<T>({
     required Widget Function(BuildContext, T, int) itemBuilder,
+    PagingController<int, T>? pagingController,
     String? loadingMessage,
     String? emptyTitle,
     String? emptyMessage,
@@ -265,11 +272,11 @@ class PaginationUtils {
     return PagedChildBuilderDelegate<T>(
       itemBuilder: itemBuilder,
       firstPageErrorIndicatorBuilder: (context) => buildErrorIndicator(
-        error: 'Failed to load data',
+        error: pagingController?.error?.toString() ?? 'Failed to load data',
         onRetry: onErrorRetry ?? () {},
       ),
       newPageErrorIndicatorBuilder: (context) => buildErrorIndicator(
-        error: 'Failed to load more data',
+        error: pagingController?.error?.toString() ?? 'Failed to load more data',
         onRetry: onErrorRetry ?? () {},
         isNewPage: true,
       ),

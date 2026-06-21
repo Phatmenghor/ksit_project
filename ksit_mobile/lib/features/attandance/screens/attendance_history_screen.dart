@@ -260,6 +260,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       pagingController: controller.pagingController,
       builderDelegate:
           PaginationUtils.getCommonBuilderDelegate<AttendanceHistoryModel>(
+        pagingController: controller.pagingController,
         itemBuilder: (context, attendance, index) => Padding(
           padding: EdgeInsets.fromLTRB(16, index == 0 ? 8 : 0, 16, 12),
           child: AttendanceItemWidget(

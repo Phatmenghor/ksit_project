@@ -119,17 +119,21 @@ export function createAttendanceCheckColumns({
     {
       key: "recordedTime",
       label: "Check-in Time",
-      render: (student) => student.recordedTime || "--",
+      render: (student) => {
+        if (!student.recordedTime || student.status === "ABSENT") return "--";
+        try {
+          const date = new Date(student.recordedTime);
+          if (isNaN(date.getTime())) return student.recordedTime;
+          return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+        } catch (e) {
+          return student.recordedTime;
+        }
+      },
     },
     {
       key: "attendanceScore",
-      label: "attendanceScore",
-      render: (student) => student.attendanceScore || "--",
-    },
-    {
-      key: "maxAttendanceScore",
-      label: "maxAttendanceScore",
-      render: (student) => student.maxAttendanceScore || "--",
+      label: "Score",
+      render: (student) => student.attendanceScore !== undefined && student.attendanceScore !== null ? student.attendanceScore : "--",
     },
     {
       key: "comment",

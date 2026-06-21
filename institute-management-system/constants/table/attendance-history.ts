@@ -7,8 +7,7 @@ export const AttendanceHistoryTableHeader = [
   { label: "Attendance", className: "w-[15%]" },
   { label: "Type", className: "w-[15%]" },
   { label: "Check-in Time", className: "w-[15%]" },
-  { label: "attendanceScore", className: "w-[15%]" },
-  { label: "maxAttendanceScore", className: "w-[15%]" },
+  { label: "Score", className: "w-[15%]" },
   { label: "Comment", className: "w-[20%]" },
 ];
 

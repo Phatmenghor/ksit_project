@@ -12,6 +12,8 @@ public interface AttendanceSessionService {
 
     QrResponse regenerateQrCode(Long sessionId);
 
+    QrResponse getQrCode(Long sessionId);
+
     AttendanceSessionDto markAttendanceByQr(QrAttendanceRequest request);
     
     AttendanceSessionDto finalizeAttendanceSession(Long sessionId);

@@ -19,6 +19,7 @@ import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.auth.repository.UserRepository;
 import com.menghor.ksit.feature.master.model.ClassEntity;
 import com.menghor.ksit.feature.school.model.ScheduleEntity;
+import com.menghor.ksit.feature.score.service.StudentScoreService;
 import com.menghor.ksit.feature.school.repository.ScheduleRepository;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -46,6 +47,7 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
     private final AttendanceMapper attendanceMapper;
     private final SecurityUtils securityUtils;
     private final AttendanceWebSocketHandler webSocketHandler;
+    private final StudentScoreService studentScoreService;
 
     @Override
     public AttendanceSessionDto findById(Long id) {
@@ -72,6 +74,16 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
         // Get current date/time
         LocalDateTime now = LocalDateTime.now();
+        java.time.LocalDate today = now.toLocalDate();
+
+        // Check if an active session already exists for today
+        List<AttendanceSessionEntity> todaySessions = findTodaySessionsForSchedule(schedule.getId(), today);
+        if (!todaySessions.isEmpty()) {
+            log.info("Found existing attendance session for scheduleId={} today. Reusing session id={}", schedule.getId(), todaySessions.get(0).getId());
+            // Return the first session found for today
+            AttendanceSessionEntity existingSession = todaySessions.get(0);
+            return attendanceMapper.toDto(existingSession);
+        }
 
         // Create new attendance session
         AttendanceSessionEntity session = new AttendanceSessionEntity();
@@ -83,7 +95,6 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
 
         // Generate QR code
         session.setQrCode(UUID.randomUUID().toString());
-        session.setQrExpiryTime(now.plusMinutes(15)); // QR code valid for 15 minutes
 
         // Save session first to generate ID
         AttendanceSessionEntity savedSession = sessionRepository.save(session);
@@ -151,17 +162,14 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
             throw new IllegalStateException("Cannot regenerate QR code for finalized session");
         }
 
-        // Generate new QR code and reset expiry time (15 minutes from now)
-        LocalDateTime now = LocalDateTime.now();
+        // Generate new QR code
         session.setQrCode(UUID.randomUUID().toString());
-        session.setQrExpiryTime(now.plusMinutes(15));
 
         session = sessionRepository.save(session);
         log.info("QR code regenerated successfully for sessionId={}", sessionId);
         
         QrResponse response = QrResponse.builder()
                 .qrCode(session.getQrCode())
-                .expiryTime(session.getQrExpiryTime().toString())
                 .build();
 
         // Broadcast session update when QR is regenerated
@@ -173,6 +181,28 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         }
 
         return response;
+    }
+
+    @Override
+    @Transactional
+    public QrResponse getQrCode(Long sessionId) {
+        log.info("Fetching QR code for sessionId={}", sessionId);
+        AttendanceSessionEntity session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> {
+                    log.error("Attendance session not found with id={}", sessionId);
+                    return new EntityNotFoundException("Attendance session not found with id: " + sessionId);
+                });
+
+        // Generate QR code if missing or empty
+        if (session.getQrCode() == null || session.getQrCode().isEmpty()) {
+            session.setQrCode(UUID.randomUUID().toString());
+            session = sessionRepository.save(session);
+            log.info("Generated default QR code for sessionId={}", sessionId);
+        }
+
+        return QrResponse.builder()
+                .qrCode(session.getQrCode())
+                .build();
     }
 
     @Override
@@ -222,6 +252,14 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         AttendanceSessionEntity refreshedSession = sessionRepository.findById(session.getId()).orElse(session);
         AttendanceSessionDto sessionDto = attendanceMapper.toDto(refreshedSession);
 
+        // Attach the student's current persisted score so the check-in response shows where they stand
+        try {
+            sessionDto.setStudentScore(studentScoreService.recalculateAttendanceScoreForStudent(
+                    session.getSchedule().getId(), request.getStudentId()));
+        } catch (Exception e) {
+            log.error("Failed to load student score for studentId={} after attendance check-in", request.getStudentId(), e);
+        }
+
         try {
             webSocketHandler.broadcastAttendanceUpdated(session.getId(), sessionDto);
         } catch (Exception e) {
@@ -267,6 +305,13 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
             webSocketHandler.broadcastSessionFinalized(sessionId, sessionDto);
         } catch (Exception e) {
             log.error("Failed to broadcast session finalization WebSocket event", e);
+        }
+
+        // Recalculate attendance scores for student score session
+        try {
+            studentScoreService.recalculateAttendanceScores(session.getSchedule().getId());
+        } catch (Exception e) {
+            log.error("Failed to recalculate student attendance scores upon session finalization", e);
         }
 
         return sessionDto;

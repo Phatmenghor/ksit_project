@@ -13,8 +13,9 @@ import {
   RefreshCw,
   CheckCircle,
   QrCode,
+  Download,
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -32,6 +33,27 @@ export function QRCodeSection({
   const [qrGenerated, setQrGenerated] = useState(false);
   const [qrImageUrl, setQrImageUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Download QR Code function
+  const downloadQRCode = useCallback(async () => {
+    if (!qrImageUrl) return;
+    try {
+      const imageUrl = baseAPI.BASE_IMAGE + qrImageUrl;
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `attendance-qr-session-${sessionId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("QR Code downloaded successfully");
+    } catch (error) {
+      toast.error("Failed to download QR Code");
+    }
+  }, [qrImageUrl, sessionId]);
 
   // Status tracking
   const [status, setStatus] = useState<
@@ -64,6 +86,13 @@ export function QRCodeSection({
       setIsLoading(false);
     }
   }, [sessionId, onQRStatusChange]);
+
+  // Auto-generate QR code on load
+  useEffect(() => {
+    if (sessionId && !qrGenerated && !isLoading) {
+      generateQRCode();
+    }
+  }, [sessionId, qrGenerated, isLoading, generateQRCode]);
 
   // Get status color
   const getStatusColor = () => {
@@ -100,21 +129,6 @@ export function QRCodeSection({
             {getStatusIcon()}
             <span className="text-sm capitalize">{status}</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Main action button */}
-          <Button
-            variant="outline"
-            className="bg-blue-500 hover:bg-blue-700 text-white hover:text-white border-0"
-            onClick={generateQRCode}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : null}
-            {qrGenerated ? "Refresh" : "Generate"} QR Code
-          </Button>
         </div>
       </CardHeader>
 
@@ -169,7 +183,7 @@ export function QRCodeSection({
 
       {/* Enhanced Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
@@ -177,41 +191,35 @@ export function QRCodeSection({
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-4">
-            <div className="border border-dashed border-gray-300 inline-block">
+            <div className="border border-dashed border-gray-300 inline-block p-4 bg-white">
               {qrImageUrl && (
                 <div className="relative">
                   <img
                     src={baseAPI.BASE_IMAGE + qrImageUrl}
                     alt="Attendance QR Code"
-                    width={400}
-                    height={400}
+                    width={550}
+                    height={550}
                     className="transition-opacity"
                   />
                 </div>
               )}
             </div>
 
-            <div className="mt-4 space-y-2 text-center">
+            <div className="mt-6 flex flex-col items-center gap-4 w-full">
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span>Session ID: {sessionId}</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                   Active
                 </Badge>
               </div>
-            </div>
-
-            {/* Modal Action Button */}
-            <div className="flex items-center gap-2 mt-6">
               <Button
-                size="sm"
                 variant="outline"
-                onClick={generateQRCode}
-                disabled={isLoading}
+                size="default"
+                className="bg-blue-500 hover:bg-blue-600 text-white hover:text-white border-0 transition-colors duration-200 flex items-center gap-2 px-6"
+                onClick={downloadQRCode}
               >
-                {isLoading ? (
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                ) : null}
-                Refresh QR Code
+                <Download className="h-4 w-4" />
+                Download QR Code Image
               </Button>
             </div>
           </div>

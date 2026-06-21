@@ -56,8 +56,8 @@ ImageResponse imageResponse = imageService.getImageById(id);
 
     @GetMapping(value = "generate-qr-image/{sessionId}", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> regenerateQrCodeImage(@PathVariable Long sessionId) {
-        log.info("Regenerate QR code image for sessionId={} request received", sessionId);
-        QrResponse response = sessionService.regenerateQrCode(sessionId);
+        log.info("Fetch QR code image for sessionId={} request received", sessionId);
+        QrResponse response = sessionService.getQrCode(sessionId);
         String base64QrCode = qrCodeGenerator.generateQrCodeBase64(response.getQrCode(), 1080, 1080);
         byte[] qrCodeImage = Base64.getDecoder().decode(base64QrCode);
         return ResponseEntity.ok()

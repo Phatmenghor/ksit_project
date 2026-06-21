@@ -22,6 +22,7 @@ import com.menghor.ksit.feature.auth.repository.UserRepository;
 import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import com.menghor.ksit.feature.school.repository.ScheduleRepository;
 import com.menghor.ksit.feature.score.dto.response.ScoreSessionSummaryDto;
+import com.menghor.ksit.feature.score.service.StudentScoreService;
 import com.menghor.ksit.utils.database.CustomPaginationResponseDto;
 import com.menghor.ksit.utils.database.SecurityUtils;
 import com.menghor.ksit.utils.pagiantion.PaginationUtils;
@@ -52,6 +53,7 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
     private final ScoreConfigurationRepository scoreConfigRepository;
     private final ScoreSessionMapper scoreSessionMapper;
     private final SecurityUtils securityUtils;
+    private final StudentScoreService studentScoreService;
 
     @Override
     @Transactional
@@ -66,14 +68,31 @@ public class ScoreSessionServiceImpl implements ScoreSessionService {
         Pageable latestFirst = PaginationUtils.createPageable(1, 1, "createdAt", "DESC");
         Page<ScoreSessionEntity> existingSessionsPage = scoreSessionRepository.findAll(existingSessionSpec, latestFirst);
 
+        ScoreSessionResponseDto responseDto;
         if (!existingSessionsPage.isEmpty()) {
             // Use the latest session regardless of its status
             ScoreSessionEntity latestSession = existingSessionsPage.getContent().get(0);
-
-            return handleExistingSession(latestSession);
+            responseDto = handleExistingSession(latestSession);
         } else {
-            return createNewSession(requestDto);
+            responseDto = createNewSession(requestDto);
         }
+
+        // Recalculate attendance scores dynamically from finalized sessions
+        try {
+            studentScoreService.recalculateAttendanceScores(requestDto.getScheduleId());
+        } catch (Exception e) {
+            log.error("Failed to recalculate attendance scores during initialization: {}", e.getMessage());
+        }
+
+        // Load the refreshed session to return the updated attendance scores
+        if (responseDto != null) {
+            ScoreSessionEntity refreshed = scoreSessionRepository.findById(responseDto.getId()).orElse(null);
+            if (refreshed != null) {
+                return scoreSessionMapper.toDto(refreshed);
+            }
+        }
+
+        return responseDto;
     }
 
     private ScoreSessionResponseDto handleExistingSession(ScoreSessionEntity session) {

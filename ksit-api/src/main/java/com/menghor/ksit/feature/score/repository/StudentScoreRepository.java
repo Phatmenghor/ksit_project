@@ -10,4 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface StudentScoreRepository extends JpaRepository<StudentScoreEntity, Long>, JpaSpecificationExecutor<StudentScoreEntity> {
+    List<StudentScoreEntity> findByScoreSessionScheduleId(Long scheduleId);
+    Optional<StudentScoreEntity> findByScoreSessionScheduleIdAndStudentId(Long scheduleId, Long studentId);
 }
