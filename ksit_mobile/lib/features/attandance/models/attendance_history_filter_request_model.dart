@@ -21,7 +21,7 @@ class AttendanceHistoryFilterRequest {
     };
 
     if (semester != null) {
-      data['semester'] = semester!.name;
+      data['semester'] = semester!.apiValue;
     }
 
     if (academyYear != null) {

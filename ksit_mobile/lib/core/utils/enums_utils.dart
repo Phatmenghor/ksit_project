@@ -14,7 +14,7 @@ enum DayOfWeek {
 enum GenderEnum { male, female, other }
 
 extension DayOfWeekExtension on DayOfWeek {
-  String get name {
+  String get apiValue {
     switch (this) {
       case DayOfWeek.monday:
         return 'MONDAY';
@@ -103,7 +103,7 @@ enum Semester {
 }
 
 extension SemesterExtension on Semester {
-  String get name {
+  String get apiValue {
     switch (this) {
       case Semester.semester1:
         return 'SEMESTER_1';
@@ -143,7 +143,7 @@ enum Status {
 enum FilterType { all, today }
 
 extension StatusExtension on Status {
-  String get name {
+  String get apiValue {
     switch (this) {
       case Status.active:
         return 'ACTIVE';
@@ -196,7 +196,7 @@ enum RequestPriority {
 }
 
 extension RequestPriorityExtension on RequestPriority {
-  String get name {
+  String get apiValue {
     switch (this) {
       case RequestPriority.low:
         return 'low';
@@ -245,7 +245,7 @@ enum SurveyStatus {
 }
 
 extension SurveyStatusExtension on SurveyStatus {
-  String get name {
+  String get apiValue {
     switch (this) {
       case SurveyStatus.none:
         return 'NONE';

@@ -24,7 +24,7 @@ class TranscriptController extends GetxController {
   /// Check if user is a student before loading transcript
   void _checkUserRoleAndLoad() {
     if (_profileController.userRole.value == 'STUDENT') {
-      LoggerUtils.warning('Transcript access haha: User is not a student');
+      LoggerUtils.info('Transcript access: User is a student, loading transcript');
       loadTranscript();
     } else {
       LoggerUtils.warning('Transcript access denied: User is not a student');

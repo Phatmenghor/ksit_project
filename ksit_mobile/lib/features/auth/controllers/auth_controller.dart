@@ -155,7 +155,6 @@ class AuthController extends GetxController {
       Get.delete<HomeController>(force: true);
       Get.delete<RequestController>(force: true);
       Get.delete<ProfileController>(force: true);
-      Get.delete<RequestController>(force: true);
       Get.delete<ScanController>(force: true);
 
       // Reset current user data in AuthController without deleting the controller

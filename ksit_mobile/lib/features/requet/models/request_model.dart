@@ -1,7 +1,7 @@
 import 'package:ksit_mobile/core/utils/enums_utils.dart';
 
 extension RequestStatusExtension on RequestStatus {
-  String get name {
+  String get apiValue {
     switch (this) {
       case RequestStatus.pending:
         return 'PENDING';
@@ -63,8 +63,8 @@ class UserClass {
   factory UserClass.fromJson(Map<String, dynamic> json) {
     return UserClass(
       id: (json['id'] as num).toInt(),
-      code: json['code'] as String,
-      createdAt: json['createdAt'] as String,
+      code: json['code'] as String? ?? '',
+      createdAt: json['createdAt'] as String? ?? '',
     );
   }
 
@@ -125,25 +125,27 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: (json['id'] as num).toInt(),
-      username: json['username'] as String,
+      username: json['username'] as String? ?? '',
       khmerFirstName: json['khmerFirstName'] as String?,
       khmerLastName: json['khmerLastName'] as String?,
       englishFirstName: json['englishFirstName'] as String?,
       englishLastName: json['englishLastName'] as String?,
       email: json['email'] as String?,
       phoneNumber: json['phoneNumber'] as String?,
-      identifyNumber: json['identifyNumber'] as String,
-      degree: json['degree'] as String,
+      identifyNumber: json['identifyNumber'] as String? ?? '',
+      degree: json['degree'] as String? ?? '',
       dateOfBirth: json['dateOfBirth'] as String?,
       gender: json['gender'] as String?,
       currentAddress: json['currentAddress'] as String?,
       profileUrl: json['profileUrl'] as String?,
-      majorName: json['majorName'] as String,
-      departmentName: json['departmentName'] as String,
-      userClass: UserClass.fromJson(json['userClass'] as Map<String, dynamic>),
-      roles: (json['roles'] as List<dynamic>).map((e) => e as String).toList(),
-      isStudent: json['isStudent'] as bool,
-      createdAt: json['createdAt'] as String,
+      majorName: json['majorName'] as String? ?? '',
+      departmentName: json['departmentName'] as String? ?? '',
+      userClass: json['userClass'] != null
+          ? UserClass.fromJson(json['userClass'] as Map<String, dynamic>)
+          : const UserClass(id: 0, code: '', createdAt: ''),
+      roles: (json['roles'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      isStudent: json['isStudent'] as bool? ?? false,
+      createdAt: json['createdAt'] as String? ?? '',
     );
   }
 
@@ -222,7 +224,7 @@ class RequestModel {
     return {
       'id': id,
       'title': title,
-      'status': status.name,
+      'status': status.apiValue,
       'requestComment': requestComment,
       'staffComment': staffComment,
       'user': user.toJson(),

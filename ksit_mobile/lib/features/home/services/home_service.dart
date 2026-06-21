@@ -25,7 +25,7 @@ class HomeService extends GetxService {
     try {
       // Build request data dynamically based on provided parameters
       final Map<String, dynamic> requestData = {
-        'status': status.name,
+        'status': status.apiValue,
         'pageNo': pageNo,
         'pageSize': pageSize,
       };
@@ -36,11 +36,11 @@ class HomeService extends GetxService {
       }
 
       if (semester != null) {
-        requestData['semester'] = semester.name;
+        requestData['semester'] = semester.apiValue;
       }
 
       if (dayOfWeek != null) {
-        requestData['dayOfWeek'] = dayOfWeek.name;
+        requestData['dayOfWeek'] = dayOfWeek.apiValue;
       }
 
       final response = await _apiService.post(

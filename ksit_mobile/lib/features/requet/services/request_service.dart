@@ -23,7 +23,7 @@ class RequestService extends GetxService {
 
       // Add status filter if provided
       if (status != null) {
-        requestData['status'] = status.name;
+        requestData['status'] = status.apiValue;
       }
 
       final response = await _apiService.post(
