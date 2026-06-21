@@ -50,17 +50,17 @@ android {
             dimension "environment"
             applicationIdSuffix ".local"
             versionNameSuffix "-local"
-            resValue "string", "app_name", "KSIT Local"
+            resValue "string", "app_name", "ims ksit[local]"
         }
         dev {
             dimension "environment"
             applicationIdSuffix ".dev"
             versionNameSuffix "-dev"
-            resValue "string", "app_name", "KSIT Dev"
+            resValue "string", "app_name", "ims ksit[dev]"
         }
         prod {
             dimension "environment"
-            resValue "string", "app_name", "KSIT Mobile"
+            resValue "string", "app_name", "ims ksit"
         }
     }
 

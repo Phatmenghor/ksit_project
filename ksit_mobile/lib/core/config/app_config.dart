@@ -51,11 +51,11 @@ class AppConfig {
   static String get appName {
     switch (_environment) {
       case Environment.local:
-        return 'KSIT (Local)';
+        return 'ims ksit[local]';
       case Environment.dev:
-        return 'KSIT (Dev)';
+        return 'ims ksit[dev]';
       case Environment.prod:
-        return 'KSIT Mobile';
+        return 'ims ksit';
     }
   }
 
