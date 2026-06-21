@@ -1,5 +1,5 @@
 // Dev entry point — flutter run -t lib/main_dev.dart
-// Connects to remote dev server at 165.22.247.142:7000
+// Connects to remote dev server at 167.172.88.194:8080
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';

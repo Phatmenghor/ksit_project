@@ -30,9 +30,9 @@ class AppConfig {
       case Environment.local:
         return 'http://$_localHost:8080/api';
       case Environment.dev:
-        return 'http://165.22.247.142:7000/api';
+        return 'http://167.172.88.194:8080/api';
       case Environment.prod:
-        return 'http://165.22.247.142:7000/api';
+        return 'http://167.172.88.194:8080/api';
     }
   }
 
@@ -41,9 +41,9 @@ class AppConfig {
       case Environment.local:
         return 'http://$_localHost:8080';
       case Environment.dev:
-        return 'http://165.22.247.142:7000';
+        return 'http://167.172.88.194:8080';
       case Environment.prod:
-        return 'http://165.22.247.142:7000';
+        return 'http://167.172.88.194:8080';
     }
   }
 
