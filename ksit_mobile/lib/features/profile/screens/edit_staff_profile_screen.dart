@@ -22,117 +22,214 @@ class EditStaffProfileFullScreen extends StatelessWidget {
     final profileController = Get.find<ProfileController>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        centerTitle: false,
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
-          onPressed: () {
-            FocusScope.of(context).unfocus();
-            context.pop();
-          },
-        ),
-      ),
-      resizeToAvoidBottomInset: false,
+      backgroundColor: AppColors.body,
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Obx(() {
           if (profileController.isLoading.value) {
             return const LoadingWidget(message: '', overlay: false);
           }
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildProfileHeader(editController),
-                _buildBasicInfoSection(editController, context),
-                _buildProfessionalRankSection(editController),
-                _buildExperienceSection(editController),
-                _buildPraiseCriticismSection(editController),
-                _buildEducationSection(editController),
-                _buildVocationalSection(editController),
-                _buildShortCourseSection(editController),
-                _buildLanguageSection(editController),
-                _buildFamilySection(editController),
-                SizedBox(height: _getContentBottomPadding(context)),
-              ],
-            ),
+          return Column(
+            children: [
+              _buildHeader(editController, profileController, context),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildPersonalInfoCard(editController, context),
+                      const SizedBox(height: 12),
+                      _buildWorkInfoCard(editController, context),
+                      const SizedBox(height: 12),
+                      _buildLocationCard(editController, context),
+                      const SizedBox(height: 12),
+                      _buildProfessionalRankSection(editController),
+                      const SizedBox(height: 12),
+                      _buildExperienceSection(editController),
+                      const SizedBox(height: 12),
+                      _buildPraiseCriticismSection(editController),
+                      const SizedBox(height: 12),
+                      _buildEducationSection(editController),
+                      const SizedBox(height: 12),
+                      _buildVocationalSection(editController),
+                      const SizedBox(height: 12),
+                      _buildShortCourseSection(editController),
+                      const SizedBox(height: 12),
+                      _buildLanguageSection(editController),
+                      const SizedBox(height: 12),
+                      _buildFamilySection(editController),
+                      SizedBox(height: _getContentBottomPadding(context)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         }),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: _getBottomPadding(context),
-          top: 16,
+      bottomNavigationBar: _buildBottomBar(editController, context),
+    );
+  }
+
+  // ─── Header ──────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(
+    EditStaffProfileController editController,
+    ProfileController profileController,
+    BuildContext context,
+  ) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primaryAccent],
         ),
-        color: Colors.white,
-        child: Row(
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  final navigator = GoRouter.of(context);
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    navigator.pop();
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    side: const BorderSide(color: AppColors.border, width: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      context.pop();
+                    },
                   ),
-                ),
-                child: const Text('Discard',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Obx(() => ElevatedButton(
-                    onPressed: editController.isLoading.value
-                        ? null
-                        : () {
-                            FocusScope.of(context).unfocus();
-                            editController.saveProfile();
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                  const Expanded(
+                    child: Text(
+                      'Edit My Profile',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
-                    child: editController.isLoading.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Column(
+                children: [
+                  // Avatar
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Obx(() {
+                        final imageUrl = editController.currentImageUrl;
+                        return Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              width: 2,
                             ),
-                          )
-                        : const Text('Save',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600)),
-                  )),
+                          ),
+                          child: CircleAvatar(
+                            radius: 44,
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.2),
+                            backgroundImage: imageUrl.isNotEmpty
+                                ? _getProfileImage(imageUrl)
+                                : null,
+                            child: imageUrl.isEmpty
+                                ? const Icon(Icons.person,
+                                    color: Colors.white54, size: 44)
+                                : null,
+                          ),
+                        );
+                      }),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Obx(() => GestureDetector(
+                              onTap: () {
+                                FocusScope.of(Get.context!).unfocus();
+                                editController.uploadProfileImage();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.white, width: 2),
+                                ),
+                                child: editController.isUploadingImage.value
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : const Icon(Icons.camera_alt,
+                                        color: Colors.white, size: 14),
+                              ),
+                            )),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Obx(() {
+                    final staff = profileController.staffProfile.value;
+                    return Text(
+                      staff?.displayName ?? 'Staff',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  }),
+
+                  const SizedBox(height: 6),
+
+                  Obx(() {
+                    final staff = profileController.staffProfile.value;
+                    final roleDisplay = profileController.currentUserRoleDisplay;
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _buildBadge(Icons.work_outline, roleDisplay,
+                            Colors.white),
+                        if (staff?.identifyNumber != null &&
+                            staff!.identifyNumber!.isNotEmpty)
+                          _buildBadge(
+                            Icons.badge_outlined,
+                            'ID: ${staff.identifyNumber}',
+                            Colors.white.withValues(alpha: 0.85),
+                          ),
+                        if (staff?.staffId != null &&
+                            staff!.staffId!.isNotEmpty)
+                          _buildBadge(
+                            Icons.credit_card_outlined,
+                            staff.staffId!,
+                            Colors.white.withValues(alpha: 0.85),
+                          ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
             ),
           ],
         ),
@@ -140,334 +237,621 @@ class EditStaffProfileFullScreen extends StatelessWidget {
     );
   }
 
-  double _getContentBottomPadding(BuildContext context) {
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    const buttonBarHeight = 80;
-    if (keyboardHeight > 0) {
-      return keyboardHeight + buttonBarHeight + 16;
-    } else {
-      return buttonBarHeight + 32;
-    }
-  }
-
-  double _getBottomPadding(BuildContext context) {
-    final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
-    final systemPadding = MediaQuery.of(context).padding.bottom;
-    if (Platform.isAndroid) {
-      if (bottomInsets > 0) {
-        return bottomInsets + 16;
-      }
-      final hasBottomSystemUI = systemPadding > 0;
-      return hasBottomSystemUI ? 96 : 64;
-    }
-    return bottomInsets > 0 ? bottomInsets + 16 : 32;
-  }
-
-  Widget _buildProfileHeader(EditStaffProfileController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 32),
-      child: Column(
+  Widget _buildBadge(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Stack(
-            children: [
-              Obx(() {
-                final imageUrl = controller.currentImageUrl;
-                final hasImage = imageUrl.isNotEmpty;
-
-                return CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: hasImage ? _getProfileImage(imageUrl) : null,
-                  child: !hasImage
-                      ? const Icon(Icons.camera_alt,
-                          color: Colors.grey, size: 30)
-                      : null,
-                );
-              }),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Obx(() => GestureDetector(
-                      onTap: () {
-                        FocusScope.of(Get.context!).unfocus();
-                        controller.uploadProfileImage();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: controller.isUploadingImage.value
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.primary),
-                                ),
-                              )
-                            : const Icon(Icons.camera_alt,
-                                color: Colors.grey, size: 16),
-                      ),
-                    )),
-              ),
-            ],
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: 11, color: color, fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 16),
-          Obx(() {
-            final staff = Get.find<ProfileController>().staffProfile.value;
-            return Text(
-              staff?.displayName ?? 'N/A',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-          Obx(() {
-            final staff = Get.find<ProfileController>().staffProfile.value;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'ID : ${staff?.identifyNumber ?? 'N/A'}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.primary,
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 16),
-          const Divider(color: AppColors.border, thickness: 8),
         ],
       ),
     );
   }
 
-  ImageProvider? _getProfileImage(String imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return NetworkImage(imageUrl);
-    } else {
-      return NetworkImage(AppConfig.baseImageUrl + imageUrl);
-    }
-  }
+  // ─── Section card ─────────────────────────────────────────────────────────
 
-  Widget _buildBasicInfoSection(
-      EditStaffProfileController controller, BuildContext context) {
+  Widget _buildSectionCard({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+    EdgeInsets? margin,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: controller.formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'ព័ត៌មានផ្ទាល់ខ្លួន',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(8)),
+              border: const Border(
+                bottom: BorderSide(color: AppColors.border, width: 1),
+                left: BorderSide(color: AppColors.primary, width: 3),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text('នាមត្រកូល និងនាមខ្លួន',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Row(
+            child: Row(
               children: [
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'នាមត្រកូល',
-                    controller: controller.khmerFirstNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'នាមខ្លួន',
-                    controller: controller.khmerLastNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
+                Icon(icon, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text('ជាអក្សរឡាតាំង',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'First Name',
-                    controller: controller.englishFirstNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'Last Name',
-                    controller: controller.englishLastNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-                  ),
-                ),
-              ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
             ),
-            const SizedBox(height: 16),
-            const Text('ភេទ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Obx(() => GenderSelectionField(
-                  selectedGender: controller.selectedGender.value,
-                  onChanged: (GenderEnum? value) {
-                    FocusScope.of(context).unfocus();
-                    controller.selectedGender.value = value;
-                  },
-                  fillColor: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
-                )),
-            const SizedBox(height: 16),
-            const Text('លេខទូរស័ព្ទ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Phone Number',
-              controller: controller.phoneController,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('ថ្ងៃខែឆ្នាំកំណើត',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Select Date (YYYY-MM-DD)',
-              controller: controller.dateOfBirthController,
-              readOnly: true,
-              suffixIcon: const Icon(Icons.calendar_month),
-              fillColor: Colors.white,
-              onTap: () {
-                FocusScope.of(context).unfocus();
-                controller.selectDate(context);
-              },
-              borderRadius: BorderRadius.circular(4),
-            ),
-            const SizedBox(height: 16),
-            const Text('អ៊ីម៊ែល',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Email',
-              controller: controller.emailController,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('សញ្ជាតិ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Nationality',
-              controller: controller.nationalityController,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('ជនជាតិ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Ethnicity',
-              controller: controller.ethnicityController,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('អាសយដ្ឋានបច្ចុប្បន្ន',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'អាសយដ្ឋានបច្ចុប្បន្ន',
-              controller: controller.addressController,
-              maxLines: 2,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('ទីកន្លែងកំណើត',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Place of Birth',
-              controller: controller.placeOfBirthController,
-              maxLines: 2,
-              textInputAction: TextInputAction.done,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).unfocus(),
-            ),
-            const SizedBox(height: 32),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textSecondary,
         ),
       ),
     );
   }
 
+  Widget _buildField({
+    required String label,
+    required Widget child,
+    double? bottomSpacing,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(label),
+        child,
+        SizedBox(height: bottomSpacing ?? 16),
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required String hint,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    TextInputAction textInputAction = TextInputAction.next,
+    IconData? prefixIconData,
+    int maxLines = 1,
+    bool readOnly = false,
+    Widget? suffixIcon,
+    VoidCallback? onTap,
+    ValueChanged<String>? onSubmitted,
+    required BuildContext context,
+  }) {
+    return CustomTextField(
+      hint: hint,
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      fillColor: AppColors.body,
+      borderRadius: BorderRadius.circular(4),
+      maxLines: maxLines,
+      readOnly: readOnly,
+      suffixIcon: suffixIcon,
+      onTap: onTap,
+      prefixIcon: prefixIconData != null
+          ? Icon(prefixIconData, size: 18, color: AppColors.textSecondary)
+          : null,
+      onSubmitted: onSubmitted ?? (_) => FocusScope.of(context).nextFocus(),
+    );
+  }
+
+  // ─── Personal Info ────────────────────────────────────────────────────────
+
+  Widget _buildPersonalInfoCard(
+      EditStaffProfileController controller, BuildContext context) {
+    return _buildSectionCard(
+      icon: Icons.person_outline,
+      title: 'ព័ត៌មានផ្ទាល់ខ្លួន',
+      children: [
+        _buildFieldLabel('នាមត្រកូល និងនាមខ្លួន (ជាភាសាខ្មែរ)'),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                hint: 'នាមត្រកូល',
+                controller: controller.khmerFirstNameController,
+                context: context,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildTextField(
+                hint: 'នាមខ្លួន',
+                controller: controller.khmerLastNameController,
+                context: context,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        _buildFieldLabel('ជាអក្សរឡាតាំង (Latin)'),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                hint: 'First Name',
+                controller: controller.englishFirstNameController,
+                context: context,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildTextField(
+                hint: 'Last Name',
+                controller: controller.englishLastNameController,
+                context: context,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        _buildField(
+          label: 'ភេទ (Gender)',
+          child: Obx(() => GenderSelectionField(
+                selectedGender: controller.selectedGender.value,
+                onChanged: (GenderEnum? v) {
+                  FocusScope.of(context).unfocus();
+                  controller.selectedGender.value = v;
+                },
+                fillColor: AppColors.body,
+                borderRadius: BorderRadius.circular(4),
+              )),
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'លេខទូរស័ព្ទ',
+                child: _buildTextField(
+                  hint: 'Phone',
+                  controller: controller.phoneController,
+                  keyboardType: TextInputType.phone,
+                  prefixIconData: Icons.phone_outlined,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'ថ្ងៃខែឆ្នាំកំណើត',
+                child: _buildTextField(
+                  hint: 'YYYY-MM-DD',
+                  controller: controller.dateOfBirthController,
+                  readOnly: true,
+                  suffixIcon: const Icon(Icons.calendar_today_outlined,
+                      size: 18, color: AppColors.textSecondary),
+                  onTap: () {
+                    FocusScope.of(context).unfocus();
+                    controller.selectDate(context);
+                  },
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        _buildField(
+          label: 'អ៊ីម៊ែល (Email)',
+          child: _buildTextField(
+            hint: 'example@email.com',
+            controller: controller.emailController,
+            keyboardType: TextInputType.emailAddress,
+            prefixIconData: Icons.email_outlined,
+            context: context,
+          ),
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'សញ្ជាតិ',
+                child: _buildTextField(
+                  hint: 'Nationality',
+                  controller: controller.nationalityController,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'ជនជាតិ',
+                child: _buildTextField(
+                  hint: 'Ethnicity',
+                  controller: controller.ethnicityController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        _buildField(
+          label: 'អាសយដ្ឋានបច្ចុប្បន្ន',
+          child: _buildTextField(
+            hint: 'Current Address',
+            controller: controller.addressController,
+            maxLines: 2,
+            prefixIconData: Icons.location_on_outlined,
+            context: context,
+          ),
+        ),
+
+        _buildField(
+          label: 'ទីកន្លែងកំណើត',
+          bottomSpacing: 0,
+          child: _buildTextField(
+            hint: 'Place of Birth',
+            controller: controller.placeOfBirthController,
+            maxLines: 2,
+            prefixIconData: Icons.place_outlined,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            context: context,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Work Information ─────────────────────────────────────────────────────
+
+  Widget _buildWorkInfoCard(
+      EditStaffProfileController controller, BuildContext context) {
+    return _buildSectionCard(
+      icon: Icons.work_outline,
+      title: 'ព័ត៌មានការងារ',
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'Staff ID',
+                child: _buildTextField(
+                  hint: 'Staff ID',
+                  controller: controller.staffIdController,
+                  prefixIconData: Icons.badge_outlined,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'National ID / CC',
+                child: _buildTextField(
+                  hint: 'National ID',
+                  controller: controller.nationalIdController,
+                  prefixIconData: Icons.credit_card_outlined,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'Identify Number',
+                child: _buildTextField(
+                  hint: 'Identify No.',
+                  controller: controller.identifyNumberController,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'Serial Number',
+                child: _buildTextField(
+                  hint: 'Serial No.',
+                  controller: controller.serialNumberController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'Marital Status',
+                child: _buildTextField(
+                  hint: 'e.g. Single/Married',
+                  controller: controller.maritalStatusController,
+                  prefixIconData: Icons.favorite_border,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'Employee Work',
+                child: _buildTextField(
+                  hint: 'Employee Type',
+                  controller: controller.employeeWorkController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        _buildField(
+          label: 'Current Position',
+          child: _buildTextField(
+            hint: 'Current Position',
+            controller: controller.currentPositionController,
+            prefixIconData: Icons.person_pin_outlined,
+            context: context,
+          ),
+        ),
+
+        _buildField(
+          label: 'Office Name',
+          child: _buildTextField(
+            hint: 'Office / Department',
+            controller: controller.officeNameController,
+            prefixIconData: Icons.business_outlined,
+            context: context,
+          ),
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'Start Work Date',
+                child: _buildTextField(
+                  hint: 'YYYY-MM-DD',
+                  controller: controller.startWorkDateController,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'Position Date',
+                child: _buildTextField(
+                  hint: 'YYYY-MM-DD',
+                  controller: controller.currentPositionDateController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'Payroll Account No.',
+                child: _buildTextField(
+                  hint: 'Account No.',
+                  controller: controller.payrollAccountNumberController,
+                  keyboardType: TextInputType.number,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'CPP Membership No.',
+                child: _buildTextField(
+                  hint: 'CPP No.',
+                  controller: controller.cppMembershipNumberController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'Decree Final',
+                child: _buildTextField(
+                  hint: 'Decree Final',
+                  controller: controller.decreeFinalController,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'Rank & Class',
+                child: _buildTextField(
+                  hint: 'Rank & Class',
+                  controller: controller.rankAndClassController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        _buildField(
+          label: 'Disability',
+          child: _buildTextField(
+            hint: 'Disability (if any)',
+            controller: controller.disabilityController,
+            context: context,
+          ),
+        ),
+
+        _buildField(
+          label: 'Work History',
+          bottomSpacing: 0,
+          child: _buildTextField(
+            hint: 'Work History',
+            controller: controller.workHistoryController,
+            maxLines: 3,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            context: context,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Location ─────────────────────────────────────────────────────────────
+
+  Widget _buildLocationCard(
+      EditStaffProfileController controller, BuildContext context) {
+    return _buildSectionCard(
+      icon: Icons.location_on_outlined,
+      title: 'ទីតាំង (Address)',
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'ខេត្ត/ក្រុង (Province)',
+                child: _buildTextField(
+                  hint: 'Province',
+                  controller: controller.provinceController,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'ស្រុក/ខណ្ឌ (District)',
+                child: _buildTextField(
+                  hint: 'District',
+                  controller: controller.districtController,
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'ឃុំ/សង្កាត់ (Commune)',
+                child: _buildTextField(
+                  hint: 'Commune',
+                  controller: controller.communeController,
+                  context: context,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'ភូមិ (Village)',
+                bottomSpacing: 0,
+                child: _buildTextField(
+                  hint: 'Village',
+                  controller: controller.villageController,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                  context: context,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ─── Dynamic array sections ───────────────────────────────────────────────
+
   Widget _buildProfessionalRankSection(EditStaffProfileController controller) {
     return DynamicInputGrid(
       title: 'ឋានៈវិជ្ជាជីវៈ',
       labels: const [
-        'ប្រភេទឋានៈវិជ្ជាជីវៈ',
+        'ប្រភេទឋានៈ',
         'បរិយាយ',
         'ប្រកាសលេខ',
-        'កាលបរិច្ឆេទទទួល',
+        'កាលបរិច្ឆេទ',
       ],
       fields: const [
         DynamicFieldConfig(
             name: 'typeOfProfessionalRank',
             type: DynamicFieldType.text,
-            placeholder: 'ប្រភេទឋានៈវិជ្ជាជីវៈ'),
+            placeholder: 'ប្រភេទឋានៈ'),
         DynamicFieldConfig(
             name: 'description',
             type: DynamicFieldType.text,
@@ -479,7 +863,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'dateAccepted',
             type: DynamicFieldType.date,
-            placeholder: 'កាលបរិច្ឆេទទទួល'),
+            placeholder: 'កាលបរិច្ឆេទ'),
       ],
       initialData: controller.professionalRanks,
       onDataChanged: (data) => controller.professionalRanks.value = data,
@@ -493,8 +877,8 @@ class EditStaffProfileFullScreen extends StatelessWidget {
     return DynamicInputGrid(
       title: 'បទពិសោធន៍ការងារ',
       labels: const [
-        'ការងារបន្តបន្ទាប់',
-        'អង្គភាពបម្រើការងារបច្ចុប្បន្ន',
+        'ការងារ',
+        'អង្គភាព',
         'ថ្ងៃចាប់ផ្តើម',
         'ថ្ងៃបញ្ចប់',
       ],
@@ -502,11 +886,11 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'continuousEmployment',
             type: DynamicFieldType.text,
-            placeholder: 'ការងារបន្តបន្ទាប់'),
+            placeholder: 'ការងារ'),
         DynamicFieldConfig(
             name: 'workPlace',
             type: DynamicFieldType.text,
-            placeholder: 'អង្គភាពបម្រើការងារបច្ចុប្បន្ន'),
+            placeholder: 'អង្គភាព'),
         DynamicFieldConfig(
             name: 'startDate',
             type: DynamicFieldType.date,
@@ -526,17 +910,17 @@ class EditStaffProfileFullScreen extends StatelessWidget {
 
   Widget _buildPraiseCriticismSection(EditStaffProfileController controller) {
     return DynamicInputGrid(
-      title: 'ការសរសើរ/ការស្តីបន្ទោស',
+      title: 'ការសរសើរ / ការស្តីបន្ទោស',
       labels: const [
-        'ប្រភេទនៃការសរសើរ/ការស្តីបន្ទោស',
+        'ប្រភេទ',
         'ផ្តល់ដោយ',
-        'កាលបរិច្ឆេទទទួល',
+        'កាលបរិច្ឆេទ',
       ],
       fields: const [
         DynamicFieldConfig(
             name: 'typePraiseOrCriticism',
             type: DynamicFieldType.text,
-            placeholder: 'ប្រភេទនៃការសរសើរ/ការស្តីបន្ទោស'),
+            placeholder: 'ប្រភេទ'),
         DynamicFieldConfig(
             name: 'giveBy',
             type: DynamicFieldType.text,
@@ -544,7 +928,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'dateAccepted',
             type: DynamicFieldType.date,
-            placeholder: 'កាលបរិច្ឆេទទទួល'),
+            placeholder: 'កាលបរិច្ឆេទ'),
       ],
       initialData: controller.praiseCriticisms,
       onDataChanged: (data) => controller.praiseCriticisms.value = data,
@@ -560,7 +944,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
       labels: const [
         'កម្រិតវប្បធម៌',
         'ឈ្មោះជំនាញ',
-        'កាលបរិច្ឆេទទទួល',
+        'កាលបរិច្ឆេទ',
         'ប្រទេស',
       ],
       fields: const [
@@ -571,11 +955,11 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'skillName',
             type: DynamicFieldType.text,
-            placeholder: 'ឈ្មោះជំនាญ'),
+            placeholder: 'ឈ្មោះជំនាញ'),
         DynamicFieldConfig(
             name: 'dateAccepted',
             type: DynamicFieldType.date,
-            placeholder: 'កាលបរិច្ឆេទទទួល'),
+            placeholder: 'កាលបរិច្ឆេទ'),
         DynamicFieldConfig(
             name: 'country',
             type: DynamicFieldType.text,
@@ -593,17 +977,17 @@ class EditStaffProfileFullScreen extends StatelessWidget {
     return DynamicInputGrid(
       title: 'កម្រិតវិជ្ជាជីវៈ',
       labels: const [
-        'កម្រិតវិជ្ជាជីវៈ',
+        'កម្រិត',
         'ឯកទេសទី១',
         'ឯកទេសទី២',
-        'ប្រព័ន្ធបណ្តុះបណ្តាល',
-        'ថ្ងៃខែបានទទួល',
+        'ប្រព័ន្ធ',
+        'ថ្ងៃទទួល',
       ],
       fields: const [
         DynamicFieldConfig(
             name: 'culturalLevel',
             type: DynamicFieldType.text,
-            placeholder: 'កម្រិតវិជ្ជាជីវៈ'),
+            placeholder: 'កម្រិត'),
         DynamicFieldConfig(
             name: 'skillOne',
             type: DynamicFieldType.text,
@@ -615,11 +999,11 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'trainingSystem',
             type: DynamicFieldType.text,
-            placeholder: 'ប្រព័ន្ធបណ្តុះបណ្តាល'),
+            placeholder: 'ប្រព័ន្ធ'),
         DynamicFieldConfig(
             name: 'dateAccepted',
             type: DynamicFieldType.date,
-            placeholder: 'ថ្ងៃខែបានទទួល'),
+            placeholder: 'ថ្ងៃទទួល'),
       ],
       initialData: controller.vocational,
       onDataChanged: (data) => controller.vocational.value = data,
@@ -635,7 +1019,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
       labels: const [
         'ផ្នែក',
         'ឈ្មោះជំនាញ',
-        'ថ្ងៃចាប់ផ្តើម',
+        'ថ្ងៃចាប់',
         'ថ្ងៃបញ្ចប់',
         'រយៈពេល',
         'រៀបចំដោយ',
@@ -643,7 +1027,9 @@ class EditStaffProfileFullScreen extends StatelessWidget {
       ],
       fields: const [
         DynamicFieldConfig(
-            name: 'skill', type: DynamicFieldType.text, placeholder: 'ផ្នែក'),
+            name: 'skill',
+            type: DynamicFieldType.text,
+            placeholder: 'ផ្នែក'),
         DynamicFieldConfig(
             name: 'skillName',
             type: DynamicFieldType.text,
@@ -651,7 +1037,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'startDate',
             type: DynamicFieldType.date,
-            placeholder: 'ថ្ងៃចាប់ផ្តើម'),
+            placeholder: 'ថ្ងៃចាប់'),
         DynamicFieldConfig(
             name: 'endDate',
             type: DynamicFieldType.date,
@@ -680,17 +1066,12 @@ class EditStaffProfileFullScreen extends StatelessWidget {
   Widget _buildLanguageSection(EditStaffProfileController controller) {
     return DynamicInputGrid(
       title: 'ភាសា',
-      labels: const [
-        'ផ្នែភាសា',
-        'ការអាន',
-        'ការសរសេរ',
-        'ការសន្ទនា',
-      ],
+      labels: const ['ភាសា', 'ការអាន', 'ការសរសេរ', 'ការសន្ទនា'],
       fields: const [
         DynamicFieldConfig(
             name: 'language',
             type: DynamicFieldType.text,
-            placeholder: 'ផ្នែភាសា'),
+            placeholder: 'ភាសា'),
         DynamicFieldConfig(
             name: 'reading',
             type: DynamicFieldType.text,
@@ -715,12 +1096,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
   Widget _buildFamilySection(EditStaffProfileController controller) {
     return DynamicInputGrid(
       title: 'គ្រួសារ',
-      labels: const [
-        'ឈ្មោះកូន',
-        'ភេទ',
-        'ថ្ងៃខែឆ្នាំកំណើត',
-        'មុខរបរ',
-      ],
+      labels: const ['ឈ្មោះកូន', 'ភេទ', 'ថ្ងៃខែឆ្នាំ', 'មុខរបរ'],
       fields: const [
         DynamicFieldConfig(
             name: 'nameChild',
@@ -734,7 +1110,7 @@ class EditStaffProfileFullScreen extends StatelessWidget {
         DynamicFieldConfig(
             name: 'dateOfBirth',
             type: DynamicFieldType.date,
-            placeholder: 'ថ្ងៃខែឆ្នាំកំណើត'),
+            placeholder: 'ថ្ងៃខែឆ្នាំ'),
         DynamicFieldConfig(
             name: 'working',
             type: DynamicFieldType.text,
@@ -746,5 +1122,117 @@ class EditStaffProfileFullScreen extends StatelessWidget {
       defaultRows: 1,
       isCollapsible: true,
     );
+  }
+
+  // ─── Bottom bar ───────────────────────────────────────────────────────────
+
+  Widget _buildBottomBar(
+      EditStaffProfileController editController, BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, _getBottomPadding(context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(top: BorderSide(color: AppColors.border, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                final navigator = GoRouter.of(context);
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  navigator.pop();
+                });
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: AppColors.border, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'Discard',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Obx(() => ElevatedButton(
+                  onPressed: editController.isLoading.value
+                      ? null
+                      : () {
+                          FocusScope.of(context).unfocus();
+                          editController.saveProfile();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        AppColors.primary.withValues(alpha: 0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: editController.isLoading.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.save_outlined, size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              'Save Changes',
+                              style: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  double _getContentBottomPadding(BuildContext context) {
+    return 80 + MediaQuery.of(context).viewInsets.bottom + 16;
+  }
+
+  double _getBottomPadding(BuildContext context) {
+    final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
+    final systemPadding = MediaQuery.of(context).padding.bottom;
+    if (Platform.isAndroid) {
+      if (bottomInsets > 0) return bottomInsets + 8;
+      return systemPadding > 0 ? systemPadding + 8 : 8;
+    }
+    return bottomInsets > 0 ? bottomInsets + 8 : 8;
+  }
+
+  ImageProvider _getProfileImage(String imageUrl) {
+    if (imageUrl.startsWith('http')) return NetworkImage(imageUrl);
+    return NetworkImage(AppConfig.baseImageUrl + imageUrl);
   }
 }

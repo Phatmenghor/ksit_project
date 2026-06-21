@@ -41,6 +41,30 @@ class EditStaffProfileController extends GetxController {
   final placeOfBirthController = TextEditingController();
   final dateOfBirthController = TextEditingController();
 
+  // Work information
+  final staffIdController = TextEditingController();
+  final nationalIdController = TextEditingController();
+  final identifyNumberController = TextEditingController();
+  final maritalStatusController = TextEditingController();
+  final currentPositionController = TextEditingController();
+  final officeNameController = TextEditingController();
+  final startWorkDateController = TextEditingController();
+  final currentPositionDateController = TextEditingController();
+  final employeeWorkController = TextEditingController();
+  final disabilityController = TextEditingController();
+  final payrollAccountNumberController = TextEditingController();
+  final cppMembershipNumberController = TextEditingController();
+  final decreeFinalController = TextEditingController();
+  final rankAndClassController = TextEditingController();
+  final serialNumberController = TextEditingController();
+  final workHistoryController = TextEditingController();
+
+  // Location
+  final provinceController = TextEditingController();
+  final districtController = TextEditingController();
+  final communeController = TextEditingController();
+  final villageController = TextEditingController();
+
   final RxList<Map<String, dynamic>> professionalRanks =
       <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> experiences = <Map<String, dynamic>>[].obs;
@@ -77,6 +101,26 @@ class EditStaffProfileController extends GetxController {
     ethnicityController.dispose();
     placeOfBirthController.dispose();
     dateOfBirthController.dispose();
+    staffIdController.dispose();
+    nationalIdController.dispose();
+    identifyNumberController.dispose();
+    maritalStatusController.dispose();
+    currentPositionController.dispose();
+    officeNameController.dispose();
+    startWorkDateController.dispose();
+    currentPositionDateController.dispose();
+    employeeWorkController.dispose();
+    disabilityController.dispose();
+    payrollAccountNumberController.dispose();
+    cppMembershipNumberController.dispose();
+    decreeFinalController.dispose();
+    rankAndClassController.dispose();
+    serialNumberController.dispose();
+    workHistoryController.dispose();
+    provinceController.dispose();
+    districtController.dispose();
+    communeController.dispose();
+    villageController.dispose();
   }
 
   void _loadCurrentProfileData() {
@@ -93,6 +137,27 @@ class EditStaffProfileController extends GetxController {
       ethnicityController.text = staff.ethnicity ?? '';
       placeOfBirthController.text = staff.placeOfBirth ?? '';
       selectedImageUrl.value = staff.profileUrl ?? '';
+
+      staffIdController.text = staff.staffId ?? '';
+      nationalIdController.text = staff.nationalId ?? '';
+      identifyNumberController.text = staff.identifyNumber ?? '';
+      maritalStatusController.text = staff.maritalStatus ?? '';
+      currentPositionController.text = staff.currentPosition ?? '';
+      officeNameController.text = staff.officeName ?? '';
+      startWorkDateController.text = staff.startWorkDate ?? '';
+      currentPositionDateController.text = staff.currentPositionDate ?? '';
+      employeeWorkController.text = staff.employeeWork ?? '';
+      disabilityController.text = staff.disability ?? '';
+      payrollAccountNumberController.text = staff.payrollAccountNumber ?? '';
+      cppMembershipNumberController.text = staff.cppMembershipNumber ?? '';
+      decreeFinalController.text = staff.decreeFinal ?? '';
+      rankAndClassController.text = staff.rankAndClass ?? '';
+      serialNumberController.text = staff.serialNumber ?? '';
+      workHistoryController.text = staff.workHistory ?? '';
+      provinceController.text = staff.province ?? '';
+      districtController.text = staff.district ?? '';
+      communeController.text = staff.commune ?? '';
+      villageController.text = staff.village ?? '';
       _loadGenderFromProfile(staff.gender);
       _loadDateFromProfile(staff.dateOfBirth);
 
@@ -300,6 +365,66 @@ class EditStaffProfileController extends GetxController {
     }
     if (placeOfBirthController.text.trim().isNotEmpty) {
       updateData['placeOfBirth'] = placeOfBirthController.text.trim();
+    }
+    if (staffIdController.text.trim().isNotEmpty) {
+      updateData['staffId'] = staffIdController.text.trim();
+    }
+    if (nationalIdController.text.trim().isNotEmpty) {
+      updateData['nationalId'] = nationalIdController.text.trim();
+    }
+    if (identifyNumberController.text.trim().isNotEmpty) {
+      updateData['identifyNumber'] = identifyNumberController.text.trim();
+    }
+    if (maritalStatusController.text.trim().isNotEmpty) {
+      updateData['maritalStatus'] = maritalStatusController.text.trim();
+    }
+    if (currentPositionController.text.trim().isNotEmpty) {
+      updateData['currentPosition'] = currentPositionController.text.trim();
+    }
+    if (officeNameController.text.trim().isNotEmpty) {
+      updateData['officeName'] = officeNameController.text.trim();
+    }
+    if (startWorkDateController.text.trim().isNotEmpty) {
+      updateData['startWorkDate'] = startWorkDateController.text.trim();
+    }
+    if (currentPositionDateController.text.trim().isNotEmpty) {
+      updateData['currentPositionDate'] = currentPositionDateController.text.trim();
+    }
+    if (employeeWorkController.text.trim().isNotEmpty) {
+      updateData['employeeWork'] = employeeWorkController.text.trim();
+    }
+    if (disabilityController.text.trim().isNotEmpty) {
+      updateData['disability'] = disabilityController.text.trim();
+    }
+    if (payrollAccountNumberController.text.trim().isNotEmpty) {
+      updateData['payrollAccountNumber'] = payrollAccountNumberController.text.trim();
+    }
+    if (cppMembershipNumberController.text.trim().isNotEmpty) {
+      updateData['cppMembershipNumber'] = cppMembershipNumberController.text.trim();
+    }
+    if (decreeFinalController.text.trim().isNotEmpty) {
+      updateData['decreeFinal'] = decreeFinalController.text.trim();
+    }
+    if (rankAndClassController.text.trim().isNotEmpty) {
+      updateData['rankAndClass'] = rankAndClassController.text.trim();
+    }
+    if (serialNumberController.text.trim().isNotEmpty) {
+      updateData['serialNumber'] = serialNumberController.text.trim();
+    }
+    if (workHistoryController.text.trim().isNotEmpty) {
+      updateData['workHistory'] = workHistoryController.text.trim();
+    }
+    if (provinceController.text.trim().isNotEmpty) {
+      updateData['province'] = provinceController.text.trim();
+    }
+    if (districtController.text.trim().isNotEmpty) {
+      updateData['district'] = districtController.text.trim();
+    }
+    if (communeController.text.trim().isNotEmpty) {
+      updateData['commune'] = communeController.text.trim();
+    }
+    if (villageController.text.trim().isNotEmpty) {
+      updateData['village'] = villageController.text.trim();
     }
     if (selectedGender.value != null) {
       updateData['gender'] = selectedGender.value!.name.toUpperCase();

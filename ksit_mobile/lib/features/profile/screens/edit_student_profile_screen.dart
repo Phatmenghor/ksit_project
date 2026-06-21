@@ -22,112 +22,199 @@ class EditStudentProfileFullScreen extends StatelessWidget {
     final profileController = Get.find<ProfileController>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        centerTitle: false,
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: AppColors.primary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
-          onPressed: () {
-            FocusScope.of(context).unfocus();
-            context.pop();
-          },
-        ),
-      ),
-      resizeToAvoidBottomInset: false,
+      backgroundColor: AppColors.body,
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Obx(() {
           if (profileController.isLoading.value) {
             return const LoadingWidget(message: '', overlay: false);
           }
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildProfileHeader(editController),
-                _buildBasicInfoSection(editController, context),
-                _buildStudiesHistorySection(editController),
-                _buildParentsSection(editController),
-                _buildSiblingsSection(editController),
-                SizedBox(height: _getContentBottomPadding(context)),
-              ],
-            ),
+          return Column(
+            children: [
+              // Header with gradient
+              _buildHeader(editController, profileController, context),
+
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildPersonalInfoCard(editController, context),
+                      const SizedBox(height: 12),
+                      _buildStudiesHistorySection(editController),
+                      const SizedBox(height: 12),
+                      _buildParentsSection(editController),
+                      const SizedBox(height: 12),
+                      _buildSiblingsSection(editController),
+                      SizedBox(height: _getContentBottomPadding(context)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         }),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: _getBottomPadding(context),
-          top: 16,
+      bottomNavigationBar: _buildBottomBar(editController, context),
+    );
+  }
+
+  // ─── Header ──────────────────────────────────────────────────────────────
+
+  Widget _buildHeader(
+    EditStudentProfileController editController,
+    ProfileController profileController,
+    BuildContext context,
+  ) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primaryAccent],
         ),
-        color: Colors.white,
-        child: Row(
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  final navigator = GoRouter.of(context);
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    navigator.pop();
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    side: const BorderSide(color: AppColors.border, width: 1),
+            // App bar row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      FocusScope.of(context).unfocus();
+                      context.pop();
+                    },
                   ),
-                ),
-                child: const Text('Discard',
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Obx(() => ElevatedButton(
-                    onPressed: editController.isLoading.value
-                        ? null
-                        : () {
-                            FocusScope.of(context).unfocus();
-                            editController.saveProfile();
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                  const Expanded(
+                    child: Text(
+                      'Edit My Profile',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
-                    child: editController.isLoading.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ],
+              ),
+            ),
+
+            // Avatar + name
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Column(
+                children: [
+                  // Avatar with camera
+                  Obx(() => Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                width: 2,
+                              ),
                             ),
-                          )
-                        : const Text('Save',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600)),
-                  )),
+                            child: CircleAvatar(
+                              radius: 44,
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.2),
+                              backgroundImage:
+                                  _getProfileImage(editController),
+                              child: _getProfileImageChild(editController),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () {
+                                FocusScope.of(Get.context!).unfocus();
+                                editController.uploadProfileImage();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.white, width: 2),
+                                ),
+                                child: editController.isUploadingImage.value
+                                    ? const SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : const Icon(Icons.camera_alt,
+                                        color: Colors.white, size: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )),
+
+                  const SizedBox(height: 12),
+
+                  // Name
+                  Obx(() {
+                    final student = profileController.studentProfile.value;
+                    return Text(
+                      student?.displayName ?? 'Student',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  }),
+
+                  const SizedBox(height: 6),
+
+                  // Role + ID badges
+                  Obx(() {
+                    final student = profileController.studentProfile.value;
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _buildBadge(
+                            Icons.school_outlined, 'Student', Colors.white),
+                        if (student?.identifyNumber != null &&
+                            student!.identifyNumber!.isNotEmpty)
+                          _buildBadge(
+                            Icons.badge_outlined,
+                            'ID: ${student.identifyNumber}',
+                            Colors.white.withValues(alpha: 0.85),
+                          ),
+                        if (student?.studentClass?.code != null)
+                          _buildBadge(
+                            Icons.class_outlined,
+                            student!.studentClass!.code!,
+                            Colors.white.withValues(alpha: 0.85),
+                          ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
             ),
           ],
         ),
@@ -135,303 +222,371 @@ class EditStudentProfileFullScreen extends StatelessWidget {
     );
   }
 
-  double _getContentBottomPadding(BuildContext context) {
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    const buttonBarHeight = 80;
-    if (keyboardHeight > 0) {
-      return keyboardHeight + buttonBarHeight + 16;
-    } else {
-      return buttonBarHeight + 32;
-    }
-  }
-
-  double _getBottomPadding(BuildContext context) {
-    final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
-    final systemPadding = MediaQuery.of(context).padding.bottom;
-    if (Platform.isAndroid) {
-      if (bottomInsets > 0) {
-        return bottomInsets + 16;
-      }
-      final hasBottomSystemUI = systemPadding > 0;
-      return hasBottomSystemUI ? 96 : 64;
-    }
-    return bottomInsets > 0 ? bottomInsets + 16 : 32;
-  }
-
-  Widget _buildProfileHeader(EditStudentProfileController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 32),
-      child: Column(
+  Widget _buildBadge(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Obx(() => Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: _getProfileImage(controller),
-                    child: _getProfileImageChild(controller),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        FocusScope.of(Get.context!).unfocus();
-                        controller.uploadProfileImage();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: controller.isUploadingImage.value
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.primary),
-                                ),
-                              )
-                            : const Icon(Icons.camera_alt,
-                                color: Colors.grey, size: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              )),
-          const SizedBox(height: 16),
-          Obx(() {
-            final student = Get.find<ProfileController>().studentProfile.value;
-            return Text(
-              student?.displayName ?? 'N/A',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-          Obx(() {
-            final student = Get.find<ProfileController>().studentProfile.value;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'ID : ${student?.identifyNumber ?? 'N/A'}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.primary,
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 16),
-          const Divider(color: AppColors.border, thickness: 8),
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBasicInfoSection(
-      EditStudentProfileController controller, BuildContext context) {
+  // ─── Section card ─────────────────────────────────────────────────────────
+
+  Widget _buildSectionCard({
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+    EdgeInsets? margin,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: controller.formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'ព័ត៌មានផ្ទាល់ខ្លួនរបស់និស្សិត',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(8)),
+              border: const Border(
+                bottom: BorderSide(color: AppColors.border, width: 1),
+                left: BorderSide(color: AppColors.primary, width: 3),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text('នាមត្រកូល និងនាមខ្លួន',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Row(
+            child: Row(
               children: [
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'នាមត្រកូល',
-                    controller: controller.khmerFirstNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'នាមខ្លួន',
-                    controller: controller.khmerLastNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
+                Icon(icon, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text('ជាអក្សរឡាតាំង',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'First Name',
-                    controller: controller.englishFirstNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CustomTextField(
-                    hint: 'Last Name',
-                    controller: controller.englishLastNameController,
-                    textInputAction: TextInputAction.next,
-                    fillColor: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-                  ),
-                ),
-              ],
+          ),
+
+          // Section content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
             ),
-            const SizedBox(height: 16),
-            const Text('ភេទ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Obx(() => GenderSelectionField(
-                  selectedGender: controller.selectedGender.value,
-                  onChanged: (GenderEnum? value) {
-                    FocusScope.of(context).unfocus();
-                    controller.selectedGender.value = value;
-                  },
-                  fillColor: Colors.white,
-                  borderRadius: BorderRadius.circular(4),
-                )),
-            const SizedBox(height: 16),
-            const Text('លេខទូរស័ព្ទ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Phone Number',
-              controller: controller.phoneController,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('ថ្ងៃខែឆ្នាំកំណើត',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Select Date (YYYY-MM-DD)',
-              controller: controller.dateOfBirthController,
-              readOnly: true,
-              suffixIcon: const Icon(Icons.calendar_month),
-              fillColor: Colors.white,
-              onTap: () {
-                FocusScope.of(context).unfocus();
-                controller.selectDate(context);
-              },
-              borderRadius: BorderRadius.circular(4),
-            ),
-            const SizedBox(height: 16),
-            const Text('អ៊ីម៊ែល',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Email',
-              controller: controller.emailController,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('សញ្ជាតិ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Nationality',
-              controller: controller.nationalityController,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('ជនជាតិ',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Ethnicity',
-              controller: controller.ethnicityController,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('អាសយដ្ឋានបច្ចុប្បន្ន',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'អាសយដ្ឋានបច្ចុប្បន្ន',
-              controller: controller.addressController,
-              maxLines: 2,
-              textInputAction: TextInputAction.next,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).nextFocus(),
-            ),
-            const SizedBox(height: 16),
-            const Text('ទីកន្លែងកំណើត',
-                style: TextStyle(fontSize: 12, color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            CustomTextField(
-              hint: 'Place of Birth',
-              controller: controller.placeOfBirthController,
-              maxLines: 2,
-              textInputAction: TextInputAction.done,
-              fillColor: Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              onSubmitted: (value) => FocusScope.of(context).unfocus(),
-            ),
-            const SizedBox(height: 32),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textSecondary,
         ),
       ),
     );
   }
+
+  Widget _buildField({
+    required String label,
+    required Widget child,
+    double? bottomSpacing,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(label),
+        child,
+        SizedBox(height: bottomSpacing ?? 16),
+      ],
+    );
+  }
+
+  // ─── Personal Info Section ────────────────────────────────────────────────
+
+  Widget _buildPersonalInfoCard(
+      EditStudentProfileController controller, BuildContext context) {
+    return _buildSectionCard(
+      icon: Icons.person_outline,
+      title: 'ព័ត៌មានផ្ទាល់ខ្លួន',
+      children: [
+        // Khmer name row
+        _buildFieldLabel('នាមត្រកូល និងនាមខ្លួន (ជាភាសាខ្មែរ)'),
+        Row(
+          children: [
+            Expanded(
+              child: CustomTextField(
+                hint: 'នាមត្រកូល',
+                controller: controller.khmerFirstNameController,
+                textInputAction: TextInputAction.next,
+                fillColor: AppColors.body,
+                borderRadius: BorderRadius.circular(4),
+                onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: CustomTextField(
+                hint: 'នាមខ្លួន',
+                controller: controller.khmerLastNameController,
+                textInputAction: TextInputAction.next,
+                fillColor: AppColors.body,
+                borderRadius: BorderRadius.circular(4),
+                onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // English name row
+        _buildFieldLabel('ជាអក្សរឡាតាំង (Latin)'),
+        Row(
+          children: [
+            Expanded(
+              child: CustomTextField(
+                hint: 'First Name',
+                controller: controller.englishFirstNameController,
+                textInputAction: TextInputAction.next,
+                fillColor: AppColors.body,
+                borderRadius: BorderRadius.circular(4),
+                onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: CustomTextField(
+                hint: 'Last Name',
+                controller: controller.englishLastNameController,
+                textInputAction: TextInputAction.next,
+                fillColor: AppColors.body,
+                borderRadius: BorderRadius.circular(4),
+                onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Gender
+        _buildField(
+          label: 'ភេទ (Gender)',
+          child: Obx(() => GenderSelectionField(
+                selectedGender: controller.selectedGender.value,
+                onChanged: (GenderEnum? v) {
+                  FocusScope.of(context).unfocus();
+                  controller.selectedGender.value = v;
+                },
+                fillColor: AppColors.body,
+                borderRadius: BorderRadius.circular(4),
+              )),
+        ),
+
+        // Phone + DOB row
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'លេខទូរស័ព្ទ',
+                child: CustomTextField(
+                  hint: 'Phone Number',
+                  controller: controller.phoneController,
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  fillColor: AppColors.body,
+                  borderRadius: BorderRadius.circular(4),
+                  prefixIcon: const Icon(Icons.phone_outlined,
+                      size: 18, color: AppColors.textSecondary),
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'ថ្ងៃខែឆ្នាំកំណើត',
+                child: CustomTextField(
+                  hint: 'YYYY-MM-DD',
+                  controller: controller.dateOfBirthController,
+                  readOnly: true,
+                  fillColor: AppColors.body,
+                  suffixIcon: const Icon(Icons.calendar_today_outlined,
+                      size: 18, color: AppColors.textSecondary),
+                  onTap: () {
+                    FocusScope.of(context).unfocus();
+                    controller.selectDate(context);
+                  },
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // Email
+        _buildField(
+          label: 'អ៊ីម៊ែល (Email)',
+          child: CustomTextField(
+            hint: 'example@email.com',
+            controller: controller.emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            fillColor: AppColors.body,
+            borderRadius: BorderRadius.circular(4),
+            prefixIcon: const Icon(Icons.email_outlined,
+                size: 18, color: AppColors.textSecondary),
+            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+          ),
+        ),
+
+        // Nationality + Ethnicity row
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'សញ្ជាតិ',
+                child: CustomTextField(
+                  hint: 'Nationality',
+                  controller: controller.nationalityController,
+                  textInputAction: TextInputAction.next,
+                  fillColor: AppColors.body,
+                  borderRadius: BorderRadius.circular(4),
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'ជនជាតិ',
+                child: CustomTextField(
+                  hint: 'Ethnicity',
+                  controller: controller.ethnicityController,
+                  textInputAction: TextInputAction.next,
+                  fillColor: AppColors.body,
+                  borderRadius: BorderRadius.circular(4),
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // Current Address
+        _buildField(
+          label: 'អាសយដ្ឋានបច្ចុប្បន្ន',
+          child: CustomTextField(
+            hint: 'Current Address',
+            controller: controller.addressController,
+            maxLines: 2,
+            textInputAction: TextInputAction.next,
+            fillColor: AppColors.body,
+            borderRadius: BorderRadius.circular(4),
+            prefixIcon: const Icon(Icons.location_on_outlined,
+                size: 18, color: AppColors.textSecondary),
+            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+          ),
+        ),
+
+        // Place of Birth
+        _buildField(
+          label: 'ទីកន្លែងកំណើត',
+          child: CustomTextField(
+            hint: 'Place of Birth',
+            controller: controller.placeOfBirthController,
+            maxLines: 2,
+            textInputAction: TextInputAction.next,
+            fillColor: AppColors.body,
+            borderRadius: BorderRadius.circular(4),
+            prefixIcon: const Icon(Icons.place_outlined,
+                size: 18, color: AppColors.textSecondary),
+            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+          ),
+        ),
+
+        // Siblings info row
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildField(
+                label: 'ចំនួនបងប្អូន',
+                child: CustomTextField(
+                  hint: 'Number of Siblings',
+                  controller: controller.numberOfSiblingsController,
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
+                  fillColor: AppColors.body,
+                  borderRadius: BorderRadius.circular(4),
+                  onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildField(
+                label: 'សមាជិកក្នុងបងប្អូន',
+                bottomSpacing: 0,
+                child: CustomTextField(
+                  hint: 'Member Siblings',
+                  controller: controller.memberSiblingsController,
+                  textInputAction: TextInputAction.done,
+                  fillColor: AppColors.body,
+                  borderRadius: BorderRadius.circular(4),
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ─── Dynamic sections ─────────────────────────────────────────────────────
 
   Widget _buildStudiesHistorySection(EditStudentProfileController controller) {
     return DynamicInputGrid(
@@ -576,22 +731,126 @@ class EditStudentProfileFullScreen extends StatelessWidget {
     );
   }
 
+  // ─── Bottom bar ───────────────────────────────────────────────────────────
+
+  Widget _buildBottomBar(
+      EditStudentProfileController editController, BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+          16, 12, 16, _getBottomPadding(context)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: const Border(top: BorderSide(color: AppColors.border, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () {
+                FocusScope.of(context).unfocus();
+                final navigator = GoRouter.of(context);
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  navigator.pop();
+                });
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: AppColors.border, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'Discard',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Obx(() => ElevatedButton(
+                  onPressed: editController.isLoading.value
+                      ? null
+                      : () {
+                          FocusScope.of(context).unfocus();
+                          editController.saveProfile();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        AppColors.primary.withValues(alpha: 0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: editController.isLoading.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.save_outlined, size: 18),
+                            SizedBox(width: 6),
+                            Text(
+                              'Save Changes',
+                              style: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  double _getContentBottomPadding(BuildContext context) {
+    return 80 + MediaQuery.of(context).viewInsets.bottom + 16;
+  }
+
+  double _getBottomPadding(BuildContext context) {
+    final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
+    final systemPadding = MediaQuery.of(context).padding.bottom;
+    if (Platform.isAndroid) {
+      if (bottomInsets > 0) return bottomInsets + 8;
+      return systemPadding > 0 ? systemPadding + 8 : 8;
+    }
+    return bottomInsets > 0 ? bottomInsets + 8 : 8;
+  }
+
   ImageProvider? _getProfileImage(EditStudentProfileController controller) {
     final imageUrl = controller.currentImageUrl;
     if (imageUrl.isNotEmpty) {
-      if (imageUrl.startsWith('http')) {
-        return NetworkImage(imageUrl);
-      } else {
-        return NetworkImage(AppConfig.baseImageUrl + imageUrl);
-      }
+      if (imageUrl.startsWith('http')) return NetworkImage(imageUrl);
+      return NetworkImage(AppConfig.baseImageUrl + imageUrl);
     }
     return null;
   }
 
   Widget? _getProfileImageChild(EditStudentProfileController controller) {
-    final imageUrl = controller.currentImageUrl;
-    if (imageUrl.isEmpty) {
-      return const Icon(Icons.camera_alt, color: Colors.grey, size: 30);
+    if (controller.currentImageUrl.isEmpty) {
+      return const Icon(Icons.person, color: Colors.white54, size: 44);
     }
     return null;
   }

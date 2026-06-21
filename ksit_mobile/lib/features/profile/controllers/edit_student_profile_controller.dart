@@ -40,6 +40,8 @@ class EditStudentProfileController extends GetxController {
   final ethnicityController = TextEditingController();
   final placeOfBirthController = TextEditingController();
   final dateOfBirthController = TextEditingController();
+  final memberSiblingsController = TextEditingController();
+  final numberOfSiblingsController = TextEditingController();
 
   final RxList<Map<String, dynamic>> studiesHistories =
       <Map<String, dynamic>>[].obs;
@@ -70,6 +72,8 @@ class EditStudentProfileController extends GetxController {
     ethnicityController.dispose();
     placeOfBirthController.dispose();
     dateOfBirthController.dispose();
+    memberSiblingsController.dispose();
+    numberOfSiblingsController.dispose();
   }
 
   void _loadCurrentProfileData() {
@@ -85,6 +89,8 @@ class EditStudentProfileController extends GetxController {
       nationalityController.text = student.nationality ?? '';
       ethnicityController.text = student.ethnicity ?? '';
       placeOfBirthController.text = student.placeOfBirth ?? '';
+      memberSiblingsController.text = student.memberSiblings ?? '';
+      numberOfSiblingsController.text = student.numberOfSiblings ?? '';
       selectedImageUrl.value = student.profileUrl ?? '';
       _loadGenderFromProfile(student.gender);
       _loadDateFromProfile(student.dateOfBirth);
@@ -247,6 +253,12 @@ class EditStudentProfileController extends GetxController {
     }
     if (placeOfBirthController.text.trim().isNotEmpty) {
       updateData['placeOfBirth'] = placeOfBirthController.text.trim();
+    }
+    if (memberSiblingsController.text.trim().isNotEmpty) {
+      updateData['memberSiblings'] = memberSiblingsController.text.trim();
+    }
+    if (numberOfSiblingsController.text.trim().isNotEmpty) {
+      updateData['numberOfSiblings'] = numberOfSiblingsController.text.trim();
     }
     if (selectedGender.value != null) {
       updateData['gender'] = selectedGender.value!.name.toUpperCase();

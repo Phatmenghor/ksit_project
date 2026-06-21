@@ -133,9 +133,9 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Hello,',
-                      style: TextStyle(
+                    Text(
+                      controller.greeting,
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.white,
                         fontWeight: FontWeight.normal,
