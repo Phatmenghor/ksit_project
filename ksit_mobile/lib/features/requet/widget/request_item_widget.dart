@@ -57,27 +57,9 @@ class RequestItemWidget extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top row: ID + date + status
+                      // Top row: date + status
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 3),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              '#${request.id}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               DateTimeFormatter.formatDateTime(

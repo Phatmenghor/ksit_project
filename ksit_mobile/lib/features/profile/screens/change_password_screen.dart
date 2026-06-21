@@ -11,7 +11,9 @@ class ChangePasswordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ChangePasswordController());
+    final controller = Get.isRegistered<ChangePasswordController>()
+        ? Get.find<ChangePasswordController>()
+        : Get.put(ChangePasswordController());
 
     return Scaffold(
       backgroundColor: AppColors.body,

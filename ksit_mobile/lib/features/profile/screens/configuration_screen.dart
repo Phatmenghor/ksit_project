@@ -12,7 +12,9 @@ class ConfigurationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ConfigurationController controller =
-        Get.put(ConfigurationController());
+        Get.isRegistered<ConfigurationController>()
+            ? Get.find<ConfigurationController>()
+            : Get.put(ConfigurationController());
 
     return Scaffold(
       backgroundColor: AppColors.body,

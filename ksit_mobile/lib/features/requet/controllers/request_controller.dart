@@ -17,7 +17,7 @@ import '../models/request_model.dart';
 import '../services/request_service.dart';
 
 class RequestController extends GetxController {
-  final RequestService _requestService = Get.put(RequestService());
+  final RequestService _requestService = Get.find<RequestService>();
 
   // Pagination
   final PagingController<int, RequestModel> pagingController =
@@ -76,13 +76,18 @@ class RequestController extends GetxController {
         pageSize: AppConstants.defaultPageSize,
       );
 
+      // Strip out deleted requests — they are not shown to the user.
+      final visible = result.content
+          .where((r) => r.status != RequestStatus.deleted)
+          .toList();
+
       final isLastPage = result.last;
 
       if (isLastPage) {
-        pagingController.appendLastPage(result.content);
+        pagingController.appendLastPage(visible);
       } else {
         final nextPageKey = pageKey + 1;
-        pagingController.appendPage(result.content, nextPageKey);
+        pagingController.appendPage(visible, nextPageKey);
       }
 
       LoggerUtils.info(
@@ -187,8 +192,8 @@ class RequestController extends GetxController {
                   onChanged: (value) => selectedStatus.value = value,
                 )),
 
-            // Status options
-            ...RequestStatus.values.map((status) {
+            // Status options (same set as the filter chips)
+            ...RequestController.availableStatusFilters.map((status) {
               return Obx(() => RadioListTile<RequestStatus?>(
                     title: Text(status.displayName),
                     value: status,
@@ -227,8 +232,16 @@ class RequestController extends GetxController {
     );
   }
 
-  // Get available status filters for UI
-  List<RequestStatus> get availableStatusFilters => RequestStatus.values;
+  // Only expose the statuses the user can actively filter by (mirrors web).
+  // DELETED is intentionally omitted — deleted items still appear in the list
+  // when no filter is selected, but there's no reason to filter to them.
+  static const List<RequestStatus> availableStatusFilters = [
+    RequestStatus.pending,
+    RequestStatus.accepted,
+    RequestStatus.done,
+    RequestStatus.rejected,
+    RequestStatus.return_,
+  ];
 
   // Check if request can be edited (only pending requests)
   bool canEditRequest(RequestModel request) {
@@ -248,10 +261,11 @@ class RequestController extends GetxController {
         return Colors.red;
       case RequestStatus.return_:
         return Colors.purple;
+      case RequestStatus.deleted:
+        return Colors.grey;
     }
   }
 
-  // Get status icon for UI
   IconData getStatusIcon(RequestStatus status) {
     switch (status) {
       case RequestStatus.pending:
@@ -264,6 +278,8 @@ class RequestController extends GetxController {
         return Icons.cancel_outlined;
       case RequestStatus.return_:
         return Icons.keyboard_return_outlined;
+      case RequestStatus.deleted:
+        return Icons.delete_outline;
     }
   }
 }

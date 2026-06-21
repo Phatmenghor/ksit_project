@@ -13,6 +13,8 @@ extension RequestStatusExtension on RequestStatus {
         return 'REJECTED';
       case RequestStatus.return_:
         return 'RETURN';
+      case RequestStatus.deleted:
+        return 'DELETED';
     }
   }
 
@@ -28,6 +30,8 @@ extension RequestStatusExtension on RequestStatus {
         return 'Rejected';
       case RequestStatus.return_:
         return 'Return';
+      case RequestStatus.deleted:
+        return 'Deleted';
     }
   }
 
@@ -43,6 +47,8 @@ extension RequestStatusExtension on RequestStatus {
         return RequestStatus.rejected;
       case 'RETURN':
         return RequestStatus.return_;
+      case 'DELETED':
+        return RequestStatus.deleted;
       default:
         throw ArgumentError('Invalid RequestStatus: $value');
     }
@@ -176,13 +182,22 @@ class User {
 
   // Helper getter for display name
   String get displayName {
-    if (englishFirstName != null && englishLastName != null) {
-      return '$englishFirstName $englishLastName';
+    final enFirstName = englishFirstName?.trim() ?? '';
+    final enLastName = englishLastName?.trim() ?? '';
+    if (enFirstName.isNotEmpty || enLastName.isNotEmpty) {
+      return '$enFirstName $enLastName'.trim();
     }
-    if (khmerFirstName != null && khmerLastName != null) {
-      return '$khmerFirstName $khmerLastName';
+
+    final khFirstName = khmerFirstName?.trim() ?? '';
+    final khLastName = khmerLastName?.trim() ?? '';
+    if (khFirstName.isNotEmpty || khLastName.isNotEmpty) {
+      return '$khFirstName $khLastName'.trim();
     }
-    return username;
+
+    if (username.isNotEmpty) {
+      return username;
+    }
+    return email ?? 'Unknown';
   }
 }
 

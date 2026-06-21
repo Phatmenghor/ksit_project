@@ -13,6 +13,15 @@ import 'package:ksit_mobile/core/utils/validator_utils.dart';
 import 'package:ksit_mobile/features/auth/models/login_request_model.dart';
 import 'package:ksit_mobile/features/auth/models/login_response_model.dart';
 import 'package:ksit_mobile/features/auth/services/auth_service.dart';
+import 'package:ksit_mobile/features/attandance/services/attendance_service.dart';
+import 'package:ksit_mobile/features/home/controllers/home_controller.dart';
+import 'package:ksit_mobile/features/home/services/home_service.dart';
+import 'package:ksit_mobile/features/profile/controllers/profile_controller.dart';
+import 'package:ksit_mobile/features/profile/services/profile_service.dart';
+import 'package:ksit_mobile/features/requet/controllers/request_controller.dart';
+import 'package:ksit_mobile/features/requet/services/request_service.dart';
+import 'package:ksit_mobile/features/survey/services/survey_service.dart';
+import 'package:ksit_mobile/features/transcript/services/transcript_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/utils/ui_utils.dart';
@@ -178,6 +187,18 @@ class AuthController extends GetxController {
 
     // Register a fresh AuthController for the login screen
     Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
+
+    // Re-register all global services/controllers that InitialBinding sets up.
+    // Must stay in sync with initial_bindings.dart.
+    Get.lazyPut(() => HomeService(), fenix: true);
+    Get.lazyPut(() => HomeController(), fenix: true);
+    Get.lazyPut(() => ProfileService(), fenix: true);
+    Get.lazyPut(() => ProfileController(), fenix: true);
+    Get.lazyPut(() => RequestService(), fenix: true);
+    Get.lazyPut(() => RequestController(), fenix: true);
+    Get.lazyPut(() => AttendanceService(), fenix: true);
+    Get.lazyPut(() => TranscriptService(), fenix: true);
+    Get.lazyPut(() => SurveyService(), fenix: true);
   }
 
   /// Save user data to local storage

@@ -18,7 +18,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profileController = Get.put(ProfileController());
+    final profileController = Get.find<ProfileController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -65,11 +65,16 @@ class ProfileScreen extends StatelessWidget {
                             context.push(AppRoutes.editProfileRoute),
                           },
                         ),
-                        _buildMenuItem(
-                          icon: Icons.description_outlined,
-                          title: 'Transcript',
-                          onTap: () => _handleTranscript(context),
-                        ),
+                        Obx(() {
+                          if (profileController.userRole.value == 'STUDENT') {
+                            return _buildMenuItem(
+                              icon: Icons.description_outlined,
+                              title: 'Transcript',
+                              onTap: () => _handleTranscript(context),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
                         _buildMenuItem(
                           icon: Icons.history,
                           title: 'Attendance History',
@@ -256,6 +261,7 @@ void _handleTranscript(BuildContext context) {
     ToastUtils.showError('Unable to open transcript at this time');
   }
 }
+
 
 Future<void> _handleAboutKSIT() async {
   try {

@@ -166,13 +166,25 @@ class FormatUtils {
     String? username,
     String? email,
   }) {
-    if (englishFirstName != null && englishLastName != null) {
-      return '$englishFirstName $englishLastName';
+    final enFirstName = englishFirstName?.trim() ?? '';
+    final enLastName = englishLastName?.trim() ?? '';
+    if (enFirstName.isNotEmpty || enLastName.isNotEmpty) {
+      return '$enFirstName $enLastName'.trim();
     }
-    if (khmerFirstName != null && khmerLastName != null) {
-      return '$khmerFirstName $khmerLastName';
+
+    final khFirstName = khmerFirstName?.trim() ?? '';
+    final khLastName = khmerLastName?.trim() ?? '';
+    if (khFirstName.isNotEmpty || khLastName.isNotEmpty) {
+      return '$khFirstName $khLastName'.trim();
     }
-    return username ?? email ?? 'Unknown Teacher';
+
+    if (username != null && username.trim().isNotEmpty) {
+      return username.trim();
+    }
+    if (email != null && email.trim().isNotEmpty) {
+      return email.trim();
+    }
+    return 'Unknown Teacher';
   }
 
   /// Format display name with fallbacks

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:ksit_mobile/core/constants/app_colors.dart';
 import 'package:ksit_mobile/core/constants/app_constants.dart';
-import 'package:ksit_mobile/core/utils/enums_utils.dart';
 import 'package:ksit_mobile/features/requet/controllers/request_controller.dart';
 import 'package:ksit_mobile/features/requet/models/request_model.dart';
 import 'package:ksit_mobile/features/requet/widget/request_item_widget.dart';
@@ -15,7 +14,7 @@ class RequestScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final requestController = Get.put(RequestController());
+    final requestController = Get.find<RequestController>();
 
     return Scaffold(
       backgroundColor: AppColors.body,
@@ -170,7 +169,7 @@ class RequestScreen extends StatelessWidget {
                   controller.selectedStatus.value == null,
                   () => controller.setStatusFilter(null),
                 ),
-                ...RequestStatus.values.map((status) => Padding(
+                ...RequestController.availableStatusFilters.map((status) => Padding(
                       padding: const EdgeInsets.only(left: 8),
                       child: _buildChip(
                         status.displayName,

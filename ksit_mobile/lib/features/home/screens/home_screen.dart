@@ -8,7 +8,6 @@ import 'package:ksit_mobile/core/constants/app_image.dart';
 import 'package:ksit_mobile/core/utils/enums_utils.dart';
 import 'package:ksit_mobile/features/home/controllers/home_controller.dart';
 import 'package:ksit_mobile/features/home/models/schedule_models.dart';
-import 'package:ksit_mobile/features/home/services/home_service.dart';
 import 'package:ksit_mobile/features/home/widget/schedule_class_widget.dart';
 import 'package:ksit_mobile/features/home/widget/schedule_filter_widget.dart';
 import 'package:ksit_mobile/features/profile/controllers/profile_controller.dart';
@@ -20,8 +19,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(HomeService());
-    final scheduleController = Get.put(HomeController());
+    final scheduleController = Get.find<HomeController>();
     final profileController = Get.find<ProfileController>();
 
     return Scaffold(

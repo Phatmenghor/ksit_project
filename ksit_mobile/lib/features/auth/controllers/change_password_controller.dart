@@ -8,7 +8,7 @@ import 'package:ksit_mobile/features/auth/models/change_password_request_models.
 import 'package:ksit_mobile/features/auth/services/auth_service.dart';
 
 class ChangePasswordController extends GetxController {
-  final AuthService _passwordService = Get.put(AuthService());
+  final AuthService _passwordService = Get.find<AuthService>();
 
   // Form controllers
   final currentPasswordController = TextEditingController();

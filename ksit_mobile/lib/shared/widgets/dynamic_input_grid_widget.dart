@@ -229,11 +229,11 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
           itemCount: _data.length,
           itemBuilder: (context, rowIndex) {
             return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.body,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: AppColors.border),
               ),
               child: Column(
@@ -247,7 +247,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.primary,
-                          fontSize: 14,
+                          fontSize: 13,
                         ),
                       ),
                       if (widget.isEditable &&
@@ -257,7 +257,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
                           icon: const Icon(
                             Icons.delete_outline,
                             color: AppColors.error,
-                            size: 20,
+                            size: 18,
                           ),
                           onPressed: () => _removeRow(rowIndex),
                           padding: EdgeInsets.zero,
@@ -265,7 +265,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   ...widget.fields.asMap().entries.map((entry) {
                     final fieldIndex = entry.key;
                     final field = entry.value;
@@ -273,19 +273,19 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
                     final controller = _controllers[rowIndex][field.name]!;
 
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             label,
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           _buildFieldInput(field, controller, rowIndex),
                         ],
                       ),
@@ -300,10 +300,13 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
           Center(
             child: TextButton.icon(
               onPressed: _addRow,
-              icon: const Icon(Icons.add_circle_outline),
+              icon: const Icon(Icons.add_circle_outline, size: 18),
               label: Text('Add ${widget.title}'),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ),
@@ -315,7 +318,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
   Widget build(BuildContext context) {
     if (widget.isCollapsible) {
       return Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -327,7 +330,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
             title: Text(
               widget.title,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
@@ -340,7 +343,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
             },
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: _buildContent(),
               ),
             ],
@@ -349,7 +352,7 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
       );
     } else {
       return Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -361,12 +364,12 @@ class _DynamicInputGridState extends State<DynamicInputGrid> {
             Text(
               widget.title,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _buildContent(),
           ],
         ),

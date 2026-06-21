@@ -186,6 +186,7 @@ enum RequestStatus {
   done,
   rejected,
   return_,
+  deleted,
 }
 
 enum RequestPriority {

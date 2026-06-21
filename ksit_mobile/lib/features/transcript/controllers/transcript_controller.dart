@@ -7,7 +7,7 @@ import 'package:ksit_mobile/features/transcript/services/transcript_service.dart
 import 'package:ksit_mobile/features/profile/controllers/profile_controller.dart';
 
 class TranscriptController extends GetxController {
-  final TranscriptService _transcriptService = Get.put(TranscriptService());
+  final TranscriptService _transcriptService = Get.find<TranscriptService>();
   final ProfileController _profileController = Get.find<ProfileController>();
 
   // Observables

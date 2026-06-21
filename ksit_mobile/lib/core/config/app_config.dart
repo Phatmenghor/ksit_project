@@ -23,7 +23,7 @@ class AppConfig {
   //        iOS simulator    → localhost
   //        Physical device  → update to your machine LAN IP (e.g. 192.168.x.x)
   static String get _localHost =>
-      Platform.isAndroid ? '10.0.2.2' : 'localhost';
+      Platform.isAndroid ? '10.0.2.2' : '192.168.18.32';
 
   static String get baseUrl {
     switch (_environment) {

@@ -257,13 +257,19 @@ class StaffProfileModel {
   }
 
   String get displayName {
-    if (englishFirstName != null && englishLastName != null) {
-      return '$englishFirstName $englishLastName';
+    final enFirstName = englishFirstName?.trim() ?? '';
+    final enLastName = englishLastName?.trim() ?? '';
+    if (enFirstName.isNotEmpty || enLastName.isNotEmpty) {
+      return '$enFirstName $enLastName'.trim();
     }
-    if (khmerFirstName != null && khmerLastName != null) {
-      return '$khmerFirstName $khmerLastName';
+
+    final khFirstName = khmerFirstName?.trim() ?? '';
+    final khLastName = khmerLastName?.trim() ?? '';
+    if (khFirstName.isNotEmpty || khLastName.isNotEmpty) {
+      return '$khFirstName $khLastName'.trim();
     }
-    return username ?? '';
+
+    return username ?? email ?? '';
   }
 }
 

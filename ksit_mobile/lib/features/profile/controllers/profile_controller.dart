@@ -17,7 +17,7 @@ import '../../../core/utils/logger_utils.dart';
 
 class ProfileController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
-  final ProfileService _profileService = Get.put(ProfileService());
+  final ProfileService _profileService = Get.find<ProfileService>();
   final StorageService _storageService = Get.find<StorageService>();
 
   // Observables

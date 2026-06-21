@@ -18,7 +18,9 @@ class EditStudentProfileFullScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final editController = Get.put(EditStudentProfileController());
+    final editController = Get.isRegistered<EditStudentProfileController>()
+        ? Get.find<EditStudentProfileController>()
+        : Get.put(EditStudentProfileController());
     final profileController = Get.find<ProfileController>();
 
     return Scaffold(
@@ -30,30 +32,21 @@ class EditStudentProfileFullScreen extends StatelessWidget {
           if (profileController.isLoading.value) {
             return const LoadingWidget(message: '', overlay: false);
           }
-          return Column(
-            children: [
-              // Header with gradient
-              _buildHeader(editController, profileController, context),
-
-              // Scrollable content
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      _buildPersonalInfoCard(editController, context),
-                      const SizedBox(height: 12),
-                      _buildStudiesHistorySection(editController),
-                      const SizedBox(height: 12),
-                      _buildParentsSection(editController),
-                      const SizedBox(height: 12),
-                      _buildSiblingsSection(editController),
-                      SizedBox(height: _getContentBottomPadding(context)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildHeader(editController, profileController, context),
+                const SizedBox(height: 16),
+                _buildPersonalInfoCard(editController, context),
+                const SizedBox(height: 12),
+                _buildStudiesHistorySection(editController),
+                const SizedBox(height: 12),
+                _buildParentsSection(editController),
+                const SizedBox(height: 12),
+                _buildSiblingsSection(editController),
+                const SizedBox(height: 32),
+              ],
+            ),
           );
         }),
       ),
@@ -274,30 +267,32 @@ class EditStudentProfileFullScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Section header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(8)),
-              border: const Border(
-                bottom: BorderSide(color: AppColors.border, width: 1),
-                left: BorderSide(color: AppColors.primary, width: 3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+          ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(8)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.border, width: 1),
+                  left: BorderSide(color: AppColors.primary, width: 3),
                 ),
-              ],
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -824,10 +819,6 @@ class EditStudentProfileFullScreen extends StatelessWidget {
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
-
-  double _getContentBottomPadding(BuildContext context) {
-    return 80 + MediaQuery.of(context).viewInsets.bottom + 16;
-  }
 
   double _getBottomPadding(BuildContext context) {
     final bottomInsets = MediaQuery.of(context).viewInsets.bottom;

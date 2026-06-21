@@ -7,7 +7,6 @@ import 'package:ksit_mobile/core/constants/app_colors.dart';
 import 'package:ksit_mobile/core/utils/pagination_utils.dart';
 import 'package:ksit_mobile/features/attandance/controllers/attendance_controller.dart';
 import 'package:ksit_mobile/features/attandance/models/attendance_models.dart';
-import 'package:ksit_mobile/features/attandance/services/attendance_service.dart';
 import 'package:ksit_mobile/features/attandance/widgets/attendance_details_widget.dart';
 import 'package:ksit_mobile/features/attandance/widgets/attendance_filter_widget.dart';
 import 'package:ksit_mobile/features/attandance/widgets/attendance_item_widget.dart';
@@ -24,17 +23,25 @@ class AttendanceHistoryScreen extends StatefulWidget {
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   final ScrollController _scrollController = ScrollController();
   final RxBool _showScrollToTop = false.obs;
+  late final AttendanceController _attendanceController;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    // Create the controller here so it's tied to the screen lifecycle.
+    // AttendanceService is pre-registered in InitialBinding.
+    _attendanceController = Get.isRegistered<AttendanceController>()
+        ? Get.find<AttendanceController>()
+        : Get.put(AttendanceController());
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    // Delete the controller so its PagingController and resources are freed.
+    Get.delete<AttendanceController>(force: true);
     super.dispose();
   }
 
@@ -56,8 +63,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(AttendanceService());
-    final attendanceController = Get.put(AttendanceController());
+    final attendanceController = _attendanceController;
 
     return Scaffold(
       backgroundColor: AppColors.body,
@@ -176,36 +182,39 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
             // Stats row
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-              child: Obx(() {
-                final total = controller.pagingController.itemList?.length ?? 0;
-                final present = controller.pagingController.itemList
-                        ?.where((a) => a.statusColor == 'success')
-                        .length ??
-                    0;
-                final absent = controller.pagingController.itemList
-                        ?.where((a) => a.statusColor == 'error')
-                        .length ??
-                    0;
-                final late = controller.pagingController.itemList
-                        ?.where((a) => a.statusColor == 'warning')
-                        .length ??
-                    0;
-                return Row(
-                  children: [
-                    _buildStatChip(
-                        Icons.list_alt_outlined, '$total', 'Total', Colors.white70),
-                    const SizedBox(width: 8),
-                    _buildStatChip(Icons.check_circle_outline, '$present',
-                        'Present', Colors.white70),
-                    const SizedBox(width: 8),
-                    _buildStatChip(Icons.cancel_outlined, '$absent', 'Absent',
-                        Colors.white70),
-                    const SizedBox(width: 8),
-                    _buildStatChip(Icons.access_time_outlined, '$late', 'Late',
-                        Colors.white70),
-                  ],
-                );
-              }),
+              child: ValueListenableBuilder<PagingState<int, AttendanceHistoryModel>>(
+                valueListenable: controller.pagingController,
+                builder: (context, state, _) {
+                  final total = state.itemList?.length ?? 0;
+                  final present = state.itemList
+                          ?.where((a) => a.isPresent)
+                          .length ??
+                      0;
+                  final absent = state.itemList
+                          ?.where((a) => a.isAbsent)
+                          .length ??
+                      0;
+                  final late = state.itemList
+                          ?.where((a) => a.isLate)
+                          .length ??
+                      0;
+                  return Row(
+                    children: [
+                      _buildStatChip(
+                          Icons.list_alt_outlined, '$total', 'Total', Colors.white70),
+                      const SizedBox(width: 8),
+                      _buildStatChip(Icons.check_circle_outline, '$present',
+                          'Present', Colors.white70),
+                      const SizedBox(width: 8),
+                      _buildStatChip(Icons.cancel_outlined, '$absent', 'Absent',
+                          Colors.white70),
+                      const SizedBox(width: 8),
+                      _buildStatChip(Icons.access_time_outlined, '$late', 'Late',
+                          Colors.white70),
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         ),

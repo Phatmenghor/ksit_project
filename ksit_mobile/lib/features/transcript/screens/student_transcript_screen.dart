@@ -13,7 +13,9 @@ class StudentTranscriptScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(TranscriptController());
+    final controller = Get.isRegistered<TranscriptController>()
+        ? Get.find<TranscriptController>()
+        : Get.put(TranscriptController());
 
     return Scaffold(
       backgroundColor: AppColors.body,

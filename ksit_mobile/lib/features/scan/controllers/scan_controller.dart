@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:ksit_mobile/features/scan/models/qr_attendance_response_models.dart';
 
 import '../../../core/utils/logger_utils.dart';
@@ -25,6 +26,7 @@ class ScanController extends GetxController {
 
   // Detection and scanning states
   final RxBool isDetecting = false.obs;
+  final RxBool isFocusLocked = false.obs;
   final RxBool isScanning = false.obs;
   final RxInt scanCooldownSeconds = 0.obs;
   final RxInt detectionCountdown = 0.obs;
@@ -191,29 +193,19 @@ class ScanController extends GetxController {
   }
 
   void _startDetectionDelay(String qrCode) {
-    if (isDetecting.value) return;
+    if (isDetecting.value || isFocusLocked.value) return;
 
     isDetecting.value = true;
+    isFocusLocked.value = true;
     _pendingQrCode = qrCode;
-    detectionCountdown.value = detectionDelayDuration;
-
-    HapticFeedback.selectionClick();
 
     LoggerUtils.info('QR Code detected: $qrCode');
+    
+    HapticFeedback.mediumImpact();
 
-    _detectionCountdownTimer =
-        Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (detectionCountdown.value <= 1) {
-        detectionCountdown.value = 0;
-        timer.cancel();
-        _processScanResult();
-      } else {
-        detectionCountdown.value--;
-      }
-    });
-
-    _detectionTimer = Timer(const Duration(seconds: detectionDelayDuration), () {
-      if (isDetecting.value && _pendingQrCode == qrCode) {
+    _detectionTimer?.cancel();
+    _detectionTimer = Timer(const Duration(milliseconds: 800), () {
+      if (isFocusLocked.value) {
         _processScanResult();
       }
     });
@@ -223,6 +215,7 @@ class ScanController extends GetxController {
     _detectionTimer?.cancel();
     _detectionCountdownTimer?.cancel();
     isDetecting.value = false;
+    isFocusLocked.value = false;
     detectionCountdown.value = 0;
     _pendingQrCode = null;
   }
@@ -237,13 +230,14 @@ class ScanController extends GetxController {
     _detectionTimer?.cancel();
     _detectionCountdownTimer?.cancel();
     isDetecting.value = false;
+    isFocusLocked.value = false;
     detectionCountdown.value = 0;
 
     isScanning.value = true;
     canScan.value = false;
     scannedQrCode.value = _pendingQrCode!;
 
-    HapticFeedback.mediumImpact();
+    HapticFeedback.lightImpact();
 
     _submitAttendance(_pendingQrCode!);
     _pendingQrCode = null;
@@ -330,12 +324,30 @@ class ScanController extends GetxController {
     }
   }
 
+  Future<void> importQrFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      final bool success = await scannerController.analyzeImage(image.path);
+
+      if (!success) {
+        _showErrorModal('No valid QR code found in selected image.');
+      }
+    } catch (e) {
+      LoggerUtils.error('Failed to import QR from gallery', e);
+      _showErrorModal('Failed to read image.');
+    }
+  }
+
   void resetSession() {
     _cooldownTimer?.cancel();
     _detectionTimer?.cancel();
     _detectionCountdownTimer?.cancel();
 
     isDetecting.value = false;
+    isFocusLocked.value = false;
     isScanning.value = false;
     isSubmittingAttendance.value = false;
     canScan.value = true;
@@ -364,6 +376,7 @@ class ScanController extends GetxController {
   String get scanStatus {
     if (isSubmittingAttendance.value) return 'Processing...';
     if (isScanning.value) return 'Scanning...';
+    if (isFocusLocked.value) return 'Focus locked! Processing...';
     if (isDetecting.value) {
       return 'Detected! Scanning in ${detectionCountdown.value}s';
     }
