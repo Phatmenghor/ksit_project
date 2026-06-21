@@ -1,5 +1,7 @@
 // lib/features/profile/controllers/configuration_controller.dart
 import 'package:get/get.dart';
+import 'package:ksit_mobile/core/constants/app_storages.dart';
+import 'package:ksit_mobile/core/services/storage_service.dart';
 import 'package:ksit_mobile/core/utils/api_error_utils.dart';
 import 'package:ksit_mobile/core/utils/logger_utils.dart';
 import 'package:ksit_mobile/core/utils/toast_utils.dart';
@@ -7,8 +9,8 @@ import 'package:ksit_mobile/features/auth/controllers/auth_controller.dart';
 
 class ConfigurationController extends GetxController {
   final AuthController _authController = Get.find<AuthController>();
+  final StorageService _storage = Get.find<StorageService>();
 
-  // Observables for settings
   final RxBool isLocationEnabled = true.obs;
   final RxBool isNotificationEnabled = false.obs;
   final RxBool isDeletingAccount = false.obs;
@@ -20,54 +22,40 @@ class ConfigurationController extends GetxController {
   }
 
   void _loadSettings() {
-    LoggerUtils.info('Loading configuration settings');
+    isLocationEnabled.value =
+        _storage.getBool(AppStorages.locationEnabledKey) ?? true;
+    isNotificationEnabled.value =
+        _storage.getBool(AppStorages.notificationEnabledKey) ?? false;
+    LoggerUtils.info('Configuration settings loaded');
   }
 
   void toggleLocation(bool value) {
     isLocationEnabled.value = value;
-    _saveLocationSetting(value);
-    LoggerUtils.info('Location setting changed to: $value');
+    _persist(AppStorages.locationEnabledKey, value);
+    ToastUtils.showSuccess(value ? 'Location enabled' : 'Location disabled');
+    LoggerUtils.info('Location setting: $value');
   }
 
   void toggleNotification(bool value) {
     isNotificationEnabled.value = value;
-    _saveNotificationSetting(value);
-    LoggerUtils.info('Notification setting changed to: $value');
+    _persist(AppStorages.notificationEnabledKey, value);
+    ToastUtils.showSuccess(
+        value ? 'Notifications enabled' : 'Notifications disabled');
+    LoggerUtils.info('Notification setting: $value');
   }
 
-  Future<void> _saveLocationSetting(bool enabled) async {
+  Future<void> _persist(String key, bool value) async {
     try {
-      // Save to storage or send to API
-      ToastUtils.showSuccess(
-          enabled ? 'Location enabled' : 'Location disabled');
+      await _storage.setBool(key, value);
     } catch (e) {
-      LoggerUtils.error('Error saving location setting', e);
-      ToastUtils.showError('Failed to save location setting');
-      // Revert the change
-      isLocationEnabled.value = !enabled;
-    }
-  }
-
-  Future<void> _saveNotificationSetting(bool enabled) async {
-    try {
-      // Save to storage or send to API
-      ToastUtils.showSuccess(
-          enabled ? 'Notifications enabled' : 'Notifications disabled');
-    } catch (e) {
-      LoggerUtils.error('Error saving notification setting', e);
-      ToastUtils.showError('Failed to save notification setting');
-      // Revert the change
-      isNotificationEnabled.value = !enabled;
+      LoggerUtils.error('Failed to persist setting $key', e);
     }
   }
 
   Future<void> deleteAccount() async {
     try {
       isDeletingAccount.value = true;
-
-      // Call the auth controller's delete account method
       await _authController.deleteAccount();
-
       LoggerUtils.info('User account deleted successfully');
     } catch (e) {
       LoggerUtils.error('Error deleting account', e);

@@ -13,10 +13,6 @@ import 'package:ksit_mobile/core/utils/validator_utils.dart';
 import 'package:ksit_mobile/features/auth/models/login_request_model.dart';
 import 'package:ksit_mobile/features/auth/models/login_response_model.dart';
 import 'package:ksit_mobile/features/auth/services/auth_service.dart';
-import 'package:ksit_mobile/features/home/controllers/home_controller.dart';
-import 'package:ksit_mobile/features/profile/controllers/profile_controller.dart';
-import 'package:ksit_mobile/features/requet/controllers/request_controller.dart';
-import 'package:ksit_mobile/features/scan/controllers/scan_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/utils/ui_utils.dart';
@@ -148,72 +144,40 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Clear only user-related controllers, preserve essential services
+  /// Wipe every user-scoped GetX controller and re-register permanent services.
+  /// This is called AFTER navigation to the login screen so the UI is safe.
   void _clearUserRelatedControllers() {
-    try {
-      // Clear user-specific controllers while keeping essential services
-      Get.delete<HomeController>(force: true);
-      Get.delete<RequestController>(force: true);
-      Get.delete<ProfileController>(force: true);
-      Get.delete<ScanController>(force: true);
-
-      // Reset current user data in AuthController without deleting the controller
-      currentUser.value = null;
-      isLoggedIn.value = false;
-
-      // Clear form fields
-      _clearForm();
-    } catch (e) {
-      // Fallback to complete reset if selective clearing fails
-      _performCompleteReset();
-    }
+    _performCompleteReset();
   }
 
-  /// Complete reset with service preservation (fallback method)
-  void _performCompleteReset() async {
-    try {
-      // Store essential services before reset
-      final storageService = Get.find<StorageService>();
-      final authService = Get.find<AuthService>();
-      final apiService = Get.find<ApiService>();
-      final firebaseService = Get.find<FirebaseService>();
+  /// Full GetX state reset: grab permanent service instances, wipe GetX,
+  /// then re-register those services so the login screen works normally.
+  /// Called after navigation has already redirected to login.
+  void _performCompleteReset() {
+    StorageService? storage;
+    ApiService? api;
+    FirebaseService? firebase;
+    AuthService? auth;
 
-      // Clear all GetX controllers and their state
-      Get.reset();
+    // Grab permanent services before the reset (they outlive GetX reset)
+    try { storage = Get.find<StorageService>(); } catch (_) {}
+    try { api = Get.find<ApiService>(); } catch (_) {}
+    try { firebase = Get.find<FirebaseService>(); } catch (_) {}
+    try { auth = Get.find<AuthService>(); } catch (_) {}
 
-      // Re-register essential services immediately
-      Get.put<StorageService>(storageService, permanent: true);
-      Get.put<ApiService>(apiService, permanent: true);
-      Get.put<FirebaseService>(firebaseService, permanent: true);
+    // Wipe every GetX registration (controllers, services, bindings)
+    Get.reset();
 
-      // Re-register auth service and controller for login
-      Get.lazyPut<AuthService>(() => authService, fenix: true);
-      Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
-    } catch (serviceError) {
-      // Fallback: Re-run initial binding
-      Get.reset();
-      await _reinitializeEssentialServices();
+    // Re-register permanent services immediately
+    if (storage != null) {
+      Get.put<StorageService>(storage, permanent: true);
     }
-  }
+    if (api != null) Get.put<ApiService>(api, permanent: true);
+    if (firebase != null) Get.put<FirebaseService>(firebase, permanent: true);
+    if (auth != null) Get.lazyPut<AuthService>(() => auth!, fenix: true);
 
-  /// Fallback method to reinitialize essential services
-  Future<void> _reinitializeEssentialServices() async {
-    try {
-      // Re-initialize storage service
-      final storageService = await StorageService.getInstance();
-      Get.put<StorageService>(storageService, permanent: true);
-
-      // Re-initialize other essential services
-      Get.put<ApiService>(ApiService(), permanent: true);
-      Get.put<FirebaseService>(FirebaseService(), permanent: true);
-
-      // Re-initialize auth service and controller
-      Get.lazyPut<AuthService>(() => AuthService(), fenix: true);
-      Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
-    } catch (e) {
-      // Last resort - show error
-      ToastUtils.showError("Please restart the app");
-    }
+    // Register a fresh AuthController for the login screen
+    Get.lazyPut<AuthController>(() => AuthController(), fenix: true);
   }
 
   /// Save user data to local storage
@@ -247,14 +211,12 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Clear user data from storage
+  /// Clear all user-scoped keys from storage (keeps device keys: FCM token, isFirstTime)
   Future<void> _clearUserData() async {
     try {
-      await _storageService.remove(AppStorages.tokenKey);
-      await _storageService.remove(AppStorages.userKey);
-      await _storageService.remove(AppStorages.userIdKey);
-      await _storageService.remove(AppStorages.rolesKey);
-
+      for (final key in AppStorages.userScopedKeys) {
+        await _storageService.remove(key);
+      }
       currentUser.value = null;
       isLoggedIn.value = false;
     } catch (e) {
