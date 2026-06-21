@@ -4,14 +4,14 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:ksit_mobile/core/constants/app_colors.dart';
+import 'package:ksit_mobile/core/utils/pagination_utils.dart';
 import 'package:ksit_mobile/features/attandance/controllers/attendance_controller.dart';
 import 'package:ksit_mobile/features/attandance/models/attendance_models.dart';
 import 'package:ksit_mobile/features/attandance/services/attendance_service.dart';
+import 'package:ksit_mobile/features/attandance/widgets/attendance_details_widget.dart';
 import 'package:ksit_mobile/features/attandance/widgets/attendance_filter_widget.dart';
 import 'package:ksit_mobile/features/attandance/widgets/attendance_item_widget.dart';
-import 'package:ksit_mobile/features/attandance/widgets/attendance_details_widget.dart';
 import 'package:ksit_mobile/shared/widgets/loading_widget.dart';
-import 'package:ksit_mobile/core/utils/pagination_utils.dart';
 
 class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key});
@@ -39,75 +39,52 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   }
 
   void _scrollListener() {
-    // Show scroll to top button when scrolled down 200 pixels
     if (_scrollController.offset >= 200) {
-      if (!_showScrollToTop.value) {
-        _showScrollToTop.value = true;
-      }
+      if (!_showScrollToTop.value) _showScrollToTop.value = true;
     } else {
-      if (_showScrollToTop.value) {
-        _showScrollToTop.value = false;
-      }
+      if (_showScrollToTop.value) _showScrollToTop.value = false;
     }
   }
 
   void _scrollToTop() {
     _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Initialize service and controller
     Get.put(AttendanceService());
     final attendanceController = Get.put(AttendanceController());
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Attendance History',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: AppColors.body,
       body: Obx(() {
         if (attendanceController.isInitialLoading.value) {
-          return const LoadingWidget(
-            message: '',
-            overlay: false,
+          return Column(
+            children: [
+              _buildGradientHeader(context, attendanceController),
+              const Expanded(child: LoadingWidget(message: '', overlay: false)),
+            ],
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: attendanceController.refreshAttendance,
-          color: AppColors.primary,
-          child: Stack(
-            children: [
-              CustomScrollView(
+        return Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: attendanceController.refreshAttendance,
+              color: AppColors.primary,
+              child: CustomScrollView(
                 controller: _scrollController,
                 slivers: [
-                  // Filter Section
+                  // Gradient header as sliver
+                  SliverToBoxAdapter(
+                    child: _buildGradientHeader(context, attendanceController),
+                  ),
+
+                  // Filter widget
                   SliverToBoxAdapter(
                     child: AttendanceFilterWidget(
                       availableYears:
@@ -125,43 +102,147 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     ),
                   ),
 
-                  // Attendance List
+                  // List
                   _buildAttendanceList(attendanceController),
                 ],
               ),
+            ),
 
-              // Scroll to top button
-              Obx(() => _showScrollToTop.value
-                  ? Positioned(
-                      right: 16,
-                      bottom: 32,
-                      child: Material(
-                        elevation: 8,
-                        borderRadius: BorderRadius.circular(28),
-                        child: Container(
+            // Scroll-to-top FAB
+            Obx(() => _showScrollToTop.value
+                ? Positioned(
+                    right: 16,
+                    bottom: 32,
+                    child: Material(
+                      elevation: 6,
+                      shape: const CircleBorder(),
+                      color: AppColors.primary,
+                      child: InkWell(
+                        onTap: _scrollToTop,
+                        customBorder: const CircleBorder(),
+                        child: const SizedBox(
                           width: 44,
                           height: 44,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          child: InkWell(
-                            onTap: _scrollToTop,
-                            borderRadius: BorderRadius.circular(22),
-                            child: const Icon(
-                              Icons.keyboard_arrow_up,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
+                          child: Icon(Icons.keyboard_arrow_up,
+                              color: Colors.white, size: 28),
                         ),
                       ),
-                    )
-                  : const SizedBox()),
-            ],
-          ),
+                    ),
+                  )
+                : const SizedBox()),
+          ],
         );
       }),
+    );
+  }
+
+  Widget _buildGradientHeader(
+      BuildContext context, AttendanceController controller) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primaryAccent],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => context.pop(),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      'Attendance History',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Stats row
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+              child: Obx(() {
+                final total = controller.pagingController.itemList?.length ?? 0;
+                final present = controller.pagingController.itemList
+                        ?.where((a) => a.statusColor == 'success')
+                        .length ??
+                    0;
+                final absent = controller.pagingController.itemList
+                        ?.where((a) => a.statusColor == 'error')
+                        .length ??
+                    0;
+                final late = controller.pagingController.itemList
+                        ?.where((a) => a.statusColor == 'warning')
+                        .length ??
+                    0;
+                return Row(
+                  children: [
+                    _buildStatChip(
+                        Icons.list_alt_outlined, '$total', 'Total', Colors.white70),
+                    const SizedBox(width: 8),
+                    _buildStatChip(Icons.check_circle_outline, '$present',
+                        'Present', Colors.white70),
+                    const SizedBox(width: 8),
+                    _buildStatChip(Icons.cancel_outlined, '$absent', 'Absent',
+                        Colors.white70),
+                    const SizedBox(width: 8),
+                    _buildStatChip(Icons.access_time_outlined, '$late', 'Late',
+                        Colors.white70),
+                  ],
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(
+      IconData icon, String value, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(height: 3),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 9, color: Colors.white70),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -171,12 +252,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       builderDelegate:
           PaginationUtils.getCommonBuilderDelegate<AttendanceHistoryModel>(
         itemBuilder: (context, attendance, index) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            index == 0 ? 8 : 0,
-            16,
-            12,
-          ),
+          padding: EdgeInsets.fromLTRB(16, index == 0 ? 8 : 0, 16, 12),
           child: AttendanceItemWidget(
             attendance: attendance,
             onTap: () =>
