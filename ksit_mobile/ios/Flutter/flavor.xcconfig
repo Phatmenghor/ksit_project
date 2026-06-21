@@ -1,2 +1,1 @@
-// Default flavor (prod) — overwritten by xcscheme PreActions at build time
-APP_DISPLAY_NAME=ims ksit
+APP_DISPLAY_NAME=ims ksit[local]
