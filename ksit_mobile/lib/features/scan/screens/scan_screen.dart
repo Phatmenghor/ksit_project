@@ -81,51 +81,56 @@ class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildTopHeader() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Back & Title & Info
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Get.back(),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                      size: 20,
+    return Container(
+      width: double.infinity,
+      color: AppColors.primary,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back & Title & Info
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Scan Attendance',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Scan Attendance',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.info_outline,
-                  color: Colors.white70,
-                  size: 18,
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.info_outline,
+                    color: Colors.white70,
+                    size: 18,
+                  ),
+                ],
+              ),
 
-            // Brand logo on the right
-            const Icon(
-              Icons.qr_code_scanner,
-              color: AppColors.primary,
-              size: 24,
-            ),
-          ],
+              // Brand logo on the right
+              const Icon(
+                Icons.qr_code_scanner,
+                color: Colors.white,
+                size: 24,
+              ),
+            ],
+          ),
         ),
       ),
     );

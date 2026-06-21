@@ -3,7 +3,7 @@ spring:
     name: ks_it_school
 
   profiles:
-    active: local
+    active: dev
 
   servlet:
     multipart:

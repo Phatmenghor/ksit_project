@@ -316,6 +316,11 @@ export default function StudentsListPage() {
     }
   };
 
+  // Keep the roster in a stable order by student ID, ascending.
+  const sortedStudents = allStudentData?.content
+    ? [...allStudentData.content].sort((a, b) => a.id - b.id)
+    : null;
+
   const columns = createAttendanceHistoryColumns({
     getDisplayIndex,
     router,
@@ -397,7 +402,7 @@ export default function StudentsListPage() {
 
       <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
         <DataTable
-          data={allStudentData?.content ?? null}
+          data={sortedStudents}
           columns={columns}
           loading={isLoading}
           currentPage={currentPage}

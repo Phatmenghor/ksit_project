@@ -361,7 +361,9 @@ public class AttendanceMapper {
         }
     }
 
-    // Helper method to sort attendances: PRESENT first, then by createdAt
+    // Helper method to sort attendances: by student ID ascending, so the
+    // roster order stays stable as students get scanned (PRESENT-first
+    // ordering would otherwise make rows jump around mid check-in).
     private List<AttendanceDto> sortAttendances(List<AttendanceEntity> attendances, ScheduleEntity schedule) {
         if (attendances == null || attendances.isEmpty()) {
             return new ArrayList<>();
@@ -391,9 +393,8 @@ public class AttendanceMapper {
         }
 
         return attendances.stream()
-                .sorted(Comparator
-                        .comparing((AttendanceEntity a) -> a.getStatus().ordinal())
-                        .thenComparing(AttendanceEntity::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .sorted(Comparator.comparing(
+                        (AttendanceEntity a) -> a.getStudent() != null ? a.getStudent().getId() : Long.MAX_VALUE))
                 .map(a -> toDto(a, finalizedSessionCountByScheduleId, presentCountByScheduleAndStudent, activeScoreConfig))
                 .collect(Collectors.toList());
     }
