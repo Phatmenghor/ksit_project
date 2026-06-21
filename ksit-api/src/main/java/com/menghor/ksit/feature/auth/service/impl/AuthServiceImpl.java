@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
 
             if (user == null) {
                 log.warn("Login attempt with non-existent username: {}", loginRequestDto.getUsername());
-                throw new BadCredentialsException("Invalid username or password. Please check your credentials and try again.");
+                throw new BadCredentialsException("Username not found. Please check your username and try again.");
             }
 
             // Check user status before authentication
@@ -86,6 +86,8 @@ public class AuthServiceImpl implements AuthService {
             List<RoleEnum> roles = user.getRoles().stream()
                     .map(Role::getName)
                     .collect(Collectors.toList());
+
+            log.info("Authentication successful. username={}, userId={}", user.getUsername(), user.getId());
 
             // Use builder to create response with user information
             return AuthResponseDto.builder()
@@ -108,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new BadCredentialsException("Incorrect password. Please check your password and try again.");
             } else {
                 // User doesn't exist
-                throw new BadCredentialsException("Invalid username or password. Please check your credentials and try again.");
+                throw new BadCredentialsException("Username not found. Please check your username and try again.");
             }
         } catch (DisabledException ex) {
             log.warn("Authentication failed for username: {} - Account disabled", loginRequestDto.getUsername());
@@ -237,6 +239,7 @@ public class AuthServiceImpl implements AuthService {
         validatePasswordChangeRequest(requestDto);
 
         UserEntity user = securityUtils.getCurrentUser();
+        log.info("Changing own password. userId={}", user.getId());
 
         // Validate current password
         if (!passwordEncoder.matches(requestDto.getCurrentPassword(), user.getPassword())) {
@@ -259,18 +262,20 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         UserEntity updatedUser = userRepository.save(user);
+        log.info("Password changed successfully. userId={}, username={}", updatedUser.getId(), updatedUser.getUsername());
 
         return staffMapper.toStaffUserDto(updatedUser);
     }
 
     @Override
     public StudentUserResponseDto changePasswordByAdmin(ChangePasswordByAdminRequestDto requestDto) {
+        log.info("Changing password by admin. studentId={}", requestDto.getId());
 
         validateAdminPasswordChangeRequest(requestDto);
 
         UserEntity user = userRepository.findById(requestDto.getId())
                 .orElseThrow(() -> {
-                    log.error("User with ID {} not found", requestDto.getId());
+                    log.error("Change password by admin failed: user not found. studentId={}", requestDto.getId());
                     return new NotFoundException("Student not found with ID: " + requestDto.getId() + ". The student may have been deleted or does not exist.");
                 });
 
@@ -289,6 +294,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(requestDto.getNewPassword()));
 
         UserEntity updatedUser = userRepository.save(user);
+        log.info("Password changed by admin successfully. studentId={}, username={}", updatedUser.getId(), updatedUser.getUsername());
 
         return studentMapper.toStudentUserDto(updatedUser);
     }

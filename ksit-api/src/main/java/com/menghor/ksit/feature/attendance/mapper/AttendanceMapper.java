@@ -14,6 +14,7 @@ import com.menghor.ksit.feature.score.repository.ScoreConfigurationRepository;
 import com.menghor.ksit.feature.auth.models.UserEntity;
 import com.menghor.ksit.feature.master.model.SemesterEntity;
 import com.menghor.ksit.feature.school.model.CourseEntity;
+import com.menghor.ksit.feature.school.model.ScheduleEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -288,9 +289,13 @@ public class AttendanceMapper {
         dto.setTotalPresent(calculateTotalPresent(entity));
         dto.setTotalAbsent(calculateTotalAbsent(entity));
 
-        // Sort and map attendances (each will have calculated scores)
+        // Sort and map attendances (each will have calculated scores).
+        // Precompute the per-student score-relevant counts in a couple of
+        // batched queries instead of letting each row issue its own COUNT
+        // queries (N+1 — multiplies into seconds of latency for a full class
+        // against a remote DB).
         if (entity.getAttendances() != null) {
-            dto.setAttendances(sortAttendances(entity.getAttendances()));
+            dto.setAttendances(sortAttendances(entity.getAttendances(), entity.getSchedule()));
         } else {
             dto.setAttendances(new ArrayList<>());
         }
@@ -357,16 +362,39 @@ public class AttendanceMapper {
     }
 
     // Helper method to sort attendances: PRESENT first, then by createdAt
-    private List<AttendanceDto> sortAttendances(List<AttendanceEntity> attendances) {
+    private List<AttendanceDto> sortAttendances(List<AttendanceEntity> attendances, ScheduleEntity schedule) {
         if (attendances == null || attendances.isEmpty()) {
             return new ArrayList<>();
+        }
+
+        Long scheduleId = schedule != null ? schedule.getId() : null;
+        List<Long> studentIds = attendances.stream()
+                .map(a -> a.getStudent() != null ? a.getStudent().getId() : null)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Long> finalizedSessionCountByScheduleId = new java.util.HashMap<>();
+        Map<ScheduleStudentKey, Long> presentCountByScheduleAndStudent = new java.util.HashMap<>();
+        ScoreConfigurationEntity activeScoreConfig = scoreConfigurationRepository.findByStatus(Status.ACTIVE).orElse(null);
+
+        if (scheduleId != null && !studentIds.isEmpty()) {
+            List<Long> scheduleIds = List.of(scheduleId);
+            for (Object[] row : sessionRepository.countFinalizedGroupedByScheduleId(scheduleIds, AttendanceFinalizationStatus.FINAL)) {
+                finalizedSessionCountByScheduleId.put((Long) row[0], (Long) row[1]);
+            }
+            for (Object[] row : attendanceRepository.countPresentGroupedByScheduleAndStudent(
+                    scheduleIds, studentIds, AttendanceFinalizationStatus.FINAL, AttendanceStatus.PRESENT)) {
+                presentCountByScheduleAndStudent.put(
+                        new ScheduleStudentKey((Long) row[0], (Long) row[1]), (Long) row[2]);
+            }
         }
 
         return attendances.stream()
                 .sorted(Comparator
                         .comparing((AttendanceEntity a) -> a.getStatus().ordinal())
                         .thenComparing(AttendanceEntity::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
-                .map(this::toDto)
+                .map(a -> toDto(a, finalizedSessionCountByScheduleId, presentCountByScheduleAndStudent, activeScoreConfig))
                 .collect(Collectors.toList());
     }
 

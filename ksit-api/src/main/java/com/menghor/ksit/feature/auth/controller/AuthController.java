@@ -42,60 +42,72 @@ public class AuthController {
 
     @PostMapping("/login")
     public ApiResponse<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+        log.info("Login request received. username={}", loginRequestDto.getUsername());
         AuthResponseDto authResponse = authService.login(loginRequestDto);
+        log.info("Login successful. username={}, userId={}", authResponse.getUsername(), authResponse.getUserId());
         return new ApiResponse<>("success", "Login successful", authResponse);
     }
 
     @PostMapping("/change-password-by-admin")
     public ApiResponse<StudentUserResponseDto> changePasswordStudentByAdmin(@Valid @RequestBody ChangePasswordByAdminRequestDto changePasswordDto) {
+        log.info("Change password by admin request received. studentId={}", changePasswordDto.getId());
         StudentUserResponseDto user = authService.changePasswordByAdmin(changePasswordDto);
+        log.info("Password changed successfully by admin. studentId={}", user.getId());
         return new ApiResponse<>("success", SuccessMessages.PASSWORD_CHANGED_SUCCESSFULLY, user);
     }
 
     @PostMapping("/change-password")
     public ApiResponse<StaffUserResponseDto> changePasswordStaff(@Valid @RequestBody ChangePasswordRequestDto changePasswordDto) {
+        log.info("Change password request received. userId={}", securityUtils.getCurrentUser().getId());
         StaffUserResponseDto user = authService.changePasswordStaff(changePasswordDto);
+        log.info("Password changed successfully. userId={}", user.getId());
         return new ApiResponse<>("success", SuccessMessages.PASSWORD_CHANGED_SUCCESSFULLY, user);
     }
 
     @PostMapping("/student/token")
     public ApiResponse<StudentUserResponseDto> getStudentByToken() {
-
         final UserEntity currentEntity = securityUtils.getCurrentUser();
+        log.info("Get student by token request received. userId={}", currentEntity.getId());
 
         // Use the service to get detailed information instead of just mapping
         StudentUserResponseDto user = studentService.getStudentUserById(currentEntity.getId());
 
+        log.info("Student by token retrieved successfully. userId={}", currentEntity.getId());
         return new ApiResponse<>("success", "Detailed student user information retrieved successfully", user);
     }
 
     @PostMapping("/staff/token")
     public ApiResponse<StaffUserResponseDto> getStaffByToken() {
-
         final UserEntity currentEntity = securityUtils.getCurrentUser();
+        log.info("Get staff by token request received. userId={}", currentEntity.getId());
 
         // Use the service to get detailed information instead of just mapping
         StaffUserResponseDto user = staffService.getStaffUserById(currentEntity.getId());
 
+        log.info("Staff by token retrieved successfully. userId={}", currentEntity.getId());
         return new ApiResponse<>("success", "Detailed staff user information retrieved successfully", user);
     }
 
     @PostMapping("/delete-account/token")
     public ApiResponse<StaffUserResponseDto> deleteAccountToken() {
         UserEntity currentEntity = securityUtils.getCurrentUser();
+        log.info("Delete own account request received. userId={}", currentEntity.getId());
 
         currentEntity.setStatus(Status.DELETED);
         userRepository.save(currentEntity);
 
+        log.info("Account deleted successfully. userId={}", currentEntity.getId());
         return new ApiResponse<>("success", "Detailed account successfully", null);
     }
 
     @PostMapping("/refresh-token")
     public ApiResponse<AuthResponseDto> refreshToken(HttpServletRequest request) {
+        log.info("Refresh token request received");
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String refreshToken = authHeader.substring(7);
             AuthResponseDto newToken = authService.refreshToken(refreshToken);
+            log.info("Token refreshed successfully. username={}", newToken.getUsername());
             return new ApiResponse<>("success", "Token refreshed successfully", newToken);
         } else {
             log.warn("Invalid or missing Authorization header during token refresh");
@@ -105,10 +117,12 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ApiResponse<?> logout(HttpServletRequest request) {
+        log.info("Logout request received");
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             logoutService.logout(token);
+            log.info("Logout request processed");
             return new ApiResponse<>("success", "Logged out successfully", null);
         } else {
             log.warn("Invalid or missing Authorization header during logout");

@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { usePagination } from "@/hooks/use-pagination";
 import { ROUTE } from "@/constants/routes";
 import { DataTable } from "@/components/shared/data-table";
+import { Loader2 } from "lucide-react";
 
 export default function HistoryRecordsPage() {
   const params = useParams();
@@ -38,6 +39,7 @@ export default function HistoryRecordsPage() {
   const isLoading = useAppSelector((state) => state.attendance.isLoading);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(true);
   const searchParams = useSearchParams();
 
   const { currentPage, currentPageSize, updateUrlWithPage, handlePageChange, handlePageSizeChange, getDisplayIndex } =
@@ -78,6 +80,8 @@ export default function HistoryRecordsPage() {
       await dispatch(fetchScheduleByIdService(scheduleId)).unwrap();
     } catch {
       toast.error("Error fetching schedule data");
+    } finally {
+      setIsScheduleLoading(false);
     }
   }, [scheduleId, dispatch]);
 
@@ -88,7 +92,6 @@ export default function HistoryRecordsPage() {
   const exportToExcel = async (): Promise<void> => {
     setIsSubmitting(true);
     try {
-      setIsLoading(true);
       const allDataResponse: AttendanceHistoryModel[] = await dispatch(fetchAttendanceHistoryExcelThunk({
         scheduleId: Number(scheduleId),
         studentId: Number(studentId),
@@ -157,15 +160,25 @@ export default function HistoryRecordsPage() {
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setIsLoading(false);
     }
   };
 
   const totalStatuses = attendanceHistoryData?.totalElements || 0;
-  const presentStatuses = attendanceHistoryData?.content?.filter((r) => r.status === "PRESENT").length || 0;
-  const absentStatuses = attendanceHistoryData?.content?.filter((r) => r.status === "ABSENT").length || 0;
+  const presentStatuses = attendanceHistoryData?.content?.filter((r: AttendanceHistoryModel) => r.status === "PRESENT").length || 0;
+  const absentStatuses = attendanceHistoryData?.content?.filter((r: AttendanceHistoryModel) => r.status === "ABSENT").length || 0;
 
   const tableColumns = createAttendanceStudentHistoryColumns({ getDisplayIndex });
+
+  if (isScheduleLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="text-sm text-muted-foreground font-medium">
+          Loading attendance history...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

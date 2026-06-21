@@ -39,11 +39,10 @@ public class AuthExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
         log.warn("Authentication failed: User not found - {}", ex.getMessage());
 
-        // Don't reveal that the username doesn't exist for security reasons
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(
                         "error",
-                        "Invalid username or password. Please check your credentials and try again.",
+                        "Username not found. Please check your username and try again.",
                         null
                 ));
     }

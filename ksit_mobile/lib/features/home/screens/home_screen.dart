@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-import 'package:ksit_mobile/core/config/app_config.dart';
 import 'package:ksit_mobile/core/constants/app_colors.dart';
 import 'package:ksit_mobile/core/constants/app_image.dart';
 import 'package:ksit_mobile/core/utils/enums_utils.dart';
@@ -52,74 +51,51 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                title: Obx(() {
-                  final imageUrl = profileController.currentUserProfileUrl;
-                  return Row(
-                    children: [
-                      // School logo
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            AppImages.logoSchool,
-                            fit: BoxFit.cover,
-                          ),
+                title: Row(
+                  children: [
+                    // School logo
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          AppImages.logoSchool,
+                          fit: BoxFit.cover,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Kampong Speu',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Kampong Speu',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
                             ),
-                            Text(
-                              'Institute of Technology',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // User avatar (right side)
-                      if (imageUrl != null && imageUrl.isNotEmpty)
-                        CircleAvatar(
-                          radius: 17,
-                          backgroundImage: NetworkImage(
-                              AppConfig.baseImageUrl + imageUrl),
-                          backgroundColor: Colors.white24,
-                        )
-                      else
-                        Container(
-                          width: 34,
-                          height: 34,
-                          decoration: const BoxDecoration(
-                            color: Colors.white24,
-                            shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.person,
-                              color: Colors.white70, size: 20),
-                        ),
-                    ],
-                  );
-                }),
+                          Text(
+                            'Institute of Technology',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               // ─── Greeting + count header ──────────────────────────────

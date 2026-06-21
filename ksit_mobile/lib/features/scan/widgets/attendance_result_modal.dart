@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:ksit_mobile/features/scan/models/qr_attendance_response_models.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/format_utils.dart';
-import '../../../core/utils/date_time_formatter.dart';
 
 class AttendanceResultModal {
   static void showSuccess({
@@ -65,8 +65,7 @@ class AttendanceResultModal {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      DateTimeFormatter.formatDateTime(
-                          DateTime.now().toIso8601String()),
+                      DateFormat('M/d/yyyy h:mm:ss a').format(DateTime.now()),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.9),
@@ -118,7 +117,10 @@ class AttendanceResultModal {
                       ),
 
                       // Detailed attendance information
-                      if (attendanceData != null) ...[
+                      if (attendanceData != null &&
+                          attendanceData.day != null &&
+                          attendanceData.startTime != null &&
+                          attendanceData.endTime != null) ...[
                         const SizedBox(height: 24),
 
                         // Class Information
@@ -127,34 +129,12 @@ class AttendanceResultModal {
                           Icons.school,
                           [
                             _buildDetailRow(
-                                'Subject',
-                                attendanceData.subject ??
-                                    attendanceData.courseName ??
-                                    'N/A'),
+                              'Schedule',
+                              '${_formatDay(attendanceData.day)}, ${FormatUtils.formatTimeRange(attendanceData.startTime, attendanceData.endTime)}',
+                            ),
                             _buildDetailRow(
                                 'Class Code', attendanceData.classCode),
                             _buildDetailRow('Room', attendanceData.roomName),
-                            if (attendanceData.day != null &&
-                                attendanceData.startTime != null &&
-                                attendanceData.endTime != null)
-                              _buildDetailRow(
-                                'Schedule',
-                                '${_formatDay(attendanceData.day)}, ${FormatUtils.formatTimeRange(attendanceData.startTime, attendanceData.endTime)}',
-                              ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Instructor Information
-                        _buildDetailSection(
-                          'Instructor',
-                          Icons.person,
-                          [
-                            _buildDetailRow(
-                                'Teacher', attendanceData.teacherName),
-                            _buildDetailRow(
-                                'Teacher ID', '#${attendanceData.teacherId}'),
                           ],
                         ),
                       ],
@@ -191,6 +171,143 @@ class AttendanceResultModal {
               ),
             ],
           ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  static void showWarning({
+    required String title,
+    required String message,
+    VoidCallback? onDone,
+  }) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: EdgeInsets.zero,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with warning icon
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: AppColors.warning,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    DateFormat('M/d/yyyy h:mm:ss a').format(DateTime.now()),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: AppColors.warning,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            message,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // OK Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: onDone ?? () => Get.back(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.warning,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: const Text(
+                        'Got it',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       barrierDismissible: false,
@@ -250,8 +367,7 @@ class AttendanceResultModal {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    DateTimeFormatter.formatDateTime(
-                        DateTime.now().toIso8601String()),
+                    DateFormat('M/d/yyyy h:mm:ss a').format(DateTime.now()),
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),

@@ -114,6 +114,8 @@ class _MainScreenState extends State<MainScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final bool isScan = item.route == AppRoutes.scanRoute;
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -123,21 +125,24 @@ class _MainScreenState extends State<MainScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+              Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.1)
-                      : Colors.transparent,
+                  color: isScan
+                      ? AppColors.primary
+                      : (isSelected
+                          ? AppColors.primary.withValues(alpha: 0.1)
+                          : Colors.transparent),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   isSelected ? item.activeIcon : item.icon,
                   size: 24,
-                  color: isSelected
-                      ? AppColors.bottomNavSelected
-                      : AppColors.bottomNavUnselected,
+                  color: isScan
+                      ? Colors.white
+                      : (isSelected
+                          ? AppColors.bottomNavSelected
+                          : AppColors.bottomNavUnselected),
                 ),
               ),
               const SizedBox(height: 4),

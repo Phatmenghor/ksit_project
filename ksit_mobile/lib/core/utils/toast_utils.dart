@@ -11,7 +11,7 @@ class ToastUtils {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP,
       backgroundColor: Colors.green,
       textColor: Colors.white,
       fontSize: 16.0,
@@ -23,7 +23,7 @@ class ToastUtils {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP,
       backgroundColor: Colors.red,
       textColor: Colors.white,
       fontSize: 16.0,
@@ -35,7 +35,7 @@ class ToastUtils {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP,
       backgroundColor: Colors.blue,
       textColor: Colors.white,
       fontSize: 16.0,
@@ -47,7 +47,7 @@ class ToastUtils {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP,
       backgroundColor: Colors.orange,
       textColor: Colors.white,
       fontSize: 16.0,
@@ -60,7 +60,7 @@ class ToastUtils {
     Color backgroundColor = Colors.black87,
     Color textColor = Colors.white,
     Toast toastLength = Toast.LENGTH_SHORT,
-    ToastGravity gravity = ToastGravity.BOTTOM,
+    ToastGravity gravity = ToastGravity.TOP,
     double fontSize = 16.0,
   }) {
     Fluttertoast.showToast(
@@ -102,7 +102,7 @@ class ToastUtils {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.TOP,
       backgroundColor: backgroundColor ?? Colors.black87,
       textColor: Colors.white,
       fontSize: 16.0,

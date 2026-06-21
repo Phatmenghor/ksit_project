@@ -76,13 +76,22 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         LocalDateTime now = LocalDateTime.now();
         java.time.LocalDate today = now.toLocalDate();
 
-        // Check if an active session already exists for today
+        // Check if a still-open (not yet submitted/finalized) session already exists for today.
+        // A FINAL session must not be reused — once submitted, the next check-in for this
+        // schedule today should start a fresh session rather than reopen the finalized one.
         List<AttendanceSessionEntity> todaySessions = findTodaySessionsForSchedule(schedule.getId(), today);
+        AttendanceSessionEntity existingDraftSession = todaySessions.stream()
+                .filter(s -> s.getFinalizationStatus() != AttendanceFinalizationStatus.FINAL)
+                .findFirst()
+                .orElse(null);
+
+        if (existingDraftSession != null) {
+            log.info("Found existing open attendance session for scheduleId={} today. Reusing session id={}", schedule.getId(), existingDraftSession.getId());
+            return attendanceMapper.toDto(existingDraftSession);
+        }
+
         if (!todaySessions.isEmpty()) {
-            log.info("Found existing attendance session for scheduleId={} today. Reusing session id={}", schedule.getId(), todaySessions.get(0).getId());
-            // Return the first session found for today
-            AttendanceSessionEntity existingSession = todaySessions.get(0);
-            return attendanceMapper.toDto(existingSession);
+            log.info("All existing attendance sessions for scheduleId={} today are already finalized. Creating a new session.", schedule.getId());
         }
 
         // Create new attendance session
@@ -116,15 +125,20 @@ public class AttendanceSessionServiceImpl implements AttendanceSessionService {
         }
 
         // Save all attendance records
-        attendanceRepository.saveAll(attendances);
+        List<AttendanceEntity> savedAttendances = attendanceRepository.saveAll(attendances);
 
-        // ✅ FIX: Fetch the session fresh from database to include attendances
-        AttendanceSessionEntity refreshedSession = sessionRepository.findById(savedSession.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Session not found after creation"));
+        // Keep the in-memory session entity in sync with what was just persisted.
+        // Re-querying by ID here would NOT pick up these rows — within the same
+        // transaction, findById hits Hibernate's identity map and returns this
+        // same managed instance, whose attendances collection was never touched
+        // by the saveAll() above (that went through a different repository).
+        // Without this, the very first response after creating a session would
+        // report zero students until a later, separate request re-reads it fresh.
+        savedSession.setAttendances(savedAttendances);
 
         log.info("Attendance session created successfully. id={}, studentCount={}", savedSession.getId(), students.size());
-        
-        AttendanceSessionDto refreshedSessionDto = attendanceMapper.toDto(refreshedSession);
+
+        AttendanceSessionDto refreshedSessionDto = attendanceMapper.toDto(savedSession);
 
         // Broadcast session creation in real-time
         try {

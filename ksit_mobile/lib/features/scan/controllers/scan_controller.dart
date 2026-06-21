@@ -50,6 +50,13 @@ class ScanController extends GetxController {
   int _qrDetectionCount = 0;
   static const int qrDetectionCountThreshold = 2;
 
+  // Require the same QR to be read for several consecutive frames before
+  // locking focus and submitting, so a brief/blurry partial read can't
+  // trigger a scan before the code is fully and steadily in frame.
+  String? _stableQrCode;
+  int _stableDetectionFrames = 0;
+  static const int stableDetectionThreshold = 5;
+
   @override
   void onInit() {
     super.onInit();
@@ -105,7 +112,7 @@ class ScanController extends GetxController {
 
       if (boundingBox.isNotEmpty) {
         final qrSize = _calculateQrSize(boundingBox);
-        final optimalZoom = _calculateOptimalZoom(qrSize);
+        final optimalZoom = _calculateOptimalZoom(qrSize, capture.size);
 
         _qrDetectionCount++;
 
@@ -143,14 +150,23 @@ class ScanController extends GetxController {
     return ((maxX - minX) + (maxY - minY)) / 2;
   }
 
-  /// Calculate optimal zoom level
-  double _calculateOptimalZoom(double qrSize) {
-    const double targetQrSize = 200;
-    const double screenSize = 400;
+  /// Calculate optimal zoom level so the QR code fills a healthy portion of
+  /// the frame (better focus/read reliability when the code is small/far away).
+  ///
+  /// [qrSize] and [frameSize] must both be in the same image-pixel space
+  /// (i.e. straight from the camera frame), not screen/widget pixels —
+  /// otherwise the ratio is meaningless across devices/resolutions.
+  double _calculateOptimalZoom(double qrSize, Size frameSize) {
+    final referenceDimension = frameSize.shortestSide;
+    if (qrSize <= 0 || referenceDimension <= 0) return currentZoom.value;
 
-    if (qrSize <= 0) return 1.0;
+    // Aim for the QR to occupy ~38% of the frame's shorter side.
+    const double targetFraction = 0.38;
+    final targetSize = referenceDimension * targetFraction;
 
-    final zoom = (targetQrSize / qrSize) * (screenSize / 400);
+    // qrSize already reflects whatever zoom is currently applied, so scale
+    // relative to the current zoom to get the new absolute zoom needed.
+    final zoom = currentZoom.value * (targetSize / qrSize);
     return zoom.clamp(minZoom.value, maxZoom.value);
   }
 
@@ -183,12 +199,32 @@ class ScanController extends GetxController {
     _performAutoZoom(capture);
 
     final List<Barcode> barcodes = capture.barcodes;
+    String? code;
     for (final barcode in barcodes) {
-      final String? code = barcode.rawValue;
-      if (code != null && code.isNotEmpty) {
-        _startDetectionDelay(code);
+      final String? value = barcode.rawValue;
+      if (value != null && value.isNotEmpty) {
+        code = value;
         break;
       }
+    }
+
+    if (code == null) {
+      _stableQrCode = null;
+      _stableDetectionFrames = 0;
+      return;
+    }
+
+    if (_stableQrCode != code) {
+      // New or different code in frame: restart the stability count so a
+      // changing/blurry read doesn't carry over a stale streak.
+      _stableQrCode = code;
+      _stableDetectionFrames = 1;
+      return;
+    }
+
+    _stableDetectionFrames++;
+    if (_stableDetectionFrames >= stableDetectionThreshold) {
+      _startDetectionDelay(code);
     }
   }
 
@@ -218,6 +254,8 @@ class ScanController extends GetxController {
     isFocusLocked.value = false;
     detectionCountdown.value = 0;
     _pendingQrCode = null;
+    _stableQrCode = null;
+    _stableDetectionFrames = 0;
   }
 
   void _processScanResult() {
@@ -253,11 +291,11 @@ class ScanController extends GetxController {
         hasScannedInSession.value = true;
         _showSuccessModal(response);
       } else {
-        _showErrorModal(response.message);
+        _handleAttendanceFailure(response.message);
       }
     } catch (e) {
       final errorMessage = ApiErrorUtils.extractApiErrorMessage(e);
-      _showErrorModal(errorMessage);
+      _handleAttendanceFailure(errorMessage);
       LoggerUtils.error('Error submitting attendance', e);
     } finally {
       isSubmittingAttendance.value = false;
@@ -275,6 +313,37 @@ class ScanController extends GetxController {
       attendanceData: response.data,
       onDone: () {
         Get.back();
+      },
+    );
+  }
+
+  /// Route a failed scan to the right modal: a friendly warning when
+  /// attendance was already recorded, an error for everything else.
+  void _handleAttendanceFailure(String message) {
+    if (_isAlreadyMarkedMessage(message)) {
+      _showWarningModal(message);
+    } else {
+      _showErrorModal(message);
+    }
+  }
+
+  bool _isAlreadyMarkedMessage(String message) {
+    final lower = message.toLowerCase();
+    return lower.contains('already been marked') ||
+        lower.contains('already marked') ||
+        lower.contains('already present') ||
+        lower.contains('already scanned');
+  }
+
+  void _showWarningModal(String message) {
+    HapticFeedback.lightImpact();
+
+    AttendanceResultModal.showWarning(
+      title: 'Already Scanned',
+      message: message,
+      onDone: () {
+        Get.back();
+        _startScanCooldown(duration: 1);
       },
     );
   }
@@ -363,6 +432,8 @@ class ScanController extends GetxController {
     }
     _pendingQrCode = null;
     _qrDetectionCount = 0;
+    _stableQrCode = null;
+    _stableDetectionFrames = 0;
 
     LoggerUtils.info('Scan session reset');
   }

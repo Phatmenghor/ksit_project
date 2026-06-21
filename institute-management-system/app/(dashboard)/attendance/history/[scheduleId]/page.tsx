@@ -1,11 +1,19 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { StatusEnum } from "@/constants/constant";
 import { ROUTE } from "@/constants/routes";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { fetchAllStudentsService, fetchStudentsListThunk } from "@/features/students/store/thunks/student-thunks";
+import {
+  fetchAllStudentsService,
+  fetchStudentsListThunk,
+  deleteStudentService,
+} from "@/features/students/store/thunks/student-thunks";
 import { useDebounce } from "@/utils/debounce/debounce";
+import { createAttendanceHistoryColumns } from "./columns";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import {
@@ -23,7 +31,7 @@ import { format } from "date-fns";
 import { StudentListExcelTableHeader } from "@/constants/excel/student-header";
 import { formatDate } from "@/utils/date/date";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
-import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
 import { DataTable } from "@/components/shared/data-table";
 import { CollapsibleFilterPanel } from "@/components/shared/filter";
 import { PageBreadcrumb } from "@/components/shared/page-breadcrumb";
@@ -148,32 +156,15 @@ export default function StudentsListPage() {
   const handleScheduleChange = (e: ScheduleModel | null) => {
     setSelectedSchedule(e ?? undefined);
   };
-  // Delete selected student (optimistic UI update)
+  // Delete (soft-deactivate) selected student
   async function handleDeleteStudent() {
     if (!selectedStudent) return;
 
     setIsSubmitting(true);
     try {
-      const originalData = allStudentData;
+      const result = await dispatch(deleteStudentService(selectedStudent.id));
 
-      // Optimistically remove student from UI
-      setAllStudentData((prevData) => {
-        if (!prevData) return null;
-        const updatedContent = prevData.content.filter(
-          (item) => item.id !== selectedStudent.id
-        );
-        return {
-          ...prevData,
-          content: updatedContent,
-          totalElements: prevData.totalElements - 1,
-        };
-      });
-
-      const response = await editStudentService(selectedStudent.id, {
-        status: StatusEnum.INACTIVE,
-      });
-
-      if (response) {
+      if (deleteStudentService.fulfilled.match(result)) {
         toast.success(
           `Student ${selectedStudent.username ?? ""} deleted successfully`
         );
@@ -187,12 +178,10 @@ export default function StudentsListPage() {
           await loadStudents({});
         }
       } else {
-        setAllStudentData(originalData);
         toast.error("Failed to delete student");
       }
     } catch (error) {
       toast.error("An error occurred while deleting the student");
-      loadStudents({});
     } finally {
       setIsSubmitting(false);
       setIsDeleteDialogOpen(false);
@@ -204,7 +193,6 @@ export default function StudentsListPage() {
     setIsSubmitting(true);
 
     try {
-      setIsLoading(true);
       // Create a proper filter object for the API call
 
       const studentData = allStudentData?.content?.length;
@@ -325,7 +313,6 @@ export default function StudentsListPage() {
       toast.error("Error exporting to Excel. Please try again.");
     } finally {
       setIsSubmitting(false);
-      setIsLoading(false);
     }
   };
 
@@ -381,9 +368,8 @@ export default function StudentsListPage() {
               render: () => (
                 <ComboboxSelectClass
                   dataSelect={selectedClass ?? null}
-                  onChangeSelected={handleClassChange}
+                  onChangeSelected={(item) => handleClassChange(item)}
                   disabled={isSubmitting}
-                  allowClear
                 />
               ),
             },

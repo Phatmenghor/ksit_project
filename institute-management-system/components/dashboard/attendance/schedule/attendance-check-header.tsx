@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ROUTE } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import {
   ArrowLeft,
   CheckCircle,
@@ -41,143 +40,126 @@ export default function AttendanceCheckHeader({
   lastUpdated,
 }: AttendanceCheckProps) {
   const router = useRouter();
+
+  const teacherName =
+    (scheduleDetail?.teacher &&
+      (scheduleDetail.teacher.englishFirstName ||
+      scheduleDetail.teacher.englishLastName
+        ? `${scheduleDetail.teacher.englishFirstName || ""} ${
+            scheduleDetail.teacher.englishLastName || ""
+          }`.trim()
+        : scheduleDetail.teacher.khmerFirstName ||
+          scheduleDetail.teacher.khmerLastName
+        ? `${scheduleDetail.teacher.khmerFirstName || ""} ${
+            scheduleDetail.teacher.khmerLastName || ""
+          }`.trim()
+        : "- - -")) ||
+    "- - -";
+
   return (
-    <Card>
-      <CardContent className="p-6 space-y-2">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href={ROUTE.ATTENDANCE.CLASS_SCHEDULE}>
-                Schedule
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Class</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <Card className="w-full overflow-hidden">
+      <CardContent className="p-0">
+        {/* Top bar: breadcrumb + status */}
+        <div className="flex flex-col gap-3 px-6 pt-5 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>
+                  Dashboard
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.ATTENDANCE.CLASS_SCHEDULE}>
+                  Schedule
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Class</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <Button
-              onClick={() => router.back()}
-              variant="ghost"
-              size="icon"
-              asChild
-              className="rounded-full flex-shrink-0 hover:cursor-pointer"
-            >
-              <img
-                src={AppIcons.Back}
-                alt="back Icon"
-                className="h-4 w-4 mr-5 text-muted-foreground"
-              />
-            </Button>
-            <h1 className="text-xl font-semibold">
-              {scheduleDetail?.course?.nameEn ||
-                scheduleDetail?.course?.nameKH ||
-                "Attendance Check"}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Submission Status */}
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {isSubmitted && (
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="default"
-                  className="bg-green-600 text-white animate-pulse"
-                >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Submitted
-                </Badge>
+              <Badge
+                variant="default"
+                className="gap-1 bg-green-600 text-white"
+              >
+                <CheckCircle className="h-3 w-3" />
+                Submitted
                 {submissionTime && (
-                  <span className="text-xs text-muted-foreground">
-                    {submissionTime.toLocaleString()}
+                  <span className="font-normal opacity-90">
+                    · {submissionTime.toLocaleTimeString()}
                   </span>
                 )}
-              </div>
+              </Badge>
             )}
 
-            {/* Unsaved Changes Badge */}
             {unsavedChanges.size > 0 && (
               <Badge variant="destructive" className="animate-pulse">
                 {unsavedChanges.size} Unsaved Changes
               </Badge>
             )}
 
-
-            {/* Last Updated */}
             {lastUpdated && (
               <span className="text-xs text-muted-foreground">
-                Last updated: {lastUpdated.toLocaleTimeString()}
+                Updated {lastUpdated.toLocaleTimeString()}
               </span>
             )}
           </div>
         </div>
 
-        {/* Schedule Details Card */}
-        <Card className="overflow-hidden bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 transition-all duration-300">
-          <CardContent className="p-0">
-            <div className="p-4 flex-1">
-              <div className="flex gap-4">
-                <div className="flex border-l-4 border-amber-500 rounded-xl" />
-                <div className="flex flex-col flex-1">
-                  <div className="flex items-center gap-1 justify-between">
-                    <div className="text-sm font-medium text-amber-600">
-                      {scheduleDetail?.course?.code || "- - -"}
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {scheduleDetail?.day || "- - -"}
-                    </span>
-                  </div>
-                  <div className="text-sm font-medium">
-                    {scheduleDetail?.course?.nameEn ||
-                      scheduleDetail?.course?.nameKH ||
-                      "- - -"}
-                  </div>
-                </div>
-              </div>
+        <Separator />
 
-              <Separator className="my-2" />
+        {/* Title row */}
+        <div className="flex items-center gap-3 px-6 py-4">
+          <Button
+            onClick={() => router.back()}
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 flex-shrink-0 rounded-full"
+          >
+            <img src={AppIcons.Back} alt="Back" className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold leading-tight">
+              {scheduleDetail?.course?.nameEn ||
+                scheduleDetail?.course?.nameKH ||
+                "Attendance Check"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {scheduleDetail?.course?.code || "- - -"} · Take attendance for
+              today's class
+            </p>
+          </div>
+        </div>
 
-              <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1 hover:scale-105 transition-transform duration-200">
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    {formatTime12h(scheduleDetail?.startTime)} - {formatTime12h(scheduleDetail?.endTime)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 hover:scale-105 transition-transform duration-200">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {(scheduleDetail?.teacher &&
-                      (scheduleDetail.teacher.englishFirstName ||
-                      scheduleDetail.teacher.englishLastName
-                        ? `${scheduleDetail.teacher.englishFirstName || ""} ${
-                            scheduleDetail.teacher.englishLastName || ""
-                          }`.trim()
-                        : scheduleDetail.teacher.khmerFirstName ||
-                          scheduleDetail.teacher.khmerLastName
-                        ? `${scheduleDetail.teacher.khmerFirstName || ""} ${
-                            scheduleDetail.teacher.khmerLastName || ""
-                          }`.trim()
-                        : "- - -")) ||
-                      "- - -"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 hover:scale-105 transition-transform duration-200">
-                  <MapPin className="h-4 w-4" />
-                  <span>{scheduleDetail?.room?.name || "- - -"}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Schedule info strip */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-t bg-muted/30 px-6 py-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Timer className="h-4 w-4 text-amber-500" />
+            <span className="font-medium">
+              {scheduleDetail?.day || "- - -"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>
+              {formatTime12h(scheduleDetail?.startTime)} –{" "}
+              {formatTime12h(scheduleDetail?.endTime)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span>{teacherName}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            <span>{scheduleDetail?.room?.name || "- - -"}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

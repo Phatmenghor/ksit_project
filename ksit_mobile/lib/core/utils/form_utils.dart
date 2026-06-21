@@ -162,7 +162,7 @@ class FormUtils {
       Get.snackbar(
         'Validation Error',
         'Please fix the errors in the form',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 2),
       );
     }
@@ -416,7 +416,7 @@ class FormUtils {
       Get.snackbar(
         'Validation Error',
         firstError,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 3),
       );
     }

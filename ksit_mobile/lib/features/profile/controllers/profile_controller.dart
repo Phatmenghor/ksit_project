@@ -505,7 +505,7 @@ class ProfileController extends GetxController {
     Get.snackbar(
       'Settings',
       'Settings functionality coming soon',
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
       duration: const Duration(seconds: 2),
     );
   }

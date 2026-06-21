@@ -14,9 +14,8 @@ class ScanScreen extends StatefulWidget {
   State<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
+class _ScanScreenState extends State<ScanScreen> with WidgetsBindingObserver {
   late final ScanController scanController;
-  late AnimationController _animationController;
 
   @override
   void initState() {
@@ -25,19 +24,11 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
         ? Get.find<ScanController>()
         : Get.put(ScanController());
     WidgetsBinding.instance.addObserver(this);
-
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-
-    _animationController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _animationController.dispose();
     // ScanController.onClose() cancels timers and disposes MobileScannerController.
     Get.delete<ScanController>(force: true);
     super.dispose();
@@ -128,10 +119,10 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
               ],
             ),
 
-            // Gold brand logo on the right
+            // Brand logo on the right
             const Icon(
               Icons.qr_code_scanner,
-              color: Color(0xFFFFB300),
+              color: AppColors.primary,
               size: 24,
             ),
           ],
@@ -141,149 +132,116 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
   }
 
   Widget _buildScanOverlay() {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return Obx(() {
-          final isLocked = scanController.isFocusLocked.value;
-          return CustomPaint(
-            painter: ScannerOverlayPainter(
-              scanAreaWidth: 280,
-              scanAreaHeight: 280,
-              borderRadius: 24,
-              borderColor: isLocked
-                  ? AppColors.success.withValues(alpha: 0.15)
-                  : const Color(0xFFFFB300).withValues(alpha: 0.15),
-              cornerColor: const Color(0xFFFFB300),
-              animationValue: _animationController.value,
-              isFocusLocked: isLocked,
-            ),
-            child: Center(
-              child: SizedBox(
-                width: 280,
-                height: 280,
-                child: Stack(
-                  children: [
-                    // Scanning line animation (only when NOT in cooldown)
-                    Obx(() {
-                      final isCooldown = scanController.scanCooldownSeconds.value > 0;
-                      final isLockedNow = scanController.isFocusLocked.value;
-                      if (isCooldown) return const SizedBox.shrink();
-                      
-                      if (isLockedNow) {
-                        return Positioned(
-                          top: 140, // Freeze in center
-                          left: 12,
-                          right: 12,
-                          child: Container(
-                            height: 3.0,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  AppColors.success,
-                                  Colors.transparent,
+    return Obx(() {
+      final isLocked = scanController.isFocusLocked.value;
+      return CustomPaint(
+        painter: ScannerOverlayPainter(
+          scanAreaWidth: 280,
+          scanAreaHeight: 280,
+          borderRadius: 24,
+          borderColor: isLocked
+              ? AppColors.success.withValues(alpha: 0.15)
+              : const Color(0xFFFFB300).withValues(alpha: 0.15),
+          cornerColor: const Color(0xFFFFB300),
+          isFocusLocked: isLocked,
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 280,
+            height: 280,
+            child: Stack(
+              children: [
+                // Focus-locked indicator line (static, only while locked)
+                Obx(() {
+                  final isCooldown = scanController.scanCooldownSeconds.value > 0;
+                  final isLockedNow = scanController.isFocusLocked.value;
+                  if (isCooldown || !isLockedNow) return const SizedBox.shrink();
+
+                  return Positioned(
+                    top: 140, // Freeze in center
+                    left: 12,
+                    right: 12,
+                    child: Container(
+                      height: 3.0,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            AppColors.success,
+                            Colors.transparent,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.success,
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
+                // Cooldown Overlay clipped to the scanning frame
+                Obx(() {
+                  final cooldown = scanController.scanCooldownSeconds.value;
+                  if (cooldown <= 0) return const SizedBox.shrink();
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(alpha: 0.2),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
+                                  ),
                                 ],
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.success,
-                                  blurRadius: 12,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-
-                      return Positioned(
-                        top: 10 + _animationController.value * 260,
-                        left: 12,
-                        right: 12,
-                        child: Container(
-                          height: 2.5,
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                Color(0xFFFFB300),
-                                Colors.transparent,
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFFFFB300),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-
-                    // Cooldown Overlay clipped to the scanning frame
-                    Obx(() {
-                      final cooldown = scanController.scanCooldownSeconds.value;
-                      if (cooldown <= 0) return const SizedBox.shrink();
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Container(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColors.primary.withValues(alpha: 0.2),
-                                        blurRadius: 6,
-                                        spreadRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '$cooldown',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'Ready in...',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 12,
+                              child: Center(
+                                child: Text(
+                                  '$cooldown',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
                                     fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
                                   ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Ready in...',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ),
-          );
-        });
-      },
-    );
+          ),
+        ),
+      );
+    });
   }
 
   Widget _buildProcessingOverlay() {
@@ -367,19 +325,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
                   letterSpacing: 0.2,
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Category Badges (representing Class, Session, Exam QR)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildCategoryBadge(Icons.school_outlined, 'Class'),
-                  const SizedBox(width: 8),
-                  _buildCategoryBadge(Icons.calendar_today_outlined, 'Session'),
-                  const SizedBox(width: 8),
-                  _buildCategoryBadge(Icons.assignment_outlined, 'Exam'),
-                ],
-              ),
               const SizedBox(height: 40),
 
               // Circular Action Buttons
@@ -460,31 +405,6 @@ class _ScanScreenState extends State<ScanScreen> with TickerProviderStateMixin, 
     );
   }
 
-  Widget _buildCategoryBadge(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white24, width: 1.0),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 14),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class ScannerOverlayPainter extends CustomPainter {
@@ -493,7 +413,6 @@ class ScannerOverlayPainter extends CustomPainter {
     final double borderRadius;
     final Color borderColor;
     final Color cornerColor;
-    final double animationValue;
     final bool isFocusLocked;
 
     ScannerOverlayPainter({
@@ -502,7 +421,6 @@ class ScannerOverlayPainter extends CustomPainter {
       this.borderRadius = 24.0,
       this.borderColor = Colors.white24,
       this.cornerColor = const Color(0xFF024D3E),
-      required this.animationValue,
       required this.isFocusLocked,
     });
 
@@ -532,12 +450,9 @@ class ScannerOverlayPainter extends CustomPainter {
         ..strokeWidth = 1.0;
       canvas.drawRRect(rrect, borderPaint);
 
-      // Oscillating pulse value (0.0 -> 1.0 -> 0.0)
-      final double pulseValue = (0.5 - (0.5 - animationValue).abs()) * 2;
-
-      // 3. Draw bold corners (solid success green when locked, otherwise pulsing gold/yellow)
+      // 3. Draw bold corners (solid success green when locked, otherwise static gold/yellow)
       final currentThemeColor = isFocusLocked ? AppColors.success : const Color(0xFFFFB300);
-      final double cornerOpacity = isFocusLocked ? 1.0 : (0.7 + (pulseValue * 0.3));
+      final double cornerOpacity = isFocusLocked ? 1.0 : 0.85;
       final cornerPaint = Paint()
         ..color = currentThemeColor.withValues(alpha: cornerOpacity)
         ..style = PaintingStyle.stroke
@@ -615,9 +530,9 @@ class ScannerOverlayPainter extends CustomPainter {
           ..lineTo(center.dx + 6, center.dy - 4);
         canvas.drawPath(checkPath, checkPaint);
       } else {
-        // Pulsating gold circle
-        final focusRadius = 30.0 + (pulseValue * 5.0);
-        final focusOpacity = 0.35 + (pulseValue * 0.45);
+        // Static gold circle
+        const focusRadius = 32.0;
+        const focusOpacity = 0.55;
         final focusPaint = Paint()
           ..color = currentThemeColor.withValues(alpha: focusOpacity)
           ..style = PaintingStyle.stroke
@@ -638,6 +553,5 @@ class ScannerOverlayPainter extends CustomPainter {
 
     @override
     bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) =>
-        oldDelegate.animationValue != animationValue ||
         oldDelegate.isFocusLocked != isFocusLocked;
   }

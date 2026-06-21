@@ -42,6 +42,7 @@ import {
 } from "@/constants/filter/filter-page";
 import { Badge } from "@/components/ui/badge";
 import AttendanceCheckHeader from "@/components/dashboard/attendance/schedule/attendance-check-header";
+import { ConfirmDialog } from "@/components/shared/custom-confirm-dialog";
 import { QRCodeSection } from "@/components/dashboard/attendance/qr-code-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,7 @@ const AttendanceCheckPage = () => {
   // Submission state
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionTime, setSubmissionTime] = useState<Date | null>(null);
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
 
   // Refs for smooth scrolling and focus management
   const tableRef = useRef<HTMLDivElement>(null);
@@ -289,7 +291,7 @@ const AttendanceCheckPage = () => {
   }, [attendanceGenerate, unsavedChanges, originalData, isSubmitted]);
 
   // Submit attendance to staff
-  const handleSubmitToStaff = useCallback(async () => {
+  const performSubmitToStaff = useCallback(async () => {
     if (!attendanceGenerate) return;
 
     if (unsavedChanges.size > 0) {
@@ -317,6 +319,17 @@ const AttendanceCheckPage = () => {
     }
   }, [attendanceGenerate, unsavedChanges.size, scheduleDetail?.id]);
 
+  const handleSubmitToStaff = useCallback(() => {
+    if (!attendanceGenerate) return;
+
+    if (unsavedChanges.size > 0) {
+      toast.error("Please save all changes before submitting");
+      return;
+    }
+
+    setIsSubmitConfirmOpen(true);
+  }, [attendanceGenerate, unsavedChanges.size]);
+
   // Reset changes with Set
   const handleResetChanges = useCallback(() => {
     if (isSubmitted) {
@@ -341,6 +354,22 @@ const AttendanceCheckPage = () => {
     });
   }, []);
 
+
+  // Reset all per-schedule state when navigating between different schedules'
+  // check pages. Next.js reuses this component instance for the [id]/check
+  // route template instead of remounting it, so without this reset
+  // `isInitialized` stays true from the previous schedule and blocks the
+  // auto-init effect below from ever loading the new one (page stays blank
+  // until a hard refresh forces a real remount).
+  useEffect(() => {
+    setScheduleDetail(null);
+    setAttendanceGenerate(null);
+    setIsInitialized(false);
+    setIsSubmitted(false);
+    setSubmissionTime(null);
+    setUnsavedChanges(new Set());
+    setOriginalData(new Map());
+  }, [id]);
 
   // Initial load
   useEffect(() => {
@@ -803,6 +832,16 @@ const AttendanceCheckPage = () => {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={isSubmitConfirmOpen}
+        onOpenChange={setIsSubmitConfirmOpen}
+        title="Submit Attendance to Staff?"
+        description="Once submitted, this attendance record will be finalized and can no longer be edited. Make sure all student statuses are correct before continuing."
+        confirmText="Submit"
+        variant="warning"
+        onConfirm={performSubmitToStaff}
+      />
     </div>
   );
 };

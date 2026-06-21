@@ -64,8 +64,10 @@ public class AttendanceController {
         UserEntity currentUser = securityUtils.getCurrentUser();
         if (currentUser.isStudent()) {
             filterDto.setStudentId(currentUser.getId());
-            filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         }
+        // History must only ever surface finalized attendance sessions, regardless of
+        // what the caller (web/mobile) sends — DRAFT sessions are still in progress.
+        filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         CustomPaginationResponseDto<AttendanceDto> response = attendanceService.findAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "Attendance history retrieved successfully", response);
     }
@@ -77,8 +79,8 @@ public class AttendanceController {
         UserEntity currentUser = securityUtils.getCurrentUser();
         if (currentUser.isStudent()) {
             filterDto.setStudentId(currentUser.getId());
-            filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         }
+        filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         List<AttendanceDto> response = attendanceService.findAllAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "All attendance history retrieved successfully", response);
     }
@@ -90,8 +92,8 @@ public class AttendanceController {
         UserEntity currentUser = securityUtils.getCurrentUser();
         if (currentUser.isStudent()) {
             filterDto.setStudentId(currentUser.getId());
-            filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         }
+        filterDto.setFinalizationStatus(AttendanceFinalizationStatus.FINAL);
         Long count = attendanceService.countAttendanceHistory(filterDto);
         return new ApiResponse<>("success", "Attendance history count retrieved successfully", count);
     }

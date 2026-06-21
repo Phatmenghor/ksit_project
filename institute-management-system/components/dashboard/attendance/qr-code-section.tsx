@@ -14,6 +14,7 @@ import {
   CheckCircle,
   QrCode,
   Download,
+  Loader2,
 } from "lucide-react";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
@@ -33,10 +34,12 @@ export function QRCodeSection({
   const [qrGenerated, setQrGenerated] = useState(false);
   const [qrImageUrl, setQrImageUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Download QR Code function
   const downloadQRCode = useCallback(async () => {
-    if (!qrImageUrl) return;
+    if (!qrImageUrl || isDownloading) return;
+    setIsDownloading(true);
     try {
       const imageUrl = baseAPI.BASE_IMAGE + qrImageUrl;
       const response = await fetch(imageUrl);
@@ -52,8 +55,10 @@ export function QRCodeSection({
       toast.success("QR Code downloaded successfully");
     } catch (error) {
       toast.error("Failed to download QR Code");
+    } finally {
+      setIsDownloading(false);
     }
-  }, [qrImageUrl, sessionId]);
+  }, [qrImageUrl, sessionId, isDownloading]);
 
   // Status tracking
   const [status, setStatus] = useState<
@@ -215,11 +220,16 @@ export function QRCodeSection({
               <Button
                 variant="outline"
                 size="default"
-                className="bg-blue-500 hover:bg-blue-600 text-white hover:text-white border-0 transition-colors duration-200 flex items-center gap-2 px-6"
+                disabled={isDownloading}
+                className="bg-blue-500 hover:bg-blue-600 text-white hover:text-white border-0 transition-colors duration-200 flex items-center gap-2 px-6 disabled:opacity-70"
                 onClick={downloadQRCode}
               >
-                <Download className="h-4 w-4" />
-                Download QR Code Image
+                {isDownloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {isDownloading ? "Downloading..." : "Download QR Code Image"}
               </Button>
             </div>
           </div>
