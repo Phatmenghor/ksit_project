@@ -1,11 +1,13 @@
+import 'dart:io';
+
 enum Environment {
-  development,
-  staging,
-  production,
+  local,
+  dev,
+  prod,
 }
 
 class AppConfig {
-  static Environment _environment = Environment.development;
+  static Environment _environment = Environment.prod;
 
   static Environment get environment => _environment;
 
@@ -13,85 +15,92 @@ class AppConfig {
     _environment = env;
   }
 
-  // API Configuration
+  // API Base URLs
+  // local : physical device → machine LAN IP (192.168.18.32:8080)
+  // dev   : remote dev server
+  // prod  : production server
+  // Local: Android emulator → 10.0.2.2 (maps to host localhost)
+  //        iOS simulator    → localhost
+  //        Physical device  → update to your machine LAN IP (e.g. 192.168.x.x)
+  static String get _localHost =>
+      Platform.isAndroid ? '10.0.2.2' : 'localhost';
+
   static String get baseUrl {
     switch (_environment) {
-      case Environment.development:
+      case Environment.local:
+        return 'http://$_localHost:8080/api';
+      case Environment.dev:
         return 'http://165.22.247.142:7000/api';
-      case Environment.staging:
-        return 'http://165.22.247.142:7000/api';
-      case Environment.production:
+      case Environment.prod:
         return 'http://165.22.247.142:7000/api';
     }
   }
 
   static String get baseImageUrl {
     switch (_environment) {
-      case Environment.development:
+      case Environment.local:
+        return 'http://$_localHost:8080';
+      case Environment.dev:
         return 'http://165.22.247.142:7000';
-      case Environment.staging:
-        return 'http://165.22.247.142:7000';
-      case Environment.production:
+      case Environment.prod:
         return 'http://165.22.247.142:7000';
     }
   }
 
-  // Firebase Configuration
-  static String get firebaseProjectId {
+  // App display name shown in OS (helps identify which build is running)
+  static String get appName {
     switch (_environment) {
-      case Environment.development:
-        return 'your-project-dev';
-      case Environment.staging:
-        return 'your-project-staging';
-      case Environment.production:
-        return 'your-project-prod';
+      case Environment.local:
+        return 'KSIT (Local)';
+      case Environment.dev:
+        return 'KSIT (Dev)';
+      case Environment.prod:
+        return 'KSIT Mobile';
     }
   }
 
   // Feature Flags
   static bool get enableLogging {
     switch (_environment) {
-      case Environment.development:
-      case Environment.staging:
+      case Environment.local:
+      case Environment.dev:
         return true;
-      case Environment.production:
+      case Environment.prod:
         return false;
     }
   }
 
   static bool get enableCrashReporting {
     switch (_environment) {
-      case Environment.development:
+      case Environment.local:
         return false;
-      case Environment.staging:
-      case Environment.production:
+      case Environment.dev:
+      case Environment.prod:
         return true;
     }
   }
 
   static bool get enableAnalytics {
     switch (_environment) {
-      case Environment.development:
+      case Environment.local:
         return false;
-      case Environment.staging:
-      case Environment.production:
+      case Environment.dev:
+      case Environment.prod:
         return true;
     }
   }
 
   // Timeouts
-  static int get connectTimeout => 30000; // 30 seconds
-  static int get receiveTimeout => 30000; // 30 seconds
+  static int get connectTimeout => 30000;
+  static int get receiveTimeout => 30000;
 
-  // Cache Configuration
+  // Cache
   static Duration get cacheExpiration => const Duration(hours: 1);
 
   // Pagination
   static int get defaultPageSize => 10;
   static int get maxPageSize => 50;
 
-  // App Configuration
-  static String get appName => 'Flutter App';
   static String get appVersion => '1.0.0';
 
   // Firebase FCM Topic
@@ -107,60 +116,37 @@ class AppConfig {
   static int get minPasswordLength => 6;
   static int get maxPasswordLength => 20;
 
-  // UI Configuration
+  // UI
   static double get defaultPadding => 16.0;
   static double get smallPadding => 8.0;
   static double get largePadding => 24.0;
   static double get borderRadius => 8.0;
 
-  // Animation Duration
+  // Animation
   static Duration get defaultAnimationDuration =>
       const Duration(milliseconds: 300);
   static Duration get splashDuration => const Duration(seconds: 3);
 
-  // Debug Information
-  static Map<String, dynamic> get debugInfo {
-    return {
-      'environment': _environment.name,
-      'baseUrl': baseUrl,
-      'appName': appName,
-      'appVersion': appVersion,
-      'enableLogging': enableLogging,
-      'enableCrashReporting': enableCrashReporting,
-      'enableAnalytics': enableAnalytics,
-      'connectTimeout': connectTimeout,
-      'receiveTimeout': receiveTimeout,
-      'cacheExpiration': cacheExpiration.inMinutes,
-      'fcmTopic': fcmTopic,
-    };
-  }
+  // Convenience checks
+  static bool get isLocal => _environment == Environment.local;
+  static bool get isDev => _environment == Environment.dev;
+  static bool get isProd => _environment == Environment.prod;
 
-  // Initialize configuration
-  static void initialize({Environment? environment}) {
-    if (environment != null) {
-      setEnvironment(environment);
-    }
-  }
+  static String getEndpointUrl(String endpoint) => baseUrl + endpoint;
 
-  // Check if current environment is development
-  static bool get isDevelopment => _environment == Environment.development;
-
-  // Check if current environment is staging
-  static bool get isStaging => _environment == Environment.staging;
-
-  // Check if current environment is production
-  static bool get isProduction => _environment == Environment.production;
-
-  // Get environment-specific endpoint URL
-  static String getEndpointUrl(String endpoint) {
-    return baseUrl + endpoint;
-  }
-
-  // Get API headers
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-App-Version': appVersion,
         'X-Environment': _environment.name,
+      };
+
+  static Map<String, dynamic> get debugInfo => {
+        'environment': _environment.name,
+        'baseUrl': baseUrl,
+        'baseImageUrl': baseImageUrl,
+        'appName': appName,
+        'appVersion': appVersion,
+        'enableLogging': enableLogging,
       };
 }

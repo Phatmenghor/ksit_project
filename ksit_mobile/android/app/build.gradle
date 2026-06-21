@@ -35,22 +35,33 @@ android {
     }
 
     defaultConfig {
-        // IMPROVED: Professional application ID for KSIT Mobile
-        applicationId = "com.ksit.mobile"  // Changed from com.example.ksit_mobile
-        
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "com.ksit.mobile"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        
-        // ADDED: App name for better branding - CHANGED TO IMS KSIT
-        resValue "string", "app_name", "ims ksit"
-        
-        // ADDED: Version information
         buildConfigField "String", "VERSION_NAME", "\"${flutter.versionName}\""
         buildConfigField "int", "VERSION_CODE", "${flutter.versionCode}"
+    }
+
+    flavorDimensions "environment"
+    productFlavors {
+        local {
+            dimension "environment"
+            applicationIdSuffix ".local"
+            versionNameSuffix "-local"
+            resValue "string", "app_name", "KSIT Local"
+        }
+        dev {
+            dimension "environment"
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+            resValue "string", "app_name", "KSIT Dev"
+        }
+        prod {
+            dimension "environment"
+            resValue "string", "app_name", "KSIT Mobile"
+        }
     }
 
     // ADD THIS: Signing configurations

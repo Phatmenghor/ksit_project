@@ -1,3 +1,5 @@
+// Dev entry point — flutter run -t lib/main_dev.dart
+// Connects to remote dev server at 165.22.247.142:7000
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -12,40 +14,26 @@ import 'core/services/firebase_service.dart';
 import 'core/utils/logger_utils.dart';
 import 'routes/app_router.dart';
 
-// Production entry point — flutter run (default)
 void main() async {
-  AppConfig.setEnvironment(Environment.prod);
+  AppConfig.setEnvironment(Environment.dev);
 
   final WidgetsBinding widgetsBinding =
       WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   try {
-    LoggerUtils.info('Starting app initialization...');
+    LoggerUtils.info('Starting app [DEV] — ${AppConfig.baseUrl}');
 
-    // // Initialize Firebase with platform-specific options
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    LoggerUtils.info('Firebase initialized successfully');
 
-    // Initialize services
     await InitialBinding().dependencies();
-    LoggerUtils.info('Initial bindings completed');
-
-    // Initialize Firebase messaging
     await Get.find<FirebaseService>().initializeMessaging();
-    LoggerUtils.info('Firebase messaging initialized');
-
-    // Minimum splash time for better UX (optional)
     await Future.delayed(const Duration(milliseconds: 800));
-
-    LoggerUtils.info('App initialization completed successfully');
   } catch (e) {
     LoggerUtils.error('Failed to initialize app: $e');
-    // Continue anyway - router will handle authentication redirect
   } finally {
-    // Remove native splash screen
     FlutterNativeSplash.remove();
   }
 
@@ -58,8 +46,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp.router(
-      title: 'KSIT Mobile',
-      debugShowCheckedModeBanner: false,
+      title: AppConfig.appName,
+      debugShowCheckedModeBanner: true,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
