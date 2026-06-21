@@ -155,41 +155,39 @@ export function Header() {
   return (
     <>
       <header className="flex items-center justify-between bg-[#024D3E] px-4 md:px-6 h-20 md:h-16">
-        {/* Left: Logo or Sidebar toggle */}
+        {/* Left: always a flex child to keep justify-between; content hidden on desktop */}
         <div className="flex items-center">
-          {isMobile && (
-            <>
-              <Button
-                variant="ghost"
-                asChild
-                size="icon"
-                onClick={toggleMobileMenu}
-                className="hover:bg-white/10"
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-5 w-5 text-white" />
-                ) : (
-                  <img
-                    src={AppIcons.menu}
-                    alt="menu Icon"
-                    className="h-5 w-6 mr-3 sm:mr-5 text-muted-foreground"
-                  />
-                )}
-              </Button>
-              <Link href="/" className="flex items-center ml-2 gap-2">
-                <div className="relative h-12 w-12">
-                  <Image
-                    src={AppResource.Logo}
-                    alt="KSIT Logo"
-                    fill
-                    className="rounded-full object-contain"
-                    priority
-                  />
-                </div>
-                <span className="font-bold text-white text-lg">KSIT</span>
-              </Link>
-            </>
-          )}
+          <div className="flex md:hidden items-center">
+            <Button
+              variant="ghost"
+              asChild
+              size="icon"
+              onClick={toggleMobileMenu}
+              className="hover:bg-white/10"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5 text-white" />
+              ) : (
+                <img
+                  src={AppIcons.menu}
+                  alt="menu Icon"
+                  className="h-5 w-6 mr-3 sm:mr-5 text-muted-foreground"
+                />
+              )}
+            </Button>
+            <Link href="/" className="flex items-center ml-2 gap-2">
+              <div className="relative h-12 w-12">
+                <Image
+                  src={AppResource.Logo}
+                  alt="KSIT Logo"
+                  fill
+                  className="rounded-full object-contain"
+                  priority
+                />
+              </div>
+              <span className="font-bold text-white text-lg">KSIT</span>
+            </Link>
+          </div>
         </div>
 
         {/* Right: User Profile Section */}

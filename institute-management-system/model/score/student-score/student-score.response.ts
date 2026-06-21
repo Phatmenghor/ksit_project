@@ -22,6 +22,7 @@ export interface SubmissionScoreModel {
   teacherComments: string;
   staffComments: string;
   studentCount: number;
+  academyYear: number;
   createdAt: string;
 }
 

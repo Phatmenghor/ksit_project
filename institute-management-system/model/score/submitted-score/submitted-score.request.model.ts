@@ -5,7 +5,7 @@ export interface SubmittedScoreParam {
   scheduleId?: number;
   classId?: number;
   courseId?: number;
-  academicYear?: number;
+  academyYear?: number;
   studentId?: number;
   semester?: string;
   pageNo?: number;

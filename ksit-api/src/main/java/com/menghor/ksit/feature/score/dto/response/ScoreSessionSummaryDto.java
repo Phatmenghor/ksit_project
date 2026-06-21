@@ -25,5 +25,6 @@ public class ScoreSessionSummaryDto {
     private String teacherComments;
     private String staffComments;
     private Integer studentCount;
+    private Integer academyYear;
     private LocalDateTime createdAt;
 }

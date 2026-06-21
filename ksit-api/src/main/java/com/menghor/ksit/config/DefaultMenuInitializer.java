@@ -130,7 +130,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         addPermissions(attendance, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity classSchedule = upsertMenuItem("class-schedule", "Class Schedule", "/attendance/schedule", attendance, "calendar-check", false, 1);
-        addPermissions(classSchedule, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.DEVELOPER);
+        addPermissions(classSchedule, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity historyRecords = upsertMenuItem("history-records", "History Records", "/attendance/history", attendance, "history", false, 2);
         addPermissions(historyRecords, 2, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
@@ -149,17 +149,20 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         MenuItemEntity manageSchedule = upsertMenuItem("manage-schedule", "Manage Schedule", "/manage-schedule", scheduleGroup, "calendar-cog", false, 2);
         addPermissions(manageSchedule, 2, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity scores = upsertMenuItem("scores-submitted", "Scores", null, null, "bar-chart-2", true, 8);
+        MenuItemEntity scores = upsertMenuItem("scores-submitted", "Score Management", null, null, "bar-chart-2", true, 8);
         addPermissions(scores, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity studentScore = upsertMenuItem("student-score", "Student Scores", "/scores/student", scores, "clipboard-list", false, 1);
+        MenuItemEntity studentScore = upsertMenuItem("student-score", "Score Entry", "/scores/student", scores, "clipboard-list", false, 1);
         addPermissions(studentScore, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity submittedList = upsertMenuItem("submitted-list", "Submitted List", "/scores/submitted", scores, "check-circle", false, 2);
+        MenuItemEntity submittedList = upsertMenuItem("submitted-list", "Submissions", "/scores/submitted", scores, "check-circle", false, 2);
         addPermissions(submittedList, 2, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
-        MenuItemEntity scoreSettings = upsertMenuItem("score-setting", "Score Settings", "/scores/settings", scores, "settings", false, 3);
-        addPermissions(scoreSettings, 3, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+        MenuItemEntity groupExport = upsertMenuItem("group-score", "Score Report", "/scores/group", scores, "file-spreadsheet", false, 3);
+        addPermissions(groupExport, 3, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+
+        MenuItemEntity scoreSettings = upsertMenuItem("score-setting", "Score Config", "/scores/settings", scores, "settings", false, 4);
+        addPermissions(scoreSettings, 4, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity payment = upsertMenuItem("payment", "Payments", null, null, "credit-card", true, 9);
         addPermissions(payment, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
@@ -168,7 +171,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
         addPermissions(studentPayment, 1, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity myPayment = upsertMenuItem("my-payment", "My Payment", "/my-payment", payment, "wallet", false, 2);
-        addPermissions(myPayment, 2, RoleEnum.STUDENT);
+        addPermissions(myPayment, 2, RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity survey = upsertMenuItem("survey", "Survey", null, null, "clipboard", true, 10);
         addPermissions(survey, 1, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
@@ -195,7 +198,7 @@ public class DefaultMenuInitializer implements CommandLineRunner {
 
         MenuItemEntity myRequests = upsertMenuItem("my-requests", "My Requests", "/my-requests", requestGroup, "plus-circle", false, 2);
         addPermissions(myRequests, 2,
-                RoleEnum.STUDENT, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
+                RoleEnum.STUDENT, RoleEnum.TEACHER, RoleEnum.STAFF, RoleEnum.ADMIN, RoleEnum.DEVELOPER);
 
         MenuItemEntity rolePermission = upsertMenuItem("role-permission", "Role & Permissions", "/permissions", null, "shield", false, 12);
         addPermissions(rolePermission, 1, RoleEnum.ADMIN, RoleEnum.DEVELOPER);

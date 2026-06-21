@@ -98,13 +98,13 @@ export function DataTable<T = unknown>({
         <div ref={scrollRef} className="overflow-x-auto">
           <table className="w-full min-w-max text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/40">
+              <tr className="border-b border-border bg-primary/10 shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]">
                 {columns.map((col) => (
                   <th
                     key={col.key}
                     style={thStyle(col)}
                     className={cn(
-                      "px-4 py-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
+                      "px-4 py-3 text-left text-xs font-semibold text-foreground/75 whitespace-nowrap",
                       col.className
                     )}
                   >

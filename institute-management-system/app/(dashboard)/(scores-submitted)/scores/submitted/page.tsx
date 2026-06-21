@@ -77,7 +77,7 @@ export default function ScoreSubmittedPage() {
         status: filters.status,
         classId: filters.classId,
         scheduleId: filters.scheduleId,
-        academicYear: filters.academicYear || undefined,
+        academyYear: filters.academicYear || undefined,
         semester: filters.semester === "ALL" ? undefined : filters.semester,
         pageNo: currentPage,
         pageSize: currentPageSize,

@@ -29,7 +29,7 @@ VALUES
   ('students',        'Students',         NULL,          'graduation-cap', 4,  'ACTIVE', true, NULL, NOW()),
   ('attendance',      'Attendance',       NULL,          'clipboard-check',5,  'ACTIVE', true, NULL, NOW()),
   ('schedule-group',  'Schedule',         NULL,          'calendar',       6,  'ACTIVE', true, NULL, NOW()),
-  ('scores-submitted','Scores',           NULL,          'bar-chart-2',    8,  'ACTIVE', true, NULL, NOW()),
+  ('scores-submitted','Score Management', NULL,          'bar-chart-2',    8,  'ACTIVE', true, NULL, NOW()),
   ('payment',         'Payments',         NULL,          'credit-card',    9,  'ACTIVE', true, NULL, NOW()),
   ('survey',          'Survey',           NULL,          'clipboard',      10, 'ACTIVE', true, NULL, NOW()),
   ('request-group',   'Requests',         NULL,          'inbox',          11, 'ACTIVE', true, NULL, NOW()),
@@ -76,9 +76,10 @@ VALUES
 -- ── SCORES children ──────────────────────────────────────
 INSERT INTO menu_items (code, title, route, icon, display_order, status, is_parent, parent_id, created_at)
 VALUES
-  ('student-score',  'Student Scores', '/scores/student',   'clipboard-list', 1, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW()),
-  ('submitted-list', 'Submitted List', '/scores/submitted', 'check-circle',   2, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW()),
-  ('score-setting',  'Score Settings', '/scores/settings',  'settings',       3, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW());
+  ('student-score',  'Score Entry',   '/scores/student',   'clipboard-list',   1, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW()),
+  ('submitted-list', 'Submissions',   '/scores/submitted', 'check-circle',     2, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW()),
+  ('group-score',    'Score Report',  '/scores/group',     'file-spreadsheet', 3, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW()),
+  ('score-setting',  'Score Config',  '/scores/settings',  'settings',         4, 'ACTIVE', false, (SELECT id FROM menu_items WHERE code='scores-submitted'), NOW());
 
 -- ── PAYMENT children ─────────────────────────────────────
 INSERT INTO menu_items (code, title, route, icon, display_order, status, is_parent, parent_id, created_at)
@@ -148,11 +149,11 @@ FROM menu_items
 CROSS JOIN (VALUES ('TEACHER',1),('STAFF',2),('ADMIN',3),('DEVELOPER',4)) AS r(role,ord)
 WHERE code = 'attendance';
 
--- class-schedule → TEACHER, STAFF, DEVELOPER
+-- class-schedule → TEACHER, STAFF, ADMIN, DEVELOPER
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
 SELECT id, role, NULL::bigint, true, ord, 'ACTIVE', NOW()
 FROM menu_items
-CROSS JOIN (VALUES ('TEACHER',1),('STAFF',2),('DEVELOPER',3)) AS r(role,ord)
+CROSS JOIN (VALUES ('TEACHER',1),('STAFF',2),('ADMIN',3),('DEVELOPER',4)) AS r(role,ord)
 WHERE code = 'class-schedule';
 
 -- history-records, student-records → TEACHER/STAFF/ADMIN/DEVELOPER & STAFF/ADMIN/DEVELOPER
@@ -187,7 +188,7 @@ INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, displa
 SELECT id, role, NULL::bigint, true, ord, 'ACTIVE', NOW()
 FROM menu_items
 CROSS JOIN (VALUES ('TEACHER',1),('STAFF',2),('ADMIN',3),('DEVELOPER',4)) AS r(role,ord)
-WHERE code IN ('scores-submitted','submitted-list','student-score');
+WHERE code IN ('scores-submitted','submitted-list','student-score','group-score');
 
 -- score-setting → ADMIN, DEVELOPER
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
@@ -203,10 +204,12 @@ FROM menu_items
 CROSS JOIN (VALUES ('STAFF',1),('ADMIN',2),('DEVELOPER',3)) AS r(role,ord)
 WHERE code IN ('payment','student-payment');
 
--- my-payment → STUDENT only
+-- my-payment → ALL roles
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
-SELECT id, 'STUDENT', NULL::bigint, true, 1, 'ACTIVE', NOW()
-FROM menu_items WHERE code = 'my-payment';
+SELECT id, role, NULL::bigint, true, ord, 'ACTIVE', NOW()
+FROM menu_items
+CROSS JOIN (VALUES ('STUDENT',1),('TEACHER',2),('STAFF',3),('ADMIN',4),('DEVELOPER',5)) AS r(role,ord)
+WHERE code = 'my-payment';
 
 -- survey parent → TEACHER, STAFF, ADMIN, DEVELOPER
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
@@ -229,11 +232,11 @@ FROM menu_items
 CROSS JOIN (VALUES ('STUDENT',1),('TEACHER',2),('STAFF',3),('ADMIN',4),('DEVELOPER',5)) AS r(role,ord)
 WHERE code = 'survey-student';
 
--- request-group + my-requests → STUDENT, STAFF, ADMIN, DEVELOPER
+-- request-group + my-requests → ALL roles
 INSERT INTO menu_permissions (menu_item_id, role_name, user_id, can_view, display_order, status, created_at)
 SELECT id, role, NULL::bigint, true, ord, 'ACTIVE', NOW()
 FROM menu_items
-CROSS JOIN (VALUES ('STUDENT',1),('STAFF',2),('ADMIN',3),('DEVELOPER',4)) AS r(role,ord)
+CROSS JOIN (VALUES ('STUDENT',1),('TEACHER',2),('STAFF',3),('ADMIN',4),('DEVELOPER',5)) AS r(role,ord)
 WHERE code IN ('request-group','my-requests');
 
 -- request (list) → STAFF, ADMIN, DEVELOPER

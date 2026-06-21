@@ -39,6 +39,7 @@ public interface ScoreSessionMapper {
     @Mapping(source = "schedule.semester.semester", target = "semester")
     @Mapping(source = "schedule.course", target = "courseName", qualifiedByName = "mapCourseName")
     @Mapping(source = "studentScores", target = "studentCount", qualifiedByName = "mapStudentCount")
+    @Mapping(source = "schedule.semester.academyYear", target = "academyYear")
     ScoreSessionSummaryDto toSummaryDto(ScoreSessionEntity entity);
 
     @Named("mapTeacherName")
