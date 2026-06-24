@@ -82,39 +82,39 @@ export function DataTable<T = unknown>({
   });
 
   return (
-    <div className="space-y-3">
-      <div className={cn("rounded-md border overflow-x-auto bg-white", className)}>
-        <table className="text-xs w-full" style={{ tableLayout: "fixed" }}>
-          <thead className="bg-muted/50">
-            <tr>
+    <div className="space-y-0">
+      <div className={cn("rounded-md border border-border overflow-x-auto bg-card", className)}>
+        <table className="w-full min-w-max text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   style={thStyle(col)}
                   className={cn(
-                    "px-3 py-2.5 text-left font-semibold text-xs text-muted-foreground border-b border-border",
+                    "px-4 py-3 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
                     col.className
                   )}
                 >
-                  {col.label}
+                  {col.label || (col.key === "actions" ? "Actions" : "")}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border/40">
             {loading ? (
               [...Array(SKELETON_ROWS)].map((_, i) => (
-                <tr key={i}>
+                <tr key={i} className="bg-card">
                   {columns.map((col) => (
-                    <td key={col.key} style={thStyle(col)} className="px-3 py-2.5 border-b border-border/50">
-                      <div className="h-3 bg-muted animate-pulse rounded" />
+                    <td key={col.key} style={thStyle(col)} className="px-4 py-3">
+                      <div className="h-5 bg-muted animate-pulse rounded-md" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-3 py-8 text-center text-muted-foreground">
+                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-muted-foreground">
                   {emptyMessage}
                 </td>
               </tr>
@@ -123,7 +123,7 @@ export function DataTable<T = unknown>({
                 <tr
                   key={getRowKey(item, index)}
                   className={cn(
-                    "transition-colors hover:bg-primary/5",
+                    "bg-card transition-colors hover:bg-muted/30",
                     onRowClick && "cursor-pointer"
                   )}
                   onClick={() => onRowClick?.(item)}
@@ -136,7 +136,7 @@ export function DataTable<T = unknown>({
                       <td
                         key={col.key}
                         style={thStyle(col)}
-                        className={cn("px-3 py-2.5 border-b border-border/50", col.className)}
+                        className={cn("px-4 py-3 text-sm text-foreground", col.className)}
                       >
                         <div className={cn("whitespace-nowrap", col.truncate && "overflow-hidden text-ellipsis")}>
                           {cell}
@@ -152,24 +152,26 @@ export function DataTable<T = unknown>({
       </div>
 
       {showPagination && totalPages > 0 && (
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1 pt-4 pb-1">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {totalPages > 1 && (
+              <span>
+                Page <span className="font-medium text-foreground">{currentPage}</span> of <span className="font-medium text-foreground">{totalPages}</span>
+              </span>
+            )}
             {showPageSizeSelector && onPageSizeChange && (
               <div className="flex items-center gap-1.5">
-                <span>Rows:</span>
+                <span>Rows per page:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                  className="h-7 rounded border border-input px-1.5 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary"
+                  className="h-8 rounded-md border border-input px-2 text-xs bg-background hover:border-primary/50 focus:outline-none focus:border-primary transition-colors"
                 >
                   {pageSizeOptions.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
               </div>
-            )}
-            {totalElements > 0 && (
-              <span>{totalElements.toLocaleString()} total</span>
             )}
           </div>
 
@@ -178,25 +180,25 @@ export function DataTable<T = unknown>({
               <button
                 onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="h-7 px-2 flex items-center gap-1 rounded border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
+                className="h-8 px-2.5 flex items-center gap-1 rounded-md border text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed border-border bg-background hover:bg-primary/10 hover:border-primary hover:text-primary"
               >
-                <ChevronLeft className="h-3 w-3" />
+                <ChevronLeft className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Prev</span>
               </button>
 
               <div className="flex items-center gap-0.5">
                 {getPaginationItems(currentPage, totalPages).map((item, i) =>
                   item === "ellipsis" ? (
-                    <span key={`e-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                    <span key={`e-${i}`} className="px-1.5 text-xs text-muted-foreground">…</span>
                   ) : (
                     <button
                       key={item}
                       onClick={() => onPageChange(item)}
                       className={cn(
-                        "h-7 min-w-[28px] px-1 rounded text-xs font-medium transition-all border",
+                        "h-8 min-w-[32px] px-2 rounded-md text-xs font-medium transition-all border",
                         currentPage === item
-                          ? "bg-primary text-white border-primary shadow-sm font-bold"
-                          : "border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                          : "bg-background border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
                       )}
                     >
                       {item}
@@ -208,10 +210,10 @@ export function DataTable<T = unknown>({
               <button
                 onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="h-7 px-2 flex items-center gap-1 rounded border text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border-border hover:bg-primary/10 hover:border-primary hover:text-primary"
+                className="h-8 px-2.5 flex items-center gap-1 rounded-md border text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed border-border bg-background hover:bg-primary/10 hover:border-primary hover:text-primary"
               >
                 <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
           )}

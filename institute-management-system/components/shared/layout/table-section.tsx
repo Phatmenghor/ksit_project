@@ -34,7 +34,7 @@ export function CustomTable<T>({
         scrollbarColor: "#000000 #d1d5db",
       }}
     >
-      <Table className="w-full border-collapse">
+      <Table className="w-full min-w-max border-collapse">
         <TableHeader>
           <TableRow className="bg-black text-white">
             {columns.map((col, index) => (

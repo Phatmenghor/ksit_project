@@ -2,16 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -40,13 +31,11 @@ import {
   RoomModal,
 } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { roomTableHeader } from "@/constants/table/master-data";
-import PaginationPage from "@/components/shared/pagination-page";
-import Loading from "@/components/shared/loading";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function ManageRoomPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -61,9 +50,7 @@ export default function ManageRoomPage() {
     undefined
   );
 
-  const searchParams = useSearchParams();
-
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.MANAGE_ROOM,
       defaultPageSize: 10,
@@ -77,15 +64,6 @@ export default function ManageRoomPage() {
       updateUrlWithPage(1);
     }
   };
-
-  // Then add this effect for initial URL setup
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadRooms = useCallback(
     async (param: AllRoomFilterModel) => {
@@ -106,7 +84,6 @@ export default function ManageRoomPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading rooms");
@@ -127,11 +104,11 @@ export default function ManageRoomPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (room: RoomModel) => {
+  const handleOpenEditModal = (roomData: RoomModel) => {
     const formData: RoomFormData = {
-      id: room.id,
-      name: room.name,
-      status: room.status,
+      id: roomData.id,
+      name: roomData.name,
+      status: roomData.status,
     };
 
     setModalMode("edit");
@@ -183,8 +160,8 @@ export default function ManageRoomPage() {
             setAllRoomData((prevData) => {
               if (!prevData) return null;
 
-              const updatedContent = prevData.content.map((dept) =>
-                dept.id === formData.id && response ? response : dept
+              const updatedContent = prevData.content.map((r) =>
+                r.id === formData.id && response ? response : r
               );
 
               return {
@@ -250,124 +227,104 @@ export default function ManageRoomPage() {
     }
   }
 
+  const columns: TableColumn<RoomModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => {
+        const page = currentPage ?? 1;
+        return (page - 1) * 30 + index + 1;
+      },
+    },
+    {
+      key: "name",
+      label: "Name",
+      render: (r) => r?.name,
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (r) => DateTimeFormatter(r.createdAt),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (r) => (
+        <div className="flex justify-start space-x-2">
+          <Button
+            onClick={() => handleOpenEditModal(r)}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+            disabled={isSubmitting}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              setRoom(r);
+              setIsDeleteDialogOpen(true);
+            }}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+            disabled={isSubmitting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Manage room</BreadcrumbPage>
+                <BreadcrumbPage>Manage Room</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-
-          <h3 className="text-xl font-bold">Manage Room</h3>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search room..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <Button
-              onClick={handleOpenAddModal}
-              className="bg-teal-900 text-white hover:bg-teal-950"
-            >
-              <Plus className="mr-2 h-2 w-2" />
-              Add New
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {roomTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allRoomData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No Room found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allRoomData?.content.map((room, index) => {
-                  return (
-                    <TableRow key={room.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{room?.name}</TableCell>
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Rooms",
+          totalCount: allRoomData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search room...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddModal,
+          filters: [],
+          onClearAll: () => {
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={[]}
+      />
 
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() => handleOpenEditModal(room)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                            disabled={isSubmitting}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setRoom(room);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                            disabled={isSubmitting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={allRoomData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allRoomData?.totalPages ?? 0}
+        totalElements={allRoomData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No rooms found"
+        getRowKey={(r) => r.id}
+      />
 
-      {/* Pagination */}
-      {!isLoading && allRoomData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allRoomData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
-
-      {/* Room Edit/Add Modal */}
       <RoomModal
         isOpen={isModalOpen}
         mode={modalMode}
@@ -383,7 +340,6 @@ export default function ManageRoomPage() {
         onDelete={handleDeleteRoom}
         title="Delete Room"
         description="Are you sure you want to delete the room:"
-        itemName={room?.name}
         isSubmitting={isSubmitting}
       />
     </div>

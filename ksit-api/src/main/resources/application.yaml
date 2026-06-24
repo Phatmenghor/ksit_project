@@ -28,7 +28,7 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
 
 server:
-  port: 7000
+  port: 8080
 
 jwt:
   secret:

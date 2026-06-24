@@ -3,15 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,7 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Input } from "@/components/ui/input";
 import { ROUTE } from "@/constants/routes";
 import {
   createMajorService,
@@ -39,14 +30,12 @@ import {
   MajorFormData,
   MajorFormModal,
 } from "@/components/dashboard/master-data/manage-major/major-form-modal";
-import { majorTableHeader } from "@/constants/table/master-data";
-import Loading from "@/components/shared/loading";
-import PaginationPage from "@/components/shared/pagination-page";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function ManageMajorPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,9 +49,8 @@ export default function ManageMajorPage() {
   const [initialData, setInitialData] = useState<MajorFormData | undefined>(
     undefined
   );
-  const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.MANAGE_MAJOR,
       defaultPageSize: 10,
@@ -76,15 +64,6 @@ export default function ManageMajorPage() {
       updateUrlWithPage(1);
     }
   };
-
-  // Then add this effect for initial URL setup
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadMajors = useCallback(
     async (param: AllMajorFilterModel) => {
@@ -104,10 +83,9 @@ export default function ManageMajorPage() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
-        toast.error("An error occurred while loading rooms");
+        toast.error("An error occurred while loading majors");
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +151,7 @@ export default function ManageMajorPage() {
             setIsModalOpen(false);
           }
         } catch (error: any) {
-          toast.error(error.message || "Failed to add room");
+          toast.error(error.message || "Failed to add major");
         }
       } else if (modalMode === "edit" && formData.id) {
         try {
@@ -248,127 +226,116 @@ export default function ManageMajorPage() {
       setIsDeleteDialogOpen(false);
     }
   }
+
+  const columns: TableColumn<MajorModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => {
+        const page = currentPage ?? 1;
+        return (page - 1) * 30 + index + 1;
+      },
+    },
+    {
+      key: "code",
+      label: "Code",
+      render: (major) => (
+        <span className="rounded bg-gray-100 px-2 py-1">{major.code}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      render: (major) => major.name,
+    },
+    {
+      key: "department",
+      label: "Department",
+      render: (major) => major.department.name,
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (major) => DateTimeFormatter(major.createdAt),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (major) => (
+        <div className="flex justify-start space-x-2">
+          <Button
+            onClick={() => handleOpenEditModal(major)}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-gray-200"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              setMajors(major);
+              setIsDeleteDialogOpen(true);
+            }}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+            disabled={isSubmitting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Manage major</BreadcrumbPage>
+                <BreadcrumbPage>Manage Major</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <h3 className="text-xl font-bold">Manage Major</h3>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search major..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <Button
-              onClick={handleOpenAddModal}
-              className="bg-teal-900 text-white hover:bg-teal-950"
-            >
-              <Plus className="mr-2 h-2 w-2" />
-              Add New
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {majorTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allMajorData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No Major found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allMajorData?.content.map((major, index) => {
-                  return (
-                    <TableRow key={major.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>
-                        <span className="rounded bg-gray-100 px-2 py-1">
-                          {major.code}
-                        </span>
-                      </TableCell>
-                      <TableCell>{major.name}</TableCell>
-                      <TableCell>{major.department.name}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() => handleOpenEditModal(major)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setMajors(major);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                            disabled={isSubmitting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Majors",
+          totalCount: allMajorData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search major...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddModal,
+          filters: [],
+          onClearAll: () => {
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={[]}
+      />
 
-      {/* Pagination */}
-      {!isLoading && allMajorData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allMajorData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <DataTable
+        data={allMajorData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allMajorData?.totalPages ?? 0}
+        totalElements={allMajorData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No majors found"
+        getRowKey={(major) => major.id}
+      />
 
-      {/* Add/Edit Major Modal */}
       <MajorFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -378,14 +345,12 @@ export default function ManageMajorPage() {
         isSubmitting={isSubmitting}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={handleDeleteMajor}
         title="Delete Major"
         description="Are you sure you want to delete the major:"
-        itemName={majors?.name}
         isSubmitting={isSubmitting}
       />
     </div>

@@ -17,4 +17,5 @@ export interface SemesterModel {
   academyYear: number;
   semesterType?: SemesterType;
   status: string;
+  createdAt?: string;
 }

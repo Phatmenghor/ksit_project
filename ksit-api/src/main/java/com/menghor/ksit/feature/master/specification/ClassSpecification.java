@@ -17,7 +17,7 @@ public class ClassSpecification {
 
     public static Specification<ClassEntity> hasAcademyYear(Integer academyYear) {
         return (root, query, criteriaBuilder) -> {
-            if (academyYear == null) return criteriaBuilder.conjunction();
+            if (academyYear == null || academyYear == 0) return criteriaBuilder.conjunction();
             return criteriaBuilder.equal(root.get("academyYear"), academyYear);
         };
     }
@@ -98,18 +98,24 @@ public class ClassSpecification {
         Specification<ClassEntity> spec = Specification.where(null);
 
         if (StringUtils.hasText(searchTerm)) {
+            log.debug("combine | applying search filter: '{}'", searchTerm);
             spec = spec.and(search(searchTerm));
         }
 
-        if (academyYear != null) {
+        if (academyYear != null && academyYear != 0) {
+            log.debug("combine | applying academyYear filter: {}", academyYear);
             spec = spec.and(hasAcademyYear(academyYear));
+        } else {
+            log.debug("combine | academyYear filter skipped (value={})", academyYear);
         }
 
         if (status != null) {
+            log.debug("combine | applying status filter: {}", status);
             spec = spec.and(hasStatus(status));
         }
 
         if (majorId != null) {
+            log.debug("combine | applying majorId filter: {}", majorId);
             spec = spec.and(hasMajorId(majorId));
         }
 

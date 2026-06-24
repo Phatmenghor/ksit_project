@@ -8,10 +8,10 @@ interface InfoGridProps {
 export default function InfoGrid({ data, columns = 2 }: InfoGridProps) {
   const gridColsClass =
     columns === 1
-      ? "grid-cols-2"
+      ? "grid-cols-1 sm:grid-cols-2"
       : columns === 2
-      ? "grid-cols-4"
-      : "grid-cols-2"; // fallback
+      ? "grid-cols-2 md:grid-cols-4"
+      : "grid-cols-1 sm:grid-cols-2"; // fallback
 
   return (
     <div className={`grid ${gridColsClass} gap-x-4 gap-y-3 text-sm`}>

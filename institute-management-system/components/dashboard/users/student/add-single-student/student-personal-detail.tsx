@@ -103,7 +103,7 @@ export default function StudentPersonalDetailSection() {
         </div>
 
         {/* Nationality & Ethnicity */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex flex-col flex-1 gap-2">
             <label htmlFor="nationality" className="text-sm font-bold">
               ជនជាតិ
@@ -143,7 +143,7 @@ export default function StudentPersonalDetailSection() {
         </div>
 
         {/* Gender & Date of Birth */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex flex-col flex-1 gap-2">
             <label htmlFor="gender" className="text-sm font-bold">
               ភេទ
@@ -195,7 +195,7 @@ export default function StudentPersonalDetailSection() {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           {/* Phone Number */}
           <div className="flex flex-col gap-2 w-full">
             <label htmlFor="phoneNumber" className="text-sm font-bold">

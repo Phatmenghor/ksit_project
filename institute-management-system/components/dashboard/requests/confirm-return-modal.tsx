@@ -4,31 +4,17 @@ import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Info } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { RotateCcw, X, Loader2 } from "lucide-react";
+import { FormHeader } from "@/components/shared/form-field/form-header";
+import { FormBody } from "@/components/shared/form-field/form-body";
+import { FormFooter } from "@/components/shared/form-field/form-footer";
 
-// Form schema with validation
 const returnFormSchema = z.object({
-  staffComment: z
-    .string()
-    .min(1, { message: "Staff comment is required" })
-    .min(10, { message: "Comment must be at least 10 characters long" })
+  staffComment: z.string().min(1, { message: "Staff comment is required" }).min(10, { message: "Comment must be at least 10 characters long" }),
 });
 
 type ReturnFormData = z.infer<typeof returnFormSchema>;
@@ -39,18 +25,12 @@ interface ConfirmReturnModalProps {
   onConfirm: (message: string) => void;
 }
 
-export function ConfirmReturnModal({
-  open,
-  onOpenChange,
-  onConfirm,
-}: ConfirmReturnModalProps) {
+export function ConfirmReturnModal({ open, onOpenChange, onConfirm }: ConfirmReturnModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ReturnFormData>({
     resolver: zodResolver(returnFormSchema),
-    defaultValues: {
-      staffComment: "",
-    },
+    defaultValues: { staffComment: "" },
   });
 
   const handleSubmit = async (data: ReturnFormData) => {
@@ -59,89 +39,49 @@ export function ConfirmReturnModal({
       await onConfirm(data.staffComment);
       form.reset();
       onOpenChange(false);
-    } catch (error) {
-    } finally {
-      setIsSubmitting(false);
-    }
+    } catch {} finally { setIsSubmitting(false); }
   };
 
-  const handleDiscard = () => {
-    form.reset();
-    onOpenChange(false);
-  };
+  const handleDiscard = () => { form.reset(); onOpenChange(false); };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !isSubmitting) {
-      form.reset();
-    }
+    if (!newOpen && !isSubmitting) form.reset();
     onOpenChange(newOpen);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center space-y-4">
-          <div className="mx-auto w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
-            <Info className="w-6 h-6 text-white" />
-          </div>
-          <DialogTitle className="text-center font-semibold">
-            Confirm Return!
-          </DialogTitle>
-          <DialogDescription className="text-gray-600 text-center">
-            Are you sure you want to return this submission back to the
-            requestor?
-          </DialogDescription>
-        </DialogHeader>
-
-        <hr />
-
+      <DialogContent className="w-full max-w-md p-0 flex flex-col gap-0">
+        <FormHeader
+          title="Confirm Return"
+          description="Please provide a reason for returning this submission."
+          icon={<RotateCcw className="h-5 w-5 text-orange-500" />}
+          iconBg="bg-orange-50 border-orange-200"
+        />
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="staffComment"
-              render={({ field }) => (
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col">
+            <FormBody>
+              <p className="text-sm text-muted-foreground">Are you sure you want to return this submission back to the requestor?</p>
+              <FormField control={form.control} name="staffComment" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">
-                    Add suggestions or comments{" "}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                  <FormLabel>Add suggestions or comments <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Write message... (minimum 10 characters)"
-                      className="min-h-[100px] resize-none"
-                      {...field}
-                    />
+                    <Textarea placeholder="Write message... (minimum 10 characters)" className="min-h-[100px] resize-none" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-
-            <div className="py-2">
-              <hr />
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDiscard}
-                disabled={isSubmitting}
-              >
+              )} />
+            </FormBody>
+            <FormFooter>
+              <Button type="button" variant="outline" size="sm" onClick={handleDiscard} disabled={isSubmitting} className="h-9 px-4 gap-1.5 text-muted-foreground hover:text-foreground border-border/60">
+                <X className="h-3.5 w-3.5" />
                 Discard
               </Button>
-              <Button
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" size="sm" className="h-9 px-4 gap-1.5 bg-orange-500 hover:bg-orange-600 text-white" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                 {isSubmitting ? "Returning..." : "Return"}
               </Button>
-            </div>
+            </FormFooter>
           </form>
         </Form>
       </DialogContent>

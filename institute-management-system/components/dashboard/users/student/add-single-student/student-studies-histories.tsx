@@ -2,6 +2,7 @@
 
 import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
+
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 import { educationLevels } from "@/constants/constant";
@@ -23,12 +24,11 @@ export const StudentStudiesHistorySection = () => {
       <CardContent className="pt-6 space-y-4">
         <h3 className="text-lg font-semibold">ប្រវត្តិការសិក្សា</h3>
 
-        <Card
-          className="overflow-x-auto"
+        <div
+          className="overflow-x-auto w-full rounded-lg border"
           style={{ scrollbarWidth: "thin", scrollbarColor: "#000000 #d1d5db" }}
         >
-          <CardContent className="p-3">
-            <div className="min-w-[800px]">
+          <div className="min-w-[800px] p-3">
               <div className="grid grid-cols-7 gap-2 font-semibold text-sm mb-4">
                 <span>កម្រិតថ្នាក់</span>
                 <span>ឈ្មោះសាលារៀន</span>
@@ -120,9 +120,9 @@ export const StudentStudiesHistorySection = () => {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
       </CardContent>
     </Card>
+
   );
 };

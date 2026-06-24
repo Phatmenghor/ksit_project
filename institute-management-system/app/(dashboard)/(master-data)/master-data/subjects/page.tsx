@@ -1,16 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,9 +17,6 @@ import { Constants } from "@/constants/text-string";
 import { toast } from "sonner";
 import { RoomFormData as SubjectFormData } from "@/components/dashboard/master-data/manage-room/room-form-model";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
-import { subjectTableHeader } from "@/constants/table/master-data";
-import PaginationPage from "@/components/shared/pagination-page";
-import Loading from "@/components/shared/loading";
 import {
   AllSubjectModel,
   SubjectModel,
@@ -42,9 +30,10 @@ import {
 } from "@/service/master-data/subject.service";
 import { SubjectModal } from "@/components/dashboard/master-data/manage-subject/subject-form-model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function ManageSubjectPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -60,9 +49,8 @@ export default function ManageSubjectPage() {
   const [initialData, setInitialData] = useState<SubjectFormData | undefined>(
     undefined
   );
-  const searchParams = useSearchParams();
 
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.MANAGE_SUBJECT,
       defaultPageSize: 10,
@@ -76,15 +64,6 @@ export default function ManageSubjectPage() {
       updateUrlWithPage(1);
     }
   };
-
-  // Then add this effect for initial URL setup
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
 
   const loadSubjects = useCallback(
     async (param: AllSubjectFilterModel) => {
@@ -101,12 +80,10 @@ export default function ManageSubjectPage() {
 
         if (response) {
           setAllSubjectData(response);
-          // Handle case where current page exceeds total pages
           if (response.totalPages > 0 && currentPage > response.totalPages) {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading subject");
@@ -127,13 +104,11 @@ export default function ManageSubjectPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (room: SubjectModel) => {
+  const handleOpenEditModal = (subjectData: SubjectModel) => {
     const formData: SubjectFormData = {
-      id: room.id,
-
-      name: room.name,
-
-      status: room.status,
+      id: subjectData.id,
+      name: subjectData.name,
+      status: subjectData.status,
     };
 
     setModalMode("edit");
@@ -145,9 +120,8 @@ export default function ManageSubjectPage() {
     setIsSubmitting(true);
 
     try {
-      const roomData = {
+      const subjectData = {
         name: formData.name.trim(),
-
         status: formData.status,
       };
 
@@ -155,7 +129,7 @@ export default function ManageSubjectPage() {
 
       if (modalMode === "add") {
         try {
-          response = await createSubjectService(roomData);
+          response = await createSubjectService(subjectData);
 
           if (response) {
             setAllSubjectData((prevData) => {
@@ -179,13 +153,13 @@ export default function ManageSubjectPage() {
         }
       } else if (modalMode === "edit" && formData.id) {
         try {
-          response = await updateSubjectService(formData.id, roomData);
+          response = await updateSubjectService(formData.id, subjectData);
           if (response) {
             setAllSubjectData((prevData) => {
               if (!prevData) return null;
 
-              const updatedContent = prevData.content.map((dept) =>
-                dept.id === formData.id && response ? response : dept
+              const updatedContent = prevData.content.map((s) =>
+                s.id === formData.id && response ? response : s
               );
 
               return {
@@ -251,16 +225,65 @@ export default function ManageSubjectPage() {
     }
   }
 
+  const columns: TableColumn<SubjectModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => {
+        const page = currentPage ?? 1;
+        return (page - 1) * 30 + index + 1;
+      },
+    },
+    {
+      key: "name",
+      label: "Name",
+      render: (s) => s.name,
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (s) => DateTimeFormatter(s.createdAt),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (s) => (
+        <div className="flex justify-start space-x-2">
+          <Button
+            onClick={() => handleOpenEditModal(s)}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+            disabled={isSubmitting}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              setSubject(s);
+              setIsDeleteDialogOpen(true);
+            }}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+            disabled={isSubmitting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
@@ -268,107 +291,38 @@ export default function ManageSubjectPage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-
-          <h3 className="text-xl font-bold">Manage Subject</h3>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search subject..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <Button
-              onClick={handleOpenAddModal}
-              className="bg-teal-900 text-white hover:bg-teal-950"
-            >
-              <Plus className="mr-2 h-2 w-2" />
-              Add New
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {subjectTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allSubjectData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No Subject found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allSubjectData?.content.map((subject, index) => {
-                  return (
-                    <TableRow key={subject.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{subject.name}</TableCell>
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Subjects",
+          totalCount: allSubjectData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search subject...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddModal,
+          filters: [],
+          onClearAll: () => {
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={[]}
+      />
 
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() => handleOpenEditModal(subject)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                            disabled={isSubmitting}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setSubject(subject);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                            disabled={isSubmitting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={allSubjectData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allSubjectData?.totalPages ?? 0}
+        totalElements={allSubjectData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No subjects found"
+        getRowKey={(s) => s.id}
+      />
 
-      {/* Pagination */}
-      {!isLoading && allSubjectData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allSubjectData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
-
-      {/* Subject Edit/Add Modal */}
       <SubjectModal
         isOpen={isModalOpen}
         mode={modalMode}
@@ -384,7 +338,6 @@ export default function ManageSubjectPage() {
         onDelete={handleDeleteSubject}
         title="Delete Subject"
         description="Are you sure you want to delete the subject:"
-        itemName={subject?.name}
         isSubmitting={isSubmitting}
       />
     </div>

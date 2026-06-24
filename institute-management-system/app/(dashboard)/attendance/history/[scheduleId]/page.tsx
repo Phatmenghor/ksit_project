@@ -9,14 +9,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { toast } from "sonner";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -30,7 +22,6 @@ import { ROUTE } from "@/constants/routes";
 import { YearSelector } from "@/components/shared/year-selector";
 import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { StudentTableHeader } from "@/constants/table/user";
 import ChangePasswordModal from "@/components/dashboard/users/shared/change-password-modal";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import {
@@ -38,9 +29,7 @@ import {
   RequestAllStudent,
   StudentModel,
 } from "@/model/user/student/student.request.model";
-import Loading from "@/components/shared/loading";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import PaginationPage from "@/components/shared/pagination-page";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePagination } from "@/hooks/use-pagination";
 import { Constants } from "@/constants/text-string";
@@ -51,6 +40,7 @@ import { StudentListExcelTableHeader } from "@/constants/excel/student-header";
 import { formatDate } from "@/utils/date/date";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function StudentsListPage() {
   // Core state
@@ -355,6 +345,78 @@ export default function StudentsListPage() {
     }
   };
 
+  const columns: TableColumn<StudentModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      render: (_, index) => getDisplayIndex(index),
+    },
+    {
+      key: "username",
+      label: "Username",
+      render: (student) => student.username || "---",
+    },
+    {
+      key: "khmerName",
+      label: "Khmer Name",
+      render: (student) =>
+        `${student.khmerFirstName || ""} ${student.khmerLastName || ""}`.trim() || "---",
+    },
+    {
+      key: "englishName",
+      label: "English Name",
+      render: (student) =>
+        `${student.englishFirstName || ""} ${student.englishLastName || ""}`.trim() || "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (student) => student.gender || "---",
+    },
+    {
+      key: "dateOfBirth",
+      label: "Date of Birth",
+      render: (student) => student.dateOfBirth || "---",
+    },
+    {
+      key: "class",
+      label: "Class",
+      render: (student) =>
+        `${student?.studentClass.code} - ${student?.studentClass.major.name}` || "---",
+    },
+    {
+      key: "actions",
+      label: "",
+      render: (student) => (
+        <div className="flex justify-start space-x-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    router.push(
+                      `${ROUTE.ATTENDANCE.HISTORY_RECORD_DETAIL(
+                        String(scheduleId),
+                        String(student.id)
+                      )}`
+                    );
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+                  disabled={isSubmitting}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Student Detail</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <CardHeaderSection
@@ -398,84 +460,17 @@ export default function StudentsListPage() {
       />
 
       <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {StudentTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allStudentData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={StudentTableHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No student found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allStudentData?.content.map((student, index) => {
-                  return (
-                    <TableRow key={student.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{student.username || "---"}</TableCell>
-                      <TableCell>
-                        {`${student.khmerFirstName || ""} ${student.khmerLastName || ""
-                          }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${student.englishFirstName || ""} ${student.englishLastName || ""
-                          }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>{student.gender || "---"}</TableCell>
-                      <TableCell>{student.dateOfBirth || "---"}</TableCell>
-                      <TableCell>
-                        {`${(student || student)?.studentClass.code} - ${(student || student)?.studentClass.major.name
-                          }` || "---"}
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => {
-                                    router.push(
-                                      `${ROUTE.ATTENDANCE.HISTORY_RECORD_DETAIL(
-                                        String(scheduleId),
-                                        String(student.id)
-                                      )}`
-                                    );
-                                  }}
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                                  disabled={isSubmitting}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Student Detail</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
+        <DataTable
+          data={allStudentData?.content ?? null}
+          columns={columns}
+          loading={isLoading}
+          currentPage={currentPage}
+          totalPages={allStudentData?.totalPages ?? 0}
+          totalElements={allStudentData?.totalElements}
+          onPageChange={handlePageChange}
+          emptyMessage="No student found"
+          getRowKey={(student) => student.id}
+        />
       </div>
 
       <ChangePasswordModal
@@ -493,19 +488,8 @@ export default function StudentsListPage() {
         onDelete={handleDeleteStudent}
         title="Delete Student"
         description={`Are you sure you want to delete the student: ${selectedStudent?.username}?`}
-        itemName={selectedStudent?.username}
         isSubmitting={isSubmitting}
       />
-
-      {!isLoading && allStudentData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allStudentData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -65,19 +65,23 @@ export default function DynamicInputGrid({
     }
   };
 
+  const minTableWidth = `${fields.length * 180 + 60}px`;
+
   return (
-    <div
-      className="border p-4 rounded-md shadow-sm space-y-4 overflow-x-auto"
-      style={{
-        scrollbarWidth: "thin",
-        scrollbarColor: "#000000 #d1d5db",
-      }}
-    >
+    <div className="border rounded-md shadow-sm">
+      <div
+        className="overflow-x-auto p-4 space-y-4"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "#000000 #d1d5db",
+        }}
+      >
+      <div style={{ minWidth: minTableWidth }}>
       {/* Header */}
       <div
-        className="grid gap-4 font-bold text-sm"
+        className="grid gap-4 font-bold text-sm mb-4"
         style={{
-          gridTemplateColumns: `repeat(${fields.length}, minmax(200px, 1fr)) auto`,
+          gridTemplateColumns: `repeat(${fields.length}, minmax(160px, 1fr)) auto`,
         }}
       >
         {labels.map((label, idx) => (
@@ -92,9 +96,9 @@ export default function DynamicInputGrid({
       {arrayFields.map((fieldRow, rowIndex) => (
         <div
           key={fieldRow.id}
-          className="grid gap-4 items-center"
+          className="grid gap-4 items-center mb-3"
           style={{
-            gridTemplateColumns: `repeat(${fields.length}, minmax(200px, 1fr)) auto`,
+            gridTemplateColumns: `repeat(${fields.length}, minmax(160px, 1fr)) auto`,
           }}
         >
           {fields.map((field, colIndex) => {
@@ -191,6 +195,8 @@ export default function DynamicInputGrid({
         >
           បន្ថែមជួរថ្មី
         </Button>
+      </div>
+      </div>
       </div>
     </div>
   );

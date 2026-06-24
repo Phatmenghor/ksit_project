@@ -3,24 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-import {
   CalendarClock,
   CheckCircle,
   Loader,
   Pencil,
-  Plus,
-  Search,
   Trash2,
 } from "lucide-react";
-
 import { useState, useEffect, useCallback } from "react";
 import {
   Breadcrumb,
@@ -30,11 +18,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Input } from "@/components/ui/input";
 import { ROUTE } from "@/constants/routes";
 import { format, parseISO } from "date-fns";
+import { DateTimeFormatter } from "@/utils/date/date-time-format";
 import { SemesterFormModal } from "@/components/dashboard/master-data/manage-semester/semester-form-modal";
-import { YearSelector } from "@/components/shared/year-selector";
 import { toast } from "sonner";
 import {
   AllSemesterModel,
@@ -48,15 +35,13 @@ import {
   updateSemesterService,
 } from "@/service/master-data/semester.service";
 import { Constants } from "@/constants/text-string";
-import Loading from "@/components/shared/loading";
-import { semesterTableHeader } from "@/constants/table/master-data";
-import PaginationPage from "@/components/shared/pagination-page";
 import { DeleteConfirmationDialog } from "@/components/shared/delete-confirmation-dialog";
 import { SemesterType } from "@/constants/constant";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useDebounce } from "@/utils/debounce/debounce";
-import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
+
 export default function ManageSemester() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
@@ -68,21 +53,18 @@ export default function ManageSemester() {
   const [semesters, setSemesters] = useState<SemesterModel | null>(null);
   const [allSemesterData, setAllSemesterData] =
     useState<AllSemesterModel | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const [selectedYear, setSelectedYear] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const searchParams = useSearchParams();
-
-  const { currentPage, updateUrlWithPage, handlePageChange, getDisplayIndex } =
+  const { currentPage, updateUrlWithPage, handlePageChange } =
     usePagination({
       baseRoute: ROUTE.MASTER_DATA.MANAGE_SEMESTER,
       defaultPageSize: 10,
     });
 
   const searchDebounce = useDebounce(searchQuery, 500);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     if (currentPage !== 1) {
@@ -90,21 +72,13 @@ export default function ManageSemester() {
     }
   };
 
-  // Then add this effect for initial URL setup
-  useEffect(() => {
-    const pageParam = searchParams.get("pageNo");
-    if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
-      updateUrlWithPage(1, true);
-    }
-  }, [searchParams, updateUrlWithPage]);
   const loadSemester = useCallback(
     async (param: AllSemesterFilterModel) => {
       setIsLoading(true);
       try {
         const response = await getAllSemesterService({
           search: searchDebounce,
-          academyYear: selectedYear,
+          academyYear: selectedYear || undefined,
           status: Constants.ACTIVE,
           pageNo: currentPage,
           pageSize: 30,
@@ -116,7 +90,6 @@ export default function ManageSemester() {
             updateUrlWithPage(response.totalPages);
             return;
           }
-        } else {
         }
       } catch (error) {
         toast.error("An error occurred while loading semester");
@@ -186,8 +159,8 @@ export default function ManageSemester() {
             setAllSemesterData((prevData) => {
               if (!prevData) return null;
 
-              const updatedContent = prevData.content.map((dept) =>
-                dept.id === formData.id && response ? response : dept
+              const updatedContent = prevData.content.map((s) =>
+                s.id === formData.id && response ? response : s
               );
 
               return {
@@ -260,16 +233,106 @@ export default function ManageSemester() {
     }
   }
 
+  const columns: TableColumn<SemesterModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => {
+        const page = currentPage ?? 1;
+        return (page - 1) * 30 + index + 1;
+      },
+    },
+    {
+      key: "semester",
+      label: "Semester",
+      render: (s) => s.semester,
+    },
+    {
+      key: "startDate",
+      label: "Start Date",
+      render: (s) => formatDate(s.startDate),
+    },
+    {
+      key: "endDate",
+      label: "End Date",
+      render: (s) => formatDate(s.endDate),
+    },
+    {
+      key: "academyYear",
+      label: "Academy Year",
+      render: (s) => s.academyYear,
+    },
+    {
+      key: "semesterType",
+      label: "Status",
+      render: (s) => (
+        <>
+          {s.semesterType === SemesterType.DONE && (
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle size={16} />
+              <span>Done</span>
+            </div>
+          )}
+          {s.semesterType === SemesterType.PROCESSING && (
+            <div className="flex items-center gap-2 text-blue-600">
+              <Loader size={16} />
+              <span>Processing</span>
+            </div>
+          )}
+          {s.semesterType === SemesterType.PROGRESS && (
+            <div className="flex items-center gap-2 text-yellow-500">
+              <CalendarClock size={16} />
+              <span>Progress</span>
+            </div>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (s) => DateTimeFormatter(s.createdAt),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (s) => (
+        <div className="flex justify-start space-x-2">
+          <Button
+            onClick={() => handleOpenEditModal(s)}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
+            disabled={isSubmitting}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              setSemesters(s);
+              setIsDeleteDialogOpen(true);
+            }}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
+            disabled={isSubmitting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <Card>
-        <CardContent className="p-6 space-y-2">
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                  Dashboard
-                </BreadcrumbLink>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
@@ -277,132 +340,47 @@ export default function ManageSemester() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-          <h3 className="text-xl font-bold">Manage Semester</h3>
-          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative w-full md:w-1/2">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search semester..."
-                className="pl-8 w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <YearSelector value={selectedYear} onChange={setSelectedYear} />
-
-              <Button
-                onClick={handleOpenAddModal}
-                className="bg-teal-900 text-white hover:bg-teal-950"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add New
-              </Button>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {semesterTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allSemesterData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No semester found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                allSemesterData?.content.map((semesters, index) => {
-                  return (
-                    <TableRow key={semesters.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{semesters.semester}</TableCell>
-                      <TableCell>{formatDate(semesters.startDate)}</TableCell>
-                      <TableCell>{formatDate(semesters.endDate)}</TableCell>
-                      <TableCell>{semesters.academyYear}</TableCell>
+      <CollapsibleFilterPanel
+        config={{
+          title: "Manage Semesters",
+          totalCount: allSemesterData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search semester...",
+          onSearchChange: handleSearchChange,
+          buttonText: "Add New",
+          onButtonClick: handleOpenAddModal,
+          filters: [
+            {
+              id: "year",
+              type: "year",
+              label: "Academy Year",
+              value: selectedYear,
+              onChange: setSelectedYear,
+            },
+          ],
+          onClearAll: () => {
+            setSelectedYear(0);
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={["year"]}
+      />
 
-                      <TableCell>
-                        {semesters.semesterType === SemesterType.DONE && (
-                          <div className="flex items-center gap-2 text-green-600">
-                            <CheckCircle size={16} />
-                            <span>Done</span>
-                          </div>
-                        )}
-                        {semesters.semesterType === SemesterType.PROCESSING && (
-                          <div className="flex items-center gap-2 text-blue-600">
-                            <Loader size={16} />
-                            <span>Processing</span>
-                          </div>
-                        )}
-                        {semesters.semesterType === SemesterType.PROGRESS && (
-                          <div className="flex items-center gap-2 text-yellow-500">
-                            <CalendarClock size={16} />
-                            <span>Progress</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-start space-x-2">
-                          <Button
-                            onClick={() => handleOpenEditModal(semesters)}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-gray-200 hover:bg-gray-300"
-                            disabled={isSubmitting}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setSemesters(semesters);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 bg-red-500 text-white hover:bg-red-600"
-                            disabled={isSubmitting}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={allSemesterData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={allSemesterData?.totalPages ?? 0}
+        totalElements={allSemesterData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No semesters found"
+        getRowKey={(s) => s.id ?? 0}
+      />
 
-      {/* Pagination */}
-      {!isLoading && allSemesterData && (
-        <div className="mt-4 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={allSemesterData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
-      {/* The semester form modal */}
       <SemesterFormModal
         isOpen={isModalOpen}
         mode={modalMode}
@@ -418,7 +396,6 @@ export default function ManageSemester() {
         onDelete={handleDeleteSemester}
         title="Delete Semester"
         description="Are you sure you want to delete the semester:"
-        itemName={semesters?.semester}
         isSubmitting={isSubmitting}
       />
     </div>

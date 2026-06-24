@@ -3,27 +3,8 @@
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { ComboboxSelectClass } from "@/components/shared/ComboBox/combobox-class";
-import Loading from "@/components/shared/loading";
-import PaginationPage from "@/components/shared/pagination-page";
 import { DateRangePicker } from "@/components/shared/start-end-date";
-import { YearSelector } from "@/components/shared/year-selector";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { SemesterFilter } from "@/constants/constant";
 import { formatSemester } from "@/constants/format-enum/format-semester";
 import { formatSemesterOne } from "@/constants/format-enum/format-semester-1";
@@ -48,7 +29,6 @@ import {
   Download,
   FileSpreadsheet,
   Loader2,
-  Search,
   Tally1,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -62,9 +42,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useSearchParams } from "next/navigation";
 import { usePagination } from "@/hooks/use-pagination";
+import { CollapsibleFilterPanel } from "@/components/shared/filter";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function SurveyResultPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -83,7 +64,6 @@ export default function SurveyResultPage() {
   const [surveyHeaders, setSurveyHeaders] = useState<SurveyReportHeader[]>([]);
   const [surveyData, setSurveyData] = useState<SurveyResponseData | null>(null);
 
-  // Date filter states
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
@@ -95,11 +75,9 @@ export default function SurveyResultPage() {
       defaultPageSize: 20,
     });
 
-  // Then add this effect for initial URL setup
   useEffect(() => {
     const pageParam = searchParams.get("pageNo");
     if (!pageParam) {
-      // Use replace: true to avoid adding to browser history
       updateUrlWithPage(1, true);
     }
   }, [searchParams, updateUrlWithPage]);
@@ -111,7 +89,6 @@ export default function SurveyResultPage() {
     }
   };
 
-  // Hidden headers state - you can modify this to control which headers to hide
   const hiddenHeaders = [
     "responseId",
     "submittedAt",
@@ -141,7 +118,6 @@ export default function SurveyResultPage() {
     async (filter: AllSurveyFilterModel = {}) => {
       setIsLoading(true);
       try {
-        // Prepare headers request body
         const headersRequestBody: SurveyReportHeadersRequest = {
           hiddenHeaders: hiddenHeaders,
         };
@@ -158,7 +134,6 @@ export default function SurveyResultPage() {
           ...filter,
         };
 
-        // Fetch both headers and data simultaneously
         const [headersData, previewData] = await Promise.all([
           getSurveyReportHeadersService(headersRequestBody),
           getAllSurveyResultService(surveyFilter),
@@ -170,7 +145,6 @@ export default function SurveyResultPage() {
 
         if (previewData) {
           setSurveyData(previewData);
-          // Handle case where current page exceeds total pages
           if (
             previewData.totalPages > 0 &&
             currentPage > previewData.totalPages
@@ -203,12 +177,10 @@ export default function SurveyResultPage() {
     currentPage,
     selectAcademicYear,
     selectedSemester,
-    currentPage,
     startDate,
     endDate,
   ]);
 
-  // Render cell value based on type
   const renderCellValue = (
     item: SurveyResponseItem,
     header: SurveyReportHeader
@@ -243,6 +215,11 @@ export default function SurveyResultPage() {
     updateUrlWithPage(1);
   };
 
+  const handleSemesterChange = (value: string) => {
+    setSelectedSemester(value);
+    updateUrlWithPage(1);
+  };
+
   const clearStartDate = () => {
     setStartDate(undefined);
     updateUrlWithPage(1);
@@ -266,26 +243,22 @@ export default function SurveyResultPage() {
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
       };
 
-      // Call the service to export data
       const response: SurveyResponseItem[] =
         await getAllSurveyResultExcelService(filter);
 
-      // Use API data if available, otherwise use current data
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Survey Result Data");
 
-      // Header table excel
       const headersData = await getSurveyReportHeadersService({
         hiddenHeaders,
       });
       const headers: SurveyReportHeader[] = [
-        { key: "no", label: "No." }, // Inject static "No." column
+        { key: "no", label: "No." },
         ...(headersData && Array.isArray(headersData)
           ? headersData
           : surveyHeaders),
       ];
 
-      // Extract column labels and keys for dynamic mapping
       const columns = headers.map((header: SurveyReportHeader) => header.label);
       const columnKeys = headers.map(
         (header: SurveyReportHeader) => header.key
@@ -297,7 +270,6 @@ export default function SurveyResultPage() {
         width: 20,
       }));
 
-      // Add title row at Row 1
       worksheet.mergeCells(1, 1, 1, columns.length);
       const titleCell = worksheet.getCell("A1");
       titleCell.value = "List Survey Result Data";
@@ -313,7 +285,6 @@ export default function SurveyResultPage() {
         fgColor: { argb: "FF1F4E78" },
       };
 
-      // Add header row at Row 3
       const headerRow = worksheet.getRow(3);
       columns.forEach((text: string, idx: number) => {
         const cell = headerRow.getCell(idx + 1);
@@ -336,20 +307,15 @@ export default function SurveyResultPage() {
           right: { style: "thin" },
         };
 
-        // Dynamic column widths or fallback to default
         const columnWidths = [5, 20, 25, 27, 20, 15, 15, 15, 30];
         worksheet.getColumn(idx + 1).width = columnWidths[idx] || 25;
       });
       worksheet.getRow(3).commit();
 
-      // Add data rows starting at row 4 - DYNAMIC DATA MAPPING
       response.forEach((item: any, i: number) => {
-        // Create row data dynamically based on column keys
         const rowData = columnKeys.map((key: string) => {
-          // Handle special cases for sequential numbering
           if (key === "no") return i + 1;
 
-          // Handle date formatting for specific date fields
           if (
             (key === "createdAt" ||
               key === "updatedAt" ||
@@ -366,12 +332,8 @@ export default function SurveyResultPage() {
           return item[key] || "---";
         });
 
-        //   rowData.push(" ");
-
         const row = worksheet.addRow(rowData);
-        //   row.height = 30;
 
-        // Zebra striping
         row.eachCell((cell, colNumber) => {
           cell.fill = {
             type: "pattern",
@@ -390,7 +352,6 @@ export default function SurveyResultPage() {
             wrapText: false,
           };
 
-          // Format dates dynamically
           const columnKey = columnKeys[colNumber - 1];
           if (
             (columnKey === "createdAt" ||
@@ -408,7 +369,6 @@ export default function SurveyResultPage() {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
-      // File name
       const fileName = `survey_result_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
       saveAs(blob, fileName);
 
@@ -424,179 +384,142 @@ export default function SurveyResultPage() {
     }
   };
 
+  // Build dynamic columns from surveyHeaders
+  const columns: TableColumn<SurveyResponseItem>[] = [
+    {
+      key: "no",
+      label: "#",
+      width: "50px",
+      render: (_, index) => getDisplayIndex(index),
+    },
+    ...surveyHeaders.map((header) => ({
+      key: header.key,
+      label: header.label,
+      render: (item: SurveyResponseItem) => renderCellValue(item, header),
+    })),
+  ];
+
   return (
-    <div>
-      <div className="w-full">
-        <Card className="w-full">
-          <CardContent className="py-6 space-y-3 w-full">
-            {/* Breadcrumb Section */}
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href={ROUTE.DASHBOARD}>
-                    Dashboard
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Survey Result</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+    <div className="space-y-4">
+      <Card className="border-0 shadow-none bg-transparent p-0">
+        <CardContent className="p-0 space-y-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href={ROUTE.DASHBOARD}>Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Survey Result</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </CardContent>
+      </Card>
 
-            {/* Title Section */}
-            <div className="mb-3">
-              <h3 className="lg:text-2xl text-lg font-bold text-gray-900">
-                Survey Result
-              </h3>
-            </div>
-
-            {/* Full Width Content Section */}
-            <div className="w-full space-y-4 -mx-6 px-6">
-              {/* Grid: Search, Class, Year, Semester */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                <div className="relative w-full">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search by name or ID..."
-                    className="pl-8 w-full"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                  />
-                </div>
-
-                <div className="w-full">
+      <CollapsibleFilterPanel
+        config={{
+          title: "Survey Result",
+          totalCount: surveyData?.totalElements,
+          searchValue: searchQuery,
+          searchPlaceholder: "Search by name or ID...",
+          onSearchChange: handleSearchChange,
+          filters: [
+            {
+              id: "class",
+              type: "custom",
+              label: "Class",
+              value: selectedClass,
+              onChange: (v) => setSelectedClass(v),
+              render: ({ value, onChange }) => (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-foreground/80">Class</label>
                   <ComboboxSelectClass
-                    dataSelect={selectedClass ?? null}
-                    onChangeSelected={handleClassChange}
+                    dataSelect={value ?? null}
+                    onChangeSelected={(e) => onChange(e ?? undefined)}
                     disabled={isLoading}
                   />
                 </div>
+              ),
+            },
+            {
+              id: "year",
+              type: "year",
+              label: "Academic Year",
+              value: selectAcademicYear ?? new Date().getFullYear(),
+              onChange: handleYearChange,
+            },
+            {
+              id: "semester",
+              type: "select",
+              label: "Semester",
+              value: selectedSemester,
+              onChange: handleSemesterChange,
+              options: SemesterFilter.map((s) => ({ label: s.label, value: s.value })),
+            },
+          ],
+          onClearAll: () => {
+            setSelectedClass(undefined);
+            setSelectAcademicYear(undefined);
+            setSelectedSemester("ALL");
+            setStartDate(undefined);
+            setEndDate(undefined);
+            setSearchQuery("");
+          },
+        }}
+        essentialFilterIds={["class", "year", "semester"]}
+      />
 
-                <div className="w-full">
-                  <YearSelector
-                    title="Select Year"
-                    onChange={handleYearChange}
-                    value={selectAcademicYear || 0}
-                  />
-                </div>
-
-                <div className="w-full">
-                  <Select
-                    onValueChange={setSelectedSemester}
-                    value={selectedSemester}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SemesterFilter.map((semester) => (
-                        <SelectItem key={semester.value} value={semester.value}>
-                          {semester.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Date Range Picker & Export Section */}
-              <div className="flex flex-col lg:flex-row justify-between gap-4 w-full">
-                <div className="flex-1 lg:flex-none min-w-0">
-                  <DateRangePicker
-                    startDate={startDate}
-                    endDate={endDate}
-                    onStartDateChange={setStartDate}
-                    onEndDateChange={setEndDate}
-                    clearStartDate={clearStartDate}
-                    clearEndDate={clearEndDate}
-                  />
-                </div>
-
-                <div className="flex justify-start lg:justify-end items-center gap-2 flex-shrink-0">
-                  <span className="text-sm whitespace-nowrap">
-                    Export Data by Class
-                  </span>
-                  <Button
-                    onClick={exportToExcel}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2 border-gray-200 py-5 flex items-center gap-1"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <span className="ml-2">Exporting...</span>
-                      </div>
-                    ) : (
-                      <>
-                        <FileSpreadsheet className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="ml-1 text-xs font-medium">Excel</span>
-                        <Tally1 className="-mr-[12px] text-gray-300 flex-shrink-0" />
-                        <Download className="h-4 w-4 flex-shrink-0" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                {surveyHeaders.map((header) => (
-                  <TableHead key={header.key}>{header.label}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {surveyData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-6 text-muted-foreground"
-                  >
-                    No Record
-                  </TableCell>
-                </TableRow>
-              ) : (
-                surveyData?.content.map((survey, index) => {
-                  return (
-                    <TableRow key={survey.responseId}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      {surveyHeaders.map((header) => (
-                        <TableCell key={`${survey.responseId}-${header.key}`}>
-                          {renderCellValue(survey, header)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {surveyData && (
-        <div className="mt-8 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={surveyData.totalPages}
-            onPageChange={handlePageChange}
+      {/* Date Range + Export row */}
+      <div className="flex flex-col lg:flex-row justify-between gap-4 w-full">
+        <div className="flex-1 lg:flex-none min-w-0">
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            clearStartDate={clearStartDate}
+            clearEndDate={clearEndDate}
           />
         </div>
-      )}
+
+        <div className="flex justify-start lg:justify-end items-center gap-2 flex-shrink-0">
+          <span className="text-sm whitespace-nowrap">Export Data by Class</span>
+          <Button
+            onClick={exportToExcel}
+            variant="outline"
+            size="sm"
+            className="h-8 px-2 border-gray-200 py-5 flex items-center gap-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Exporting...</span>
+              </div>
+            ) : (
+              <>
+                <FileSpreadsheet className="h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="ml-1 text-xs font-medium">Excel</span>
+                <Tally1 className="-mr-[12px] text-gray-300 flex-shrink-0" />
+                <Download className="h-4 w-4 flex-shrink-0" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <DataTable
+        data={surveyData?.content ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={currentPage}
+        totalPages={surveyData?.totalPages ?? 0}
+        totalElements={surveyData?.totalElements}
+        onPageChange={handlePageChange}
+        emptyMessage="No Record"
+        getRowKey={(s) => s.responseId}
+      />
     </div>
   );
 }

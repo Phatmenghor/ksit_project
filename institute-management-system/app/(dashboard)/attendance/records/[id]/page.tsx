@@ -17,16 +17,7 @@ import { ClassModel } from "@/model/master-data/class/all-class-model";
 import { useDebounce } from "@/utils/debounce/debounce";
 import { useCallback, useEffect, useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   AttendanceHistoryExcelTableHeader,
-  AttendanceHistoryTableHeader,
 } from "@/constants/table/attendance-history";
 import {
   AttendanceHistoryFilter,
@@ -38,12 +29,10 @@ import {
   getAllAttendanceHistoryService,
 } from "@/service/schedule/attendance.service";
 import { toast } from "sonner";
-import PaginationPage from "@/components/shared/pagination-page";
 import { Button } from "@/components/ui/button";
-import { Download, FileSpreadsheet, Search, Tally1, X } from "lucide-react";
+import { Download, Search, Tally1 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
-import Loading from "@/components/shared/loading";
 import { formatDate } from "@/utils/date/dd-mm-yyyy-format";
 import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "@/components/shared/start-end-date";
@@ -59,6 +48,8 @@ import { ComboboxSelectCourse } from "@/components/shared/ComboBox/combobox-cour
 import { CourseModel } from "@/model/master-data/course/all-course-model";
 import { ComboboxSelectSchedule } from "@/components/shared/ComboBox/combobox-schedule";
 import { ScheduleModel } from "@/model/schedules/all-schedule-model";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
+import Loading from "@/components/shared/loading";
 
 export default function StudentAttendancePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -382,6 +373,54 @@ export default function StudentAttendancePage() {
     }
   };
 
+  const tableColumns: TableColumn<AttendanceHistoryModel>[] = [
+    {
+      key: "no",
+      label: "#",
+      render: (_, index) => getDisplayIndex(index),
+    },
+    {
+      key: "identifyNumber",
+      label: "Identify Number",
+      render: (history) => history.identifyNumber || "---",
+    },
+    {
+      key: "studentName",
+      label: "Student Name",
+      render: (history) => history.studentName || "---",
+    },
+    {
+      key: "teacherName",
+      label: "Teacher Name",
+      render: (history) => history.teacherName || "---",
+    },
+    {
+      key: "courseName",
+      label: "Course Name",
+      render: (history) => history.courseName || "---",
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (history) => getStatusAttendance(history.status) || "---",
+    },
+    {
+      key: "attendanceType",
+      label: "Type",
+      render: (history) => formatType(history.attendanceType) || "---",
+    },
+    {
+      key: "createdAt",
+      label: "Date",
+      render: (history) => formatDate(history.createdAt) || "---",
+    },
+    {
+      key: "comment",
+      label: "Comment",
+      render: (history) => history.comment || "---",
+    },
+  ];
+
   return (
     <div>
       <CardHeaderSection
@@ -394,7 +433,7 @@ export default function StudentAttendancePage() {
           <div className="flex flex-col gap-4">
             {/* First row: Search, Class, Year, and Semester */}
             <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:gap-2">
-              <div className="relative w-full lg:min-w-[700px] min-w-[200px] md:w-auto md:flex-1">
+              <div className="relative w-full min-w-[200px] md:w-auto md:flex-1">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="search"
@@ -491,66 +530,18 @@ export default function StudentAttendancePage() {
       />
 
       <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {AttendanceHistoryTableHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {attendanceHistoryData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-6 text-muted-foreground"
-                  >
-                    No Record
-                  </TableCell>
-                </TableRow>
-              ) : (
-                attendanceHistoryData?.content.map((history, index) => {
-                  return (
-                    <TableRow key={history.id}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      <TableCell>{history.identifyNumber || "---"}</TableCell>
-                      <TableCell>{history.studentName || "---"}</TableCell>
-                      <TableCell>{history.teacherName || "---"}</TableCell>
-                      <TableCell>{history.courseName || "---"}</TableCell>
-                      <TableCell>
-                        {getStatusAttendance(history.status) || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {formatType(history.attendanceType) || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(history.createdAt) || "---"}
-                      </TableCell>
-                      <TableCell>{history.comment || "---"}</TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
+        <DataTable
+          data={attendanceHistoryData?.content ?? null}
+          columns={tableColumns}
+          loading={isLoading}
+          currentPage={currentPage}
+          totalPages={attendanceHistoryData?.totalPages ?? 0}
+          totalElements={attendanceHistoryData?.totalElements}
+          onPageChange={handlePageChange}
+          emptyMessage="No Record"
+          getRowKey={(history) => history.id}
+        />
       </div>
-
-      {attendanceHistoryData && (
-        <div className="mt-8 flex justify-end animate-in slide-in-from-bottom-4 duration-500 delay-1000">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={attendanceHistoryData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
     </div>
   );
 }

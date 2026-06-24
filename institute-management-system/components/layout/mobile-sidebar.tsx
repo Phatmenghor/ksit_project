@@ -177,12 +177,8 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col h-screen w-70 overflow-hidden">
-      <div
-        className={`relative flex flex-col h-full bg-white transform transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+    <div className="flex flex-col h-full bg-white">
+      <div className="relative flex flex-col h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-4 h-16">
           <div className="flex items-center gap-4">
@@ -199,6 +195,17 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         {/* Scrollable content */}
         <ScrollArea className="flex-1">
           <div className="p-2">
+            {transformedRoutes.length === 0
+              ? [...Array(7)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded mb-1">
+                    <div className="h-5 w-5 rounded bg-gray-200 animate-pulse flex-shrink-0" />
+                    <div
+                      className="h-4 rounded bg-gray-200 animate-pulse"
+                      style={{ width: `${50 + (i % 4) * 15}%` }}
+                    />
+                  </div>
+                ))
+              : null}
             {transformedRoutes.map((route) => {
               const isActive = route.href
                 ? pathname === route.href

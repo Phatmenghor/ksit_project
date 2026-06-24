@@ -4,14 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   FileIcon as FilePdf,
   Check,
   X,
@@ -40,6 +32,7 @@ import { ScheduleModel } from "@/model/schedules/all-schedule-model";
 import { SubmissionScoreModel } from "@/model/score/student-score/student-score.response";
 import { AppIcons } from "@/constants/icons/icon";
 import { ScoreConfigurationModel } from "@/model/score/submitted-score/submitted-score.response.model";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function ScoreSubmissionDetailPage() {
   const [submission, setSubmissions] = useState<SubmissionScoreModel | null>(
@@ -216,7 +209,7 @@ export default function ScoreSubmissionDetailPage() {
   // Approval Actions Component
   const ApprovalActionsCard = () => (
     <Card className="shadow-md">
-      <CardHeader className="flex flex-row justify-between items-center">
+      <CardHeader className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <CardTitle className="text-lg font-bold">Submitting Approval</CardTitle>
         <div className="flex gap-2">
           <Button onClick={() => setReturnDialog(true)} variant="outline">
@@ -276,6 +269,77 @@ export default function ScoreSubmissionDetailPage() {
     </div>
   );
 
+  type StudentScore = NonNullable<SubmissionScoreModel["studentScores"]>[number];
+
+  const columns: TableColumn<StudentScore>[] = [
+    { key: "no", label: "#", width: "50px", render: (_, i) => i + 1 },
+    {
+      key: "studentIdentityNumber",
+      label: "Student IdentifyNumber",
+      render: (item) => item.studentIdentityNumber || "---",
+    },
+    {
+      key: "studentNameKhmer",
+      label: "Fullname (KH)",
+      render: (item) => item.studentNameKhmer?.trim() || "---",
+    },
+    {
+      key: "studentNameEnglish",
+      label: "Fullname (EN)",
+      render: (item) => item.studentNameEnglish?.trim() || "---",
+    },
+    {
+      key: "gender",
+      label: "Gender",
+      render: (item) => item.gender ?? "---",
+    },
+    {
+      key: "dateOfBirth",
+      label: "Birth Date",
+      render: (item) => item.dateOfBirth ?? "---",
+    },
+    {
+      key: "attendanceScore",
+      label: `Att. (${scoreData?.attendancePercentage}%)`,
+      render: (item) => item.attendanceScore ?? "---",
+    },
+    {
+      key: "assignmentScore",
+      label: `Ass. (${scoreData?.assignmentPercentage}%)`,
+      render: (item) => item.assignmentScore ?? "---",
+    },
+    {
+      key: "midtermScore",
+      label: `Mid. (${scoreData?.midtermPercentage}%)`,
+      render: (item) => item.midtermScore ?? "---",
+    },
+    {
+      key: "finalScore",
+      label: `Final (${scoreData?.finalPercentage}%)`,
+      render: (item) => item.finalScore ?? "---",
+    },
+    {
+      key: "totalScore",
+      label: "Total",
+      render: (item) => (
+        <span className="text-center font-bold block">
+          {item.totalScore ?? "---"}
+        </span>
+      ),
+    },
+    {
+      key: "grade",
+      label: "Grade",
+      render: (item) => (
+        <span
+          className={`font-bold px-2 py-1 rounded text-sm ${getGradeStyles(item.grade)}`}
+        >
+          {item.grade ?? "---"}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="container space-y-4">
       <StudentScoreHeader
@@ -314,86 +378,17 @@ export default function ScoreSubmissionDetailPage() {
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-black hover:bg-black">
-                  <TableHead className="text-white w-12">#</TableHead>
-                  <TableHead className="text-white">
-                    Student IdentifyNumber
-                  </TableHead>
-                  <TableHead className="text-white">Fullname (KH)</TableHead>
-                  <TableHead className="text-white">Fullname (EN)</TableHead>
-                  <TableHead className="text-white">Gender</TableHead>
-                  <TableHead className="text-white">Birth Date</TableHead>
-                  <TableHead className="text-white text-center">
-                    Att. ({scoreData?.attendancePercentage}%)
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Ass. ({scoreData?.assignmentPercentage}%)
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Mid. ({scoreData?.midtermPercentage}%)
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Final ({scoreData?.finalPercentage}%)
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Total
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Grade
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submission?.studentScores?.map((student, index) => (
-                  <TableRow key={student.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell className="font-medium">
-                      {student?.studentIdentityNumber || "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.studentNameKhmer?.trim() || "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.studentNameEnglish?.trim() || "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.gender ?? "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.dateOfBirth ?? "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.attendanceScore ?? "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.assignmentScore ?? "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.midtermScore ?? "---"}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {student?.finalScore ?? "---"}
-                    </TableCell>
-                    <TableCell className="text-center font-bold">
-                      {student?.totalScore ?? "---"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={`font-bold px-2 py-1 rounded text-sm ${getGradeStyles(
-                          student.grade
-                        )}`}
-                      >
-                        {student.grade ?? "---"}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={submission?.studentScores ?? null}
+            columns={columns}
+            loading={isLoading}
+            currentPage={1}
+            totalPages={0}
+            onPageChange={() => {}}
+            showPagination={false}
+            emptyMessage="No student scores found"
+            getRowKey={(item) => item.id}
+          />
         </CardContent>
       </Card>
 

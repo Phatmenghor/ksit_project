@@ -1,14 +1,11 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { FormHeader } from "@/components/shared/form-field/form-header";
+import { FormBody } from "@/components/shared/form-field/form-body";
+import { FormFooter } from "@/components/shared/form-field/form-footer";
 
 interface RequestCompletedModalProps {
   open: boolean;
@@ -16,39 +13,27 @@ interface RequestCompletedModalProps {
   onConfirm: () => void;
 }
 
-export function RequestCompletedModal({
-  open,
-  onOpenChange,
-  onConfirm,
-}: RequestCompletedModalProps) {
-  const handleOkay = () => {
-    onConfirm();
-    onOpenChange(false);
-  };
-
+export function RequestCompletedModal({ open, onOpenChange, onConfirm }: RequestCompletedModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center space-y-4">
-          <div className="mx-auto w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-6 h-6 text-white" />
-          </div>
-          <DialogTitle className="text-center font-semibold">
-            Request Completed!
-          </DialogTitle>
-          <DialogDescription className="text-gray-600 text-center">Your request have been mark as done!</DialogDescription>
-        </DialogHeader>
-
-        <hr />
-
-        <div className="flex justify-end">
-          <Button
-            onClick={handleOkay}
-            className="bg-green-600 hover:bg-green-700 px-8"
-          >
+      <DialogContent className="w-full max-w-md p-0 flex flex-col gap-0">
+        <FormHeader
+          title="Request Completed"
+          description="The request has been marked as done."
+          icon={<CheckCircle className="h-5 w-5 text-green-600" />}
+          iconBg="bg-green-50 border-green-200"
+        />
+        <FormBody>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Your request has been successfully marked as <strong className="text-foreground">completed</strong>. The status will be updated accordingly.
+          </p>
+        </FormBody>
+        <FormFooter>
+          <Button size="sm" className="h-9 px-6 gap-1.5 bg-green-600 hover:bg-green-700 text-white" onClick={() => { onConfirm(); onOpenChange(false); }}>
+            <CheckCircle className="h-3.5 w-3.5" />
             Okay
           </Button>
-        </div>
+        </FormFooter>
       </DialogContent>
     </Dialog>
   );

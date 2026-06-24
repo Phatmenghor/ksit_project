@@ -10,14 +10,6 @@ import React, {
 } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Users,
   RefreshCcw,
   RefreshCw,
@@ -31,6 +23,7 @@ import {
   Timer,
   Plus,
 } from "lucide-react";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { useParams } from "next/navigation";
 import { getDetailScheduleService } from "@/service/schedule/schedule.service";
 import { ScheduleModel } from "@/model/attendance/schedule/schedule-model";
@@ -651,7 +644,7 @@ const AttendanceCheckPage = () => {
                   </div>
 
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[150px] transition-all duration-200">
+                    <SelectTrigger className="w-full sm:w-[150px] transition-all duration-200">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -665,7 +658,7 @@ const AttendanceCheckPage = () => {
                   </Select>
 
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-[150px] transition-all duration-200">
+                    <SelectTrigger className="w-full sm:w-[150px] transition-all duration-200">
                       <SelectValue placeholder="Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -710,186 +703,181 @@ const AttendanceCheckPage = () => {
 
               <CardContent>
                 <div className="overflow-x-auto relative" ref={tableRef}>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>#</TableHead>
-                        <TableHead>Student Name</TableHead>
-                        <TableHead>Student IdentifyNumber</TableHead>
-                        <TableHead>Attendance</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Check-in Time</TableHead>
-                        <TableHead>attendanceScore</TableHead>
-                        <TableHead>maxAttendanceScore</TableHead>
-                        <TableHead>Comments</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y">
-                      {filteredAttendances.map((student, index) => (
-                        <TableRow
-                          key={student.id}
-                          className={`
-                        ${unsavedChanges.has(student.id) ? "bg-yellow-50" : ""} 
-                        ${isSubmitted ? "opacity-80" : ""}
-                        transition-all duration-200
-                      `}
-                        >
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {student.studentName || "- - -"}
-                              {unsavedChanges.has(student.id) && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs animate-pulse"
-                                >
-                                  Unsaved
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{student.identifyNumber}</TableCell>
-                          <TableCell className="py-2 px-3">
-                            <Select
-                              value={student.status}
-                              onValueChange={(value) =>
-                                handleFieldChange(student.id, "status", value)
-                              }
-                              disabled={isSubmitted}
-                            >
-                              <SelectTrigger
-                                className={`h-8 w-full border ${getStatusColor(
-                                  student.status
-                                )} ${isSubmitted ? "cursor-not-allowed" : ""}`}
+                  <DataTable
+                    data={filteredAttendances}
+                    columns={[
+                      {
+                        key: "no",
+                        label: "#",
+                        width: "50px",
+                        render: (_, index) => index + 1,
+                      },
+                      {
+                        key: "studentName",
+                        label: "Student Name",
+                        render: (student) => (
+                          <div className="flex items-center gap-2">
+                            {student.studentName || "- - -"}
+                            {unsavedChanges.has(student.id) && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs animate-pulse"
                               >
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {attendanceStatusOptions.map((option) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 px-3">
-                            <Select
-                              value={student.attendanceType}
-                              onValueChange={(value) =>
-                                handleFieldChange(
-                                  student.id,
-                                  "attendanceType",
-                                  value
-                                )
-                              }
-                              disabled={isSubmitted}
-                            >
-                              <SelectTrigger
-                                className={`h-8 w-full border ${
-                                  isSubmitted ? "cursor-not-allowed" : ""
-                                }`}
-                              >
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {attendanceTypeOptions.map((option) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 px-3">
-                            {student.recordedTime || "--"}
-                          </TableCell>
-                          <TableCell className="py-2 px-3">
-                            {student.attendanceScore || "--"}
-                          </TableCell>
-                          <TableCell className="py-2 px-3">
-                            {student.maxAttendanceScore || "--"}
-                          </TableCell>
-                          <TableCell className="py-2 px-3">
-                            <Input
-                              placeholder="Add Comment"
-                              className={`h-8 text-sm w-full transition-all duration-100 ease-in-out ${
-                                unsavedChanges.has(student.id)
-                                  ? "border-yellow-300 ring-1 ring-yellow-200"
-                                  : ""
-                              } ${isSubmitted ? "cursor-not-allowed" : ""}`}
-                              value={student.comment || ""}
-                              onChange={(e) =>
-                                handleFieldChange(
-                                  student.id,
-                                  "comment",
-                                  e.target.value
-                                )
-                              }
-                              disabled={isSubmitted}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            {isSubmitted ? (
-                              <Badge variant="secondary" className="text-xs">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Submitted
-                              </Badge>
-                            ) : unsavedChanges.has(student.id) ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleRemoveFromUnsaved(student.id)
-                                }
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                Saved
+                                Unsaved
                               </Badge>
                             )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
-                  {/* No Results Message */}
-                  {filteredAttendances.length === 0 &&
-                    attendanceGenerate?.attendances?.length > 0 && (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Search className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg font-medium">No students found</p>
-                        <p className="text-sm mt-1">
-                          Try adjusting your search criteria or filters
-                        </p>
-                      </div>
-                    )}
-
-                  {/* Empty State when no attendance data */}
-                  {(!attendanceGenerate?.attendances ||
-                    attendanceGenerate.attendances.length === 0) &&
-                    isInitialized && (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Users className="h-16 w-16 mx-auto mb-4 opacity-30" />
-                        <p className="text-lg font-medium">
-                          No students enrolled
-                        </p>
-                        <p className="text-sm mt-1">
-                          This class doesn't have any enrolled students yet
-                        </p>
-                      </div>
-                    )}
+                          </div>
+                        ),
+                      },
+                      {
+                        key: "identifyNumber",
+                        label: "Student IdentifyNumber",
+                        render: (student) => student.identifyNumber,
+                      },
+                      {
+                        key: "attendance",
+                        label: "Attendance",
+                        render: (student) => (
+                          <Select
+                            value={student.status}
+                            onValueChange={(value) =>
+                              handleFieldChange(student.id, "status", value)
+                            }
+                            disabled={isSubmitted}
+                          >
+                            <SelectTrigger
+                              className={`h-8 w-full border ${getStatusColor(
+                                student.status
+                              )} ${isSubmitted ? "cursor-not-allowed" : ""}`}
+                            >
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {attendanceStatusOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ),
+                      },
+                      {
+                        key: "type",
+                        label: "Type",
+                        render: (student) => (
+                          <Select
+                            value={student.attendanceType}
+                            onValueChange={(value) =>
+                              handleFieldChange(
+                                student.id,
+                                "attendanceType",
+                                value
+                              )
+                            }
+                            disabled={isSubmitted}
+                          >
+                            <SelectTrigger
+                              className={`h-8 w-full border ${
+                                isSubmitted ? "cursor-not-allowed" : ""
+                              }`}
+                            >
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {attendanceTypeOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ),
+                      },
+                      {
+                        key: "recordedTime",
+                        label: "Check-in Time",
+                        render: (student) => student.recordedTime || "--",
+                      },
+                      {
+                        key: "attendanceScore",
+                        label: "attendanceScore",
+                        render: (student) => student.attendanceScore || "--",
+                      },
+                      {
+                        key: "maxAttendanceScore",
+                        label: "maxAttendanceScore",
+                        render: (student) => student.maxAttendanceScore || "--",
+                      },
+                      {
+                        key: "comment",
+                        label: "Comments",
+                        render: (student) => (
+                          <Input
+                            placeholder="Add Comment"
+                            className={`h-8 text-sm w-full transition-all duration-100 ease-in-out ${
+                              unsavedChanges.has(student.id)
+                                ? "border-yellow-300 ring-1 ring-yellow-200"
+                                : ""
+                            } ${isSubmitted ? "cursor-not-allowed" : ""}`}
+                            value={student.comment || ""}
+                            onChange={(e) =>
+                              handleFieldChange(
+                                student.id,
+                                "comment",
+                                e.target.value
+                              )
+                            }
+                            disabled={isSubmitted}
+                          />
+                        ),
+                      },
+                      {
+                        key: "status",
+                        label: "Status",
+                        render: (student) =>
+                          isSubmitted ? (
+                            <Badge variant="secondary" className="text-xs">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Submitted
+                            </Badge>
+                          ) : unsavedChanges.has(student.id) ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleRemoveFromUnsaved(student.id)
+                              }
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">
+                              Saved
+                            </Badge>
+                          ),
+                      },
+                    ]}
+                    loading={loading}
+                    currentPage={1}
+                    totalPages={0}
+                    onPageChange={() => {}}
+                    showPagination={false}
+                    emptyMessage={
+                      filteredAttendances.length === 0 &&
+                      (attendanceGenerate?.attendances?.length ?? 0) > 0
+                        ? "No students found matching your search criteria"
+                        : "No students enrolled"
+                    }
+                    getRowKey={(student) => student.id}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -897,7 +885,7 @@ const AttendanceCheckPage = () => {
 
           {/* Quick Actions Panel - Only show when not submitted */}
           {attendanceGenerate && unsavedChanges.size > 0 && !isSubmitted && (
-            <Card className="fixed bottom-4 right-4 w-80 shadow-lg border-yellow-300 bg-yellow-50 z-50 animate-in slide-in-from-bottom-4 duration-300">
+            <Card className="fixed bottom-4 left-4 right-4 sm:left-auto sm:w-80 shadow-lg border-yellow-300 bg-yellow-50 z-50 animate-in slide-in-from-bottom-4 duration-300">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">

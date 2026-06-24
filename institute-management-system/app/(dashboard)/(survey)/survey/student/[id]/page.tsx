@@ -1,22 +1,80 @@
 "use client";
 
 import { CardHeaderSection } from "@/components/shared/layout/card-header-section";
-import Loading from "@/components/shared/loading";
 import { ROUTE } from "@/constants/routes";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { StudentSurveyHeader } from "@/constants/table/user";
 import { StudentSurveyModel } from "@/model/survey/student-survey-model";
 import { getAllStudentSurveyService } from "@/service/survey/history-survey.service";
 import { toast } from "sonner";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
+
+type Student = NonNullable<StudentSurveyModel["students"]>[number];
+
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case "COMPLETED":
+      return {
+        text: "Completed",
+        bgColor: "bg-green-100",
+        textColor: "text-green-800",
+        borderColor: "border-green-200",
+      };
+    case "NOT_STARTED":
+      return {
+        text: "Not Started",
+        bgColor: "bg-red-100",
+        textColor: "text-red-800",
+        borderColor: "border-red-200",
+      };
+    case "NONE":
+    default:
+      return {
+        text: "Pending",
+        bgColor: "bg-yellow-100",
+        textColor: "text-yellow-800",
+        borderColor: "border-yellow-200",
+      };
+  }
+};
+
+const columns: TableColumn<Student>[] = [
+  { key: "no", label: "#", render: (_, i) => i + 1 },
+  { key: "username", label: "Username", render: (item) => item.username || "---" },
+  {
+    key: "khmerName",
+    label: "Fullname (KH)",
+    render: (item) =>
+      `${item.khmerFirstName || ""} ${item.khmerLastName || ""}`.trim() || "---",
+  },
+  {
+    key: "englishName",
+    label: "Fullname (EN)",
+    render: (item) =>
+      `${item.englishFirstName || ""} ${item.englishLastName || ""}`.trim() || "---",
+  },
+  { key: "gender", label: "Gender", render: (item) => item.gender || "---" },
+  { key: "dateOfBirth", label: "Date Of Birth", render: (item) => item.dateOfBirth || "---" },
+  {
+    key: "classCode",
+    label: "Class code",
+    render: (item) => item.studentClass?.code || "---",
+  },
+  {
+    key: "surveyStatus",
+    label: "Status",
+    render: (item) => {
+      const config = getStatusConfig(item.surveyStatus);
+      return (
+        <span
+          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${config.bgColor} ${config.textColor} ${config.borderColor}`}
+        >
+          {config.text}
+        </span>
+      );
+    },
+  },
+];
 
 const AllStduentView = () => {
   const params = useParams();
@@ -67,102 +125,17 @@ const AllStduentView = () => {
         back
       />
 
-      <div className={`overflow-x-auto mt-4`}>
-        {isLoading ? (
-          <div>
-            <Loading />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {StudentSurveyHeader.map((header, index) => (
-                  <TableHead key={index} className={header.className}>
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {studentData?.students.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={StudentSurveyHeader.length}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No student found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                studentData?.students?.map((student, index) => {
-                  return (
-                    <TableRow key={student.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{student.username || "---"}</TableCell>
-                      <TableCell>
-                        {`${student.khmerFirstName || ""} ${
-                          student.khmerLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>
-                        {`${student.englishFirstName || ""} ${
-                          student.englishLastName || ""
-                        }`.trim() || "---"}
-                      </TableCell>
-                      <TableCell>{student.gender || "---"}</TableCell>
-                      <TableCell>{student.dateOfBirth || "---"}</TableCell>
-                      <TableCell>
-                        {student.studentClass?.code || "---"}
-                      </TableCell>
-
-                      <TableCell>
-                        {(() => {
-                          const getStatusConfig = (status: string) => {
-                            switch (status) {
-                              case "COMPLETED":
-                                return {
-                                  text: "Completed",
-                                  bgColor: "bg-green-100",
-                                  textColor: "text-green-800",
-                                  borderColor: "border-green-200",
-                                };
-                              case "NOT_STARTED":
-                                return {
-                                  text: "Not Started",
-                                  bgColor: "bg-red-100",
-                                  textColor: "text-red-800",
-                                  borderColor: "border-red-200",
-                                };
-                              case "NONE":
-                              default:
-                                return {
-                                  text: "Pending",
-                                  bgColor: "bg-yellow-100",
-                                  textColor: "text-yellow-800",
-                                  borderColor: "border-yellow-200",
-                                };
-                            }
-                          };
-
-                          const config = getStatusConfig(student.surveyStatus);
-
-                          return (
-                            <span
-                              className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${config.bgColor} ${config.textColor} ${config.borderColor}`}
-                            >
-                              {config.text}
-                            </span>
-                          );
-                        })()}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+      <DataTable
+        data={studentData?.students ?? null}
+        columns={columns}
+        loading={isLoading}
+        currentPage={1}
+        totalPages={0}
+        onPageChange={() => {}}
+        showPagination={false}
+        emptyMessage="No student found"
+        getRowKey={(item) => item.id}
+      />
     </div>
   );
 };

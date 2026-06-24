@@ -12,67 +12,40 @@ export default function StudentFamily({ student }: StudentProfileProps) {
 
   return (
     <CollapsibleCard title="ព័ត៍មានទាក់ទងនឹងគ្រួសារសិស្ស">
-      <div className="grid grid-cols-6 gap-4 text-sm">
-        {/* Father's Name */}
-        <div className="text-muted-foreground col-span-1">ឈ្មោះឪពុក</div>
-        <div className="col-span-1">{father?.name || "---"}</div>
-
-        {/* Spacer */}
-        <div className="col-span-1"></div>
-
-        {/* Mother's Name */}
-        <div className="text-muted-foreground col-span-1">ឈ្មោះម្ដាយ</div>
-        <div className="col-span-1">{mother?.name || "---"}</div>
-        <div className="col-span-1"></div>
-
-        {/* Father's Age */}
-        <div className="text-muted-foreground col-span-1">អាយុឪពុក</div>
-        <div className="col-span-1">{father?.age || "---"}</div>
-
-        <div className="col-span-1"></div>
-
-        {/* Mother's Age */}
-        <div className="text-muted-foreground col-span-1">អាយុម្ដាយ</div>
-        <div className="col-span-1">{mother?.age || "---"}</div>
-        <div className="col-span-1"></div>
-
-        {/* Repeat this pattern for other fields: job, phone, address, etc. */}
-        <div className="text-muted-foreground col-span-1">មុខរបរឪពុក</div>
-        <div className="col-span-1">{father?.job || "---"}</div>
-        <div className="col-span-1"></div>
-        <div className="text-muted-foreground col-span-1">មុខរបរម្ដាយ</div>
-        <div className="col-span-1">{mother?.job || "---"}</div>
-        <div className="col-span-1"></div>
-
-        <div className="text-muted-foreground col-span-1">លេខទូរស័ព្ទឪពុក</div>
-        <div className="col-span-1">{father?.phone || "---"}</div>
-        <div className="col-span-1"></div>
-        <div className="text-muted-foreground col-span-1">លេខទូរស័ព្ទម្ដាយ</div>
-        <div className="col-span-1">{mother?.phone || "---"}</div>
-        <div className="col-span-1"></div>
-
-        <div className="text-muted-foreground col-span-1">
-          អាសយដ្ឋានបច្ចុប្បន្នឪពុក
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+        {/* Father */}
+        <div className="space-y-3">
+          <h4 className="font-semibold text-gray-700 border-b pb-1">ឪពុក</h4>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <dt className="text-muted-foreground">ឈ្មោះ</dt>
+            <dd>{father?.name || "---"}</dd>
+            <dt className="text-muted-foreground">អាយុ</dt>
+            <dd>{father?.age || "---"}</dd>
+            <dt className="text-muted-foreground">មុខរបរ</dt>
+            <dd>{father?.job || "---"}</dd>
+            <dt className="text-muted-foreground">លេខទូរស័ព្ទ</dt>
+            <dd>{father?.phone || "---"}</dd>
+            <dt className="text-muted-foreground">អាសយដ្ឋាន</dt>
+            <dd className="break-words">{father?.address || "---"}</dd>
+          </dl>
         </div>
-        <div className="col-span-1">{father?.address || "---"}</div>
-        <div className="col-span-1"></div>
-        <div className="text-muted-foreground col-span-1">
-          អាសយដ្ឋានបច្ចុប្បន្នម្ដាយ
-        </div>
-        <div className="col-span-1">{mother?.address || "---"}</div>
-        <div className="col-span-1"></div>
 
-        {/* NOTED: NOT SURE */}
-        {/* <div className="text-muted-foreground col-span-1">
-          ចំនួនបងប្អូនបង្កើត
+        {/* Mother */}
+        <div className="space-y-3">
+          <h4 className="font-semibold text-gray-700 border-b pb-1">ម្ដាយ</h4>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <dt className="text-muted-foreground">ឈ្មោះ</dt>
+            <dd>{mother?.name || "---"}</dd>
+            <dt className="text-muted-foreground">អាយុ</dt>
+            <dd>{mother?.age || "---"}</dd>
+            <dt className="text-muted-foreground">មុខរបរ</dt>
+            <dd>{mother?.job || "---"}</dd>
+            <dt className="text-muted-foreground">លេខទូរស័ព្ទ</dt>
+            <dd>{mother?.phone || "---"}</dd>
+            <dt className="text-muted-foreground">អាសយដ្ឋាន</dt>
+            <dd className="break-words">{mother?.address || "---"}</dd>
+          </dl>
         </div>
-        <div className="col-span-1">{student?.numberOfSiblings || "---"}</div>
-        <div className="col-span-1"></div>
-        <div className="text-muted-foreground col-span-1">
-          ចំនួនបងប្អូនបង្កើតស្រី
-        </div>
-        <div className="col-span-1">{student?.memberSiblings || "---"}</div>
-        <div className="col-span-1"></div> */}
       </div>
     </CollapsibleCard>
   );

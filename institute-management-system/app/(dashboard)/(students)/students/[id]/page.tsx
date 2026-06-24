@@ -79,8 +79,8 @@ export default function StudentViewPage() {
           { label: "View Student", href: ROUTE.STUDENTS.VIEW(id) },
         ]}
         tabs={
-          <div className="container mx-auto mt-3">
-            <TabsList className="flex w-full border-b gap-6 pb-1 bg-transparent justify-start">
+          <div className="mt-3 overflow-x-auto">
+            <TabsList className="flex w-max min-w-full border-b gap-4 pb-1 bg-transparent justify-start">
               {tabs.map(({ value, label, icon: Icon }) => (
                 <TabsTrigger
                   key={value}

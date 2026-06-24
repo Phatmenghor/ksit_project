@@ -2,21 +2,10 @@
 
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import Loading from "@/components/shared/loading";
-import PaginationPage from "@/components/shared/pagination-page";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatSemesterOne } from "@/constants/format-enum/format-semester-1";
 import { ROUTE } from "@/constants/routes";
-import { ClassModel } from "@/model/master-data/class/all-class-model";
 import {
   AllSurveyFilterModel,
   SurveyReportHeader,
@@ -39,7 +28,7 @@ import {
   Search,
   Tally1,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -54,6 +43,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { AppIcons } from "@/constants/icons/icon";
 import { usePagination } from "@/hooks/use-pagination";
+import { DataTable, TableColumn } from "@/components/shared/data-table";
 
 export default function AllStudentResultPage() {
   const params = useParams();
@@ -193,6 +183,15 @@ export default function AllStudentResultPage() {
     }
     return value;
   };
+
+  const columns: TableColumn<SurveyResponseItem>[] = useMemo(() => [
+    { key: "no", label: "#", width: "50px", render: (_, i) => getDisplayIndex(i) },
+    ...surveyHeaders.map((header) => ({
+      key: header.key,
+      label: header.label,
+      render: (item: SurveyResponseItem) => renderCellValue(item, header),
+    })),
+  ], [surveyHeaders, getDisplayIndex]);
 
   const exportToExcel = async () => {
     setIsSubmitting(true);
@@ -441,57 +440,19 @@ export default function AllStudentResultPage() {
         </Card>
       </div>
 
-      <div className={`overflow-x-auto mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                {surveyHeaders.map((header) => (
-                  <TableHead key={header.key}>{header.label}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {surveyData?.content.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-6 text-muted-foreground"
-                  >
-                    No Record
-                  </TableCell>
-                </TableRow>
-              ) : (
-                surveyData?.content.map((survey, index) => {
-                  return (
-                    <TableRow key={survey.responseId}>
-                      <TableCell>{getDisplayIndex(index)}</TableCell>
-                      {surveyHeaders.map((header) => (
-                        <TableCell key={`${survey.responseId}-${header.key}`}>
-                          {renderCellValue(survey, header)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        )}
+      <div className={`mt-4 ${useIsMobile() ? "pl-4" : ""}`}>
+        <DataTable
+          data={surveyData?.content ?? null}
+          columns={columns}
+          loading={isLoading}
+          currentPage={currentPage}
+          totalPages={surveyData?.totalPages ?? 0}
+          totalElements={surveyData?.totalElements}
+          onPageChange={handlePageChange}
+          emptyMessage="No Record"
+          getRowKey={(item) => item.responseId}
+        />
       </div>
-
-      {surveyData && (
-        <div className="mt-8 flex justify-end">
-          <PaginationPage
-            currentPage={currentPage}
-            totalPages={surveyData.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
     </div>
   );
 }

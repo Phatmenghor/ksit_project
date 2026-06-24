@@ -39,8 +39,8 @@ export function BasicInformationForm() {
         </h2>
         <Separator className="mb-3" />
         <div className="w-full space-y-3">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="col-span-2 md:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="col-span-1">
               <label
                 htmlFor="user-name"
                 className="block mb-2 text-sm font-medium"

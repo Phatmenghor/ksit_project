@@ -149,11 +149,7 @@ export function Header() {
 
   return (
     <>
-      <header
-        className={`flex items-center justify-between bg-[#024D3E] px-4 md:px-6 ${
-          isMobile ? "h-20" : "h-16"
-        }`}
-      >
+      <header className="flex items-center justify-between bg-[#024D3E] px-4 md:px-6 h-20 md:h-16">
         {/* Left: Logo or Sidebar toggle */}
         <div className="flex items-center">
           {isMobile && (
@@ -287,7 +283,7 @@ export function Header() {
       {/* Mobile sidebar */}
       {isMobile && (
         <div
-          className={`fixed inset-y-0 left-0 z-50 w-11/12 transform bg-white shadow-lg transition-transform duration-300 ease-in-out ${
+          className={`fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] transform bg-white shadow-lg transition-transform duration-300 ease-in-out ${
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
